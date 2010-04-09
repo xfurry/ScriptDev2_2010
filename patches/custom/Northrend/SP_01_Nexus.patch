@@ -1,0 +1,392 @@
+diff --git a/scripts/northrend/nexus/nexus/boss_anomalus.cpp b/scripts/northrend/nexus/nexus/boss_anomalus.cpp
+index 2293557..c5af48a 100644
+--- a/scripts/northrend/nexus/nexus/boss_anomalus.cpp
++++ b/scripts/northrend/nexus/nexus/boss_anomalus.cpp
+@@ -53,9 +53,13 @@ enum
+ 
+     SPELL_SUMMON_CRAZED_MANA_WRAITH    = 47692,
+     NPC_CHAOTIC_RIFT                   = 26918,
+-    NPC_CRAZED_MANA_WRAITH             = 26746
++    NPC_CRAZED_MANA_WRAITH             = 26746,
++
++    ACHIEVEMENT_CHAOS_THEORY            = 2037,
+ };
+ 
++bool DeadChaoticRift; // needed for achievement: Chaos Theory(2037)
++
+ /*######
+ ## boss_anomalus
+ ######*/
+@@ -83,6 +87,8 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
+         m_uiSparkTimer = 5000;
+         m_uiCreateRiftTimer = 25000;
+         m_uiChaoticRiftGUID = 0;
++
++        DeadChaoticRift = false;
+     }
+ 
+     void Aggro(Unit* pWho)
+@@ -96,6 +102,12 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
+ 
+         if (m_pInstance)
+             m_pInstance->SetData(TYPE_ANOMALUS, DONE);
++
++        if (!m_bIsRegularMode && !DeadChaoticRift)
++        {
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_CHAOS_THEORY);
++        }
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -209,6 +221,11 @@ struct MANGOS_DLL_DECL mob_chaotic_riftAI : public Scripted_NoMovementAI
+         }
+     }
+ 
++    void JustDied(Unit *killer)
++    {
++        DeadChaoticRift = true;
++    }
++
+     void UpdateAI(const uint32 uiDiff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+diff --git a/scripts/northrend/nexus/nexus/boss_keristrasza.cpp b/scripts/northrend/nexus/nexus/boss_keristrasza.cpp
+index 72f98bd..8b0d911 100644
+--- a/scripts/northrend/nexus/nexus/boss_keristrasza.cpp
++++ b/scripts/northrend/nexus/nexus/boss_keristrasza.cpp
+@@ -17,7 +17,7 @@
+ /* ScriptData
+ SDName: Boss_Keristrasza
+ SD%Complete: 65%
+-SDComment: timers tuning, add achievement
++SDComment: timers tuning
+ SDCategory: Nexus
+ EndScriptData */
+ 
+@@ -33,6 +33,7 @@ enum
+     SAY_DEATH                   = -1576020,
+ 
+     SPELL_INTENSE_COLD          = 48094,
++    SPELL_INTENSE_COLD_TRIGGERED= 48095,
+ 
+     SPELL_CRYSTALFIRE_BREATH    = 48096,
+     SPELL_CRYSTALFIRE_BREATH_H  = 57091,
+@@ -43,7 +44,9 @@ enum
+ 
+     SPELL_TAIL_SWEEP            = 50155,
+ 
+-    SPELL_ENRAGE                = 8599
++    SPELL_ENRAGE                = 8599,
++
++    ACHIEVEMENT_INTENSE_COLD    = 2036,
+ };
+ 
+ /*######
+@@ -69,6 +72,9 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
+ 
+     bool m_bIsEnraged;
+ 
++    uint32 CheckIntenseColdTimer;
++    bool MoreThanTwoIntenseCold; // needed for achievement: Intense Cold(2036)
++
+     void Reset()
+     {
+         uiCrystalChainTimer = 30000;
+@@ -78,13 +84,19 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
+ 
+         m_bIsEnraged = false;
+ 
++        CheckIntenseColdTimer = 2000;
++        MoreThanTwoIntenseCold = false;
++
+         if (!m_pInstance)
+             return;
+ 
+         if (m_creature->isAlive())
+         {   
+             if (m_pInstance->GetData(TYPE_KERISTRASZA) != SPECIAL)
++            {
+                 m_creature->CastSpell(m_creature, SPELL_FROZEN_PRISON, true);
++                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++            }
+         }
+     }
+ 
+@@ -101,6 +113,12 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
+ 
+         if (m_pInstance)
+             m_pInstance->SetData(TYPE_KERISTRASZA, DONE);
++
++        if (!m_bIsRegularMode && !MoreThanTwoIntenseCold)
++        {
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_INTENSE_COLD);
++        }
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -114,6 +132,25 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        if (CheckIntenseColdTimer < uiDiff && !MoreThanTwoIntenseCold)
++        {
++            ThreatList const& tList = m_creature->getThreatManager().getThreatList();
++            for (ThreatList::const_iterator iter = tList.begin();iter != tList.end(); ++iter)
++            {
++                Unit *pTarget = Unit::GetUnit(*m_creature, (*iter)->getUnitGuid());
++                if (!pTarget || pTarget->GetTypeId() != TYPEID_PLAYER)
++                    continue;
++
++                Aura *AuraIntenseCold = pTarget->GetAura(SPELL_INTENSE_COLD_TRIGGERED, EFFECT_INDEX_0);
++                if (AuraIntenseCold && AuraIntenseCold->GetStackAmount() > 2)
++                {
++                    MoreThanTwoIntenseCold = true;
++                    break;
++                }
++            }
++            CheckIntenseColdTimer = 2000;
++        } else CheckIntenseColdTimer -= uiDiff;
++
+         if (!m_bIsEnraged && m_creature->GetHealthPercent() < 25.0f)
+         {
+             if (!m_creature->IsNonMeleeSpellCasted(false))
+diff --git a/scripts/northrend/nexus/nexus/boss_telestra.cpp b/scripts/northrend/nexus/nexus/boss_telestra.cpp
+index 2f26dc7..1244e3d 100644
+--- a/scripts/northrend/nexus/nexus/boss_telestra.cpp
++++ b/scripts/northrend/nexus/nexus/boss_telestra.cpp
+@@ -64,7 +64,16 @@ enum
+     PHASE_1                 = 1,
+     PHASE_2                 = 2,
+     PHASE_3                 = 3,
+-    PHASE_4                 = 4
++    PHASE_4                 = 4,
++
++    //Achievement
++    ACHIEV_SPLIT_PERSONALITY  = 2150,
++    ACHIEV_TIMER              = 5 * 1000
++};
++
++float CenterOfRoom[1][4] =
++{
++    {504.80f, 89.07f, -16.12f, 6.27f}
+ };
+ 
+ /*######
+@@ -90,6 +99,20 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
+     uint32 m_uiIceNovaTimer;
+     uint32 m_uiGravityWellTimer;
+ 
++    uint64 FireMagusGUID;
++    uint64 FrostMagusGUID;
++    uint64 ArcaneMagusGUID;
++    bool FireMagusDead;
++    bool FrostMagusDead;
++    bool ArcaneMagusDead;
++
++    uint32 AppearDelay_Timer;
++    bool AppearDelay;
++
++    bool AchievementTimerRunning;
++    uint8 AchievementProgress;
++    uint32 AchievementTimer;
++
+     void Reset()
+     {
+         m_uiPhase = PHASE_1;
+@@ -98,6 +121,19 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
+         m_uiFirebombTimer = urand(2000, 4000);
+         m_uiIceNovaTimer = urand(8000, 12000);
+         m_uiGravityWellTimer = urand(15000, 25000);
++
++        FireMagusGUID = 0;
++        FrostMagusGUID = 0;
++        ArcaneMagusGUID = 0;
++
++        AppearDelay = false;
++
++        AchievementProgress = 0;
++        AchievementTimer = 0;
++        AchievementTimerRunning = false;
++
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++        m_creature->SetVisibility(VISIBILITY_ON);
+     }
+ 
+     void JustReachedHome()
+@@ -128,6 +164,12 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
+ 
+         if (m_pInstance)
+             m_pInstance->SetData(TYPE_TELESTRA, DONE);
++
++        if (!m_bIsRegularMode && AchievementProgress == 2)
++        {
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEV_SPLIT_PERSONALITY);
++        }
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -176,6 +218,36 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
+         }
+     }
+ 
++        uint64 SplitPersonality(uint32 entry)
++    {
++        Creature* Summoned = m_creature->SummonCreature(entry, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 1000);
++        if (Summoned)
++        {
++            switch (entry)
++            {
++            case NPC_TELEST_FIRE:
++                {
++                    Summoned->CastSpell(Summoned, SPELL_FIRE_VISUAL, false);
++                    break;
++                }
++            case NPC_TELEST_FROST:
++                {
++                    Summoned->CastSpell(Summoned, SPELL_FROST_VISUAL, false);
++                    break;
++                }
++            case NPC_TELEST_ARCANE:
++                {
++                    Summoned->CastSpell(Summoned, SPELL_ARCANE_VISUAL, false);
++                    break;
++                }
++            }
++            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                Summoned->AI()->AttackStart(pTarget);
++            return Summoned->GetGUID();
++        }
++        return 0;
++    }
++
+     void UpdateAI(const uint32 uiDiff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+@@ -209,6 +281,16 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
+                     {
+                         if (DoCastSpellIfCan(m_creature, SPELL_SUMMON_CLONES, CAST_INTERRUPT_PREVIOUS) == CAST_OK)
+                         {
++                            m_creature->CastStop();
++                            m_creature->RemoveAllAuras();
++                            m_creature->SetVisibility(VISIBILITY_OFF);
++                            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                            FireMagusGUID = SplitPersonality(NPC_TELEST_FIRE);
++                            FrostMagusGUID = SplitPersonality(NPC_TELEST_FROST);
++                            ArcaneMagusGUID = SplitPersonality(NPC_TELEST_ARCANE);
++                            FireMagusDead = false;
++                            FrostMagusDead = false;
++                            ArcaneMagusDead = false;
+                             DoScriptText(urand(0, 1) ? SAY_SPLIT_1 : SAY_SPLIT_2, m_creature);
+                             m_uiPhase = PHASE_2;
+                         }
+@@ -218,6 +300,16 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
+                     {
+                         if (DoCastSpellIfCan(m_creature, SPELL_SUMMON_CLONES, CAST_INTERRUPT_PREVIOUS) == CAST_OK)
+                         {
++                            m_creature->CastStop();
++                            m_creature->RemoveAllAuras();
++                            m_creature->SetVisibility(VISIBILITY_OFF);
++                            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                            FireMagusGUID = SplitPersonality(NPC_TELEST_FIRE);
++                            FrostMagusGUID = SplitPersonality(NPC_TELEST_FROST);
++                            ArcaneMagusGUID = SplitPersonality(NPC_TELEST_ARCANE);
++                            FireMagusDead = false;
++                            FrostMagusDead = false;
++                            ArcaneMagusDead = false;
+                             DoScriptText(urand(0, 1) ? SAY_SPLIT_1 : SAY_SPLIT_2, m_creature);
+                             m_uiPhase = PHASE_2;
+                         }
+@@ -234,10 +326,75 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
+                 else
+                     m_uiGravityWellTimer -= uiDiff;
+ 
++                if (AppearDelay)
++                {
++                    m_creature->StopMoving();
++                    m_creature->AttackStop();
++                    if (AppearDelay_Timer <= uiDiff)
++                    {
++                        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                        AppearDelay = false;
++                    } else AppearDelay_Timer -= uiDiff;
++                    return;
++                }
++
+                 break;
+             }
+             case PHASE_2:
+             {
++                Unit* FireMagus;
++                Unit* FrostMagus;
++                Unit* ArcaneMagus;
++                if (FireMagusGUID)
++                    FireMagus = Unit::GetUnit((*m_creature), FireMagusGUID);
++                if (FrostMagusGUID)
++                    FrostMagus = Unit::GetUnit((*m_creature), FrostMagusGUID);
++                if (ArcaneMagusGUID)
++                    ArcaneMagus = Unit::GetUnit((*m_creature), ArcaneMagusGUID);
++                if (FireMagus && FireMagus->isDead())
++                {
++                    FireMagusDead = true;
++                    if (!AchievementTimerRunning)
++                        AchievementTimerRunning = true;
++                }
++                if (FrostMagus && FrostMagus->isDead())
++                {
++                    FrostMagusDead = true;
++                    if (!AchievementTimerRunning)
++                        AchievementTimerRunning = true;
++                }
++                if (ArcaneMagus && ArcaneMagus->isDead())
++                {
++                    ArcaneMagusDead = true;
++                    if (!AchievementTimerRunning)
++                        AchievementTimerRunning = true;
++                }
++                if (AchievementTimerRunning)
++                    AchievementTimer += uiDiff;
++
++                if (FireMagusDead && FrostMagusDead && ArcaneMagusDead)
++                {
++                    if (AchievementTimer <= ACHIEV_TIMER)
++                    AchievementProgress +=1;
++
++                    m_creature->GetMotionMaster()->Clear();
++                    m_creature->GetMap()->CreatureRelocation(m_creature, CenterOfRoom[0][0], CenterOfRoom[0][1], CenterOfRoom[0][2], CenterOfRoom[0][3]);
++                    DoCast(m_creature, SPELL_SPAWN_BACK_IN);
++                    m_creature->SetVisibility(VISIBILITY_ON);
++                    if (m_creature->GetHealth()*100 < m_creature->GetMaxHealth()*50)
++                        m_uiPhase = PHASE_3;
++                    if (!m_bIsRegularMode && m_creature->GetHealth()*100 < m_creature->GetMaxHealth()*15)
++                        m_uiPhase = PHASE_4;
++                    FireMagusGUID = 0;
++                    FrostMagusGUID = 0;
++                    ArcaneMagusGUID = 0;
++                    AppearDelay = true;
++                    AppearDelay_Timer = 4000;
++                    DoScriptText(SAY_MERGE, m_creature);
++                    AchievementTimerRunning = false;
++                }else
++                    return;
++
+                 break;
+             }
+         }
+diff --git a/scripts/northrend/nexus/nexus/instance_nexus.cpp b/scripts/northrend/nexus/nexus/instance_nexus.cpp
+index 64c3040..1388aaf 100644
+--- a/scripts/northrend/nexus/nexus/instance_nexus.cpp
++++ b/scripts/northrend/nexus/nexus/instance_nexus.cpp
+@@ -188,7 +188,10 @@ struct MANGOS_DLL_DECL instance_nexus : public ScriptedInstance
+             if (Creature* pCreature = instance->GetCreature(m_uiKeristrazaGUID))
+             {
+                 if (pCreature->isAlive())
++                {
+                     pCreature->RemoveAurasDueToSpell(SPELL_FROZEN_PRISON);
++                    pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                }
+             }
+         }
+ 

@@ -53,8 +53,12 @@ enum
 
     SPELL_SUMMON_CRAZED_MANA_WRAITH    = 47692,
     NPC_CHAOTIC_RIFT                   = 26918,
-    NPC_CRAZED_MANA_WRAITH             = 26746
+    NPC_CRAZED_MANA_WRAITH             = 26746,
+
+    ACHIEVEMENT_CHAOS_THEORY            = 2037,
 };
+
+bool DeadChaoticRift; // needed for achievement: Chaos Theory(2037)
 
 /*######
 ## boss_anomalus
@@ -83,6 +87,8 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
         m_uiSparkTimer = 5000;
         m_uiCreateRiftTimer = 25000;
         m_uiChaoticRiftGUID = 0;
+
+        DeadChaoticRift = false;
     }
 
     void Aggro(Unit* pWho)
@@ -96,6 +102,12 @@ struct MANGOS_DLL_DECL boss_anomalusAI : public ScriptedAI
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_ANOMALUS, DONE);
+
+        if (!m_bIsRegularMode && !DeadChaoticRift)
+        {
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_CHAOS_THEORY);
+        }
     }
 
     void KilledUnit(Unit* pVictim)
@@ -207,6 +219,11 @@ struct MANGOS_DLL_DECL mob_chaotic_riftAI : public Scripted_NoMovementAI
             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
                 pSummoned->AI()->AttackStart(pTarget);
         }
+    }
+
+    void JustDied(Unit *killer)
+    {
+        DeadChaoticRift = true;
     }
 
     void UpdateAI(const uint32 uiDiff)

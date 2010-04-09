@@ -188,7 +188,10 @@ struct MANGOS_DLL_DECL instance_nexus : public ScriptedInstance
             if (Creature* pCreature = instance->GetCreature(m_uiKeristrazaGUID))
             {
                 if (pCreature->isAlive())
+                {
                     pCreature->RemoveAurasDueToSpell(SPELL_FROZEN_PRISON);
+                    pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                }
             }
         }
 

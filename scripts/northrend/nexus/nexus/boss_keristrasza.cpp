@@ -17,7 +17,7 @@
 /* ScriptData
 SDName: Boss_Keristrasza
 SD%Complete: 65%
-SDComment: timers tuning, add achievement
+SDComment: timers tuning
 SDCategory: Nexus
 EndScriptData */
 
@@ -33,6 +33,7 @@ enum
     SAY_DEATH                   = -1576020,
 
     SPELL_INTENSE_COLD          = 48094,
+    SPELL_INTENSE_COLD_TRIGGERED= 48095,
 
     SPELL_CRYSTALFIRE_BREATH    = 48096,
     SPELL_CRYSTALFIRE_BREATH_H  = 57091,
@@ -43,7 +44,9 @@ enum
 
     SPELL_TAIL_SWEEP            = 50155,
 
-    SPELL_ENRAGE                = 8599
+    SPELL_ENRAGE                = 8599,
+
+    ACHIEVEMENT_INTENSE_COLD    = 2036,
 };
 
 /*######
@@ -69,6 +72,9 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 
     bool m_bIsEnraged;
 
+    uint32 CheckIntenseColdTimer;
+    bool MoreThanTwoIntenseCold; // needed for achievement: Intense Cold(2036)
+
     void Reset()
     {
         uiCrystalChainTimer = 30000;
@@ -78,13 +84,19 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 
         m_bIsEnraged = false;
 
+        CheckIntenseColdTimer = 2000;
+        MoreThanTwoIntenseCold = false;
+
         if (!m_pInstance)
             return;
 
         if (m_creature->isAlive())
         {   
             if (m_pInstance->GetData(TYPE_KERISTRASZA) != SPECIAL)
+            {
                 m_creature->CastSpell(m_creature, SPELL_FROZEN_PRISON, true);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            }
         }
     }
 
@@ -101,6 +113,12 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_KERISTRASZA, DONE);
+
+        if (!m_bIsRegularMode && !MoreThanTwoIntenseCold)
+        {
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_INTENSE_COLD);
+        }
     }
 
     void KilledUnit(Unit* pVictim)
@@ -113,6 +131,25 @@ struct MANGOS_DLL_DECL boss_keristraszaAI : public ScriptedAI
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        if (CheckIntenseColdTimer < uiDiff && !MoreThanTwoIntenseCold)
+        {
+            ThreatList const& tList = m_creature->getThreatManager().getThreatList();
+            for (ThreatList::const_iterator iter = tList.begin();iter != tList.end(); ++iter)
+            {
+                Unit *pTarget = Unit::GetUnit(*m_creature, (*iter)->getUnitGuid());
+                if (!pTarget || pTarget->GetTypeId() != TYPEID_PLAYER)
+                    continue;
+
+                Aura *AuraIntenseCold = pTarget->GetAura(SPELL_INTENSE_COLD_TRIGGERED, EFFECT_INDEX_0);
+                if (AuraIntenseCold && AuraIntenseCold->GetStackAmount() > 2)
+                {
+                    MoreThanTwoIntenseCold = true;
+                    break;
+                }
+            }
+            CheckIntenseColdTimer = 2000;
+        } else CheckIntenseColdTimer -= uiDiff;
 
         if (!m_bIsEnraged && m_creature->GetHealthPercent() < 25.0f)
         {
