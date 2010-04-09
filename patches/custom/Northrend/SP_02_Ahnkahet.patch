@@ -1,0 +1,1786 @@
+diff --git a/Makefile.am b/Makefile.am
+index b7ca4a8..fd57e47 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -307,6 +307,7 @@ scripts/northrend/sholazar_basin.cpp \
+ scripts/northrend/storm_peaks.cpp \
+ scripts/northrend/howling_fjord.cpp \
+ scripts/northrend/zuldrak.cpp \
++scripts/northrend/azjol-nerub/ahnkahet/boss_amanitar.cpp \
+ scripts/northrend/azjol-nerub/ahnkahet/boss_jedoga.cpp \
+ scripts/northrend/azjol-nerub/ahnkahet/boss_nadox.cpp \
+ scripts/northrend/azjol-nerub/ahnkahet/boss_taldaram.cpp \
+diff --git a/VC90/90ScriptDev2.vcproj b/VC90/90ScriptDev2.vcproj
+index dd6d5c4..2bd0ad7 100644
+--- a/VC90/90ScriptDev2.vcproj
++++ b/VC90/90ScriptDev2.vcproj
+@@ -1063,15 +1063,15 @@
+ 						>
+ 					</File>
+ 					<File
+-						RelativePath="..\scripts\eastern_kingdoms\uldaman\uldaman.cpp"
++						RelativePath="..\scripts\eastern_kingdoms\uldaman\instance_uldaman.cpp"
+ 						>
+ 					</File>
+ 					<File
+-						RelativePath="..\scripts\eastern_kingdoms\uldaman\uldaman.h"
++						RelativePath="..\scripts\eastern_kingdoms\uldaman\uldaman.cpp"
+ 						>
+ 					</File>
+ 					<File
+-						RelativePath="..\scripts\eastern_kingdoms\uldaman\instance_uldaman.cpp"
++						RelativePath="..\scripts\eastern_kingdoms\uldaman\uldaman.h"
+ 						>
+ 					</File>
+ 				</Filter>
+@@ -1606,6 +1606,10 @@
+ 							>
+ 						</File>
+ 						<File
++							RelativePath="..\scripts\northrend\azjol-nerub\ahnkahet\boss_amanitar.cpp"
++							>
++						</File>
++						<File
+ 							RelativePath="..\scripts\northrend\azjol-nerub\ahnkahet\boss_jedoga.cpp"
+ 							>
+ 						</File>
+diff --git a/scripts/northrend/azjol-nerub/ahnkahet/boss_amanitar.cpp b/scripts/northrend/azjol-nerub/ahnkahet/boss_amanitar.cpp
+new file mode 100644
+index 0000000..7c501bc
+--- /dev/null
++++ b/scripts/northrend/azjol-nerub/ahnkahet/boss_amanitar.cpp
+@@ -0,0 +1,322 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
++
++/* ScriptData
++SDName: Boss_Amanitar
++SD%Complete: 80%
++SDComment: Timers 
++SDAuthor: Tassadar
++SDCategory: Ahn'kahet
++EndScriptData */
++
++#include "precompiled.h"
++#include "ahnkahet.h"
++
++enum
++{
++    //Amanitar spells
++    SPELL_BASH               = 57094,
++    SPELL_VENOM_BOLT         = 57088,
++    SPELL_ENTANGLING_ROOTS   = 57095,
++    SPELL_MINI               = 57055, // this one and SPELL_POTENT_FUNGUS MUST stack!
++
++    //Mushroom spells
++    SPELL_POISON_CLOUD       = 57061,
++    SPELL_POISONOUS_MUSHROOM_VISUAL = 56741,
++    SPELL_POTENT_FUNGUS      = 56648, // this one and SPELL_MINI MUST stack!
++    SPELL_PUTRID_MUSHROOM    = 31690, // They should look like mushroom
++
++    //Script thinks that all mushrooms which are spawned are only healthy, so change entry only for poisinous
++    NPC_HEALTHY_MUSHROOM     = 30391,
++    NPC_POISONOUS_MUSHROOM   = 30435,
++};
++
++struct LocationsXY
++{
++    float x, y, z;
++    uint32 id;
++};
++static LocationsXY MushroomLoc[]=
++{
++    {338.361053f,-879.169312f,-74.346985f},
++    {355.021393f,-864.248657f,-75.258141f},
++    {382.234924f,-870.168640f,-74.763039f}, 
++    {398.212097f,-882.812195f,-74.419968f},
++    {391.769653f,-901.039368f,-78.281616f}, 
++    {368.704224f,-907.145691f,-81.627701f},
++    {354.933533f,-853.599854f,-74.380493f},
++    {334.626862f,-843.550171f,-74.213554f},
++    {387.515747f,-861.414978f,-72.161438f},
++    {333.274994f,-894.845337f,-73.749512f},
++};
++/*######
++## boss_amanitar
++######*/
++
++struct MANGOS_DLL_DECL boss_amanitarAI : public ScriptedAI
++{
++    boss_amanitarAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++
++    uint32 m_uiBashTimer;
++    uint32 m_uiVenomBoltTimer;
++    uint32 m_uiRootsTimer;
++    uint32 m_uiMiniTimer;
++
++
++    void Reset()
++    {
++        m_uiBashTimer = 8000;
++        m_uiVenomBoltTimer = 12000;
++        m_uiRootsTimer = 19000;
++        m_uiMiniTimer = 30000;
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_AMANITAR, NOT_STARTED);
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        SummonMushrooms();
++        ShowMushrooms();
++
++        if(m_bIsRegularMode == true)
++            m_creature->ForcedDespawn();
++
++        m_pInstance->SetData(TYPE_AMANITAR, IN_PROGRESS);
++    }
++    void EnterEvadeMode()
++    {
++        ShowMushrooms(false);
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_AMANITAR, FAIL);
++
++        m_creature->GetMotionMaster()->MoveTargetedHome();
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_AMANITAR, DONE);
++    }
++
++    void SummonMushrooms()
++    {
++        for(uint8 i = 0; i < 10; i++)
++        {
++            uint32 MushroomId = 0;
++            switch(urand(0, 1))
++            {
++            case 0: MushroomId = NPC_HEALTHY_MUSHROOM; break;
++            case 1: MushroomId = NPC_POISONOUS_MUSHROOM; break;
++            }
++            m_creature->SummonCreature(MushroomId, MushroomLoc[i].x, MushroomLoc[i].y, MushroomLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN, 600000);
++        }
++    }
++
++    void ShowMushrooms(bool show = true)
++    {
++        std::list<Creature*> lMushroomsHealthy;
++        GetCreatureListWithEntryInGrid(lMushroomsHealthy, m_creature, NPC_HEALTHY_MUSHROOM, 150.0f);
++        for(std::list<Creature*>::iterator itr1 = lMushroomsHealthy.begin(); itr1 != lMushroomsHealthy.end(); itr1++)
++        {
++            if(show)
++                (*itr1)->SetVisibility(VISIBILITY_ON);
++            else
++                (*itr1)->SetVisibility(VISIBILITY_OFF);
++        }
++        std::list<Creature*> lMushroomsPoison;
++        GetCreatureListWithEntryInGrid(lMushroomsPoison, m_creature, NPC_POISONOUS_MUSHROOM, 150.0f);
++        for(std::list<Creature*>::iterator itr2 = lMushroomsPoison.begin(); itr2 != lMushroomsPoison.end(); itr2++)
++        {
++            if(show)
++                (*itr2)->SetVisibility(VISIBILITY_ON);
++            else
++                (*itr2)->SetVisibility(VISIBILITY_OFF);
++        }
++
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        //Bash
++        if(m_uiBashTimer <= uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_BASH);
++            m_uiBashTimer = 8000 + rand()%5000;
++        }else m_uiBashTimer -= uiDiff;
++
++        //Venom bolt volley
++        if(m_uiVenomBoltTimer <= uiDiff)
++        {
++            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_VENOM_BOLT);
++            m_uiVenomBoltTimer = 15000 + rand()%5000;
++        }else m_uiVenomBoltTimer -= uiDiff;
++
++        //Entangling Roots
++        if(m_uiRootsTimer <= uiDiff)
++        {
++            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_ENTANGLING_ROOTS);
++            m_uiRootsTimer = 18000 + rand()%5000;
++        }else m_uiRootsTimer -= uiDiff;
++
++        //Mini
++        if(m_uiMiniTimer <= uiDiff)
++        {
++            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_MINI);
++            m_uiMiniTimer = 30000;
++        }else m_uiMiniTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_amanitar(Creature* pCreature)
++{
++    return new boss_amanitarAI(pCreature);
++}
++/*######
++## npc_amanitar_mushroom
++######*/
++
++struct MANGOS_DLL_DECL npc_amanitar_mushroomAI : public ScriptedAI
++{
++    npc_amanitar_mushroomAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        SetCombatMovement(false);
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++
++    uint8 m_uiMushroomType; //0 = healthy, 1 = poisinous
++    bool m_bIsDead;
++    uint32 m_uiRespawnTimer;
++
++    void Reset()
++    {
++        m_bIsDead = false;
++        m_uiRespawnTimer = 30000;
++
++        DoCast(m_creature,SPELL_PUTRID_MUSHROOM,true);
++        m_creature->SetVisibility(VISIBILITY_OFF);
++
++        ResetMushroom();
++    }
++
++    void ResetMushroom()
++    {
++        m_uiMushroomType = urand(0, 1);
++        if(m_uiMushroomType == 1)
++        {
++            m_creature->UpdateEntry(NPC_POISONOUS_MUSHROOM);
++            m_creature->CastSpell(m_creature, SPELL_POISONOUS_MUSHROOM_VISUAL, true);
++        }else{
++            m_creature->RemoveAurasDueToSpell(SPELL_POISONOUS_MUSHROOM_VISUAL);
++            m_creature->UpdateEntry(NPC_HEALTHY_MUSHROOM);
++        }
++        DoCast(m_creature,SPELL_PUTRID_MUSHROOM,true);
++        if(m_bIsDead)
++            m_creature->SetVisibility(VISIBILITY_OFF);
++    }
++    void AttackStart(Unit *pWho)
++    {
++        return;
++    }
++    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
++    {
++        if (m_bIsDead)
++        {
++            uiDamage = 0;
++            return;
++        }
++
++        if (uiDamage > m_creature->GetHealth())
++        {
++            m_bIsDead = true;
++            uiDamage = 0;
++            if(m_uiMushroomType == 0)
++            {
++                m_creature->CastSpell(m_creature, SPELL_POTENT_FUNGUS, true);
++                ThreatList const& tList = m_creature->getThreatManager().getThreatList();
++                    for (ThreatList::const_iterator iter = tList.begin();iter != tList.end(); ++iter)
++                    {
++                        Unit* pUnit = Unit::GetUnit((*m_creature), (*iter)->getUnitGuid());
++                        if (pUnit && (pUnit->GetTypeId() == TYPEID_PLAYER))
++                        {
++                            if (pUnit->HasAura(SPELL_MINI))
++                                pDoneBy->RemoveAurasDueToSpell(SPELL_MINI);
++                        }
++                    }
++            }
++            else
++                m_creature->CastSpell(m_creature, SPELL_POISON_CLOUD, true);
++
++            m_creature->SetHealth(1);
++            m_creature->SetVisibility(VISIBILITY_OFF);
++        }
++    }
++    void JustDied(Unit* pKiller)
++    {
++        m_creature->Respawn();
++    }
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if(m_bIsDead)
++        {
++            if(m_uiRespawnTimer <= uiDiff)
++            {
++                m_bIsDead = false;
++                ResetMushroom();
++                m_creature->SetHealth(m_creature->GetMaxHealth());
++                m_creature->SetVisibility(VISIBILITY_ON);
++                m_uiRespawnTimer = 30000;                
++            }else m_uiRespawnTimer -= uiDiff;
++        }       
++    }
++};
++
++CreatureAI* GetAI_npc_amanitar_mushroom(Creature* pCreature)
++{
++    return new npc_amanitar_mushroomAI(pCreature);
++}
++void AddSC_boss_amanitar()
++{
++    Script* newscript;
++
++    newscript = new Script;
++    newscript->Name = "boss_amanitar";
++    newscript->GetAI = &GetAI_boss_amanitar;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "npc_amanitar_mushroom";
++    newscript->GetAI = &GetAI_npc_amanitar_mushroom;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/northrend/azjol-nerub/ahnkahet/boss_jedoga.cpp b/scripts/northrend/azjol-nerub/ahnkahet/boss_jedoga.cpp
+index 9870291..7d615d6 100644
+--- a/scripts/northrend/azjol-nerub/ahnkahet/boss_jedoga.cpp
++++ b/scripts/northrend/azjol-nerub/ahnkahet/boss_jedoga.cpp
+@@ -22,6 +22,7 @@ SDCategory: Ahn'kahet
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "ahnkahet.h"
+ 
+ enum
+ {
+@@ -41,7 +42,214 @@ enum
+     SAY_PREACHING_5                     = -1619030,
+ 
+     SAY_VOLUNTEER_1                     = -1619031,         //said by the volunteer image
+-    SAY_VOLUNTEER_2                     = -1619032
++    SAY_VOLUNTEER_2                     = -1619032,
++
++    // spells
++    SPELL_SPHERE_VISUAL                 = 56075,
++    SPELL_GIFT_OF_THE_HERALD            = 56219,
++    SPELL_CYCLONE_STRIKE                = 60030,
++    SPELL_CYCLONE_STRIKE_H              = 56855,
++    SPELL_LIGHTNING_BOLT                = 56891,
++    SPELL_LIGHTNING_BOLT_H              = 60032,
++    SPELL_THUNDERSHOCK                  = 56926,
++    SPELL_THUNDERSHOCK_H                = 60029,
++
++    NPC_TWILIGHT_INITIATE               = 30114,
++    NPC_TWILIGHT_VOLUNTEER              = 30385,
++    NPC_JEDOGA                          = 29310,
++ 
++    GO_CIRCLE                           = 194394,           // Propably wrong id
++ 
++    //Jedoga Shadowseeker's phases
++    PHASE_NOSTART                       = 0,
++    PHASE_PREACHING                     = 1,
++    PHASE_DESCEND                       = 2,
++        SUBPHASE_FLY_DESCEND            = 21,
++    PHASE_FIGHT                         = 3,
++    PHASE_SACRIFACE                     = 4,
++        SUBPHASE_FLY_UP                 = 41,
++        SUBPHASE_CALL_VOLUNTEER         = 42,
++        SUBPHASE_WAIT_FOR_VOLUNTEER     = 43,
++        SUBPHASE_SACRIFACE              = 44,
++ 
++    //Twilight Volunteer's sacriface phases
++    SACRIFACE_CHOOSEN                   = 1,
++    SACRIFACE_DIE                       = 2,
++ 
++    VOLUNTEER_COUNT                     = 29,
++
++    ACHIEV_VOLUNTEER_WORK               = 2056,
++};
++
++bool m_bIsVolunteerDead;                // needed for achiv volunteer work
++
++#define CENTER_X                        367.800f
++#define CENTER_Y                        -704.403f
++#define GROUND_Z                        -16.17f
++ 
++#define JEDOGA_X                        357.353f
++#define JEDOGA_Y                        -692.807f
++#define JEDOGA_Z                        -11.720f
++#define JEDOGA_O                        5.565f
++
++struct Locations
++{
++    float x, y, z, o;
++    uint32 id;
++};
++
++static Locations VolunteerLoc[]=
++{
++    //29 Volunteers
++    {365.68f, -735.95f, -16.17f, 1.607f}, // Right, first line
++    {367.12f, -736.13f, -16.17f, 1.607f},
++    {369.03f, -736.06f, -16.17f, 1.607f},
++    {371.66f, -735.97f, -16.17f, 1.607f},
++    {373.47f, -735.63f, -16.17f, 1.607f},
++    
++    {365.45f, -739.03f, -16.00f, 1.607f}, // Right, second line
++    {367.56f, -738.62f, -16.00f, 1.607f},
++    {369.62f, -738.22f, -16.17f, 1.607f},
++    {371.66f, -737.82f, -16.06f, 1.607f},
++    {373.75f, -737.41f, -16.00f, 1.607f},
++    
++    {400.99f, -705.41f, -16.00f, 2.491f}, // Center, from right
++    {398.07f, -710.02f, -16.00f, 2.491f},
++    {395.34f, -713.76f, -16.00f, 2.491f},
++    {393.42f, -716.39f, -16.00f, 2.491f},
++    {391.48f, -718.94f, -16.00f, 2.491f},
++    {388.80f, -722.46f, -16.00f, 2.491f},
++    {386.19f, -725.89f, -16.00f, 2.491f},
++    {383.61f, -729.29f, -16.00f, 2.491f},
++    {380.37f, -733.55f, -16.00f, 2.491f},
++    
++    {402.72f, -700.79f, -16.00f, 3.046f}, // Left, first line
++    {402.63f, -698.86f, -16.18f, 3.149f},
++    {402.62f, -697.10f, -16.17f, 3.149f},
++    {402.61f, -695.50f, -16.17f, 3.059f},
++    {402.20f, -693.39f, -16.17f, 3.159f},
++ 
++    {405.31f, -701.29f, -16.00f, 2.924f}, // Left, second line
++    {405.46f, -699.25f, -16.00f, 3.198f},
++    {405.40f, -697.19f, -16.00f, 3.150f},
++    {405.35f, -695.30f, -16.00f, 3.150f},
++    {405.29f, -693.26f, -16.00f, 3.150f}
++};
++
++/*######
++## npc_twilight_volunteer
++######*/
++struct MANGOS_DLL_DECL npc_twilight_volunteerAI : public ScriptedAI
++{
++    npc_twilight_volunteerAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++ 
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++ 
++    uint8 m_uiPhase;
++    bool m_bIsVulunteerNear;
++    uint32 m_uiCheckTimer;
++    bool m_bIsDead;
++    void Reset()
++    {
++        m_uiPhase = 0;
++        m_bIsVulunteerNear = false;
++        m_uiCheckTimer = 1000;
++        m_bIsDead = false;
++    }
++    void AttackStart(Unit* pWho)
++    {
++        return;
++    }
++    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
++    {
++        if (m_bIsDead)
++        {
++            uiDamage = 0;
++            return;
++        }
++ 
++        if (uiDamage > m_creature->GetHealth())
++        {
++            m_creature->ForcedDespawn(10000);
++            m_bIsDead = true;
++            m_bIsVolunteerDead = true;
++            uiDamage = 0;
++            
++            m_creature->SetHealth(1);
++            m_creature->SetVisibility(VISIBILITY_OFF);
++        }
++    }
++    void MovementInform(uint32 uiType, uint32 uiPointId)
++    {
++        if(uiType != POINT_MOTION_TYPE)
++                return;
++ 
++        switch(uiPointId)
++        {
++            case 0:
++                m_bIsVulunteerNear = true;
++                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                m_creature->ForcedDespawn(10000);
++                m_creature->SetVisibility(VISIBILITY_OFF);
++                break;
++        }
++    }
++    void Sacriface(uint8 phase)
++    {
++        if(m_bIsDead)
++            return;
++ 
++        m_uiPhase = phase;
++        switch(m_uiPhase)
++        {
++            case SACRIFACE_CHOOSEN:
++                switch(urand(0, 1))
++                {
++                    case 0: DoScriptText(SAY_VOLUNTEER_1, m_creature); break;
++                    case 1: DoScriptText(SAY_VOLUNTEER_2, m_creature); break;
++                }
++                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                m_creature->GetMotionMaster()->MovePoint(0, CENTER_X, CENTER_Y, GROUND_Z);
++                break;
++            case SACRIFACE_DIE:
++                m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
++                break;
++        }
++    }
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if(m_bIsDead)
++            return;
++ 
++        //Despawn if no Jedoga or if she is not in combat
++        // I hope this will not take too CPU time
++        if (m_uiCheckTimer <= uiDiff)
++        {
++            if(Creature *pJedoga = GetClosestCreatureWithEntry(m_creature, NPC_JEDOGA_SHADOWSEEKER, 50.0f))
++            {
++                if(!pJedoga->isAlive())
++                    m_creature->ForcedDespawn();
++                else
++                {
++                    if(Creature *pInitiate = GetClosestCreatureWithEntry(m_creature, NPC_TWILIGHT_INITIATE, 50.0f))
++                    {
++                        if(pInitiate->isAlive())
++                            m_creature->ForcedDespawn();
++                    }
++                }
++            }else m_creature->ForcedDespawn();    
++            
++ 
++            m_uiCheckTimer = 4000;
++        }else m_uiCheckTimer -= uiDiff;    
++    }
+ };
+ 
+ /*######
+@@ -60,13 +268,53 @@ struct MANGOS_DLL_DECL boss_jedogaAI : public ScriptedAI
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    bool m_bIsVulunteerNear;
++    bool m_bVolunteerDied;
++    uint8 m_uiPhase;
++    uint8 m_uiSubPhase;
++    uint8 m_uiPreachingText;
++    Creature *pVolunteer;
++    uint8 m_uiLastSacrifaceHP;
++ 
++    uint32 m_uiPreachingTimer;
++    uint32 m_uiCheckTimer;
++    uint32 m_uiSacrifaceTimer;
++    uint32 m_uiCycloneStrikeTimer;
++    uint32 m_uiLightningBoltTimer;
++    uint32 m_uiThundershockTimer;
++
+     void Reset()
+     {
++        m_uiPhase = PHASE_PREACHING;
++        m_uiSubPhase = 0;
++        m_uiPreachingText = 0;
++        m_bIsVulunteerNear = false;
++        m_bVolunteerDied = false;
++        m_uiLastSacrifaceHP = 0;
++
++        m_bIsVolunteerDead = false;
++ 
++        m_uiCheckTimer = 1000;
++        m_uiSacrifaceTimer = 2000;
++        m_uiPreachingTimer = 0;
++        m_uiCycloneStrikeTimer = 17000;
++        m_uiLightningBoltTimer = 3000;
++        m_uiThundershockTimer = 30000;
++ 
++        DoCast(m_creature, SPELL_SPHERE_VISUAL);
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_JEDOGA, NOT_STARTED);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         DoScriptText(SAY_AGGRO, m_creature);
++        AttackStart(pWho);
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_JEDOGA, IN_PROGRESS);
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -79,17 +327,285 @@ struct MANGOS_DLL_DECL boss_jedogaAI : public ScriptedAI
+         }
+     }
+ 
++    void EnterEvadeMode()
++    {
++        m_uiPhase = PHASE_PREACHING;
++        SetCombatMovement(false);
++        m_creature->GetMotionMaster()->MovementExpired();
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        m_creature->InterruptNonMeleeSpells(true);
++        DoCast(m_creature, SPELL_SPHERE_VISUAL);
++        m_creature->GetMap()->CreatureRelocation(m_creature, JEDOGA_X, JEDOGA_Y, JEDOGA_Z, JEDOGA_O);
++        m_creature->SendMonsterMove(JEDOGA_X, JEDOGA_Y, JEDOGA_Z, SPLINETYPE_FACINGSPOT, SPLINEFLAG_NONE, 0);
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_JEDOGA, NOT_STARTED);
++ 
++        std::list<Creature*> lInitiates;                      //respawn Twilight initiates
++        GetCreatureListWithEntryInGrid(lInitiates, m_creature, NPC_TWILIGHT_INITIATE, DEFAULT_VISIBILITY_INSTANCE);
++ 
++        if (!lInitiates.empty())
++        {
++            for(std::list<Creature*>::iterator iter = lInitiates.begin(); iter != lInitiates.end(); ++iter)
++            {
++                if ((*iter) && !(*iter)->isAlive())
++                    (*iter)->Respawn();
++            }
++        }
++        
++    }
++
+     void JustDied(Unit* pKiller)
+     {
+         DoScriptText(SAY_DEATH, m_creature);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_JEDOGA, DONE);
++
++        if (!m_bIsRegularMode && !m_bIsVolunteerDead)
++        {
++            /* Needs more testing!!!
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEV_VOLUNTEER_WORK);*/
++        }
++    }
++
++    Creature* SelectRandomVolunteer(float fRange)
++    {
++        std::list<Creature* > lVolunteerList;
++        GetCreatureListWithEntryInGrid(lVolunteerList, m_creature, NPC_TWILIGHT_VOLUNTEER, fRange);
++ 
++        //This should not appear!
++        if (lVolunteerList.empty()){
++            EnterEvadeMode();
++            debug_log("SD2: AhnKahet: No volunteer to sacriface!");
++            return NULL;
++        }
++            
++ 
++        std::list<Creature* >::iterator iter = lVolunteerList.begin();
++        advance(iter, urand(0, lVolunteerList.size()-1));
++ 
++        return *iter;
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+     {
+-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++        if(m_uiPhase == PHASE_NOSTART)
+             return;
+-
+-        DoMeleeAttackIfReady();
++        else if(m_uiPhase == PHASE_PREACHING)
++        {
++            if(m_uiCheckTimer <= uiDiff)
++            {
++                if(Creature *pTemp = GetClosestCreatureWithEntry(m_creature, NPC_TWILIGHT_INITIATE, 150.0f))
++                    m_uiCheckTimer = 2000;
++                else
++                {
++                    m_uiPhase = PHASE_DESCEND;
++                    m_uiSubPhase = SUBPHASE_FLY_DESCEND;
++                    return;
++                }
++            }else m_uiCheckTimer -= uiDiff;
++ 
++            if(m_uiPreachingTimer > uiDiff)
++            {
++                m_uiPreachingTimer -= uiDiff;
++                return;
++            }
++ 
++            if (m_pInstance)
++                if(m_pInstance->GetData(TYPE_TALDARAM) != DONE)
++                    return;
++ 
++            switch(m_uiPreachingText)
++            {
++               case 0:
++                   DoScriptText(SAY_PREACHING_1, m_creature);
++                   m_uiPreachingText++;
++                   m_uiPreachingTimer = 9500;
++                   break;
++               case 1:
++                   DoScriptText(SAY_PREACHING_2, m_creature);
++                   m_uiPreachingText++;
++                   m_uiPreachingTimer = 6500;
++                   break;
++               case 2:
++                   DoScriptText(SAY_PREACHING_3, m_creature);
++                   m_uiPreachingText++;
++                   m_uiPreachingTimer = 8500;
++                   break;
++               case 3:
++                   DoScriptText(SAY_PREACHING_4, m_creature);
++                   m_uiPreachingText++;
++                   m_uiPreachingTimer = 7500;
++                   break;
++               case 4:
++                   DoScriptText(SAY_PREACHING_5, m_creature);
++                   m_uiPreachingText = 0;
++                   m_uiPreachingTimer = 12000;
++                   break;
++            }
++            return;
++        }
++        else if(m_uiPhase == PHASE_DESCEND)
++        {
++            if(m_uiSubPhase == SUBPHASE_FLY_DESCEND)
++            {
++                if(GetClosestCreatureWithEntry(m_creature, NPC_TWILIGHT_VOLUNTEER, 150.0f))
++                    return;
++ 
++                SetCombatMovement(true);
++                m_creature->GetMap()->CreatureRelocation(m_creature, CENTER_X, CENTER_Y, GROUND_Z, JEDOGA_O);
++                m_creature->SendMonsterMove(CENTER_X, CENTER_Y, GROUND_Z, SPLINETYPE_FACINGSPOT, SPLINEFLAG_NONE, 0);
++                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                m_creature->RemoveAurasDueToSpell(SPELL_SPHERE_VISUAL);
++                  m_creature->SetInCombatWithZone();
++                //Spawn Volunteers
++                for(int i = 0; i <= 28; i++)
++                {
++                    if(Creature *pTemp = m_creature->SummonCreature(NPC_TWILIGHT_VOLUNTEER, VolunteerLoc[i].x, VolunteerLoc[i].y, VolunteerLoc[i].z, VolunteerLoc[i].o, TEMPSUMMON_CORPSE_DESPAWN, 0))
++                        pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                    
++                }
++                m_uiSubPhase = 0;
++                m_uiPhase = PHASE_FIGHT;
++                return;
++            }
++        }
++        else if(m_uiPhase == PHASE_FIGHT)
++        {
++            //Evade if no target in this phase
++            if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                return;
++ 
++            //Spells
++            //Cyclone Strike
++            if(m_uiCycloneStrikeTimer <= uiDiff)
++            {
++                DoCast(m_creature, m_bIsRegularMode ? SPELL_CYCLONE_STRIKE : SPELL_CYCLONE_STRIKE_H);
++                m_uiCycloneStrikeTimer = 10000 + rand()%10000;
++            }else m_uiCycloneStrikeTimer -= uiDiff;
++ 
++            //Lightning Bolt
++            if(m_uiLightningBoltTimer <= uiDiff)
++            {
++                if(Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    DoCast(pTarget, m_bIsRegularMode ? SPELL_LIGHTNING_BOLT : SPELL_LIGHTNING_BOLT_H);
++                m_uiLightningBoltTimer = 3000 + rand()%2000;
++            }else m_uiLightningBoltTimer -= uiDiff;
++ 
++            //Thundershock
++            if(m_uiThundershockTimer <= uiDiff)
++            {
++                if(Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    DoCast(pTarget, m_bIsRegularMode ? SPELL_THUNDERSHOCK : SPELL_THUNDERSHOCK_H);
++                m_uiThundershockTimer = 20000 + rand()%10000;
++            }else m_uiThundershockTimer -= uiDiff;
++ 
++            //Health check
++            if(m_uiCheckTimer <= uiDiff)
++            {
++                uint8 health = m_creature->GetHealth()*100 / m_creature->GetMaxHealth();                    
++                if(m_uiLastSacrifaceHP == 0 && health <= 75)
++                {
++                    m_uiLastSacrifaceHP = 75;
++                    m_uiPhase = PHASE_SACRIFACE;
++                    m_uiSubPhase = SUBPHASE_FLY_UP;
++                    return;
++                }
++                else if(m_uiLastSacrifaceHP == 75 && health <= 50)
++                {
++                    m_uiLastSacrifaceHP = 50;
++                    m_uiPhase = PHASE_SACRIFACE;
++                    m_uiSubPhase = SUBPHASE_FLY_UP;
++                    return;
++                }
++                else if(m_uiLastSacrifaceHP == 50 && health <= 25)
++                {
++                    m_uiLastSacrifaceHP = 25;
++                    m_uiPhase = PHASE_SACRIFACE;
++                    m_uiSubPhase = SUBPHASE_FLY_UP;
++                    return;
++                }
++                m_uiCheckTimer = 1000;
++            }else m_uiCheckTimer -= uiDiff; 
++ 
++            DoMeleeAttackIfReady();
++        }
++        else if(m_uiPhase == PHASE_SACRIFACE)
++        {
++            if(m_uiSubPhase == SUBPHASE_FLY_UP)
++            {
++                SetCombatMovement(false);
++                m_creature->GetMotionMaster()->MovementExpired();
++                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                m_creature->InterruptNonMeleeSpells(true);
++                DoCast(m_creature, SPELL_SPHERE_VISUAL);
++                m_creature->GetMap()->CreatureRelocation(m_creature, JEDOGA_X, JEDOGA_Y, JEDOGA_Z, JEDOGA_O);
++                m_creature->SendMonsterMove(JEDOGA_X, JEDOGA_Y, JEDOGA_Z, SPLINETYPE_FACINGSPOT, SPLINEFLAG_NONE, 0);
++                m_uiSubPhase = SUBPHASE_CALL_VOLUNTEER;
++                GameObject* pCircle = GetClosestGameObjectWithEntry(m_creature,GO_CIRCLE,50.0f);
++                if (pCircle && !pCircle->isSpawned())
++                    pCircle->SetRespawnTime(10000);
++            }
++            else if(m_uiSubPhase == SUBPHASE_CALL_VOLUNTEER)
++            {
++                pVolunteer = SelectRandomVolunteer(150.0f);
++                if(pVolunteer)
++                {
++                    switch(urand(0, 1))
++                    {
++                        case 0: DoScriptText(SAY_CALL_SACRIFICE_1, m_creature); break;
++                        case 1: DoScriptText(SAY_CALL_SACRIFICE_2, m_creature); break;
++                    }
++                    ((npc_twilight_volunteerAI*)pVolunteer->AI())->Sacriface(SACRIFACE_CHOOSEN);
++                    m_uiSubPhase = SUBPHASE_WAIT_FOR_VOLUNTEER;
++                }
++            }
++            else if(m_uiSubPhase == SUBPHASE_WAIT_FOR_VOLUNTEER)
++            {
++                if(m_uiCheckTimer <= uiDiff)
++                {
++                    if(pVolunteer && pVolunteer->isAlive()){
++                        if(pVolunteer->GetVisibility() == VISIBILITY_OFF)
++                        {
++                            if(((npc_twilight_volunteerAI*)pVolunteer->AI())->m_bIsVulunteerNear)
++                                m_bVolunteerDied = false;
++                            else
++                                m_bVolunteerDied = true;
++                            m_uiSubPhase = SUBPHASE_SACRIFACE;
++                        }
++                    }else{
++                        m_bIsVulunteerNear = true;
++                        m_bVolunteerDied = true;
++                        m_uiSubPhase = SUBPHASE_SACRIFACE;
++                    }
++                       
++                    m_uiCheckTimer = 1000;
++                }else m_uiCheckTimer -= uiDiff;
++            }
++            else if(m_uiSubPhase == SUBPHASE_SACRIFACE)
++            {
++                switch(urand(0, 1))
++                {
++                    case 0: DoScriptText(SAY_SACRIFICE_1, m_creature); break;
++                    case 1: DoScriptText(SAY_SACRIFICE_2, m_creature); break;
++                }
++                
++                if(!m_bVolunteerDied)
++                    DoCast(m_creature, SPELL_GIFT_OF_THE_HERALD);
++ 
++                m_creature->GetMap()->CreatureRelocation(m_creature, CENTER_X, CENTER_Y, GROUND_Z, JEDOGA_O);
++                m_creature->SendMonsterMove(CENTER_X, CENTER_Y, GROUND_Z, SPLINETYPE_FACINGSPOT, SPLINEFLAG_NONE, 0);
++                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                m_creature->RemoveAurasDueToSpell(SPELL_SPHERE_VISUAL);
++                SetCombatMovement(true);
++                m_uiPhase = PHASE_FIGHT;
++                if(m_creature->getVictim())
++                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++            }
++        }
+     }
+ };
+ 
+diff --git a/scripts/northrend/azjol-nerub/ahnkahet/boss_taldaram.cpp b/scripts/northrend/azjol-nerub/ahnkahet/boss_taldaram.cpp
+index 2b2c6b5..1bc3a5a 100644
+--- a/scripts/northrend/azjol-nerub/ahnkahet/boss_taldaram.cpp
++++ b/scripts/northrend/azjol-nerub/ahnkahet/boss_taldaram.cpp
+@@ -34,7 +34,37 @@ enum
+     SAY_SLAY_1                      = -1619013,
+     SAY_SLAY_2                      = -1619014,
+     SAY_SLAY_3                      = -1619015,
+-    SAY_DEATH                       = -1619016
++    SAY_DEATH                       = -1619016,
++
++    //spells
++    SPELL_BEAM_VISUAL               = 60342,      // Used when taldram levitates before encounter
++    SPELL_CONJURE_FLAME_ORB         = 55931,      // Dummy spell, dont do anything except cast
++    SPELL_BLOODTHIRST               = 55968,
++    SPELL_VANISH                    = 55964,      // Does not work...?
++    SPELL_EMBRACE_OF_THE_VAMPYR     = 55959,
++    SPELL_EMBRACE_OF_THE_VAMPYR_H   = 59513,
++ 
++    SPELL_FLAME_ORB_SPAWN_EFFECT    = 55891, // Orb Grow up
++    SPELL_FLAME_ORB_VISUAL          = 55928, // Flame orb effect
++    SPELL_FLAME_ORB_DEATH           = 55947, // Despawn effect
++    SPELL_FLAME_ORB                 = 57750, // Flame orb damage    
++    SPELL_FLAME_ORB_H               = 58937,
++ 
++    NPC_FLAME_ORB                   = 30702,
++
++    FLAME_ORB_Z                     = 17,
++ 
++    FLAME_ORB_UP_X                  = 383,
++    FLAME_ORB_UP_Y                  = -984,
++ 
++    FLAME_ORB_DOWN_X                = 632,
++    FLAME_ORB_DOWN_Y                = -684,
++ 
++    FLAME_ORB_RIGHT_X               = 350,
++    FLAME_ORB_RIGHT_Y               = -705,
++ 
++    FLAME_ORB_LEFT_X                = 613,
++    FLAME_ORB_LEFT_Y                = -966,
+ };
+ 
+ /*######
+@@ -53,13 +83,39 @@ struct MANGOS_DLL_DECL boss_taldaramAI : public ScriptedAI
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    uint8 m_uiVanishPhase;
++    uint32 m_uiDamageTaken;
++    Unit* m_uEmbraceTarget;
++ 
++    uint32 m_uiBloodthirst_Timer;
++    uint32 m_uiSummonOrb_Timer;
++    uint32 m_uiVanish_Timer;
++    uint32 m_uiVanishPhase_Timer;
++    uint32 m_uiEmbrace_Timer;
++
+     void Reset()
+     {
++        m_uiBloodthirst_Timer = 4000;
++        m_uiSummonOrb_Timer = 13000;
++        m_uiVanish_Timer = 17000;
++        m_uiVanishPhase_Timer = 0;
++        m_uiEmbrace_Timer = 0;
++        m_uiVanishPhase = 0;
++        m_uiDamageTaken = 0;
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_TALDARAM, NOT_STARTED);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         DoScriptText(SAY_AGGRO, m_creature);
++
++        m_creature->RemoveAurasDueToSpell(SPELL_BEAM_VISUAL);
++        m_creature->RemoveSplineFlag(SPLINEFLAG_FLYING);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_TALDARAM, IN_PROGRESS);
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -80,11 +136,107 @@ struct MANGOS_DLL_DECL boss_taldaramAI : public ScriptedAI
+             m_pInstance->SetData(TYPE_TALDARAM, DONE);
+     }
+ 
++    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
++    {
++        if(m_creature->IsNonMeleeSpellCasted(false))
++        {
++            m_uiDamageTaken += uiDamage;
++            uint32 m_uiMinDamage = m_bIsRegularMode ? 20000 : 40000;
++            if(m_uiDamageTaken >= m_uiMinDamage)
++            {
++                m_uiVanishPhase = 0; 
++                m_creature->InterruptNonMeleeSpells(false);
++            }
++        }
++    }
++
+     void UpdateAI(const uint32 uiDiff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        if(m_uiVanishPhase != 0)
++        {
++            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++ 
++            if(m_uiVanishPhase_Timer <= uiDiff)
++            {
++                m_creature->InterruptNonMeleeSpells(false);
++                m_uiVanishPhase = 0;
++            }else m_uiVanishPhase_Timer -= uiDiff;
++ 
++            if(m_uiVanishPhase != 1)
++                return;
++ 
++            // Embrace of the Vampyr
++            if(m_uiEmbrace_Timer <= uiDiff)
++            {
++                switch(urand(0, 1))
++                {
++                    case 0: DoScriptText(SAY_FEED_1, m_creature); break;
++                    case 1: DoScriptText(SAY_FEED_2, m_creature); break;
++                }
++                m_creature->SetVisibility(VISIBILITY_ON);
++                if(m_uEmbraceTarget && m_uEmbraceTarget->isAlive())
++                    DoCast(m_uEmbraceTarget, m_bIsRegularMode ? SPELL_EMBRACE_OF_THE_VAMPYR : SPELL_EMBRACE_OF_THE_VAMPYR_H);
++                m_uiDamageTaken = 0;
++                m_uiVanishPhase = 2;
++            }else m_uiEmbrace_Timer -= uiDiff;    
++            return;
++        }
++ 
++        // Bloodthirst
++        if(m_uiBloodthirst_Timer <= uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_BLOODTHIRST);
++            m_uiBloodthirst_Timer = 8000 + rand()%6000;
++        }else m_uiBloodthirst_Timer -= uiDiff;
++ 
++        // Summon Flame Orb
++        if(m_uiSummonOrb_Timer <= uiDiff)
++        {
++            for(int i = 0; i <= 3; i++)
++            {
++                m_creature->SummonCreature(NPC_FLAME_ORB, m_creature->GetPositionX(), m_creature->GetPositionY(), FLAME_ORB_Z, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
++                if(m_bIsRegularMode)
++                    break;
++            }
++            DoCast(m_creature, SPELL_CONJURE_FLAME_ORB);
++            m_uiSummonOrb_Timer = 16000 + rand()%10000;
++            m_uiVanish_Timer = 16000;
++        }else m_uiSummonOrb_Timer -= uiDiff;
++ 
++        // Vanish
++        if(m_uiVanish_Timer <= uiDiff)
++        {
++            switch(urand(0, 1))
++            {
++                case 0: DoScriptText(SAY_VANISH_1, m_creature); break;
++                case 1: DoScriptText(SAY_VANISH_2, m_creature); break;
++            }
++ 
++            //DoCast(m_creature, SPELL_VANISH); We dont want to drop aggro
++            m_uiVanishPhase = 1;
++            bool stop = false;
++            while(!stop)
++            {
++                m_uEmbraceTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
++                if(m_uEmbraceTarget && m_uEmbraceTarget->isAlive() && m_uEmbraceTarget->GetTypeId() == TYPEID_PLAYER)
++                    stop = true;
++                else
++                    continue;
++ 
++                m_creature->GetMotionMaster()->MoveChase(m_uEmbraceTarget);
++                break;
++            }
++ 
++            m_creature->SetVisibility(VISIBILITY_OFF);
++            m_uiVanish_Timer = 10000 + rand()%10000;
++            m_uiEmbrace_Timer = 3500;
++            m_uiVanishPhase_Timer = 22500;
++            return;
++        }else m_uiVanish_Timer -= uiDiff;
++
+         DoMeleeAttackIfReady();
+     }
+ };
+@@ -95,6 +247,89 @@ CreatureAI* GetAI_boss_taldaram(Creature* pCreature)
+ }
+ 
+ /*######
++## mob_flame_orb
++######*/
++ 
++struct MANGOS_DLL_DECL mob_flame_orbAI : public ScriptedAI
++{
++    mob_flame_orbAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++ 
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++    bool m_bIsFlying;
++    int8 direction;
++    
++    uint32 m_uiDespawn_Timer;
++    uint32 m_uiCast_Timer;
++ 
++    void Reset()
++    {
++        m_uiDespawn_Timer = 13000;
++        m_uiCast_Timer = 3000;
++        direction = -1;
++        m_bIsFlying = false;
++        DoCast(m_creature, SPELL_FLAME_ORB_VISUAL);
++        DoCast(m_creature, SPELL_FLAME_ORB_SPAWN_EFFECT);
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++    }
++    void AttackStart(Unit* pWho)
++    {
++        return;
++    }
++    void UpdateAI(const uint32 uiDiff)
++    {
++        // Despawn Timer
++        if(m_uiDespawn_Timer <= uiDiff)
++        {
++            DoCast(m_creature, SPELL_FLAME_ORB_DEATH);
++            m_creature->ForcedDespawn();
++        }else m_uiDespawn_Timer -= uiDiff;
++ 
++        // Fly timer
++        if(m_uiCast_Timer <= uiDiff)
++        {
++            if(m_bIsFlying)
++                return;
++ 
++            DoCast(m_creature, m_bIsRegularMode ? SPELL_FLAME_ORB : SPELL_FLAME_ORB_H);
++            direction = rand()%3;
++            switch(direction)
++            {
++                case 0: // Up
++                    m_creature->GetMotionMaster()->MovePoint(0, FLAME_ORB_UP_X, FLAME_ORB_UP_Y, FLAME_ORB_Z);
++                    break;
++                case 1: // Down
++                    m_creature->GetMotionMaster()->MovePoint(0, FLAME_ORB_DOWN_X, FLAME_ORB_DOWN_Y, FLAME_ORB_Z);
++                    break;
++                case 2: // Right
++                    m_creature->GetMotionMaster()->MovePoint(0, FLAME_ORB_RIGHT_X, FLAME_ORB_RIGHT_Y, FLAME_ORB_Z);
++                    break;
++                case 3: // Left
++                    m_creature->GetMotionMaster()->MovePoint(0, FLAME_ORB_LEFT_X, FLAME_ORB_LEFT_Y, FLAME_ORB_Z);
++                    break;
++                default:
++                    m_creature->GetMotionMaster()->MovePoint(0, FLAME_ORB_UP_X, FLAME_ORB_UP_Y, FLAME_ORB_Z);
++                    break;
++ 
++            }
++            m_bIsFlying = true;
++            m_creature->AddSplineFlag(SPLINEFLAG_FLYING);
++        }else m_uiCast_Timer -= uiDiff;
++    }
++};
++ 
++CreatureAI* GetAI_mob_flame_orb(Creature* pCreature)
++{
++    return new mob_flame_orbAI(pCreature);
++}
++
++/*######
+ ## go_nerubian_device
+ ######*/
+ 
+@@ -120,6 +355,11 @@ void AddSC_boss_taldaram()
+     newscript->RegisterSelf();
+ 
+     newscript = new Script;
++    newscript->Name = "mob_flame_orb";
++    newscript->GetAI = &GetAI_mob_flame_orb;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
+     newscript->Name = "go_nerubian_device";
+     newscript->pGOHello = &GOHello_go_nerubian_device;
+     newscript->RegisterSelf();
+diff --git a/scripts/northrend/azjol-nerub/ahnkahet/boss_volazj.cpp b/scripts/northrend/azjol-nerub/ahnkahet/boss_volazj.cpp
+index 9d93472..4ef0613 100644
+--- a/scripts/northrend/azjol-nerub/ahnkahet/boss_volazj.cpp
++++ b/scripts/northrend/azjol-nerub/ahnkahet/boss_volazj.cpp
+@@ -22,6 +22,7 @@ SDCategory: Ahn'kahet
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "ahnkahet.h"
+ 
+ //TODO: fill in texts in database. Also need to add text for whisper.
+ enum
+@@ -32,7 +33,91 @@ enum
+     SAY_SLAY_2                      = -1619036,
+     SAY_SLAY_3                      = -1619037,
+     SAY_DEATH_1                     = -1619038,
+-    SAY_DEATH_2                     = -1619039
++    SAY_DEATH_2                     = -1619039,
++    SAY_ANCIENT_VOID                = -1619040,
++    
++    SAY_VOID_CORRUPT                = -1619041,
++    SAY_VOID_AGGRO                  = -1619042,
++
++    SPELL_MIND_FLAY                 = 57941,
++    SPELL_MIND_FLAY_H               = 59974,
++    SPELL_SHADOW_BOLT               = 57942,
++    SPELL_SHADOW_BOLT_H             = 59975,
++ 
++    //Shiver - horrible ability
++    SPELL_SHIVER                    = 57949, //Jump Aura 
++    SPELL_SHIVER_H                  = 59978,
++    SPELL_SHIVER_DMG                = 57952, //Damage
++    SPELL_SHIVER_DMG_H              = 59979,
++    SPELL_SHIVER_DUMMY              = 57951, //What is this? 
++ 
++    //This is little complicated:
++    //When volajz cast this, on every player is cast different invisibility spell,
++    //so they dont see together, but they see four Twisted Visages - images of other
++    //four party members, which cast spell like their class.
++    SPELL_INSANITY                  = 57496, //This is what volajz casts, it should trigger Twisted Visage spawn spells
++    SPELL_INSANITY_PHASE            = 57507, //For use in code
++    SPELL_INSANITY_PHASE_1          = 57508, //invis spells
++    SPELL_INSANITY_PHASE_2          = 57509,
++    SPELL_INSANITY_PHASE_3          = 57510,
++    SPELL_INSANITY_PHASE_4          = 57511,
++    SPELL_INSANITY_PHASE_5          = 57512,
++    SPELL_INSANITY_CHANNEL          = 57561, //Just for visual, Volazj cast this when players are in insanity
++ 
++    SPELL_TWISTED_VISAGE_MIRROR     = 57507, //Not implented in mangos, but I have patch :)
++ 
++    /*
++    http://www.wowhead.com/?spell=57507 Twisted visage visual
++    http://www.wowhead.com/?spells=0&filter=na=twisted+visage so many spells?!
++    */
++ 
++    //Ancient void spells
++    SPELL_PRISON                    = 43312,
++    SPELL_BLUE_FLAMES               = 42586,
++    SPELL_RED_FLAMES                = 42346,
++    SPELL_BLUE_BEAM                 = 32840,
++    SPELL_SHAKE                     = 44681,
++    SPELL_PSYCHIC_SCREAM            = 34322,
++
++ 
++    NPC_TWISTED_VISAGE              = 30621,
++    NPC_ANCIENT_VOID                = 30622, //Custom 
++ 
++    MODEL_VOID_LIGHT                = 19702,
++    MODEL_VOID_DARK                 = 1132,
++
++    PHASE_NOSTART                   = 0,
++    PHASE_FIGHT                     = 1,
++    PHASE_INSANITY_1                = 2,  // Wait five seconds until cast is complete, set unattackable
++    PHASE_INSANITY_2                = 3, 
++    PHASE_INSANITY_3                = 4, 
++};
++
++struct Locations
++{
++    float x, y, z;
++    uint32 id;
++};
++static Locations SpawnLoc[]=
++{
++    //Around room
++    {571.48f, -494.01f, 26.35f},
++    {562.58f, -526.48f, 28.97f},
++    {524.80f, -552.07f, 26.66f},
++    {494.62f, -533.39f, 28.99f},
++    {470.88f, -498.74f, 26.35f},
++    {483.96f, -468.54f, 28.97f},
++    {519.23f, -441.54f, 26.35f},
++    {548.45f, -456.50f, 29.00f},
++ 
++    //Center of the room
++    {521.67f, -496.17f, 27.01f}
++ 
++};
++
++enum Achievements
++{
++    ACHIEVEMENT_QUICK_DEMISE                = 1862
+ };
+ 
+ /*######
+@@ -51,13 +136,72 @@ struct MANGOS_DLL_DECL boss_volazjAI : public ScriptedAI
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    bool m_bIsDebugMode;  //if only one player(GM) in instance
++    uint8 m_uiPhase;
++    uint64 m_uiLastShiverTargetGUID;
++    uint8 m_uiShiverJumpTimer;
++    uint8 m_uiLastSacrifaceHP;
++ 
++    uint32 m_uiMindFlayTimer;
++    uint32 m_uiShadowBoltTimer;
++    uint32 m_uiShiverTimer;
++    uint32 m_uiCheckTimer;
++
++    uint32 uiEncounterTimer;
++    bool m_bIsInProgress;
++ 
++    //Insanity
++    uint32 m_uiInsanityCastTimer;
++
+     void Reset()
+     {
++        m_uiPhase = PHASE_NOSTART;
++        m_bIsDebugMode = false;
++        m_uiLastSacrifaceHP = 0;
++ 
++        m_uiMindFlayTimer = 10000;
++        m_uiShadowBoltTimer = 5000;
++        m_uiShiverTimer = 18000;
++        m_uiCheckTimer = 1000;
++        m_uiShiverJumpTimer = 0;
++        m_uiLastShiverTargetGUID = 0;
++ 
++        uiEncounterTimer = 0;
++        m_bIsInProgress = false;
++ 
++        //Insanity
++        m_uiInsanityCastTimer = 5000;
++ 
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_VOLAZJ, NOT_STARTED);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
++        m_bIsDebugMode;
+         DoScriptText(SAY_AGGRO, m_creature);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_VOLAZJ, IN_PROGRESS);
++
++        m_bIsInProgress = true;
++        m_uiPhase = PHASE_FIGHT;
++        
++        Map* pMap = m_creature->GetMap();
++        if(pMap)
++        {
++            Map::PlayerList const &lPlayers = pMap->GetPlayers();
++            if(lPlayers.getSize() == 1)
++                m_bIsDebugMode = true;
++        }
++    }
++
++    void EnterEvadeMode()
++    {
++        if(m_uiPhase != PHASE_FIGHT)
++            return;
++ 
++        m_creature->GetMotionMaster()->MoveTargetedHome();
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -73,13 +217,296 @@ struct MANGOS_DLL_DECL boss_volazjAI : public ScriptedAI
+     void JustDied(Unit* pKiller)
+     {
+         DoScriptText(urand(0, 1) ? SAY_DEATH_1 : SAY_DEATH_2, m_creature);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_VOLAZJ, DONE);
++
++        if (!m_bIsRegularMode && uiEncounterTimer < 120000)
++        {
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_QUICK_DEMISE);
++        }
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+     {
+-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+-            return;
++        if(m_bIsInProgress)
++            uiEncounterTimer += uiDiff;
+ 
++        if(m_uiPhase == PHASE_FIGHT)
++        {
++            if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                return;
++ 
++            //Spells
++            //Mind Flay
++            if(m_uiMindFlayTimer <= uiDiff)
++            {
++                DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_MIND_FLAY : SPELL_MIND_FLAY_H);
++                m_uiMindFlayTimer = 10000 + rand()%10000;
++            }else m_uiMindFlayTimer -= uiDiff;
++ 
++            //Shadowbolt voley
++            if(m_uiShadowBoltTimer <= uiDiff)
++            {
++                DoCast(m_creature, m_bIsRegularMode ? SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT_H);
++                m_uiShadowBoltTimer = 8000 + rand()%5000;
++            }else m_uiShadowBoltTimer -= uiDiff;
++ 
++            //Shiver
++            if(m_uiShiverTimer <= uiDiff)
++            {
++                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_SHIVER : SPELL_SHIVER_H);
++                m_uiShiverTimer = 30000;
++            }else m_uiShiverTimer -= uiDiff;
++ 
++            //Health check
++            if(m_uiCheckTimer <= uiDiff)
++            {
++                uint8 health = m_creature->GetHealth()*100 / m_creature->GetMaxHealth();                    
++                if(m_uiLastSacrifaceHP == 0 && health <= 50)
++                {
++                    m_creature->InterruptNonMeleeSpells(true);
++                    SetCombatMovement(false);    
++                    m_uiLastSacrifaceHP = 50;
++                    DoCast(m_creature, SPELL_INSANITY);
++                    m_uiPhase = PHASE_INSANITY_1;
++                    return;
++                }
++                m_uiCheckTimer = 1000;
++            }else m_uiCheckTimer -= uiDiff;  
++    
++            DoMeleeAttackIfReady();
++        }else if(m_uiPhase == PHASE_INSANITY_1)
++        {
++            //Wait until cast is complete
++            if(m_uiInsanityCastTimer <= uiDiff)
++            {
++                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                DoCast(m_creature, SPELL_INSANITY_CHANNEL);
++                DoInsanity();
++                m_uiInsanityCastTimer = 5000;
++                m_uiCheckTimer = 5000;
++                m_uiPhase = PHASE_INSANITY_2;
++                SetCombatMovement(false);
++                m_creature->GetMotionMaster()->MovementExpired(false);
++                DoScriptText(SAY_ANCIENT_VOID, m_creature);
++            }else m_uiInsanityCastTimer -= uiDiff;
++        }else if(m_uiPhase == PHASE_INSANITY_2)
++        {
++            if(m_uiCheckTimer <= uiDiff)
++            {
++                if(Creature *pTemp = GetClosestCreatureWithEntry(m_creature, NPC_ANCIENT_VOID, 150.0f))
++                {
++                    if(!pTemp->isAlive())
++                       m_uiPhase = PHASE_INSANITY_3;
++                }else m_uiPhase = PHASE_INSANITY_3;
++                m_uiCheckTimer = 1000;
++            }else m_uiCheckTimer -= uiDiff; 
++        }else if(m_uiPhase == PHASE_INSANITY_3)
++        {
++            m_creature->RemoveAurasDueToSpell(SPELL_INSANITY_CHANNEL);
++            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++            SetCombatMovement(true);
++            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++            m_uiPhase = PHASE_FIGHT;
++        }        
++    }
++
++    //This do everything which is needed by Insanity spell (CUSTOM)
++    void DoInsanity()
++    {
++        m_creature->SummonCreature(NPC_ANCIENT_VOID, SpawnLoc[8].x, SpawnLoc[8].y, SpawnLoc[8].z, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);             
++ 
++        for(int i = 0; i <= 7; i++)
++            m_creature->SummonCreature(NPC_TWISTED_VISAGE, SpawnLoc[i].x, SpawnLoc[i].y, SpawnLoc[i].z, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
++        
++    }
++};
++
++/*######
++## mob_twisted_visage
++######*/
++struct MANGOS_DLL_DECL mob_twisted_visageAI : public ScriptedAI
++{
++    mob_twisted_visageAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++ 
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++ 
++    void Reset()
++    {
++        m_creature->GetMotionMaster()->MovePoint(0, SpawnLoc[8].x, SpawnLoc[8].y, SpawnLoc[8].z);
++    }
++    void AttackStart(Unit *pWho)
++    {
++        return;
++    }
++    void MovementInform(uint32 uiType, uint32 uiPointId)
++    {
++        if(uiType != POINT_MOTION_TYPE)
++                return;
++ 
++        switch(uiPointId)
++        {
++            case 0:
++                if(Creature *pVoid = GetClosestCreatureWithEntry(m_creature, NPC_ANCIENT_VOID, 30.0f))
++                {
++                    float newsize = pVoid->GetFloatValue(OBJECT_FIELD_SCALE_X) + 0.25f;
++                    uint32 health = pVoid->GetHealth() + 20000;
++                    pVoid->SetHealth(health);
++                    pVoid->SetFloatValue(OBJECT_FIELD_SCALE_X, newsize);
++                }
++                m_creature->ForcedDespawn();
++                break;
++        }
++    }
++    void UpdateAI(const uint32 uiDiff)
++    {
++ 
++    }
++};
++/*######
++## mob_ancient_void
++######*/
++struct MANGOS_DLL_DECL mob_ancient_voidAI : public ScriptedAI
++{
++    mob_ancient_voidAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        defaultsize = m_creature->GetFloatValue(OBJECT_FIELD_SCALE_X);
++        Reset();
++    }
++ 
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++    uint8 m_uiPhase;
++    float defaultsize;
++    uint8 m_uiTransformPhase;
++    uint32 m_uiDelayTimer;
++    uint32 m_uiPhysicScreamTimer;
++    uint32 m_uiShadowBoltTimer;
++    uint32 m_uiOutOfCombatTimer;
++    float m_fVisages;
++ 
++    void Reset()
++    {
++        m_fVisages = 0.0f;
++        m_uiDelayTimer = 1000;
++        m_uiOutOfCombatTimer = 20000;
++        m_uiPhase = 1;
++        m_uiTransformPhase = 1;
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STUN);
++        m_creature->SetDisplayId(MODEL_VOID_LIGHT);
++        SetCombatMovement(false);
++        m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, defaultsize);
++        DoCast(m_creature, SPELL_PRISON);
++        DoCast(m_creature, SPELL_BLUE_BEAM, true);
++        m_creature->setFaction(14);
++ 
++        m_uiPhysicScreamTimer = 0;
++        m_uiShadowBoltTimer = 8000;
++        if(m_bIsRegularMode)
++            m_creature->SetHealth(200000);
++        else
++            m_creature->SetHealth(300000);
++    }
++    void DoTransform(uint8 phase)
++    {
++        switch(phase)
++        {
++            case 1:
++                m_fVisages = (m_creature->GetFloatValue(OBJECT_FIELD_SCALE_X) - 1.0f) / 0.25;
++                SetPhysicScreamTimer();
++                DoCast(m_creature, SPELL_BLUE_FLAMES);
++                DoScriptText(SAY_VOID_CORRUPT, m_creature);
++                m_creature->RemoveAurasDueToSpell(SPELL_PRISON);
++                break;
++            case 2:
++                DoCast(m_creature, SPELL_RED_FLAMES);
++                m_creature->RemoveAurasDueToSpell(SPELL_BLUE_BEAM);
++                break;
++            case 3:
++                DoCast(m_creature, SPELL_SHAKE);
++                m_creature->SetDisplayId(MODEL_VOID_DARK);
++                break;
++            case 4:
++                m_creature->RemoveAurasDueToSpell(SPELL_RED_FLAMES);
++                break;
++            case 5:
++                DoScriptText(SAY_VOID_AGGRO, m_creature);
++                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                SetCombatMovement(true);
++                if(m_creature->getVictim())
++                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++                m_uiPhase = 3;
++                break;
++        }
++    }
++    void SetPhysicScreamTimer()
++    {
++        if(m_fVisages < 3)
++            m_uiPhysicScreamTimer = 23000;
++        else if(m_fVisages < 5)
++            m_uiPhysicScreamTimer = 17000;
++        else if(m_fVisages < 7)
++            m_uiPhysicScreamTimer = 11000;
++        else if(m_fVisages < 9)
++            m_uiPhysicScreamTimer = 5000;
++    }
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if(m_uiPhase == 1)
++        {
++            if(m_uiDelayTimer <= uiDiff)
++            {
++                if(!GetClosestCreatureWithEntry(m_creature, NPC_TWISTED_VISAGE, 150.0f))
++                    m_uiPhase = 2;
++                m_uiDelayTimer = 1000;
++            }else m_uiDelayTimer -= uiDiff;
++            return;
++        }
++        if(m_uiPhase == 2)
++        {
++            if(m_uiDelayTimer <= uiDiff)
++            {
++                DoTransform(m_uiTransformPhase);
++                m_uiTransformPhase++;
++                m_uiDelayTimer = 2500;
++            }else m_uiDelayTimer -= uiDiff;
++        }
++        
++        if(m_uiPhase != 3)
++            return;
++        if(!m_creature->isInCombat())
++        {
++            if(m_uiOutOfCombatTimer <= uiDiff)
++                m_creature->ForcedDespawn();
++            else m_uiOutOfCombatTimer -= uiDiff;
++ 
++            return;
++        }
++ 
++        if(m_uiPhysicScreamTimer <= uiDiff)
++        {
++            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0),SPELL_PSYCHIC_SCREAM);
++            SetPhysicScreamTimer();
++        }else m_uiPhysicScreamTimer -= uiDiff;
++ 
++        //Shadowbolt voley
++        if(m_uiShadowBoltTimer <= uiDiff)
++        {
++            DoCast(m_creature, m_bIsRegularMode ? SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT_H);
++            m_uiShadowBoltTimer = 8000;
++        }else m_uiShadowBoltTimer -= uiDiff;
++ 
+         DoMeleeAttackIfReady();
+     }
+ };
+@@ -89,6 +516,16 @@ CreatureAI* GetAI_boss_volazj(Creature* pCreature)
+     return new boss_volazjAI(pCreature);
+ }
+ 
++CreatureAI* GetAI_mob_twisted_visage(Creature* pCreature)
++{
++    return new mob_twisted_visageAI(pCreature);
++}
++
++CreatureAI* GetAI_mob_ancient_void(Creature* pCreature)
++{
++    return new mob_ancient_voidAI(pCreature);
++}
++
+ void AddSC_boss_volazj()
+ {
+     Script *newscript;
+@@ -97,4 +534,14 @@ void AddSC_boss_volazj()
+     newscript->Name = "boss_volazj";
+     newscript->GetAI = &GetAI_boss_volazj;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_twisted_visage";
++    newscript->GetAI = &GetAI_mob_twisted_visage;
++    newscript->RegisterSelf();
++ 
++    newscript = new Script;
++    newscript->Name = "mob_ancient_void";
++    newscript->GetAI = &GetAI_mob_ancient_void;
++    newscript->RegisterSelf();
+ }
+diff --git a/sql/Custom_Updates/Mangos/Northrend/Ahnkahet_Mangos.sql b/sql/Custom_Updates/Mangos/Northrend/Ahnkahet_Mangos.sql
+new file mode 100644
+index 0000000..5707942
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Northrend/Ahnkahet_Mangos.sql
+@@ -0,0 +1,8 @@
++/* AHN'KAHET */
++UPDATE `gameobject_template` SET `faction` = 114, `data0` = '0' where `entry` in (192236);
++UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, ScriptName = "mob_twisted_visage" WHERE entry = 30621;
++UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, ScriptName = "mob_ancient_void" WHERE entry = 30622;
++UPDATE creature_template SET ScriptName = "npc_twilight_volunteer" WHERE entry = 30385;
++UPDATE creature_template SET ScriptName = "mob_flame_orb" WHERE entry = 30702;
++UPDATE creature_template SET ScriptName = "boss_amanitar" WHERE entry = 30258;
++UPDATE creature_template SET ScriptName = "npc_amanitar_mushroom" WHERE entry in (30391, 30435);
+\ No newline at end of file
+diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
+index f8806ce..a001a39 100644
+--- a/system/ScriptLoader.cpp
++++ b/system/ScriptLoader.cpp
+@@ -252,7 +252,8 @@ extern void AddSC_ungoro_crater();
+ extern void AddSC_winterspring();
+ 
+ //northrend
+-extern void AddSC_boss_jedoga();                            //ahnkahet
++extern void AddSC_boss_amanitar();                          //ahnkahet
++extern void AddSC_boss_jedoga();                            
+ extern void AddSC_boss_nadox();
+ extern void AddSC_boss_taldaram();
+ extern void AddSC_boss_volazj();
+@@ -656,7 +657,8 @@ void AddScripts()
+     AddSC_winterspring();
+ 
+     //northrend
+-    AddSC_boss_jedoga();                                    //ahnkahet
++    AddSC_boss_amanitar();                                  //ahnkahet
++    AddSC_boss_jedoga();                                    
+     AddSC_boss_nadox();
+     AddSC_boss_taldaram();
+     AddSC_boss_volazj();
