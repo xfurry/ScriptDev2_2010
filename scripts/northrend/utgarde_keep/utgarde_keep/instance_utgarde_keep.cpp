@@ -34,6 +34,7 @@ struct MANGOS_DLL_DECL instance_utgarde_keep : public ScriptedInstance
     uint64 m_uiKelesethGUID;
     uint64 m_uiSkarvaldGUID;
     uint64 m_uiDalronnGUID;
+    uint64 m_uiIngvarGUID;
 
     uint64 m_uiBellow1GUID;
     uint64 m_uiBellow2GUID;
@@ -42,6 +43,11 @@ struct MANGOS_DLL_DECL instance_utgarde_keep : public ScriptedInstance
     uint64 m_uiForgeFire2GUID;
     uint64 m_uiForgeFire3GUID;
 
+    uint64 m_uiEntranceDoorGUID;
+    uint64 m_uiKelesethDoorGUID;
+    uint64 m_uiIngvarDoorGUID;
+    uint64 m_uiExitDoorGUID;
+
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
@@ -49,6 +55,7 @@ struct MANGOS_DLL_DECL instance_utgarde_keep : public ScriptedInstance
         m_uiKelesethGUID = 0;
         m_uiSkarvaldGUID = 0;
         m_uiDalronnGUID = 0;
+        m_uiIngvarGUID  = 0;
 
         m_uiBellow1GUID = 0;
         m_uiBellow2GUID = 0;
@@ -56,6 +63,10 @@ struct MANGOS_DLL_DECL instance_utgarde_keep : public ScriptedInstance
         m_uiForgeFire1GUID = 0;
         m_uiForgeFire2GUID = 0;
         m_uiForgeFire3GUID = 0;
+        m_uiEntranceDoorGUID = 0;
+        m_uiKelesethDoorGUID = 0;
+        m_uiIngvarDoorGUID  = 0;
+        m_uiExitDoorGUID    = 0;
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -65,6 +76,7 @@ struct MANGOS_DLL_DECL instance_utgarde_keep : public ScriptedInstance
             case NPC_KELESETH: m_uiKelesethGUID = pCreature->GetGUID(); break;
             case NPC_SKARVALD: m_uiSkarvaldGUID = pCreature->GetGUID(); break;
             case NPC_DALRONN: m_uiDalronnGUID = pCreature->GetGUID(); break;
+            case NPC_INGVAR: m_uiIngvarGUID = pCreature->GetGUID(); break;
         }
     }
 
@@ -102,7 +114,41 @@ struct MANGOS_DLL_DECL instance_utgarde_keep : public ScriptedInstance
                 if (m_auiEncounter[2] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
+            case DOOR_ENTRANCE:
+                m_uiEntranceDoorGUID = pGo->GetGUID();
+                if (m_auiEncounter[2] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case DOOR_EXIT:
+                m_uiExitDoorGUID = pGo->GetGUID();
+                if (m_auiEncounter[2] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case DOOR_KELESETH:
+                m_uiKelesethDoorGUID = pGo->GetGUID();
+                if (m_auiEncounter[0] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case DOOR_INGVAR:
+                m_uiIngvarDoorGUID = pGo->GetGUID();
+                if (m_auiEncounter[2] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
         }
+    }
+
+    void OpenDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
+    }
+
+    void CloseDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_READY);
     }
 
     void SetData(uint32 uiType, uint32 uiData)
@@ -116,6 +162,31 @@ struct MANGOS_DLL_DECL instance_utgarde_keep : public ScriptedInstance
                 m_auiEncounter[1] = uiData;
                 break;
             case GO_BELLOW_3:
+                m_auiEncounter[2] = uiData;
+                break;
+            case TYPE_KELESETH:
+                m_auiEncounter[0] = uiData;
+                break;
+            case TYPE_DALRONN:
+                if (uiData == DONE)
+                    OpenDoor(m_uiKelesethDoorGUID);
+                if (uiData == NOT_STARTED)
+                    OpenDoor(m_uiKelesethDoorGUID);
+                if (uiData == IN_PROGRESS)
+                    CloseDoor(m_uiKelesethDoorGUID);
+                m_auiEncounter[1] = uiData;
+                break;
+            case TYPE_INGVAR:
+                if (uiData == DONE)
+                {
+                    DoUseDoorOrButton(m_uiIngvarDoorGUID);
+                    DoUseDoorOrButton(m_uiExitDoorGUID);
+                    DoUseDoorOrButton(m_uiEntranceDoorGUID);
+                }
+                if (uiData == IN_PROGRESS)
+                    CloseDoor(m_uiIngvarDoorGUID);
+                if (uiData == NOT_STARTED)
+                    OpenDoor(m_uiIngvarDoorGUID);
                 m_auiEncounter[2] = uiData;
                 break;
         }
@@ -137,6 +208,20 @@ struct MANGOS_DLL_DECL instance_utgarde_keep : public ScriptedInstance
     const char* Save()
     {
         return strInstData.c_str();
+    }
+
+    uint32 GetData(uint32 uiType)
+    {
+        switch(uiType)
+        {
+            case TYPE_KELESETH:
+                return m_auiEncounter[0];
+            case TYPE_DALRONN:
+                return m_auiEncounter[1];
+            case TYPE_INGVAR:
+                return m_auiEncounter[2];
+        }
+        return 0;
     }
 
     uint64 GetData64(uint32 uiData)
