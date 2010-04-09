@@ -1,0 +1,952 @@
+diff --git a/scripts/northrend/azjol-nerub/azjol-nerub/azjol-nerub.h b/scripts/northrend/azjol-nerub/azjol-nerub/azjol-nerub.h
+index bc62506..076e14b 100644
+--- a/scripts/northrend/azjol-nerub/azjol-nerub/azjol-nerub.h
++++ b/scripts/northrend/azjol-nerub/azjol-nerub/azjol-nerub.h
+@@ -19,4 +19,14 @@ enum
+     GO_DOOR_ANUBARAK_3          = 192398
+ };
+ 
++enum Data64
++{
++    DATA_KRIKTHIR_THE_GATEWATCHER,
++    DATA_HADRONOX,
++    DATA_ANUBARAK,
++    DATA_WATCHER_GASHRA,
++    DATA_WATCHER_SILTHIK,
++    DATA_WATCHER_NARJIL
++};
++
+ #endif
+diff --git a/scripts/northrend/azjol-nerub/azjol-nerub/boss_anubarak.cpp b/scripts/northrend/azjol-nerub/azjol-nerub/boss_anubarak.cpp
+index a1198c9..cb5d081 100644
+--- a/scripts/northrend/azjol-nerub/azjol-nerub/boss_anubarak.cpp
++++ b/scripts/northrend/azjol-nerub/azjol-nerub/boss_anubarak.cpp
+@@ -36,9 +36,44 @@ enum
+     SAY_LOCUST_1                    = -1601021,
+     SAY_LOCUST_2                    = -1601022,
+     SAY_LOCUST_3                    = -1601023,
+-    SAY_DEATH                       = -1601024
++    SAY_DEATH                       = -1601024, 
++
++    ACHIEV_GOTTA_GO                 = 1860,
++};
++
++enum Spells
++{
++    SPELL_CARRION_BEETLES                  =       53520,
++    SPELL_SUMMON_CARRION_BEETLES           =       53521,
++    SPELL_LEECHING_SWARM                   =       53467,
++
++    SPELL_IMPALE                           =       53454,
++    H_SPELL_IMPALE                         =       59446,
++
++    SPELL_POUND                            =       53472,
++    H_SPELL_POUND                          =       59433,
++
++    SPELL_SUBMERGE                         =       53421,
++};
++
++enum Creatures
++{
++    CREATURE_GUARDIAN                      =       29216,
++    CREATURE_VENOMANCER                    =       29217,
++    CREATURE_DATTER                        =       29213
++};
++
++#define SPAWNPOINT_Z                               224.3f
++
++float SpawnPoint[2][2] =
++{
++    {550.7f, 282.8f},
++    {551.1f, 229.4f},
+ };
+ 
++#define HOME_X                      551.776978f
++#define HOME_Y                      254.246994f
++
+ /*######
+ ## boss_anubarak
+ ######*/
+@@ -55,13 +90,50 @@ struct MANGOS_DLL_DECL boss_anubarakAI : public ScriptedAI
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    bool Channeling;
++    bool Summoned_Guardian;
++    bool Summoned_Venomancer;
++    bool Summoned_Datter;
++    uint32 Phase;
++    uint32 Phase_Time;
++
++    uint32 AchievTimer;
++
++    uint32 SPELL_CARRION_BEETLES_Timer;
++    uint32 SPELL_LEECHING_SWARM_Timer;
++    uint32 SPELL_IMPALE_Timer;
++    uint32 SPELL_POUND_Timer;
++    uint32 SPELL_SUBMERGE_Timer;
++    uint32 UNDERGROUND_Timer;
++    uint32 VENOMANCER_Timer;
++    uint32 DATTER_Timer;
++
+     void Reset()
+     {
++        SPELL_CARRION_BEETLES_Timer = 8000;
++        SPELL_LEECHING_SWARM_Timer = 20000;
++        SPELL_IMPALE_Timer = 9000;
++        SPELL_POUND_Timer = 15000;
++
++        Phase = 0;
++        Phase_Time = 0;
++        Channeling = false;
++
++        AchievTimer = 0;
++
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
++        m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
++        
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_ANUBARAK, NOT_STARTED);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         DoScriptText(SAY_AGGRO, m_creature);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_ANUBARAK, IN_PROGRESS);
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -77,6 +149,15 @@ struct MANGOS_DLL_DECL boss_anubarakAI : public ScriptedAI
+     void JustDied(Unit* pKiller)
+     {
+         DoScriptText(SAY_DEATH, m_creature);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_ANUBARAK, DONE);
++
++        if (!m_bIsRegularMode && AchievTimer < 240000)
++        {
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEV_GOTTA_GO);
++        }
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+@@ -84,7 +165,143 @@ struct MANGOS_DLL_DECL boss_anubarakAI : public ScriptedAI
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
+-        DoMeleeAttackIfReady();
++        //Achievement counter
++        AchievTimer += uiDiff;
++
++        if (Channeling == true)
++        {
++            for (uint8 i = 0; i < 4; ++i)
++                DoCast(m_creature->getVictim(), SPELL_SUMMON_CARRION_BEETLES, true);
++            Channeling = false;
++        }
++
++        if (Phase == 1)
++        {
++            if (SPELL_IMPALE_Timer <= uiDiff)
++            {
++                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                {
++                if (DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_IMPALE : H_SPELL_IMPALE) == CAST_OK)
++                    SPELL_IMPALE_Timer = 9000;
++                }
++            } else SPELL_IMPALE_Timer -= uiDiff;
++
++            if (!Summoned_Guardian)
++            {
++                for (uint8 i = 0; i < 2; ++i)
++                {
++                    if (Creature *Guardian = m_creature->SummonCreature(CREATURE_GUARDIAN,SpawnPoint[i][0],SpawnPoint[i][1],SPAWNPOINT_Z,0,TEMPSUMMON_CORPSE_DESPAWN,0))
++                    {
++                        Guardian->AddThreat(m_creature->getVictim(), 0.0f);
++                    }
++                }
++                Summoned_Guardian = true;
++            }
++
++            if(!Summoned_Venomancer)
++            {
++                if (VENOMANCER_Timer <= uiDiff)
++                {
++                    if (Phase_Time > 1)
++                    {
++                        for (uint8 i = 0; i < 2; ++i)
++                        {
++                            if (Creature *Venomancer = m_creature->SummonCreature(CREATURE_VENOMANCER,SpawnPoint[i][0],SpawnPoint[i][1],SPAWNPOINT_Z,0,TEMPSUMMON_CORPSE_DESPAWN,0))
++                            {
++                                Venomancer->AddThreat(m_creature->getVictim(), 0.0f);
++                            }
++                        }
++                        Summoned_Venomancer = true;
++                    }
++                } else VENOMANCER_Timer -= uiDiff;
++            }
++
++            if(!Summoned_Datter)
++            {
++                if (DATTER_Timer <= uiDiff)
++                {
++                    if (Phase_Time > 2)
++                    {
++                        for (uint8 i = 0; i < 2; ++i)
++                        {
++                            if (Creature *Datter = m_creature->SummonCreature(CREATURE_DATTER,SpawnPoint[i][0],SpawnPoint[i][1],SPAWNPOINT_Z,0,TEMPSUMMON_CORPSE_DESPAWN,0))
++                            {
++                                Datter->AddThreat(m_creature->getVictim(), 0.0f);
++                            }
++                        }
++                        Summoned_Datter = true;
++                    }
++                } else DATTER_Timer -= uiDiff;
++            }
++
++            if (UNDERGROUND_Timer <= uiDiff)
++            {
++                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
++                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
++                Phase = 0;
++            } else UNDERGROUND_Timer -= uiDiff;
++        }
++
++        if (Phase == 0)
++        {
++            if (SPELL_LEECHING_SWARM_Timer <= uiDiff)
++            {
++			switch(urand(0, 2))
++                {
++                case 0: DoScriptText(SAY_LOCUST_1, m_creature); break;
++                case 1: DoScriptText(SAY_LOCUST_2, m_creature); break;
++                case 2: DoScriptText(SAY_LOCUST_3, m_creature); break;
++                }
++                DoCast(m_creature, SPELL_LEECHING_SWARM, true);
++                SPELL_LEECHING_SWARM_Timer = 19000;
++            } else SPELL_LEECHING_SWARM_Timer -= uiDiff;
++
++            if (SPELL_CARRION_BEETLES_Timer <= uiDiff)
++            {
++                Channeling = true;
++                DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_CARRION_BEETLES : SPELL_CARRION_BEETLES);
++                SPELL_CARRION_BEETLES_Timer = 25000;
++            } else SPELL_CARRION_BEETLES_Timer -= uiDiff;
++
++            if (SPELL_POUND_Timer <= uiDiff)
++            {
++                 if (DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_POUND : H_SPELL_POUND) == CAST_OK)
++                    SPELL_POUND_Timer = 16500;
++            } else SPELL_POUND_Timer -= uiDiff;
++        }
++
++        if ((Phase_Time == 0 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 75)
++            || (Phase_Time == 1 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 50)
++            || (Phase_Time == 2 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 25))
++        {
++            ++Phase_Time;
++
++            Summoned_Guardian = false;
++            Summoned_Venomancer = false;
++            Summoned_Datter = false;
++
++            UNDERGROUND_Timer = 40000;
++            VENOMANCER_Timer = 25000;
++            DATTER_Timer = 32000;
++
++            DoCast(m_creature, SPELL_SUBMERGE, false);
++
++            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
++
++            Phase = 1;
++
++            switch(urand(0, 1))
++                {
++                case 0: DoScriptText(SAY_SUBMERGE_1, m_creature); break;
++                case 1: DoScriptText(SAY_SUBMERGE_2, m_creature); break;
++                }
++        }
++
++        if (Phase != 1)
++            DoMeleeAttackIfReady();
++
++        if (m_creature->GetDistance2d(HOME_X, HOME_Y) > 30)
++            EnterEvadeMode();
+     }
+ };
+ 
+diff --git a/scripts/northrend/azjol-nerub/azjol-nerub/boss_hadronox.cpp b/scripts/northrend/azjol-nerub/azjol-nerub/boss_hadronox.cpp
+index 22074a7..bb45f25 100644
+--- a/scripts/northrend/azjol-nerub/azjol-nerub/boss_hadronox.cpp
++++ b/scripts/northrend/azjol-nerub/azjol-nerub/boss_hadronox.cpp
+@@ -17,16 +17,37 @@
+ /* ScriptData
+ SDName: Boss_Hadronox
+ SD%Complete: 20%
+-SDComment:
++SDComment: Implement gauntlet event; fix web grab
+ SDCategory: Azjol'Nerub
+ EndScriptData */
+ 
++//Phase 0 => Gauntlet Event described below
++//Phase 1 => Boss Encounter
++
++/*When your group enters the main room (the one after the bridge), you will notice a group of 3 Nerubians.
++When you engage them, 2 more groups like this one spawn behind the first one - it is important to pull the first group back,
++so you don't aggro all 3. Hadronox will be under you, fighting Nerubians.
++
++This is the timed gauntlet - waves of non-elite spiders
++ will spawn from the 3 doors located a little above the main room, and will then head down to fight Hadronox. After clearing the
++ main room, it is recommended to just stay in it, kill the occasional non-elites that will attack you instead of the boss, and wait for
++ Hadronox to make his way to you. When Hadronox enters the main room, she will web the doors, and no more non-elites will spawn.*/
++
+ #include "precompiled.h"
+ #include "azjol-nerub.h"
+ 
+ enum
+ {
++    SPELL_ACID_CLOUD        = 53400, // Victim
++    SPELL_LEECH_POISON      = 53030, // Victim
++    SPELL_PIERCE_ARMOR      = 53418, // Victim
++    SPELL_WEB_GRAB          = 57731, // Victim
++    SPELL_WEB_FRONT_DOORS   = 53177, // Self
++    SPELL_WEB_SIDE_DOORS    = 53185, // Self
+ 
++    SPELL_ACID_CLOUD_H      = 59419,
++    SPELL_LEECH_POISON_H    = 59417,
++    SPELL_WEB_GRAB_H        = 59421
+ };
+ 
+ /*######
+@@ -45,8 +66,28 @@ struct MANGOS_DLL_DECL boss_hadronoxAI : public ScriptedAI
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    uint32 acidtimer;
++    uint32 leechtimer;
++    uint32 piercetimer;
++    uint32 grabtimer;
++    uint32 doorstimer;
++
+     void Reset()
+     {
++        acidtimer   = urand(10000,14000);
++        leechtimer  = urand(3000,9000);
++        piercetimer = urand(1000,3000);
++        grabtimer   = urand(15000,19000);
++        doorstimer  = urand(20000,30000);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_HADRONOX, NOT_STARTED);
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_HADRONOX, IN_PROGRESS);
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -54,11 +95,68 @@ struct MANGOS_DLL_DECL boss_hadronoxAI : public ScriptedAI
+         m_creature->SetHealth(m_creature->GetHealth() + (m_creature->GetMaxHealth() * 0.1));
+     }
+ 
++    void JustDied(Unit* pKiller)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_HADRONOX, DONE);
++    }
++
+     void UpdateAI(const uint32 uiDiff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        // Without he comes up through the air to players on the bridge after krikthir if players crossing this bridge!
++        if (m_creature->HasAura(SPELL_WEB_FRONT_DOORS) || m_creature->HasAura(SPELL_WEB_SIDE_DOORS))
++        {
++            if (IsCombatMovement())
++                SetCombatMovement(false);
++        }
++        else if (!IsCombatMovement())
++            SetCombatMovement(true);
++
++
++        if (piercetimer <= uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_PIERCE_ARMOR);
++            piercetimer = 8000;
++        } else piercetimer -= uiDiff;
++
++
++        if (acidtimer <= uiDiff)
++        {
++             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++            {
++                if (DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_ACID_CLOUD : SPELL_ACID_CLOUD_H) == CAST_OK)
++                    acidtimer = urand(20000,30000);
++            }
++        } else acidtimer -= uiDiff;
++
++
++        if (leechtimer <= uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++            {
++                if (DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_LEECH_POISON : SPELL_LEECH_POISON_H) == CAST_OK)
++                    leechtimer = urand(11000,14000);
++            }   
++        } else leechtimer -= uiDiff;
++
++
++        if (grabtimer <= uiDiff)
++        {
++            if (DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_WEB_GRAB : SPELL_WEB_GRAB_H) == CAST_OK)
++                grabtimer = urand(15000,30000);
++        } else grabtimer -= uiDiff;
++
++
++        if (doorstimer <= uiDiff)
++        {/* Debuff bleibt auf den Spielern bis zum Tod...
++            DoCast(m_creature, RAND(SPELL_WEB_FRONT_DOORS, SPELL_WEB_SIDE_DOORS));
++            */
++            doorstimer = urand(30000,60000);
++        } else doorstimer -= uiDiff;
++
+         DoMeleeAttackIfReady();
+     }
+ };
+diff --git a/scripts/northrend/azjol-nerub/azjol-nerub/boss_krikthir.cpp b/scripts/northrend/azjol-nerub/azjol-nerub/boss_krikthir.cpp
+index 0433ebf..1a574fb 100644
+--- a/scripts/northrend/azjol-nerub/azjol-nerub/boss_krikthir.cpp
++++ b/scripts/northrend/azjol-nerub/azjol-nerub/boss_krikthir.cpp
+@@ -42,6 +42,56 @@ enum
+     EMOTE_BOSS_GENERIC_FRENZY       = -1000005
+ };
+ 
++enum Spells
++{
++    SPELL_MIND_FLAY                        =   52586,
++    H_SPELL_MIND_FLAY                      =   59367,
++    SPELL_CURSE_OF_FATIGUE                 =   52592,
++    H_SPELL_CURSE_OF_FATIGUE               =   59368,
++    SPELL_FRENZY                           =   28747, //maybe 53361
++
++    SPELL_SUMMON_SKITTERING_SWARMER        =   52438, //AOE Effect 140, maybe 52439
++    SPELL_SUMMON_SKITTERING_SWARMER_1      =   52439, //Summon 3x 28735
++
++    H_SPELL_ACID_SPLASH                    =   59363,
++    SPELL_ACID_SPLASH                      =   52446,
++
++    SPELL_CHARGE                           =   16979,//maybe is another spell
++    SPELL_BACKSTAB                         =   52540,
++
++    SPELL_SHADOW_BOLT                      =   52534,
++    H_SPELL_SHADOW_BOLT                    =   59357,
++    SPELL_SHADOW_NOVA                      =   52535,
++    H_SPELL_SHADOW_NOVA                    =   59358,
++
++    SPELL_STRIKE                           =   52532,
++    SPELL_CLEAVE                           =   49806,
++
++    SPELL_ENRAGE                           =   52470,
++
++    SPELL_INFECTED_BITE                    =   52469,
++    H_SPELL_INFECTED_BITE                  =   59364,
++    SPELL_WEB_WRAP                         =   52086,//the spell is not working propperly
++
++    SPELL_BLINDING_WEBS                    =   52524,
++    H_SPELL_BLINDING_WEBS                  =   59365,
++
++    SPELL_POSION_SPRAY                     =   52493,
++    H_SPELL_POSION_SPRAY                   =   59366,
++};
++
++enum Mobs
++{
++    MOB_SKITTERING_SWARMER                 =   28735,
++    MOB_SKITTERING_SWARMER_CONTROLLER      =   32593,
++    MOB_SKITTERING_INFECTIOR               =   28736,
++};
++
++enum Misc
++{
++    ACHIEVEMENT_WATCH_HIM_DIE              =   1296
++};
++
+ /*######
+ ## boss_krikthir
+ ######*/
+@@ -58,13 +108,32 @@ struct MANGOS_DLL_DECL boss_krikthirAI : public ScriptedAI
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    uint32 MindFlayTimer;
++    uint32 CurseFatigueTimer;
++    uint32 SummonTimer;
++    uint32 m_uiSpeakTimer;
++
+     void Reset()
+     {
++        MindFlayTimer       = 15000;
++        CurseFatigueTimer   = 12000;
++        m_uiSpeakTimer      = 15000;
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_KRIKTHIR, NOT_STARTED);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         DoScriptText(SAY_AGGRO, m_creature);
++
++        Summon();
++        SummonTimer = 15000;
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_KRIKTHIR, IN_PROGRESS);
++
++        m_creature->CallForHelp(50.0f);
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -80,6 +149,46 @@ struct MANGOS_DLL_DECL boss_krikthirAI : public ScriptedAI
+     void JustDied(Unit* pKiller)
+     {
+         DoScriptText(SAY_DEATH, m_creature);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_KRIKTHIR, DONE);
++
++        /* Needs more testing!!!
++        Creature *pAdd1, *pAdd2, *pAdd3;
++        pAdd1 = GetClosestCreatureWithEntry(m_creature, 28730, 80.0f);
++        pAdd2 = GetClosestCreatureWithEntry(m_creature, 28731, 80.0f);
++        pAdd3 = GetClosestCreatureWithEntry(m_creature, 28729, 80.0f);
++
++        if (pAdd1 && pAdd2 && pAdd3 && pAdd1->isAlive() && pAdd2->isAlive() && pAdd3->isAlive() && !m_bIsRegularMode)
++        {
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_WATCH_HIM_DIE);
++        }*/
++    }
++
++    void Summon()
++    {
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,566.164f,682.087f,769.079f,2.21657f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,566.164f,682.087f,769.079f,2.21657f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,529.042f,706.941f,777.298f,1.0821f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,529.042f,706.941f,777.298f,1.0821f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,489.975f,671.239f,772.131f,0.261799f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,489.975f,671.239f,772.131f,0.261799f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,488.556f,692.95f,771.764f,4.88692f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,488.556f,692.95f,771.764f,4.88692f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_INFECTIOR,553.34f,640.387f,777.419f,1.20428f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,553.34f,640.387f,777.419f,1.20428f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_INFECTIOR,517.486f,706.398f,777.335f,5.35816f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,517.486f,706.398f,777.335f,5.35816f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_INFECTIOR,504.01f,637.693f,777.479f,0.506145f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,504.01f,637.693f,777.479f,0.506145f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,552.625f,706.408f,777.177f,3.4383f,TEMPSUMMON_TIMED_DESPAWN,25000);
++            m_creature->SummonCreature(MOB_SKITTERING_SWARMER,552.625f,706.408f,777.177f,3.4383f,TEMPSUMMON_TIMED_DESPAWN,25000);
++    }
++
++    void JustSummoned(Creature* summoned)
++    {
++        summoned->GetMotionMaster()->MovePoint(m_creature->GetEntry(),m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ());
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+@@ -87,15 +196,296 @@ struct MANGOS_DLL_DECL boss_krikthirAI : public ScriptedAI
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        //Sounds Krikthir
++        if(!m_creature->getVictim())
++        {
++            if(m_uiSpeakTimer < uiDiff)
++            {
++		        switch (rand()%3)
++		        {
++			        case 0: DoPlaySoundToSet(m_creature, SAY_PREFIGHT_1); break;
++			        case 1: DoPlaySoundToSet(m_creature, SAY_PREFIGHT_2); break;
++			        case 2: DoPlaySoundToSet(m_creature, SAY_PREFIGHT_3); break;
++		        }
++                m_uiSpeakTimer = 20000;
++            }else m_uiSpeakTimer -= uiDiff;
++        }
++
++        if (SummonTimer <= uiDiff)
++        {
++            switch(urand(0, 1))
++            {
++                case 0: DoScriptText(SAY_SWARM_1, m_creature); break;
++                case 1: DoScriptText(SAY_SWARM_2, m_creature); break;
++            }
++            Summon();
++            SummonTimer = 15000;
++        } else SummonTimer -= uiDiff;
++
++
++        if (MindFlayTimer <= uiDiff)
++        {
++                if (DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_MIND_FLAY : H_SPELL_MIND_FLAY) == CAST_OK)
++                MindFlayTimer = 20000;
++            } else MindFlayTimer -= uiDiff;
++
++        if (CurseFatigueTimer <= uiDiff)
++        {
++            //WowWiki say "Curse of Fatigue-Kirk'thir will cast Curse of Fatigue on 2-3 targets periodically."
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++            {
++                if (DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_CURSE_OF_FATIGUE : H_SPELL_CURSE_OF_FATIGUE) == CAST_OK)
++                    CurseFatigueTimer = 10000;
++            }
++
++               if (Unit* pTarget_1 = SelectUnit(SELECT_TARGET_RANDOM, 1))
++            {
++                if (DoCastSpellIfCan(pTarget_1, m_bIsRegularMode ? SPELL_CURSE_OF_FATIGUE : H_SPELL_CURSE_OF_FATIGUE) == CAST_OK)
++                    CurseFatigueTimer = 10000;
++            }
++
++            CurseFatigueTimer = 10000;
++        } else CurseFatigueTimer -= uiDiff;
++
++        if (!m_creature->HasAura(SPELL_FRENZY) && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 10)
++        {
++            DoScriptText(EMOTE_BOSS_GENERIC_FRENZY, m_creature);
++            DoCast(m_creature, SPELL_FRENZY, true);
++        }
++
+         DoMeleeAttackIfReady();
+     }
+ };
+ 
++struct MANGOS_DLL_DECL npc_watcher_gashraAI : public ScriptedAI
++{
++    npc_watcher_gashraAI(Creature *pCreature) : ScriptedAI(pCreature)
++
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++    }
++    bool m_bIsRegularMode;
++    ScriptedInstance* m_pInstance;
++
++    uint32 WebWrapTimer;
++    uint32 InfectedBiteTimer;
++
++    bool m_bAggro;
++
++    void Reset()
++    {
++        WebWrapTimer      = 11000;
++        InfectedBiteTimer = 4000;
++
++        m_bAggro = false;
++    }
++
++    void EnterCombat(Unit* who)
++    {
++        DoCast(m_creature, SPELL_ENRAGE, true);
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (m_pInstance && !m_bAggro)
++        {
++            if (m_pInstance->GetData(TYPE_KRIKTHIR == IN_PROGRESS))
++            {
++                if (Creature* pKrikthir = GetClosestCreatureWithEntry(m_creature, 28684, 80.0f))
++                {
++                    if (pKrikthir->getVictim())
++                    {
++                        m_creature->AI()->AttackStart(pKrikthir->getVictim());
++                        m_bAggro = true;
++                    }
++                }
++            }
++        }
++
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (WebWrapTimer <= diff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++            {
++                DoCast(pTarget, SPELL_WEB_WRAP, true);
++                WebWrapTimer = 17000;
++            }
++        } else WebWrapTimer -= diff;
++
++        if (InfectedBiteTimer <= diff)
++        {
++            DoCast(m_creature, m_bIsRegularMode ? SPELL_INFECTED_BITE : H_SPELL_INFECTED_BITE);
++            InfectedBiteTimer = 15000;
++        } else InfectedBiteTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++struct MANGOS_DLL_DECL npc_watcher_narjilAI : public ScriptedAI
++{
++    npc_watcher_narjilAI(Creature *pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++    }
++    bool m_bIsRegularMode;
++    ScriptedInstance* m_pInstance;
++
++    uint32 WebWrapTimer;
++    uint32 InfectedBiteTimer;
++    uint32 BlindingWebsTimer;
++
++    bool m_bAggro;
++
++    void Reset()
++    {
++        WebWrapTimer      = 11000;
++        InfectedBiteTimer = 4000;
++        BlindingWebsTimer = 17000;
++
++        m_bAggro = false;
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (m_pInstance && !m_bAggro)
++        {
++            if (m_pInstance->GetData(TYPE_KRIKTHIR == IN_PROGRESS))
++            {
++                if (Unit* pKrikthir = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_KRIKTHIR_THE_GATEWATCHER)))
++                {
++                    if (pKrikthir->getVictim())
++                    {
++                        m_creature->AI()->AttackStart(pKrikthir->getVictim());
++                        m_bAggro = true;
++                    }
++                }
++            }
++        }
++
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (WebWrapTimer <= diff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++            {
++                DoCast(pTarget, SPELL_WEB_WRAP, true);
++                WebWrapTimer = 15000;
++            }
++        } else WebWrapTimer -= diff;
++
++        if (InfectedBiteTimer <= diff)
++        {
++            DoCast(m_creature, m_bIsRegularMode ? SPELL_INFECTED_BITE : H_SPELL_INFECTED_BITE);
++            InfectedBiteTimer = 11000;
++        } else InfectedBiteTimer -= diff;
++
++        if (BlindingWebsTimer <= diff)
++        {
++            DoCast(m_creature, m_bIsRegularMode ? SPELL_BLINDING_WEBS : H_SPELL_BLINDING_WEBS);
++            BlindingWebsTimer = 17000;
++        } else BlindingWebsTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++struct MANGOS_DLL_DECL npc_watcher_silthikAI : public ScriptedAI
++{
++    npc_watcher_silthikAI(Creature *pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++    }
++    bool m_bIsRegularMode;
++    ScriptedInstance* m_pInstance;
++
++    uint32 WebWrapTimer;
++    uint32 InfectedBiteTimer;
++    uint32 PosionSprayTimer;
++
++    bool m_bAggro;
++
++    void Reset()
++    {
++        WebWrapTimer      = 11000;
++        InfectedBiteTimer = 4000;
++        PosionSprayTimer  = 15000;
++
++        m_bAggro = false;
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (m_pInstance && !m_bAggro)
++        {
++            if (m_pInstance->GetData(TYPE_KRIKTHIR == IN_PROGRESS))
++            {
++                if (Unit* pKrikthir = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_KRIKTHIR_THE_GATEWATCHER)))
++                {
++                    if (pKrikthir->getVictim())
++                    {
++                        m_creature->AI()->AttackStart(pKrikthir->getVictim());
++                        m_bAggro = true;
++                    }
++                }
++            }
++        }
++
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (WebWrapTimer <= diff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++            {
++                DoCast(pTarget, SPELL_WEB_WRAP, true);
++                WebWrapTimer = 15000;
++            }
++        } else WebWrapTimer -= diff;
++
++        if (InfectedBiteTimer <= diff)
++        {
++            DoCast(m_creature, m_bIsRegularMode ? SPELL_INFECTED_BITE : H_SPELL_INFECTED_BITE);
++                    InfectedBiteTimer = 15000;
++        } else InfectedBiteTimer -= diff;
++
++        if (PosionSprayTimer <= diff)
++        {
++            DoCast(m_creature, m_bIsRegularMode ? SPELL_POSION_SPRAY : H_SPELL_POSION_SPRAY);
++                    PosionSprayTimer = 17000;
++        } else PosionSprayTimer -= diff;
++
++        DoMeleeAttackIfReady();
++
++    }
++};
++
+ CreatureAI* GetAI_boss_krikthir(Creature* pCreature)
+ {
+     return new boss_krikthirAI(pCreature);
+ }
+ 
++CreatureAI* GetAI_npc_watcher_gashra (Creature* pCreature)
++{
++    return new npc_watcher_gashraAI (pCreature);
++}
++
++CreatureAI* GetAI_npc_watcher_narjil (Creature* pCreature)
++{
++    return new npc_watcher_narjilAI (pCreature);
++}
++
++CreatureAI* GetAI_npc_watcher_silthik (Creature* pCreature)
++{
++    return new npc_watcher_silthikAI (pCreature);
++}
++
+ void AddSC_boss_krikthir()
+ {
+     Script *newscript;
+@@ -104,4 +494,19 @@ void AddSC_boss_krikthir()
+     newscript->Name = "boss_krikthir";
+     newscript->GetAI = &GetAI_boss_krikthir;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "npc_watcher_gashra";
++    newscript->GetAI = &GetAI_npc_watcher_gashra;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "npc_watcher_silthik";
++    newscript->GetAI = &GetAI_npc_watcher_silthik;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "npc_watcher_narjil";
++    newscript->GetAI = &GetAI_npc_watcher_narjil;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/northrend/azjol-nerub/azjol-nerub/instance_azjol-nerub.cpp b/scripts/northrend/azjol-nerub/azjol-nerub/instance_azjol-nerub.cpp
+index ca8839b..5806476 100644
+--- a/scripts/northrend/azjol-nerub/azjol-nerub/instance_azjol-nerub.cpp
++++ b/scripts/northrend/azjol-nerub/azjol-nerub/instance_azjol-nerub.cpp
+@@ -36,6 +36,13 @@ struct MANGOS_DLL_DECL instance_azjol_nerub : public ScriptedInstance
+     uint64 m_uiDoor_Anubarak_2GUID;
+     uint64 m_uiDoor_Anubarak_3GUID;
+ 
++    uint64 m_uiKrikthir;
++    uint64 m_uiHadronox;
++    uint64 m_uiAnubarak;
++    uint64 m_uiWatcherGashra;
++    uint64 m_uiWatcherSilthik;
++    uint64 m_uiWatcherNarjil;
++
+     void Initialize()
+     {
+         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+@@ -44,6 +51,41 @@ struct MANGOS_DLL_DECL instance_azjol_nerub : public ScriptedInstance
+         m_uiDoor_Anubarak_1GUID = 0;
+         m_uiDoor_Anubarak_2GUID = 0;
+         m_uiDoor_Anubarak_3GUID = 0;
++
++        m_uiKrikthir = 0;
++        m_uiHadronox = 0;
++        m_uiAnubarak = 0;
++        m_uiWatcherGashra = 0;
++        m_uiWatcherSilthik = 0;
++        m_uiWatcherNarjil = 0;
++    }
++
++        void OnCreatureCreate(Creature* pCreature, bool add)
++    {
++        switch(pCreature->GetEntry())
++        {
++            case 28684:    m_uiKrikthir = pCreature->GetGUID();        break;
++            case 28921:    m_uiHadronox = pCreature->GetGUID();        break;
++            case 29120:    m_uiAnubarak = pCreature->GetGUID();        break;
++            case 28730:    m_uiWatcherGashra = pCreature->GetGUID();   break;
++            case 28731:    m_uiWatcherSilthik = pCreature->GetGUID();  break;
++            case 28729:    m_uiWatcherNarjil = pCreature->GetGUID();   break;
++        }
++    }
++
++    uint64 GetData64(uint32 identifier)
++    {
++        switch(identifier)
++        {
++            case DATA_KRIKTHIR_THE_GATEWATCHER:     return m_uiKrikthir;
++            case DATA_HADRONOX:                     return m_uiHadronox;
++            case DATA_ANUBARAK:                     return m_uiAnubarak;
++            case DATA_WATCHER_GASHRA:               return m_uiWatcherGashra;
++            case DATA_WATCHER_SILTHIK:              return m_uiWatcherSilthik;
++            case DATA_WATCHER_NARJIL:               return m_uiWatcherNarjil;
++        }
++
++        return 0;
+     }
+ 
+     void OnObjectCreate(GameObject* pGo)
+diff --git a/sql/Custom_Updates/Mangos/Northrend/AzjolNerub_Mangos.sql b/sql/Custom_Updates/Mangos/Northrend/AzjolNerub_Mangos.sql
+new file mode 100644
+index 0000000..783065d
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Northrend/AzjolNerub_Mangos.sql
+@@ -0,0 +1,5 @@
++/* AZJOL-NERUB */
++UPDATE `gameobject_template` SET `faction` = 114 where `entry` in (192395);
++update creature_template set AIName = '', scriptName = 'npc_watcher_gashra' where entry = 28730;
++update creature_template set AIName = '', scriptName = 'npc_watcher_silthik' where entry = 28731;
++update creature_template set AIName = '', scriptName = 'npc_watcher_narjil' where entry = 28729;
+\ No newline at end of file
