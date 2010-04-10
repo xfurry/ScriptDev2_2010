@@ -1022,8 +1022,8 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_pos_startAI: public ScriptedAI
                     pTyrannus->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
                     pTyrannus->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
                     pTyrannus->GetMotionMaster()->MoveIdle();
-                    pTyrannus->GetMap()->CreatureRelocation(m_creature, 526.501f, 237.639f, 543.686f, 3.431f);
-                    pTyrannus->SendMonsterMove(526.501f, 237.639f, 543.686f, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                    pTyrannus->GetMap()->CreatureRelocation(pTyrannus, 526.501f, 237.639f, 543.686f, 3.431f);
+                    pTyrannus->SendMonsterMove(526.501f, 237.639f, 543.686f, SPLINETYPE_NORMAL, pTyrannus->GetSplineFlags(), 1);
                     DoScriptText(SAY_TYRANNUS1, pTyrannus);
                     switch (creatureEntry)
                     {

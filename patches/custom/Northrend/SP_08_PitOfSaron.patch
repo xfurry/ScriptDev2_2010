@@ -853,8 +853,8 @@ index 7be678b..f120d97 100644
 +                pTyrannus->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
 +                pTyrannus->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
 +                pTyrannus->GetMotionMaster()->MoveIdle();
-+                pTyrannus->GetMap()->CreatureRelocation(m_creature, 860.649f, 124.863f, 536.019f, 3.43f);
-+                pTyrannus->SendMonsterMove(860.649f, 124.863f, 536.019f, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
++                pTyrannus->GetMap()->CreatureRelocation(pTyrannus, 860.649f, 124.863f, 536.019f, 3.43f);
++                pTyrannus->SendMonsterMove(860.649f, 124.863f, 536.019f, SPLINETYPE_NORMAL, pTyrannus->GetSplineFlags(), 1);
 +                ++Step;
 +                OutroTimer = 4000;
 +                break;

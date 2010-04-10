@@ -5,7 +5,7 @@ UPDATE `creature_template` SET `ScriptName`='mob_lichKing_minion' WHERE `entry` 
 UPDATE `creature_template` SET `ScriptName`='mob_hallsOfReflectionSoul' WHERE `entry` in (38176, 38175, 38172, 38567, 38177, 38173);
 -- boss
 UPDATE `creature_template` SET `ScriptName`='boss_marwyn' WHERE `entry`=38113;
-UPDATE `creature_template` SET `ScriptName`='boss_falryn' WHERE `entry`=38112;
+UPDATE `creature_template` SET `ScriptName`='boss_falric' WHERE `entry`=38112;
 -- npc
 UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_hor_start' WHERE `entry` in (37221, 37223);
 UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_hor_end' WHERE `entry` in (36955, 37554);

@@ -47,9 +47,9 @@ enum
     EQUIP_ID                                = 50704,
 };
 
-struct MANGOS_DLL_DECL boss_falrynAI : public ScriptedAI
+struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 {
-    boss_falrynAI(Creature* pCreature) : ScriptedAI(pCreature)
+    boss_falricAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         pCreature->setFaction(35);
@@ -323,16 +323,16 @@ struct MANGOS_DLL_DECL boss_falrynAI : public ScriptedAI
     }
 };
 
-CreatureAI* GetAI_boss_falryn(Creature* pCreature)
+CreatureAI* GetAI_boss_falric(Creature* pCreature)
 {
-    return new boss_falrynAI(pCreature);
+    return new boss_falricAI(pCreature);
 }
 
-void AddSC_boss_falryn()
+void AddSC_boss_falric()
 {
     Script *newscript;
     newscript = new Script;
-    newscript->Name = "boss_falryn";
-    newscript->GetAI = &GetAI_boss_falryn;
+    newscript->Name = "boss_falric";
+    newscript->GetAI = &GetAI_boss_falric;
     newscript->RegisterSelf();
 }

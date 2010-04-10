@@ -107,9 +107,9 @@ index 0000000..c5c6b36
 +    EQUIP_ID                                = 50704,
 +};
 +
-+struct MANGOS_DLL_DECL boss_falrynAI : public ScriptedAI
++struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 +{
-+    boss_falrynAI(Creature* pCreature) : ScriptedAI(pCreature)
++    boss_falricAI(Creature* pCreature) : ScriptedAI(pCreature)
 +    {
 +        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 +        pCreature->setFaction(35);
@@ -383,17 +383,17 @@ index 0000000..c5c6b36
 +    }
 +};
 +
-+CreatureAI* GetAI_boss_falryn(Creature* pCreature)
++CreatureAI* GetAI_boss_falric(Creature* pCreature)
 +{
-+    return new boss_falrynAI(pCreature);
++    return new boss_falricAI(pCreature);
 +}
 +
-+void AddSC_boss_falryn()
++void AddSC_boss_falric()
 +{
 +    Script *newscript;
 +    newscript = new Script;
-+    newscript->Name = "boss_falryn";
-+    newscript->GetAI = &GetAI_boss_falryn;
++    newscript->Name = "boss_falric";
++    newscript->GetAI = &GetAI_boss_falric;
 +    newscript->RegisterSelf();
 +}
 diff --git a/scripts/northrend/icecrown_citadel/frozen_halls/halls_of_reflection/boss_falryn.cpp b/scripts/northrend/icecrown_citadel/frozen_halls/halls_of_reflection/boss_falryn.cpp
@@ -3443,7 +3443,7 @@ index 0000000..74eae34
 +UPDATE `creature_template` SET `ScriptName`='mob_hallsOfReflectionSoul' WHERE `entry` in (38176, 38175, 38172, 38567, 38177, 38173);
 +-- boss
 +UPDATE `creature_template` SET `ScriptName`='boss_marwyn' WHERE `entry`=38113;
-+UPDATE `creature_template` SET `ScriptName`='boss_falryn' WHERE `entry`=38112;
++UPDATE `creature_template` SET `ScriptName`='boss_falric' WHERE `entry`=38112;
 +-- npc
 +UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_hor_start' WHERE `entry` in (37221, 37223);
 +UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_hor_end' WHERE `entry` in (36955, 37554);
