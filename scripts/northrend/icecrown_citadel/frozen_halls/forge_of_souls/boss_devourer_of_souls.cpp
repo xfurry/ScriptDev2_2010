@@ -279,7 +279,7 @@ struct MANGOS_DLL_DECL boss_Devourer_of_SoulsAI : public ScriptedAI
 
         TeamInInstance = GetFaction();
 
-        m_uiPhantomBlastTimer   = 45000;
+        m_uiPhantomBlastTimer   = 10000;
         m_uiMirroredSoulTimer   = 20000;
         m_uiWellOfSoulsTimer    = 30000;
         m_uiUnleashedSoulsTimer = 25000;
@@ -354,7 +354,7 @@ struct MANGOS_DLL_DECL boss_Devourer_of_SoulsAI : public ScriptedAI
             if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
                 if(DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_PHANTOM_BLAST : SPELL_PHANTOM_BLAST_H) == CAST_OK)
                     m_bIsThreeFaced = false;
-            m_uiPhantomBlastTimer = 45000;
+            m_uiPhantomBlastTimer = urand(6000, 8000);
         }
         else
             m_uiPhantomBlastTimer -= uiDiff;
