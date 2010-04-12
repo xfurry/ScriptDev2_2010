@@ -9,10 +9,22 @@ enum
 {
     MAX_ENCOUNTER               = 3,
 
+    TYPE_KELESETH               = 1,
+    TYPE_DALRONN                = 2,
+    TYPE_INGVAR                 = 3,
+
+    DATA_INGVAR                 = 4,
+
     //also using these as identifier for Set/GetData(), unlike normal naming
     NPC_KELESETH                = 23953,
     NPC_SKARVALD                = 24200,
     NPC_DALRONN                 = 24201,
+    NPC_INGVAR                  = 23954,
+
+    DOOR_ENTRANCE               = 186756,
+    DOOR_EXIT                   = 186694,
+    DOOR_KELESETH               = 186608, 
+    DOOR_INGVAR                 = 186612,
 
     GO_BELLOW_1                 = 186688,
     GO_BELLOW_2                 = 186689,
