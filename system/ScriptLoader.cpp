@@ -275,6 +275,10 @@ extern void AddSC_boss_galdarah();
 extern void AddSC_boss_moorabi();
 extern void AddSC_boss_sladran();
 extern void AddSC_instance_gundrak();
+extern void AddSC_boss_Bronjahn();                          //icecrown citadel - frozen halls - forge of souls
+extern void AddSC_boss_Devourer_Of_Souls();
+extern void AddSC_Forge_Of_Souls();                         
+extern void AddSC_instance_forge_of_souls();
 extern void AddSC_boss_anubrekhan();                        //naxxramas
 extern void AddSC_boss_four_horsemen();
 extern void AddSC_boss_faerlina();
@@ -695,6 +699,10 @@ void AddScripts()
     AddSC_boss_moorabi();
     AddSC_boss_sladran();
     AddSC_instance_gundrak();
+	AddSC_boss_Bronjahn();                                   //icecrown citadel - frozen halls - forge of souls
+    AddSC_boss_Devourer_Of_Souls();
+    AddSC_Forge_Of_Souls();                                
+    AddSC_instance_forge_of_souls();
     AddSC_boss_anubrekhan();                                //naxxramas
     AddSC_boss_four_horsemen();
     AddSC_boss_faerlina();
