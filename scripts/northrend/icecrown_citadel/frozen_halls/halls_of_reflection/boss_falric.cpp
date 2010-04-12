@@ -15,8 +15,8 @@
 */
 
 /* ScriptData
-SDName: boss_marwyn
-SD%Complete: 30%
+SDName: boss_falryn
+SD%Complete: 40%
 SDComment:
 SDCategory: Halls of Reflection
 EndScriptData */
@@ -26,31 +26,30 @@ EndScriptData */
 
 enum
 {
-    SAY_INTRO1              = -1610109,
-    SAY_INTRO2              = -1610110,
-    SAY_AGGRO               = -1610111,
-    SAY_CORRUPTED_FLESH1    = -1610112,
-    SAY_CORRUPTED_FLESH2    = -1610113,
-    SAY_SLAY1               = -1610114,
-    SAY_SLAY2               = -1610115,
-    SAY_DEATH               = -1610116,
+    SAY_INTRO1              = -1610101,
+    SAY_INTRO2              = -1610102,
+    SAY_AGGRO               = -1610103,
+    SAY_IMPENDING_DESPAIR   = -1610104,
+    SAY_DEFILING_HORROR     = -1610105,
+    SAY_SLAY1               = -1610106,
+    SAY_SLAY2               = -1610107,
+    SAY_DEATH               = -1610108,
 
+    //common
     SPELL_BERSERK                           = 47008,
-    SPELL_OBLITERATE                        = 72360,
-    SPELL_OBLITERATE_H                      = 72434,
-    SPELL_SHARED_SUFFERING                  = 72368,
-    SPELL_SHARED_SUFFERING_H                = 72369,
-    SPELL_WELL_OF_CORRUPTION                = 72362,
-    SPELL_CORRUPTED_FLESH                   = 72363,
-    SPELL_CORRUPTED_FLESH_H                 = 72436,
+    SPELL_HOPELESSNESS                      = 72395,
+    SPELL_IMPENDING_DESPAIR                 = 72426,
+    SPELL_DEFILING_HORROR                   = 72435,
+    SPELL_DEFILING_HORROR_H                 = 72452,
+    SPELL_QUIVERING_STRIKE                  = 72422,
+    SPELL_QUIVERING_STRIKE_H                = 72453,
 
-    EQUIP_ID                                = 50672,
-
+    EQUIP_ID                                = 50704,
 };
 
-struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
+struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 {
-    boss_marwynAI(Creature* pCreature) : ScriptedAI(pCreature)
+    boss_falricAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         pCreature->setFaction(35);
@@ -62,13 +61,16 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
 
     bool m_bIsRegularMode;
     ScriptedInstance *m_pInstance;
+
     uint32 m_uiBerserk_Timer;
-    uint32 m_uiSharedSuffering_Timer;
-    uint32 m_uiWell_Timer;
-    uint32 m_uiTouch_Timer;
-    uint32 m_uiFlesh_Timer;
-    uint32 m_uiObliterate_Timer;
+    uint32 m_uiDespair_Timer;
+    uint32 m_uiHorror_Timer;
+    uint32 m_uiStrike_Timer;
     uint32 m_uiSummon_Timer;
+
+    bool m_bIsPhase1;
+    bool m_bIsPhase2;
+    bool m_bIsPhase3;
 
     uint8 SummonCount;
     bool hasIntro;
@@ -80,18 +82,21 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
 
     void Reset()
     {
-        m_uiBerserk_Timer       = 180000;
-        m_uiSharedSuffering_Timer = 4000;
-        m_uiWell_Timer          = 5000;
-        m_uiTouch_Timer         = 8000;
-        m_uiFlesh_Timer         = 10000;
-        m_uiObliterate_Timer    = 1000;
-        SummonCount             = 0;
-        m_uiSummon_Timer        = 60000;
-        hasIntro                = false;
+        m_uiBerserk_Timer = 180000;
+        SummonCount = 0;
 
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_MARWYN, NOT_STARTED);
+        m_bIsPhase1     = false;
+        m_bIsPhase2     = false;
+        m_bIsPhase3     = false;
+        hasIntro        = false;
+        
+        m_uiDespair_Timer = m_bIsRegularMode ? 40000 : 30000;
+        m_uiHorror_Timer = urand(25000,35000);
+        m_uiStrike_Timer = urand(10000,15000);
+        m_uiSummon_Timer = 1000;
+
+        if (m_pInstance) 
+            m_pInstance->SetData(TYPE_FALRIC, NOT_STARTED);
 
         ResetEvent();
 
@@ -138,6 +143,8 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
 
     bool CallGuards(TempSummonType type, uint32 _summontime )
     {
+        //((mob_hallsOfReflectionSoulAI*)m_creature->AI())->ChooseForAttack();
+        
         switch(urand(0,3))
         {
         case 0: {
@@ -173,32 +180,13 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
             pSummon3->SetInCombatWithZone();
         if (Creature* pSummon4 = m_creature->SummonCreature(npctype4, SpawnLoc[3].x, SpawnLoc[3].y, SpawnLoc[3].z, 0, type, _summontime))
             pSummon4->SetInCombatWithZone();
-
+        
         return true;
-    }
-
-    void AttackStart(Unit* pWho)
-    {
-        if (!m_pInstance)  
-            return;
-
-        if (m_pInstance->GetData(TYPE_MARWYN) != IN_PROGRESS) 
-            return;
-
-        if (m_creature->Attack(pWho, true)) 
-        {
-            m_creature->AddThreat(pWho);
-            m_creature->SetInCombatWith(pWho);
-            pWho->SetInCombatWith(m_creature);
-            DoStartMovement(pWho);
-        }
     }
 
     void Aggro(Unit *who) 
     {
-        DoScriptText(SAY_AGGRO, m_creature);
-        if(m_pInstance) 
-            m_pInstance->SetData(TYPE_MARWYN, IN_PROGRESS);
+        DoScriptText(SAY_AGGRO, m_creature);  
     }
 
     void KilledUnit(Unit *victim)
@@ -210,31 +198,54 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
         }
     }
 
+    void AttackStart(Unit* pWho)
+    {
+        if (!m_pInstance)  
+            return;
+
+        if (m_pInstance->GetData(TYPE_FALRIC) != IN_PROGRESS) 
+            return;
+
+        if (m_creature->Attack(pWho, true))
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+        }
+    }
+
     void JustDied(Unit *killer)
     {
         DoScriptText(SAY_DEATH, m_creature);
         if(m_pInstance) 
-            m_pInstance->SetData(TYPE_MARWYN, DONE);
+        {
+            m_pInstance->SetData(TYPE_FALRIC, DONE);
+            m_pInstance->SetData(TYPE_MARWYN, SPECIAL);
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (m_pInstance->GetData(TYPE_MARWYN) == SPECIAL ) 
+        if(m_pInstance && m_pInstance->GetData(TYPE_INTRO) == DONE && m_pInstance->GetData(TYPE_FALRIC) == SPECIAL)
         {
             if (m_uiSummon_Timer < uiDiff) 
             {
                 if(!hasIntro)
                 {
+                    //if(GameObject* pEnterDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_ICECROWN_DOOR)))
+                            //m_pInstance->DoUseDoorOrButton(pEnterDoor->GetGUID());
                     DoScriptText(SAY_INTRO1, m_creature);
                     hasIntro = true;
                 }
 
                 ++SummonCount;
-                if (SummonCount > MOB_WAVES_NUM_1) 
+                if (SummonCount > MOB_WAVES_NUM_1)
                 {
-                    m_pInstance->SetData(TYPE_MARWYN, IN_PROGRESS);
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     m_creature->SetInCombatWithZone();
+                    if(m_pInstance) 
+                        m_pInstance->SetData(TYPE_FALRIC, IN_PROGRESS);
                 }
                 else 
                     CallGuards(TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000);
@@ -246,59 +257,59 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
 
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
         {
-            if(m_pInstance && m_pInstance->GetData(TYPE_MARWYN) == IN_PROGRESS)
+            if(m_pInstance && m_pInstance->GetData(TYPE_FALRIC) == IN_PROGRESS)
                 Reset();
             return;
         }
 
-        if (m_uiSharedSuffering_Timer < uiDiff)
+        if (m_uiDespair_Timer < uiDiff) 
+        {
+            DoScriptText(SAY_IMPENDING_DESPAIR, m_creature);
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_IMPENDING_DESPAIR);
+            m_uiDespair_Timer= m_bIsRegularMode ? 40000 : 30000;
+        } 
+        else 
+            m_uiDespair_Timer -= uiDiff;
+
+        if (m_uiStrike_Timer < uiDiff)
+        {
+            DoCastSpellIfCan(m_creature->getVictim(), m_bIsRegularMode ? SPELL_QUIVERING_STRIKE : SPELL_QUIVERING_STRIKE_H);
+            m_uiStrike_Timer=urand(10000,15000);
+        } 
+        else 
+            m_uiStrike_Timer -= uiDiff;
+
+        if (m_uiHorror_Timer < uiDiff) 
+        {
+            DoScriptText(SAY_DEFILING_HORROR, m_creature);
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_DEFILING_HORROR : SPELL_DEFILING_HORROR_H);
+            m_uiHorror_Timer=urand(25000,35000);
+        } 
+        else 
+            m_uiHorror_Timer -= uiDiff;
+
+        if(m_creature->GetHealthPercent() <= 66.0f && !m_bIsPhase1)
         {
             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                DoCast(pTarget, m_bIsRegularMode ? SPELL_SHARED_SUFFERING : SPELL_SHARED_SUFFERING_H);
-            m_uiSharedSuffering_Timer= 20000;
-        } 
-        else 
-            m_uiSharedSuffering_Timer -= uiDiff;
+                DoCast(pTarget, SPELL_HOPELESSNESS);
+            m_bIsPhase1 = true;
+        }
 
-        if (m_uiWell_Timer < uiDiff) 
+        if(m_creature->GetHealthPercent() <= 33.0f && !m_bIsPhase2)
         {
             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                DoCast(pTarget, SPELL_WELL_OF_CORRUPTION);
-            m_uiWell_Timer= 30000;
-        } 
-        else 
-            m_uiWell_Timer -= uiDiff;
+                DoCast(pTarget, SPELL_HOPELESSNESS);
+            m_bIsPhase2 = true;
+        }
 
-        /*if (m_uiTouch_Timer < uiDiff) 
+        if(m_creature->GetHealthPercent() <= 10.0f && !m_bIsPhase3)
         {
             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                DoCast(pTarget, SPELL_WELL_OF_CORRUPTION);
-            m_uiTouch_Timer= 30000;
-        } 
-        else 
-            m_uiTouch_Timer -= uiDiff;*/
-
-        if (m_uiFlesh_Timer < uiDiff) 
-        {
-            switch(urand(0, 1))
-            {
-            case 0: DoScriptText(SAY_CORRUPTED_FLESH1, m_creature); break;
-            case 1: DoScriptText(SAY_CORRUPTED_FLESH2, m_creature); break;
-            }
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                DoCast(pTarget, m_bIsRegularMode ? SPELL_CORRUPTED_FLESH : SPELL_CORRUPTED_FLESH_H);
-            m_uiFlesh_Timer= 10000;
-        } 
-        else 
-            m_uiFlesh_Timer -= uiDiff;
-
-        if (m_uiObliterate_Timer < uiDiff)
-        {
-            DoCastSpellIfCan(m_creature->getVictim(), m_bIsRegularMode ? SPELL_OBLITERATE : SPELL_OBLITERATE_H);
-            m_uiObliterate_Timer=urand(8000,12000);
-        } 
-        else 
-            m_uiObliterate_Timer -= uiDiff;
+                DoCast(pTarget, SPELL_HOPELESSNESS);
+            m_bIsPhase3 = true;
+        }
 
         if (m_uiBerserk_Timer < uiDiff)
         {
@@ -312,16 +323,16 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
     }
 };
 
-CreatureAI* GetAI_boss_marwyn(Creature* pCreature)
+CreatureAI* GetAI_boss_falric(Creature* pCreature)
 {
-    return new boss_marwynAI(pCreature);
+    return new boss_falricAI(pCreature);
 }
 
-void AddSC_boss_marwyn()
+void AddSC_boss_falric()
 {
     Script *newscript;
     newscript = new Script;
-    newscript->Name = "boss_marwyn";
-    newscript->GetAI = &GetAI_boss_marwyn;
+    newscript->Name = "boss_falric";
+    newscript->GetAI = &GetAI_boss_falric;
     newscript->RegisterSelf();
 }

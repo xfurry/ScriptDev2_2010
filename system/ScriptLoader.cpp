@@ -279,6 +279,11 @@ extern void AddSC_boss_Bronjahn();                          //icecrown citadel -
 extern void AddSC_boss_Devourer_Of_Souls();
 extern void AddSC_Forge_Of_Souls();                         
 extern void AddSC_instance_forge_of_souls();
+extern void AddSC_boss_falric();                            //icecrown citadel - frozen halls - halls of reflection
+extern void AddSC_boss_marwyn();
+extern void AddSC_boss_wrath_of_the_lich_king();
+extern void AddSC_halls_of_reflection();                    
+extern void AddSC_instance_halls_of_reflection();
 extern void AddSC_boss_Garfrost();                          //icecrown citadel - frozen halls - pit of saron
 extern void AddSC_boss_Ick_and_Krick();
 extern void AddSC_boss_Tyrannus();
@@ -708,6 +713,11 @@ void AddScripts()
     AddSC_boss_Devourer_Of_Souls();
     AddSC_Forge_Of_Souls();                                
     AddSC_instance_forge_of_souls();
+	AddSC_boss_falric();                                    //icecrown citadel - frozen halls - halls of reflection
+    AddSC_boss_marwyn();
+    AddSC_boss_wrath_of_the_lich_king();
+    AddSC_halls_of_reflection();                            
+    AddSC_instance_halls_of_reflection();
 	AddSC_boss_Garfrost();                                  //icecrown citadel - frozen halls - pit of saron
     AddSC_boss_Ick_and_Krick();
     AddSC_boss_Tyrannus();
