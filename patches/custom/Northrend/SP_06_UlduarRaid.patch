@@ -1,8 +1,8 @@
 diff --git a/Makefile.am b/Makefile.am
-index fd57e47..5b217d2 100644
+index 9828fd4..bbb3905 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -393,6 +393,21 @@ scripts/northrend/ulduar/halls_of_stone/boss_sjonnir.cpp \
+@@ -402,6 +402,21 @@ scripts/northrend/ulduar/halls_of_stone/boss_sjonnir.cpp \
  scripts/northrend/ulduar/halls_of_stone/halls_of_stone.cpp \
  scripts/northrend/ulduar/halls_of_stone/halls_of_stone.h \
  scripts/northrend/ulduar/halls_of_stone/instance_halls_of_stone.cpp \
@@ -25,7 +25,7 @@ index fd57e47..5b217d2 100644
  scripts/northrend/ulduar/ulduar/ulduar.h \
  scripts/northrend/utgarde_keep/utgarde_keep/boss_ingvar.cpp \
 diff --git a/VC90/90ScriptDev2.vcproj b/VC90/90ScriptDev2.vcproj
-index 2bd0ad7..143fe90 100644
+index 46de99e..16c9812 100644
 --- a/VC90/90ScriptDev2.vcproj
 +++ b/VC90/90ScriptDev2.vcproj
 @@ -1930,10 +1930,70 @@
@@ -6061,10 +6061,10 @@ index 0000000..af62822
 +}
 diff --git a/scripts/northrend/ulduar/ulduar/boss_mimiron.cpp b/scripts/northrend/ulduar/ulduar/boss_mimiron.cpp
 new file mode 100644
-index 0000000..cb72f47
+index 0000000..6a8c67f
 --- /dev/null
 +++ b/scripts/northrend/ulduar/ulduar/boss_mimiron.cpp
-@@ -0,0 +1,1718 @@
+@@ -0,0 +1,1736 @@
 +/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
 +* This program is free software; you can redistribute it and/or modify
 +* it under the terms of the GNU General Public License as published by
@@ -6901,7 +6901,7 @@ index 0000000..cb72f47
 +    {
 +        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 +        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        //pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 +        SetCombatMovement(false);
 +        Reset();
 +    }
@@ -6953,8 +6953,11 @@ index 0000000..cb72f47
 +    bool isTorsoDead;
 +    bool isHeadDead;
 +
++    bool m_bIsTaunted;
++
 +    void Reset()
 +    {
++        phase               = 0;
 +        isHardMode          = false;
 +        isIntro             = true;
 +        phaseDelayTimer     = 10000;
@@ -6986,9 +6989,13 @@ index 0000000..cb72f47
 +        isTorsoDead         = false;
 +        isHeadDead          = false;
 +
++        m_bIsTaunted        = false;
++
 +        phase = 10;
 +        if(m_pInstance) 
 +            m_pInstance->SetData(TYPE_MIMIRON, NOT_STARTED);
++
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 +
 +        if(GameObject* pButton = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_RED_BUTTON)))
 +        {
@@ -7009,8 +7016,19 @@ index 0000000..cb72f47
 +    void Aggro(Unit *who) 
 +    {
 +        DoScriptText(SAY_AGGRO, m_creature);
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 +        phase = 0;
 +    }
++
++    /*void MoveInLineOfSight(Unit* pWho)
++    {
++        if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsTaunted && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 30) && m_creature->IsWithinLOSInMap(pWho))
++        {
++            m_bIsTaunted = true;
++            phase = 0;
++            DoScriptText(SAY_AGGRO, m_creature);
++        }
++    }*/
 +
 +    void DoOutro()
 +    {
@@ -9402,10 +9420,10 @@ index 0000000..9dd1b7e
 +}
 diff --git a/scripts/northrend/ulduar/ulduar/boss_vezax.cpp b/scripts/northrend/ulduar/ulduar/boss_vezax.cpp
 new file mode 100644
-index 0000000..2cd766b
+index 0000000..7fb3674
 --- /dev/null
 +++ b/scripts/northrend/ulduar/ulduar/boss_vezax.cpp
-@@ -0,0 +1,555 @@
+@@ -0,0 +1,562 @@
 +/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
 +* This program is free software; you can redistribute it and/or modify
 +* it under the terms of the GNU General Public License as published by
@@ -9530,10 +9548,11 @@ index 0000000..2cd766b
 +        zLoc = 342.188f;
 +
 +        m_bHasCheckedKeepers = false;
-+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-+
++        
 +        if(m_pInstance) 
 +            m_pInstance->SetData(TYPE_VEZAX, NOT_STARTED);
++
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 +    }
 +
 +    void Aggro(Unit *who) 
@@ -9589,9 +9608,15 @@ index 0000000..2cd766b
 +
 +        if(!m_bHasCheckedKeepers)
 +        {
-+            if(m_pInstance && m_pInstance->GetData(TYPE_HODIR) == DONE && m_pInstance->GetData(TYPE_FREYA) == DONE && m_pInstance->GetData(TYPE_THORIM) == DONE && m_pInstance->GetData(TYPE_MIMIRON) == DONE)
++            // hodir doesn't save!!! fix it
++            if(m_pInstance && /*m_pInstance->GetData(TYPE_HODIR) == DONE &&*/ m_pInstance->GetData(TYPE_FREYA) == DONE && m_pInstance->GetData(TYPE_THORIM) == DONE && m_pInstance->GetData(TYPE_MIMIRON) == DONE)
 +            {
 +                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                m_bHasCheckedKeepers = true;
++            }
++            else
++            {
++                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 +                m_bHasCheckedKeepers = true;
 +            }
 +        }
@@ -9964,10 +9989,10 @@ index 0000000..2cd766b
 \ No newline at end of file
 diff --git a/scripts/northrend/ulduar/ulduar/boss_xt002.cpp b/scripts/northrend/ulduar/ulduar/boss_xt002.cpp
 new file mode 100644
-index 0000000..2409674
+index 0000000..d967726
 --- /dev/null
 +++ b/scripts/northrend/ulduar/ulduar/boss_xt002.cpp
-@@ -0,0 +1,866 @@
+@@ -0,0 +1,868 @@
 +/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
 +* This program is free software; you can redistribute it and/or modify
 +* it under the terms of the GNU General Public License as published by
@@ -10469,7 +10494,8 @@ index 0000000..2409674
 +        {
 +            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
 +            {
-+                DoCast(pTarget, m_bIsRegularMode ? SPELL_LIGHT_BOMB : SPELL_LIGHT_BOMB_H);
++                // fix spell range
++                //DoCast(pTarget, m_bIsRegularMode ? SPELL_LIGHT_BOMB : SPELL_LIGHT_BOMB_H);
 +                pLightBombTarGUID = pTarget->GetGUID();
 +            }
 +
@@ -10483,7 +10509,8 @@ index 0000000..2409674
 +        {
 +            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
 +            {
-+                DoCast(pTarget, m_bIsRegularMode ? SPELL_GRAVITY_BOMB : SPELL_GRAVITY_BOMB_H);
++                // fix spell range
++                //DoCast(pTarget, m_bIsRegularMode ? SPELL_GRAVITY_BOMB : SPELL_GRAVITY_BOMB_H);
 +                pGravityBombTarGUID = pTarget->GetGUID();
 +            }
 +
@@ -10837,10 +10864,10 @@ index 0000000..2409674
 \ No newline at end of file
 diff --git a/scripts/northrend/ulduar/ulduar/boss_yogg_saron.cpp b/scripts/northrend/ulduar/ulduar/boss_yogg_saron.cpp
 new file mode 100644
-index 0000000..c121a26
+index 0000000..6c16f2f
 --- /dev/null
 +++ b/scripts/northrend/ulduar/ulduar/boss_yogg_saron.cpp
-@@ -0,0 +1,3043 @@
+@@ -0,0 +1,3044 @@
 +/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
 +* This program is free software; you can redistribute it and/or modify
 +* it under the terms of the GNU General Public License as published by
@@ -12991,7 +13018,8 @@ index 0000000..c121a26
 +    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
 +
 +    //if(m_pInstance && m_pInstance->GetData(TYPE_HODIR) == DONE && m_pInstance->GetData(TYPE_FREYA) == DONE && m_pInstance->GetData(TYPE_THORIM) == DONE && m_pInstance->GetData(TYPE_MIMIRON) == DONE)
-+    if(m_pInstance && m_pInstance->GetData(TYPE_HODIR) == DONE)
++    // hodir doesn't save! fix it!!!
++    if(m_pInstance /*&& m_pInstance->GetData(TYPE_HODIR) == DONE*/)
 +    {
 +        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 +        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
@@ -15497,7 +15525,7 @@ index 0524d55..650e641 100644
  #endif
 diff --git a/sql/Custom_Updates/Mangos/Northrend/UlduarRaid_Mangos.sql b/sql/Custom_Updates/Mangos/Northrend/UlduarRaid_Mangos.sql
 new file mode 100644
-index 0000000..8d84570
+index 0000000..e3ea13a
 --- /dev/null
 +++ b/sql/Custom_Updates/Mangos/Northrend/UlduarRaid_Mangos.sql
 @@ -0,0 +1,242 @@
@@ -15613,7 +15641,7 @@ index 0000000..8d84570
 +UPDATE creature_template SET ScriptName = "npc_hodir_mage" WHERE entry in (32893, 33327, 33331, 32946);
 +
 +-- Mimiron
-+UPDATE creature_template SET `AIName` = '', ScriptName = "boss_mimiron" WHERE entry = 33350;
++UPDATE creature_template SET unit_flags = 0, `AIName` = '', ScriptName = "boss_mimiron" WHERE entry = 33350;
 +UPDATE creature_template SET `RegenHealth`= 0, ScriptName = "boss_leviathan_mk" WHERE entry = 33432;
 +UPDATE creature_template SET ScriptName = "leviathan_turret" WHERE entry = 34071;
 +UPDATE creature_template SET `RegenHealth`= 0, ScriptName = "boss_vx001" WHERE entry = 33651;
@@ -15653,7 +15681,7 @@ index 0000000..8d84570
 +update `creature` set `position_y` = -434.64 where `guid` = 129391;
 +
 +-- Vezax
-+UPDATE creature_template SET ScriptName = "boss_vezax" WHERE entry = 33271;
++UPDATE creature_template SET unit_flags = 0, ScriptName = "boss_vezax" WHERE entry = 33271;
 +UPDATE creature_template SET MinHealth = 23009250, MaxHealth = 23009250, ScriptName = "boss_vezax" WHERE entry = 33449;
 +UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` in (33271, 33449);
 +UPDATE creature_template SET ScriptName = "mob_saronite_animus" WHERE entry = 33524;
@@ -16013,10 +16041,10 @@ index 0000000..1e130e9
 +-- Archivum
 \ No newline at end of file
 diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
-index a001a39..53e496d 100644
+index 3af30ff..0568472 100644
 --- a/system/ScriptLoader.cpp
 +++ b/system/ScriptLoader.cpp
-@@ -305,7 +305,22 @@ extern void AddSC_boss_maiden_of_grief();                   //Ulduar, halls_of_s
+@@ -319,7 +319,22 @@ extern void AddSC_boss_maiden_of_grief();                   //Ulduar, halls_of_s
  extern void AddSC_boss_sjonnir();
  extern void AddSC_halls_of_stone();
  extern void AddSC_instance_halls_of_stone();
@@ -16040,7 +16068,7 @@ index a001a39..53e496d 100644
  extern void AddSC_boss_ingvar();                            //utgarde_keep
  extern void AddSC_boss_keleseth();
  extern void AddSC_boss_skarvald_and_dalronn();
-@@ -710,7 +725,22 @@ void AddScripts()
+@@ -738,7 +753,22 @@ void AddScripts()
      AddSC_boss_sjonnir();
      AddSC_halls_of_stone();
      AddSC_instance_halls_of_stone();
