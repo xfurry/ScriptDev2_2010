@@ -96,11 +96,7 @@ struct MANGOS_DLL_DECL boss_s_and_d_dummyAI : public ScriptedAI
         return m_pInstance->instance->GetCreature(m_pInstance->GetData64(m_creature->GetEntry() == NPC_DALRONN ? NPC_SKARVALD : NPC_DALRONN));
     }
 
-    void Reset() 
-    { 
-        if(m_pInstance)
-            m_pInstance->SetData(TYPE_DALRONN, NOT_STARTED);
-    }
+    void Reset() { }
 
     void JustReachedHome()
     {
@@ -129,9 +125,6 @@ struct MANGOS_DLL_DECL boss_s_and_d_dummyAI : public ScriptedAI
         }
 
         Aggro(pWho);
-
-        if(m_pInstance)
-            m_pInstance->SetData(TYPE_DALRONN, IN_PROGRESS);
     }
 
     void JustSummoned(Creature* pSummoned)
@@ -167,9 +160,6 @@ struct MANGOS_DLL_DECL boss_s_and_d_dummyAI : public ScriptedAI
                 pBuddy->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
             }
         }
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_DALRONN, DONE);
     }
 };
 
