@@ -937,4 +937,5 @@ void AddSC_terokkar_forest()
     newscript->pGossipHello =  &GossipHello_npc_slim;
     newscript->pGossipSelect = &GossipSelect_npc_slim;
     newscript->RegisterSelf();
+
 }
