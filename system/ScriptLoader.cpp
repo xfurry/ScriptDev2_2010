@@ -279,6 +279,11 @@ extern void AddSC_boss_Bronjahn();                          //icecrown citadel -
 extern void AddSC_boss_Devourer_Of_Souls();
 extern void AddSC_Forge_Of_Souls();                         
 extern void AddSC_instance_forge_of_souls();
+extern void AddSC_boss_Garfrost();                          //icecrown citadel - frozen halls - pit of saron
+extern void AddSC_boss_Ick_and_Krick();
+extern void AddSC_boss_Tyrannus();
+extern void AddSC_instance_pit_of_saron();
+extern void AddSC_Pit_Of_Saron();
 extern void AddSC_boss_anubrekhan();                        //naxxramas
 extern void AddSC_boss_four_horsemen();
 extern void AddSC_boss_faerlina();
@@ -703,6 +708,11 @@ void AddScripts()
     AddSC_boss_Devourer_Of_Souls();
     AddSC_Forge_Of_Souls();                                
     AddSC_instance_forge_of_souls();
+	AddSC_boss_Garfrost();                                  //icecrown citadel - frozen halls - pit of saron
+    AddSC_boss_Ick_and_Krick();
+    AddSC_boss_Tyrannus();
+    AddSC_instance_pit_of_saron();
+    AddSC_Pit_Of_Saron();
     AddSC_boss_anubrekhan();                                //naxxramas
     AddSC_boss_four_horsemen();
     AddSC_boss_faerlina();
