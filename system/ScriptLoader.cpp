@@ -252,7 +252,8 @@ extern void AddSC_ungoro_crater();
 extern void AddSC_winterspring();
 
 //northrend
-extern void AddSC_boss_jedoga();                            //ahnkahet
+extern void AddSC_boss_amanitar();                          //ahnkahet
+extern void AddSC_boss_jedoga();                            
 extern void AddSC_boss_nadox();
 extern void AddSC_boss_taldaram();
 extern void AddSC_boss_volazj();
@@ -685,7 +686,8 @@ void AddScripts()
     AddSC_winterspring();
 
     //northrend
-    AddSC_boss_jedoga();                                    //ahnkahet
+    AddSC_boss_amanitar();                                  //ahnkahet
+    AddSC_boss_jedoga();                                    
     AddSC_boss_nadox();
     AddSC_boss_taldaram();
     AddSC_boss_volazj();
@@ -707,20 +709,20 @@ void AddScripts()
     AddSC_boss_moorabi();
     AddSC_boss_sladran();
     AddSC_instance_gundrak();
-	AddSC_boss_Bronjahn();                                   //icecrown citadel - frozen halls - forge of souls
+    AddSC_boss_Bronjahn();                                   //icecrown citadel - frozen halls - forge of souls
     AddSC_boss_Devourer_Of_Souls();
     AddSC_Forge_Of_Souls();                                
     AddSC_instance_forge_of_souls();
-	AddSC_boss_falric();                                    //icecrown citadel - frozen halls - halls of reflection
+    AddSC_boss_falric();                                    //icecrown citadel - frozen halls - halls of reflection
     AddSC_boss_marwyn();
     AddSC_boss_wrath_of_the_lich_king();
     AddSC_halls_of_reflection();                            
     AddSC_instance_halls_of_reflection();
-	AddSC_boss_Garfrost();                                  //icecrown citadel - frozen halls - pit of saron
+    AddSC_boss_Garfrost();                                  //icecrown citadel - frozen halls - pit of saron
     AddSC_boss_Ick_and_Krick();
     AddSC_boss_Tyrannus();
     AddSC_instance_pit_of_saron();
-    AddSC_Pit_Of_Saron();
+    AddSC_Pit_Of_Saron();                                   
     AddSC_boss_anubrekhan();                                //naxxramas
     AddSC_boss_four_horsemen();
     AddSC_boss_faerlina();

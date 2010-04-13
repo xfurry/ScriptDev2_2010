@@ -31,6 +31,8 @@ struct MANGOS_DLL_DECL instance_ahnkahet : public ScriptedInstance
     uint32 m_auiEncounter[MAX_ENCOUNTER];
     std::string strInstData;
 
+    uint32 m_auiVolunteerEncounter;
+
     uint64 m_uiElderNadoxGUID;
     uint64 m_uiJedogaShadowseekerGUID;
     uint64 m_uiTaldaramDoorGUID;
@@ -40,6 +42,8 @@ struct MANGOS_DLL_DECL instance_ahnkahet : public ScriptedInstance
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+
+        m_auiVolunteerEncounter = 0;
 
         m_uiElderNadoxGUID = 0;
         m_uiJedogaShadowseekerGUID = 0;
@@ -118,6 +122,9 @@ struct MANGOS_DLL_DECL instance_ahnkahet : public ScriptedInstance
             case TYPE_AMANITAR:
                 m_auiEncounter[4] = uiData;
                 break;
+            case TYPE_VOLUNTEER: 
+                m_auiVolunteerEncounter = uiData;
+                break;
             default:
                 error_log("SD2: Instance Ahn'Kahet: ERROR SetData = %u for type %u does not exist/not implemented.",uiType,uiData);
                 break;
@@ -173,6 +180,8 @@ struct MANGOS_DLL_DECL instance_ahnkahet : public ScriptedInstance
                 return m_auiEncounter[0];
             case TYPE_JEDOGA:
                 return m_auiEncounter[1];
+            case TYPE_VOLUNTEER:
+                return m_auiVolunteerEncounter;
         }
         return 0;
     }

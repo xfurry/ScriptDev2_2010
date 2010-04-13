@@ -20,6 +20,7 @@ enum
     TYPE_JEDOGA             = 2,
     TYPE_VOLAZJ             = 3,
     TYPE_AMANITAR           = 4,
+    TYPE_VOLUNTEER          = 5,        // needed for achiev: volunteer work
 
     GO_DOOR_TALDARAM        = 192236,
     GO_ANCIENT_DEVICE_L     = 193093,
