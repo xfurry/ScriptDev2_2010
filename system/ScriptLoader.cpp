@@ -315,7 +315,8 @@ extern void AddSC_boss_ionar();
 extern void AddSC_boss_loken();
 extern void AddSC_boss_volkhan();
 extern void AddSC_instance_halls_of_lightning();
-extern void AddSC_boss_maiden_of_grief();                   //Ulduar, halls_of_stone
+extern void AddSC_boss_krystallus();                        //Ulduar, halls_of_stone
+extern void AddSC_boss_maiden_of_grief();                  
 extern void AddSC_boss_sjonnir();
 extern void AddSC_halls_of_stone();
 extern void AddSC_instance_halls_of_stone();
@@ -749,7 +750,8 @@ void AddScripts()
     AddSC_boss_loken();
     AddSC_boss_volkhan();
     AddSC_instance_halls_of_lightning();
-    AddSC_boss_maiden_of_grief();                           //Ulduar, halls_of_stone
+    AddSC_boss_krystallus();                                //Ulduar, halls_of_stone
+    AddSC_boss_maiden_of_grief();                           
     AddSC_boss_sjonnir();
     AddSC_halls_of_stone();
     AddSC_instance_halls_of_stone();

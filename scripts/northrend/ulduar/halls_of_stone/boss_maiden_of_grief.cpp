@@ -43,7 +43,9 @@ enum
     SPELL_PILLAR_OF_WOE         = 50761,
     SPELL_PILLAR_OF_WOE_H       = 59727,
 
-    SPELL_PARTING_SORROW        = 59723
+    SPELL_PARTING_SORROW        = 59723,
+
+    ACHIEVEMENT_GOOD_GRIEF      = 1866,
 };
 
 /*######
@@ -65,17 +67,29 @@ struct MANGOS_DLL_DECL boss_maiden_of_griefAI : public ScriptedAI
     uint32 m_uiStormTimer;
     uint32 m_uiShockTimer;
     uint32 m_uiPillarTimer;
+    uint32 m_uiPartingSorrowTimer;
+
+    uint32 AchievTimer;
 
     void Reset()
     {
         m_uiStormTimer = 5000;
         m_uiShockTimer = 10000;
         m_uiPillarTimer = 15000;
+        m_uiPartingSorrowTimer = 9000 + rand()%5000;
+
+        AchievTimer = 0;
+
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_MAIDEN, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
         DoScriptText(SAY_AGGRO, m_creature);
+
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_MAIDEN, IN_PROGRESS);
     }
 
     void KilledUnit(Unit* pVictim)
@@ -95,12 +109,21 @@ struct MANGOS_DLL_DECL boss_maiden_of_griefAI : public ScriptedAI
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_MAIDEN, DONE);
+
+        if (!m_bIsRegularMode && AchievTimer < 60000)
+        {
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_GOOD_GRIEF);
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        //Achievement counter
+        AchievTimer += uiDiff;
 
         if (m_uiStormTimer < uiDiff)
         {
@@ -131,6 +154,15 @@ struct MANGOS_DLL_DECL boss_maiden_of_griefAI : public ScriptedAI
         }
         else
             m_uiShockTimer -= uiDiff;
+
+        if (m_uiPartingSorrowTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_PARTING_SORROW);
+            m_uiPartingSorrowTimer = 12000 + rand()%5000;
+        }
+        else
+            m_uiPartingSorrowTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }

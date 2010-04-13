@@ -14,14 +14,36 @@ enum
     TYPE_KRYSTALLUS         = 2,
     TYPE_SJONNIR            = 3,
 
+    DATA_KRYSTALLUS         = 5,
+    DATA_MAIDEN             = 6,
+    DATA_TRIBUNAL           = 7,
+    DATA_SJONNIR            = 8,
+
+    DATA_KADDRAK            = 9,
+    DATA_ABEDNEUM           = 10,
+    DATA_MARNAK             = 11,
+
+    DATA_GO_TRIBUNAL_CONSOLE = 12,
+    DATA_GO_SKY_FLOOR       = 13,
+    DATA_GO_KADDRAK         = 14,
+    DATA_GO_ABEDNEUM        = 15,
+    DATA_GO_MARNAK          = 16,
+
     NPC_BRANN               = 28070,
+    NPC_KRYSTALLUS          = 27977,
+    NPC_MAIDEN              = 27975,
+    NPC_SJONNIR             = 27978,
 
     NPC_KADDRAK             = 30898,
     NPC_ABEDNEUM            = 30899,
     NPC_MARNAK              = 30897,
 
     GO_DOOR_SJONNIR         = 191296,
-    GO_DOOR_TRIBUNAL        = 191294,                       // possibly closed during event?
+    GO_DOOR_TRIBUNAL        = 191295,                       
+    GO_DOOR_MAIDEN          = 191292,
+    GO_DOOR_ENTER           = 191459,
+    GO_DOOR_BRAN            = 191293,
+    GO_DOOR_CHAMBER         = 191294,
 
     GO_TRIBUNAL_CHEST       = 190586,
     GO_TRIBUNAL_CHEST_H     = 193996,
