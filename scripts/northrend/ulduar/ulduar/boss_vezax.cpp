@@ -190,7 +190,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
             }
             else
             {
-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                //m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 m_bHasCheckedKeepers = true;
             }
         }
