@@ -70,6 +70,8 @@ enum
     EQUIP_SHIELD                            = 35642,
     EQUIP_MACE                              = 43623,
 
+    ACHIEV_LIGHTNING_STRUCK                 = 1834,         // needs script support
+
     STANCE_DEFENSIVE                        = 0,
     STANCE_BERSERKER                        = 1,
     STANCE_BATTLE                           = 2

@@ -62,6 +62,8 @@ enum
     NPC_MOLTEN_GOLEM                        = 28695,
     NPC_BRITTLE_GOLEM                       = 28681,
 
+    ACHIEV_SHATTER_RESISTANT                = 2042,
+
     POINT_ID_ANVIL                          = 0,
     MAX_GOLEM                               = 2
 };
@@ -88,6 +90,8 @@ struct MANGOS_DLL_DECL boss_volkhanAI : public ScriptedAI
     bool m_bIsStriking;
     bool m_bCanShatterGolem;
 
+    uint8 m_uiShatteredGolems;
+
     uint32 m_uiPause_Timer;
     uint32 m_uiShatteringStomp_Timer;
     uint32 m_uiShatter_Timer;
@@ -99,6 +103,7 @@ struct MANGOS_DLL_DECL boss_volkhanAI : public ScriptedAI
         m_bIsStriking = false;
         m_bHasTemper = false;
         m_bCanShatterGolem = false;
+        m_uiShatteredGolems = 0;
 
         m_uiPause_Timer = 3500;
         m_uiShatteringStomp_Timer = 0;
@@ -141,6 +146,13 @@ struct MANGOS_DLL_DECL boss_volkhanAI : public ScriptedAI
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_VOLKHAN, DONE);
+
+        if(!m_bIsRegularMode && m_uiShatteredGolems <= 4)
+        {
+            /* needs more testing!
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(ACHIEV_SHATTER_RESISTANT);*/
+        }
     }
 
     void KilledUnit(Unit* pVictim)
@@ -181,7 +193,10 @@ struct MANGOS_DLL_DECL boss_volkhanAI : public ScriptedAI
             {
                  // only shatter brittle golems
                 if (pTemp->isAlive() && pTemp->GetEntry() == NPC_BRITTLE_GOLEM)
+                {
                     pTemp->CastSpell(pTemp, m_bIsRegularMode ? SPELL_SHATTER_N : SPELL_SHATTER_H, false);
+                    m_uiShatteredGolems++;
+                }
             }
         }
     }
@@ -276,8 +291,11 @@ struct MANGOS_DLL_DECL boss_volkhanAI : public ScriptedAI
             DoScriptText(urand(0, 1) ? SAY_FORGE_1 : SAY_FORGE_2, m_creature);
 
             m_bHasTemper = true;
+            m_bIsStriking = true;
 
             m_creature->CastSpell(m_creature, SPELL_TEMPER, false);
+            for(uint8 i = 0; i < 2; i++)
+                m_creature->SummonCreature(NPC_MOLTEN_GOLEM, 1325.464f + i, -92.513f + i, 56.717f, 5.514f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
         }
 
         DoMeleeAttackIfReady();

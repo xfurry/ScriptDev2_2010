@@ -43,10 +43,14 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
     uint64 m_uiLokenGUID;
     uint64 m_uiVolkhanGUID;
 
+    uint64 m_uiBjarngrimDoorGUID;
     uint64 m_uiVolkhanDoorGUID;
     uint64 m_uiIonarDoorGUID;
     uint64 m_uiLokenDoorGUID;
     uint64 m_uiLokenGlobeGUID;
+    uint64 m_uiBjarngrimEnterDoorGUID;
+    uint64 m_uiIonarCombatDoorGUID;
+    uint64 m_uiLokenCombatDoorGUID;
 
     void Initialize()
     {
@@ -57,10 +61,14 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
         m_uiIonarGUID            = 0;
         m_uiLokenGUID            = 0;
 
+        m_uiBjarngrimDoorGUID    = 0;
         m_uiVolkhanDoorGUID      = 0;
         m_uiIonarDoorGUID        = 0;
         m_uiLokenDoorGUID        = 0;
         m_uiLokenGlobeGUID       = 0;
+        m_uiBjarngrimEnterDoorGUID  = 0;
+        m_uiIonarCombatDoorGUID     = 0;
+        m_uiLokenCombatDoorGUID     = 0;
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -86,6 +94,12 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
     {
         switch(pGo->GetEntry())
         {
+            case GO_BJARNGRIM_DOOR:
+                m_uiBjarngrimDoorGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_READY);
+                if (m_auiEncounter[0] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
             case GO_VOLKHAN_DOOR:
                 m_uiVolkhanDoorGUID = pGo->GetGUID();
                 if (m_auiEncounter[1] == DONE)
@@ -104,7 +118,31 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
             case GO_LOKEN_THRONE:
                 m_uiLokenGlobeGUID = pGo->GetGUID();
                 break;
+            case GO_IONAR_COMBAT_DOOR:
+                m_uiIonarCombatDoorGUID = pGo->GetGUID();
+                if (m_auiEncounter[2] == IN_PROGRESS)
+                    pGo->SetGoState(GO_STATE_READY);
+                break;
+            case GO_LOKEN_COMBAT_DOOR:
+                m_uiLokenCombatDoorGUID = pGo->GetGUID();
+                if (m_auiEncounter[3] == IN_PROGRESS)
+                    pGo->SetGoState(GO_STATE_READY);
+                break;
         }
+    }
+
+    void OpenDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
+    }
+
+    void CloseDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_READY);
     }
 
     void SetData(uint32 uiType, uint32 uiData)
@@ -112,6 +150,8 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
         switch(uiType)
         {
             case TYPE_BJARNGRIM:
+                if (uiData == DONE)
+                    OpenDoor(m_uiBjarngrimDoorGUID);
                 m_auiEncounter[0] = uiData;
                 break;
             case TYPE_VOLKHAN:
@@ -121,18 +161,29 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
                 break;
             case TYPE_IONAR:
                 if (uiData == DONE)
+                {
                     DoUseDoorOrButton(m_uiIonarDoorGUID);
+                    DoUseDoorOrButton(m_uiIonarCombatDoorGUID);
+                }
+                if (uiData == IN_PROGRESS)
+                    CloseDoor(m_uiIonarCombatDoorGUID);
+                if (uiData == NOT_STARTED)
+                    OpenDoor(m_uiIonarCombatDoorGUID);
                 m_auiEncounter[2] = uiData;
                 break;
             case TYPE_LOKEN:
                 if (uiData == DONE)
                 {
                     DoUseDoorOrButton(m_uiLokenDoorGUID);
-
+                    DoUseDoorOrButton(m_uiLokenCombatDoorGUID);
                     //Appears to be type 5 GO with animation. Need to figure out how this work, code below only placeholder
                     if (GameObject* pGlobe = instance->GetGameObject(m_uiLokenGlobeGUID))
                         pGlobe->SetGoState(GO_STATE_ACTIVE);
                 }
+                if(uiData == IN_PROGRESS)
+                    CloseDoor(m_uiLokenCombatDoorGUID);
+                if(uiData == NOT_STARTED)
+                    OpenDoor(m_uiLokenCombatDoorGUID);
                 m_auiEncounter[3] = uiData;
                 break;
         }

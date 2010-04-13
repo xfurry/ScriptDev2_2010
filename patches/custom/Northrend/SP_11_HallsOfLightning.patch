@@ -1,0 +1,364 @@
+diff --git a/scripts/northrend/ulduar/halls_of_lightning/boss_bjarngrim.cpp b/scripts/northrend/ulduar/halls_of_lightning/boss_bjarngrim.cpp
+index b937461..dae087a 100644
+--- a/scripts/northrend/ulduar/halls_of_lightning/boss_bjarngrim.cpp
++++ b/scripts/northrend/ulduar/halls_of_lightning/boss_bjarngrim.cpp
+@@ -70,6 +70,8 @@ enum
+     EQUIP_SHIELD                            = 35642,
+     EQUIP_MACE                              = 43623,
+ 
++    ACHIEV_LIGHTNING_STRUCK                 = 1834,         // needs script support
++
+     STANCE_DEFENSIVE                        = 0,
+     STANCE_BERSERKER                        = 1,
+     STANCE_BATTLE                           = 2
+diff --git a/scripts/northrend/ulduar/halls_of_lightning/boss_loken.cpp b/scripts/northrend/ulduar/halls_of_lightning/boss_loken.cpp
+index f58e07b..6a4f4f0 100644
+--- a/scripts/northrend/ulduar/halls_of_lightning/boss_loken.cpp
++++ b/scripts/northrend/ulduar/halls_of_lightning/boss_loken.cpp
+@@ -47,9 +47,13 @@ enum
+ 
+     SPELL_PULSING_SHOCKWAVE_N           = 52961,
+     SPELL_PULSING_SHOCKWAVE_H           = 59836,
+-    SPELL_PULSING_SHOCKWAVE_AURA        = 59414
++    SPELL_PULSING_SHOCKWAVE_AURA        = 59414,
++
++    ACHIEVEMENT_TIMELY_DEATH            = 1867,
+ };
+ 
++#define MAX_ENCOUNTER_TIME  2 * 60 * 1000
++
+ /*######
+ ## Boss Loken
+ ######*/
+@@ -67,6 +71,10 @@ struct MANGOS_DLL_DECL boss_lokenAI : public ScriptedAI
+ 
+     bool m_bIsRegularMode;
+     bool m_bIsAura;
++    bool m_bHasTaunted;
++
++    uint8  m_uiIntroCount;
++    uint32 m_uiIntroTimer;
+ 
+     uint32 m_uiArcLightning_Timer;
+     uint32 m_uiLightningNova_Timer;
+@@ -74,11 +82,15 @@ struct MANGOS_DLL_DECL boss_lokenAI : public ScriptedAI
+     uint32 m_uiResumePulsingShockwave_Timer;
+ 
+     uint32 m_uiHealthAmountModifier;
++    uint32 EncounterTime;
+ 
+     void Reset()
+     {
+         m_bIsAura = false;
+ 
++        m_uiIntroCount = 0;
++        m_uiIntroTimer = 10000;
++
+         m_uiArcLightning_Timer = 15000;
+         m_uiLightningNova_Timer = 20000;
+         m_uiPulsingShockwave_Timer = 2000;
+@@ -86,6 +98,8 @@ struct MANGOS_DLL_DECL boss_lokenAI : public ScriptedAI
+ 
+         m_uiHealthAmountModifier = 1;
+ 
++        EncounterTime = 0;
++
+         if (m_pInstance)
+             m_pInstance->SetData(TYPE_LOKEN, NOT_STARTED);
+     }
+@@ -98,12 +112,28 @@ struct MANGOS_DLL_DECL boss_lokenAI : public ScriptedAI
+             m_pInstance->SetData(TYPE_LOKEN, IN_PROGRESS);
+     }
+ 
++    void MoveInLineOfSight(Unit* pWho)
++    {
++        if (!m_bHasTaunted && m_creature->IsWithinDistInMap(pWho, 120.0f))
++        {
++            m_bHasTaunted = true;
++        }
++
++        ScriptedAI::MoveInLineOfSight(pWho);
++    }
++
+     void JustDied(Unit* pKiller)
+     {
+         DoScriptText(SAY_DEATH, m_creature);
+ 
+         if (m_pInstance)
+             m_pInstance->SetData(TYPE_LOKEN, DONE);
++
++        if (!m_bIsRegularMode && EncounterTime <= MAX_ENCOUNTER_TIME)
++        {
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_TIMELY_DEATH);
++        }
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -118,14 +148,30 @@ struct MANGOS_DLL_DECL boss_lokenAI : public ScriptedAI
+ 
+     void UpdateAI(const uint32 uiDiff)
+     {
++        if(m_bHasTaunted)
++            if(m_uiIntroTimer < uiDiff)
++            {
++                switch(m_uiIntroCount)
++                {
++                    case 0:DoScriptText(SAY_INTRO_1, m_creature);break;
++                    case 1:DoScriptText(SAY_INTRO_2, m_creature);break;
++                    default: break;
++                }
++                if(m_uiIntroCount < 3)
++                ++m_uiIntroCount;
++                m_uiIntroTimer = 20000;
++            }else m_uiIntroTimer -= uiDiff;
++
+         //Return since we have no target
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        EncounterTime += uiDiff;
++
+         if (m_bIsAura)
+         {
+             // workaround for PULSING_SHOCKWAVE
+-            /*if (m_uiPulsingShockwave_Timer < uiDiff)
++            if (m_uiPulsingShockwave_Timer < uiDiff)
+             {
+                 Map *map = m_creature->GetMap();
+                 if (map->IsDungeon())
+@@ -144,13 +190,13 @@ struct MANGOS_DLL_DECL boss_lokenAI : public ScriptedAI
+                             if (m_fDist <= 1.0f) // Less than 1 yard
+                                 dmg = (m_bIsRegularMode ? 800 : 850); // need to correct damage
+                             else // Further from 1 yard
+-                                dmg = round((m_bIsRegularMode ? 200 : 250) * m_fDist) + (m_bIsRegularMode ? 800 : 850); // need to correct damage
++                                dmg = ((m_bIsRegularMode ? 200 : 250) * m_fDist) + (m_bIsRegularMode ? 800 : 850); // need to correct damage
+ 
+                             m_creature->CastCustomSpell(i->getSource(), (m_bIsRegularMode ? 52942 : 59837), &dmg, 0, 0, false);
+                         }
+                 }
+                 m_uiPulsingShockwave_Timer = 2000;
+-            }else m_uiPulsingShockwave_Timer -= uiDiff;*/
++            }else m_uiPulsingShockwave_Timer -= uiDiff;
+         }
+         else
+         {
+diff --git a/scripts/northrend/ulduar/halls_of_lightning/boss_volkhan.cpp b/scripts/northrend/ulduar/halls_of_lightning/boss_volkhan.cpp
+index fa5bb47..85c07c1 100644
+--- a/scripts/northrend/ulduar/halls_of_lightning/boss_volkhan.cpp
++++ b/scripts/northrend/ulduar/halls_of_lightning/boss_volkhan.cpp
+@@ -62,6 +62,8 @@ enum
+     NPC_MOLTEN_GOLEM                        = 28695,
+     NPC_BRITTLE_GOLEM                       = 28681,
+ 
++    ACHIEV_SHATTER_RESISTANT                = 2042,
++
+     POINT_ID_ANVIL                          = 0,
+     MAX_GOLEM                               = 2
+ };
+@@ -88,6 +90,8 @@ struct MANGOS_DLL_DECL boss_volkhanAI : public ScriptedAI
+     bool m_bIsStriking;
+     bool m_bCanShatterGolem;
+ 
++    uint8 m_uiShatteredGolems;
++
+     uint32 m_uiPause_Timer;
+     uint32 m_uiShatteringStomp_Timer;
+     uint32 m_uiShatter_Timer;
+@@ -99,6 +103,7 @@ struct MANGOS_DLL_DECL boss_volkhanAI : public ScriptedAI
+         m_bIsStriking = false;
+         m_bHasTemper = false;
+         m_bCanShatterGolem = false;
++        m_uiShatteredGolems = 0;
+ 
+         m_uiPause_Timer = 3500;
+         m_uiShatteringStomp_Timer = 0;
+@@ -141,6 +146,13 @@ struct MANGOS_DLL_DECL boss_volkhanAI : public ScriptedAI
+ 
+         if (m_pInstance)
+             m_pInstance->SetData(TYPE_VOLKHAN, DONE);
++
++        if(!m_bIsRegularMode && m_uiShatteredGolems <= 4)
++        {
++            /* needs more testing!
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEV_SHATTER_RESISTANT);*/
++        }
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -181,7 +193,10 @@ struct MANGOS_DLL_DECL boss_volkhanAI : public ScriptedAI
+             {
+                  // only shatter brittle golems
+                 if (pTemp->isAlive() && pTemp->GetEntry() == NPC_BRITTLE_GOLEM)
++                {
+                     pTemp->CastSpell(pTemp, m_bIsRegularMode ? SPELL_SHATTER_N : SPELL_SHATTER_H, false);
++                    m_uiShatteredGolems++;
++                }
+             }
+         }
+     }
+@@ -276,8 +291,11 @@ struct MANGOS_DLL_DECL boss_volkhanAI : public ScriptedAI
+             DoScriptText(urand(0, 1) ? SAY_FORGE_1 : SAY_FORGE_2, m_creature);
+ 
+             m_bHasTemper = true;
++            m_bIsStriking = true;
+ 
+             m_creature->CastSpell(m_creature, SPELL_TEMPER, false);
++            for(uint8 i = 0; i < 2; i++)
++                m_creature->SummonCreature(NPC_MOLTEN_GOLEM, 1325.464f + i, -92.513f + i, 56.717f, 5.514f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
+         }
+ 
+         DoMeleeAttackIfReady();
+diff --git a/scripts/northrend/ulduar/halls_of_lightning/halls_of_lightning.h b/scripts/northrend/ulduar/halls_of_lightning/halls_of_lightning.h
+index 1311076..7fae27b 100644
+--- a/scripts/northrend/ulduar/halls_of_lightning/halls_of_lightning.h
++++ b/scripts/northrend/ulduar/halls_of_lightning/halls_of_lightning.h
+@@ -24,10 +24,14 @@ enum
+     NPC_IONAR               = 28546,
+     NPC_LOKEN               = 28923,
+ 
++    GO_BJARNGRIM_DOOR       = 191416,                       //_doors10
+     GO_VOLKHAN_DOOR         = 191325,                       //_doors07
+     GO_IONAR_DOOR           = 191326,                       //_doors05
+     GO_LOKEN_DOOR           = 191324,                       //_doors02
+-    GO_LOKEN_THRONE         = 192654
++    GO_LOKEN_THRONE         = 192654,
++    GO_IONAR_COMBAT_DOOR    = 191327,                       //door06
++    GO_LOKEN_COMBAT_DOOR    = 191328,                       //door04
++    GO_DOOR                 = 191415                        //unk
+ };
+ 
+ #endif
+diff --git a/scripts/northrend/ulduar/halls_of_lightning/instance_halls_of_lightning.cpp b/scripts/northrend/ulduar/halls_of_lightning/instance_halls_of_lightning.cpp
+index 3f2dc17..9614ebc 100644
+--- a/scripts/northrend/ulduar/halls_of_lightning/instance_halls_of_lightning.cpp
++++ b/scripts/northrend/ulduar/halls_of_lightning/instance_halls_of_lightning.cpp
+@@ -43,10 +43,14 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
+     uint64 m_uiLokenGUID;
+     uint64 m_uiVolkhanGUID;
+ 
++    uint64 m_uiBjarngrimDoorGUID;
+     uint64 m_uiVolkhanDoorGUID;
+     uint64 m_uiIonarDoorGUID;
+     uint64 m_uiLokenDoorGUID;
+     uint64 m_uiLokenGlobeGUID;
++    uint64 m_uiBjarngrimEnterDoorGUID;
++    uint64 m_uiIonarCombatDoorGUID;
++    uint64 m_uiLokenCombatDoorGUID;
+ 
+     void Initialize()
+     {
+@@ -57,10 +61,14 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
+         m_uiIonarGUID            = 0;
+         m_uiLokenGUID            = 0;
+ 
++        m_uiBjarngrimDoorGUID    = 0;
+         m_uiVolkhanDoorGUID      = 0;
+         m_uiIonarDoorGUID        = 0;
+         m_uiLokenDoorGUID        = 0;
+         m_uiLokenGlobeGUID       = 0;
++        m_uiBjarngrimEnterDoorGUID  = 0;
++        m_uiIonarCombatDoorGUID     = 0;
++        m_uiLokenCombatDoorGUID     = 0;
+     }
+ 
+     void OnCreatureCreate(Creature* pCreature)
+@@ -86,6 +94,12 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
+     {
+         switch(pGo->GetEntry())
+         {
++            case GO_BJARNGRIM_DOOR:
++                m_uiBjarngrimDoorGUID = pGo->GetGUID();
++                pGo->SetGoState(GO_STATE_READY);
++                if (m_auiEncounter[0] == DONE)
++                    pGo->SetGoState(GO_STATE_ACTIVE);
++                break;
+             case GO_VOLKHAN_DOOR:
+                 m_uiVolkhanDoorGUID = pGo->GetGUID();
+                 if (m_auiEncounter[1] == DONE)
+@@ -104,14 +118,40 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
+             case GO_LOKEN_THRONE:
+                 m_uiLokenGlobeGUID = pGo->GetGUID();
+                 break;
++            case GO_IONAR_COMBAT_DOOR:
++                m_uiIonarCombatDoorGUID = pGo->GetGUID();
++                if (m_auiEncounter[2] == IN_PROGRESS)
++                    pGo->SetGoState(GO_STATE_READY);
++                break;
++            case GO_LOKEN_COMBAT_DOOR:
++                m_uiLokenCombatDoorGUID = pGo->GetGUID();
++                if (m_auiEncounter[3] == IN_PROGRESS)
++                    pGo->SetGoState(GO_STATE_READY);
++                break;
+         }
+     }
+ 
++    void OpenDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
++    }
++
++    void CloseDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_READY);
++    }
++
+     void SetData(uint32 uiType, uint32 uiData)
+     {
+         switch(uiType)
+         {
+             case TYPE_BJARNGRIM:
++                if (uiData == DONE)
++                    OpenDoor(m_uiBjarngrimDoorGUID);
+                 m_auiEncounter[0] = uiData;
+                 break;
+             case TYPE_VOLKHAN:
+@@ -121,18 +161,29 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
+                 break;
+             case TYPE_IONAR:
+                 if (uiData == DONE)
++                {
+                     DoUseDoorOrButton(m_uiIonarDoorGUID);
++                    DoUseDoorOrButton(m_uiIonarCombatDoorGUID);
++                }
++                if (uiData == IN_PROGRESS)
++                    CloseDoor(m_uiIonarCombatDoorGUID);
++                if (uiData == NOT_STARTED)
++                    OpenDoor(m_uiIonarCombatDoorGUID);
+                 m_auiEncounter[2] = uiData;
+                 break;
+             case TYPE_LOKEN:
+                 if (uiData == DONE)
+                 {
+                     DoUseDoorOrButton(m_uiLokenDoorGUID);
+-
++                    DoUseDoorOrButton(m_uiLokenCombatDoorGUID);
+                     //Appears to be type 5 GO with animation. Need to figure out how this work, code below only placeholder
+                     if (GameObject* pGlobe = instance->GetGameObject(m_uiLokenGlobeGUID))
+                         pGlobe->SetGoState(GO_STATE_ACTIVE);
+                 }
++                if(uiData == IN_PROGRESS)
++                    CloseDoor(m_uiLokenCombatDoorGUID);
++                if(uiData == NOT_STARTED)
++                    OpenDoor(m_uiLokenCombatDoorGUID);
+                 m_auiEncounter[3] = uiData;
+                 break;
+         }
+diff --git a/sql/Custom_Updates/Mangos/Northrend/HallsOfLightning_Mangos.sql b/sql/Custom_Updates/Mangos/Northrend/HallsOfLightning_Mangos.sql
+new file mode 100644
+index 0000000..4028950
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Northrend/HallsOfLightning_Mangos.sql
+@@ -0,0 +1,6 @@
++/* HALLS OF LIGHTNING */
++-- Fix invisible stalker!
++UPDATE `creature_template` SET `faction_A` = 35, `faction_H` = 35 where `entry` = 28947;
++/* HALLS OF LIGHTNING */
++-- EventAI doesn't work properly, set npcs to generic creature
++update `creature_template` set `AIName` = '', `ScriptName` = 'generic_creature' where `entry` in (28961, 28965);
+\ No newline at end of file
