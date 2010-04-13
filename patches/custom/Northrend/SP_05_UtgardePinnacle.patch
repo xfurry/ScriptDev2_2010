@@ -1,0 +1,1903 @@
+diff --git a/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_gortok.cpp b/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_gortok.cpp
+index 178782a..5a32d38 100644
+--- a/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_gortok.cpp
++++ b/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_gortok.cpp
+@@ -1,23 +1,23 @@
+ /* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+- */
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
+ 
+ /* ScriptData
+ SDName: Boss_Gortok
+-SD%Complete: 20%
+-SDComment:
++SD%Complete: 60%
++SDComment: Beast event not implemented!
+ SDCategory: Utgarde Pinnacle
+ EndScriptData */
+ 
+@@ -39,7 +39,34 @@ enum
+     SPELL_WITHERING_ROAR    = 48256,
+     SPELL_WITHERING_ROAR_H  = 59267,
+ 
+-    SPELL_ARCING_SMASH      = 48260
++    SPELL_ARCING_SMASH      = 48260,
++
++    // Massive Jormungar
++    SPELL_ACID_SPIT                          = 48132,
++    SPELL_ACID_SPLATTER_N                    = 48136,
++    SPELL_ACID_SPLATTER_H                    = 59272,
++    SPELL_POISON_BREATH_N                    = 48133,
++    SPELL_POISON_BREATH_H                    = 59271,
++    NPC_JORMUNGAR_WORM                       = 27228,
++
++    // Ferocious Rhino
++    SPELL_GORE_N                             = 48130,
++    SPELL_GORE_H                             = 59264,
++    SPELL_GRIEVOUS_WOUND_N                   = 48105,
++    SPELL_GRIEVOUS_WOUND_H                   = 59263,
++    SPELL_STOMP                              = 48131,
++
++    // Ravenous Furbolg
++    SPELL_CHAIN_LIGHTING_N                   = 48140,
++    SPELL_CHAIN_LIGHTING_H                   = 59273,
++    SPELL_CRAZED                             = 48139,
++    SPELL_TERRIFYING_ROAD                    = 48144,
++
++    // Frenzied Worgen
++    SPELL_MORTAL_WOUND_N                     = 48137,
++    SPELL_MORTAL_WOUND_H                     = 59265,
++    SPELL_ENRAGE_1                           = 48138,
++    SPELL_ENRAGE_2                           = 48142
+ };
+ 
+ /*######
+@@ -58,15 +85,111 @@ struct MANGOS_DLL_DECL boss_gortokAI : public ScriptedAI
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    uint32 m_uiRoarTimer;
++    uint32 m_uiImpaleTimer;
++    uint32 m_uiArcingSmashTimer;
++    uint32 m_uiAnimalCheck_Timer;
++    uint32 m_uiAnimalCounter;
++    Unit* pPlayer;
++
+     void Reset()
+     {
++        m_uiRoarTimer        = urand(22000,28000);
++        m_uiImpaleTimer      = urand(15000,25000);
++        m_uiArcingSmashTimer = urand(10000,30000);
++        m_uiAnimalCheck_Timer = 1000;
++        m_uiAnimalCounter = 0;
++        pPlayer = NULL;
++        DoCast(m_creature, SPELL_FREEZE_ANIM);
++
++        if (m_pInstance)
++        {
++            if(m_creature->isAlive())
++            {
++                m_pInstance->SetData(TYPE_GORTOK, NOT_STARTED);
++                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++            }
++
++            if(GameObject* pGenerator = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_STATIS_GENERATOR)))
++                pGenerator->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++
++            Unit* pTemp = NULL;
++            if (pTemp = Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_WORGEN)))
++            {
++                if (pTemp->isDead())
++                    ((Creature*)pTemp)->Respawn();
++                pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++            }
++
++            if (pTemp = Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_FURBOLG)))
++            {
++                if (pTemp->isDead())
++                    ((Creature*)pTemp)->Respawn();
++                pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++            }
++
++            if (pTemp = Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_JORMUNGAR)))
++            {
++                if (pTemp->isDead())
++                    ((Creature*)pTemp)->Respawn();
++                pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++            }
++
++            if (pTemp = Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_RHINO)))
++            {
++                if (pTemp->isDead())
++                    ((Creature*)pTemp)->Respawn();
++                pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++            }
++        }
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         DoScriptText(SAY_AGGRO, m_creature);
++
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_GORTOK, IN_PROGRESS);
+     }
+ 
++    void AttackStart(Unit* pWho)
++    {
++        if (m_uiAnimalCounter < 5)
++            return;
++
++        if (!pWho || pWho == m_creature)
++            return;
++
++        if (m_creature->Attack(pWho, true))
++        {
++            m_creature->AddThreat(pWho, 0.0f);
++            m_creature->SetInCombatWith(pWho);
++            pWho->SetInCombatWith(m_creature);
++            DoStartMovement(pWho);
++        }
++    }
++
++    /*void MoveInLineOfSight(Unit* pWho)
++    {
++        if (!pWho)
++            return;
++
++        if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && m_creature->IsHostileTo(pWho) &&
++            !m_uiAnimalCounter && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 40))
++        {
++            if(m_pInstance)
++                m_pInstance->SetData(TYPE_GORTOK, IN_PROGRESS);
++
++            pPlayer = pWho;
++            ++m_uiAnimalCounter;
++        }
++    }*/
++
+     void KilledUnit(Unit* pVictim)
+     {
+         DoScriptText(urand(0, 1) ? SAY_SLAY_1 : SAY_SLAY_2, m_creature);
+@@ -82,18 +205,460 @@ struct MANGOS_DLL_DECL boss_gortokAI : public ScriptedAI
+ 
+     void UpdateAI(const uint32 uiDiff)
+     {
++        // start the encounter
++        if(m_pInstance && m_pInstance->GetData(TYPE_GORTOK) == SPECIAL)
++        {
++            ++m_uiAnimalCounter;
++            m_pInstance->SetData(TYPE_GORTOK, IN_PROGRESS);
++            if(GameObject* pGenerator = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_STATIS_GENERATOR)))
++                pGenerator->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++        }
++
++        if (m_uiAnimalCounter)
++        {
++            if(m_uiAnimalCheck_Timer < uiDiff)
++            {
++                Creature* pTemp = NULL;
++
++                if (m_uiAnimalCounter == 1)
++                    pTemp = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(NPC_WORGEN));
++                if (m_uiAnimalCounter == 2)
++                    pTemp = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(NPC_FURBOLG));
++                if (m_uiAnimalCounter == 3)
++                    pTemp = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(NPC_JORMUNGAR));
++                if (m_uiAnimalCounter == 4)
++                    pTemp = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(NPC_RHINO));
++
++                if (pTemp)
++                {
++                    if (!pTemp->isAlive())
++                        ++m_uiAnimalCounter;
++                    if (pTemp->isAlive() && !pTemp->getVictim())
++                    {
++                        if (pTemp->HasAura(SPELL_FREEZE_ANIM, EFFECT_INDEX_0))
++                            pTemp->RemoveAurasDueToSpell(SPELL_FREEZE_ANIM);
++                        pTemp->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                        pTemp->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                        ((Unit*)pTemp)->SetStandState(UNIT_STAND_STATE_STAND);
++                        pTemp->AI()->AttackStart(pPlayer);
++                    }
++                }
++
++                if (m_uiAnimalCounter == 5)
++                {
++                    if (m_creature->HasAura(SPELL_FREEZE_ANIM, EFFECT_INDEX_0))
++                        m_creature->RemoveAurasDueToSpell(SPELL_FREEZE_ANIM);
++                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                    ((Unit*)m_creature)->SetStandState(UNIT_STAND_STATE_STAND);
++                    m_uiAnimalCheck_Timer = 10000000;
++                    AttackStart(pPlayer);
++                }
++                else
++                {
++                    m_uiAnimalCheck_Timer = 1000;
++                    return;
++                }
++            }else m_uiAnimalCheck_Timer -= uiDiff;
++        }
++
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        if(m_uiRoarTimer < uiDiff)
++        {
++            if(m_creature->getVictim())
++                m_creature->CastSpell(m_creature->getVictim(), m_bIsRegularMode ? SPELL_WITHERING_ROAR : SPELL_WITHERING_ROAR_H, false);
++            m_uiRoarTimer = urand(22000,28000);
++        }else m_uiRoarTimer -= uiDiff;
++
++        if(m_uiImpaleTimer < uiDiff)
++        {
++            if(Unit* pPlayer = SelectUnit(SELECT_TARGET_RANDOM,0))
++                m_creature->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_IMPALE : SPELL_IMPALE_H, false);
++            m_uiImpaleTimer = urand(15000,25000);
++        }else m_uiImpaleTimer -= uiDiff;
++
++        if(m_uiArcingSmashTimer < uiDiff)   
++        {
++            if(m_creature->getVictim())
++                m_creature->CastSpell(m_creature->getVictim(), SPELL_ARCING_SMASH, false);
++            m_uiArcingSmashTimer = urand(10000,30000);
++        }else m_uiArcingSmashTimer -= uiDiff;
++
+         DoMeleeAttackIfReady();
+     }
+ };
+ 
++/*######
++## Mob Massive Jormungar
++######*/
++struct MANGOS_DLL_DECL mob_massive_jormungarAI : public ScriptedAI
++{
++    mob_massive_jormungarAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        Reset();
++    }
++
++    ScriptedInstance *m_pInstance;
++    bool m_bIsRegularMode;
++
++    uint32 AcidSpit_timer;
++    uint32 AcidSplatter_timer;
++    uint32 PoisonBreath_timer;
++
++    void Reset() {
++        AcidSpit_timer = 3000;
++        AcidSplatter_timer = 12000;
++        PoisonBreath_timer = 10000;
++        if (m_pInstance)
++            if (Creature* pPalehoof = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
++                ((boss_gortokAI*)pPalehoof->AI())->EnterEvadeMode();
++
++        DoCast(m_creature, SPELL_FREEZE_ANIM);
++    }
++
++    void AttackStart(Unit* pWho)
++    {
++        if (!pWho || pWho == m_creature)
++            return;
++
++        if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
++            return;
++
++        if (m_creature->Attack(pWho, true))
++        {
++            m_creature->AddThreat(pWho, 0.0f);
++            m_creature->SetInCombatWith(pWho);
++            pWho->SetInCombatWith(m_creature);
++            DoStartMovement(pWho);
++        }
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        // Acid Spit
++        if(AcidSpit_timer < uiDiff)
++        {
++            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_ACID_SPIT);
++            AcidSpit_timer = 2000 + rand()%2000;
++        }else AcidSpit_timer -= uiDiff;
++
++        // Acid Splatter
++        if(AcidSplatter_timer < uiDiff)
++        {
++            DoCast(m_creature, m_bIsRegularMode ? SPELL_ACID_SPLATTER_N : SPELL_ACID_SPLATTER_H);
++
++            // spell doesn't work, summon 6 Jormungar Worm instead
++            float x, y, z;
++            m_creature->GetPosition(x,y,z);
++            for(uint8 i = 0; i<6; ++i)
++            {
++                Creature* pJormungarWorm = m_creature->SummonCreature(NPC_JORMUNGAR_WORM, x+rand()%10, y+rand()%10, z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 360000);
++
++                Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0);
++                if (pTarget && pJormungarWorm) {
++                    pJormungarWorm->AddThreat(pTarget, 0.0f);
++                    pJormungarWorm->AI()->AttackStart(pTarget);
++                }
++            }
++
++            AcidSplatter_timer = 10000 + rand()%4000;
++        }else AcidSplatter_timer -= uiDiff;
++
++        // Poison Breath
++        if(PoisonBreath_timer < uiDiff)
++        {
++            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_POISON_BREATH_N : SPELL_POISON_BREATH_H);
++            PoisonBreath_timer = 8000 + rand()%4000;
++        }else PoisonBreath_timer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++/*######
++## Mob Ferocious Rhino
++######*/
++struct MANGOS_DLL_DECL mob_ferocious_rhinoAI : public ScriptedAI
++{
++    mob_ferocious_rhinoAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        Reset();
++    }
++
++    ScriptedInstance *m_pInstance;
++    bool m_bIsRegularMode;
++
++    uint32 Stomp_timer;
++    uint32 Gore_timer;
++    uint32 GrievousWound_timer;
++
++    void Reset() {
++        Stomp_timer = 10000;
++        Gore_timer = 15000;
++        GrievousWound_timer = 20000;
++
++        if (m_pInstance)
++            if (Creature* pPalehoof = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
++                ((boss_gortokAI*)pPalehoof->AI())->EnterEvadeMode();
++
++        DoCast(m_creature, SPELL_FREEZE_ANIM);
++    }
++
++    void AttackStart(Unit* pWho)
++    {
++        if (!pWho || pWho == m_creature)
++            return;
++
++        if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
++            return;
++
++        if (m_creature->Attack(pWho, true))
++        {
++            m_creature->AddThreat(pWho, 0.0f);
++            m_creature->SetInCombatWith(pWho);
++            pWho->SetInCombatWith(m_creature);
++            DoStartMovement(pWho);
++        }
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        // Stomp
++        if(Stomp_timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_STOMP);
++            Stomp_timer = 8000 + rand()%4000;
++        }else Stomp_timer -= uiDiff;
++
++        // Gore
++        if(Gore_timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_STOMP);
++            Gore_timer = 13000 + rand()%4000;
++        }else Gore_timer -= uiDiff;
++
++        // Grievous Wound
++        if(GrievousWound_timer < uiDiff)
++        {
++            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_GRIEVOUS_WOUND_N : SPELL_GRIEVOUS_WOUND_H);
++            GrievousWound_timer = 18000 + rand()%4000;
++        }else GrievousWound_timer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++/*######
++## Mob Ravenous Furbolg
++######*/
++struct MANGOS_DLL_DECL mob_ravenous_furbolgAI : public ScriptedAI
++{
++    mob_ravenous_furbolgAI(Creature* pCreature) : ScriptedAI(pCreature) {
++        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        Reset();
++    }
++
++    ScriptedInstance *m_pInstance;
++    bool m_bIsRegularMode;
++
++    uint32 ChainLightning_timer;
++    uint32 Crazed_timer;
++    uint32 TerrifyingRoar_timer;
++
++    void Reset() {
++        ChainLightning_timer = 5000;
++        Crazed_timer = 10000;
++        TerrifyingRoar_timer = 15000;
++
++        if (m_pInstance)
++            if (Creature* pPalehoof = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
++                ((boss_gortokAI*)pPalehoof->AI())->EnterEvadeMode();
++
++        DoCast(m_creature, SPELL_FREEZE_ANIM);
++    }
++
++    void AttackStart(Unit* pWho)
++    {
++        if (!pWho || pWho == m_creature)
++            return;
++
++        if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
++            return;
++
++        if (m_creature->Attack(pWho, true))
++        {
++            m_creature->AddThreat(pWho, 0.0f);
++            m_creature->SetInCombatWith(pWho);
++            pWho->SetInCombatWith(m_creature);
++            DoStartMovement(pWho);
++        }
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        // Chain Lightning
++        if(ChainLightning_timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_CHAIN_LIGHTING_N : SPELL_CHAIN_LIGHTING_H);
++            ChainLightning_timer = 5000 + rand()%5000;
++        }else ChainLightning_timer -= uiDiff;
++
++        // Crazed
++        if(Crazed_timer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_CRAZED);
++            Crazed_timer = 8000 + rand()%4000;
++        }else Crazed_timer -= uiDiff;
++
++        // Terrifying Roar
++        if(TerrifyingRoar_timer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_TERRIFYING_ROAD);
++            TerrifyingRoar_timer = 10000 + rand()%10000;
++        }else TerrifyingRoar_timer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++/*######
++## Mob Frenzied Worgen
++######*/
++struct MANGOS_DLL_DECL mob_frenzied_worgenAI : public ScriptedAI
++{
++    mob_frenzied_worgenAI(Creature* pCreature) : ScriptedAI(pCreature) {
++        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        Reset();
++    }
++
++    ScriptedInstance *m_pInstance;
++    bool m_bIsRegularMode;
++
++    uint32 MortalWound_timer;
++    uint32 Enrage1_timer;
++    uint32 Enrage2_timer;
++
++    void Reset() {
++        MortalWound_timer = 5000;
++        Enrage1_timer = 15000;
++        Enrage2_timer = 10000;
++
++        if (m_pInstance)
++            if (Creature* pPalehoof = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
++                ((boss_gortokAI*)pPalehoof->AI())->EnterEvadeMode();
++
++        DoCast(m_creature, SPELL_FREEZE_ANIM);
++    }
++
++    void AttackStart(Unit* pWho)
++    {
++        if (!pWho || pWho == m_creature)
++            return;
++
++        if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
++            return;
++
++        if (m_creature->Attack(pWho, true))
++        {            
++            m_creature->AddThreat(pWho, 0.0f);
++            m_creature->SetInCombatWith(pWho);
++            pWho->SetInCombatWith(m_creature);
++            DoStartMovement(pWho);
++        }    
++    }
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        // Mortal Wound
++        if(MortalWound_timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_MORTAL_WOUND_H : SPELL_MORTAL_WOUND_H);
++            MortalWound_timer = 3000 + rand()%4000;
++        }else MortalWound_timer -= uiDiff;
++
++        // Enrage1
++        if(Enrage1_timer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_ENRAGE_1);
++            Enrage1_timer = 15000;
++        }else Enrage1_timer -= uiDiff;
++
++        // Enrage2
++        if(Enrage2_timer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_ENRAGE_2);
++            Enrage2_timer = 10000;
++        }else Enrage2_timer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++bool GOHello_go_statis_generator(Player* pPlayer, GameObject* pGo)
++{
++    ScriptedInstance* pInstance = (ScriptedInstance*)pGo->GetInstanceData();
++
++    if (!pInstance)
++        return false;
++
++    if(pGo->GetEntry() == GO_STASIS_GENERATOR)
++        pInstance->SetData(TYPE_GORTOK, SPECIAL);
++
++    return false;
++}
++
+ CreatureAI* GetAI_boss_gortok(Creature* pCreature)
+ {
+     return new boss_gortokAI(pCreature);
+ }
+ 
++CreatureAI* GetAI_mob_massive_jormungar(Creature* pCreature)
++{
++    return new mob_massive_jormungarAI (pCreature);
++}
++
++CreatureAI* GetAI_mob_ferocious_rhino(Creature* pCreature)
++{
++    return new mob_ferocious_rhinoAI (pCreature);
++}
++
++CreatureAI* GetAI_mob_ravenous_furbolg(Creature* pCreature)
++{
++    return new mob_ravenous_furbolgAI (pCreature);
++}
++
++CreatureAI* GetAI_mob_frenzied_worgen(Creature* pCreature)
++{
++    return new mob_frenzied_worgenAI (pCreature);
++}
++
+ void AddSC_boss_gortok()
+ {
+     Script *newscript;
+@@ -102,4 +667,29 @@ void AddSC_boss_gortok()
+     newscript->Name = "boss_gortok";
+     newscript->GetAI = &GetAI_boss_gortok;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_massive_jormungar";
++    newscript->GetAI = &GetAI_mob_massive_jormungar;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_ferocious_rhino";
++    newscript->GetAI = &GetAI_mob_ferocious_rhino;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_ravenous_furbolg";
++    newscript->GetAI = &GetAI_mob_ravenous_furbolg;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_frenzied_worgen";
++    newscript->GetAI = &GetAI_mob_frenzied_worgen;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "go_statis_generator";
++    newscript->pGOHello = &GOHello_go_statis_generator;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_skadi.cpp b/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_skadi.cpp
+index 9a11f84..9aefa7e 100644
+--- a/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_skadi.cpp
++++ b/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_skadi.cpp
+@@ -47,6 +47,8 @@ enum
+ 
+     SPELL_POISONED_SPEAR            = 50255,
+     SPELL_POISONED_SPEAR_H          = 59331,
++    SPELL_POISONED                  = 50258,
++    SPELL_POISONED_H                = 59334,
+ 
+     // casted with base of creature 22515 (World Trigger), so we must make sure
+     // to use the close one by the door leading further in to instance.
+@@ -56,6 +58,36 @@ enum
+     SPELL_GAUNTLET_PERIODIC         = 47546,                // what is this? Unknown use/effect, but probably related
+ 
+     SPELL_LAUNCH_HARPOON            = 48642,                // this spell hit drake to reduce HP (force triggered from 48641)
++    ITEM_HARPOON                    = 37372,
++
++    NPC_YMIRJAR_WARRIOR         = 26690,
++    NPC_YMIRJAR_WITCH_DOCTOR    = 26691,
++    NPC_YMIRJAR_HARPOONER       = 26692,
++
++    ACHIEV_LODI_DODI                = 1873,
++    ACHIEV_MY_GIRL_LIKES_TO_SKADI   = 2156,         // needs script support
++};
++
++uint64 goHarpoons[3] =
++{
++    GO_HARPOON1,
++    GO_HARPOON2,
++    GO_HARPOON3
++};
++
++struct Locations
++{
++    float x, y, z;
++    uint32 id;
++};
++
++static Locations SpawnLoc[]=
++{
++    {340.556f, -511.493f, 104.352f},
++    {367.741f, -512.865f, 104.828f},
++    {399.546f, -512.755f, 104.834f},
++    {430.551f, -514.320f, 105.055f},
++    {468.931f, -513.555f, 104.723f}
+ };
+ 
+ /*######
+@@ -74,8 +106,56 @@ struct MANGOS_DLL_DECL boss_skadiAI : public ScriptedAI
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    //Land Phase
++    uint32 m_uiCrushTimer;
++    uint32 m_uiPoisonedSpearTimer;
++    uint32 m_uiWirlwhindTimer;
++    bool m_bIsLandPhase;
++
++    //Event Phase
++    uint8  m_uiNextWaveCount;
++    uint32 m_uiIsInHarpoonRangeTimer;
++    uint32 m_uiNextWaveTimer;
++    uint32 m_uiGraufBrathTimer;
++
++    uint32 m_uiEventTimer;
++    uint8 m_uiphase;
++    uint8 m_uiSpawn_counter;
++    uint32 m_uiWaypointId;
++    uint32 m_uiMoveNext_Timer;
++    uint32 m_uiPlayerCheck_Timer;
++
+     void Reset()
+     {
++        //Land Phase
++        m_uiCrushTimer              = urand(5000,10000);
++        m_uiPoisonedSpearTimer      = urand(5000,10000);
++        m_uiWirlwhindTimer          = urand(5000,10000);
++        m_bIsLandPhase              = false;
++
++        //Event Phase
++        m_uiGraufBrathTimer         = 30000;
++        m_uiNextWaveCount           = 0;
++        m_uiIsInHarpoonRangeTimer   = urand(5000,10000);
++        m_uiNextWaveTimer           = urand(5000,10000);
++        m_uiphase                   = 0;
++        m_uiSpawn_counter           = 0;
++        m_uiWaypointId              = 0;
++        m_uiMoveNext_Timer          = 25000;
++        m_uiPlayerCheck_Timer       = 1000;
++
++        m_uiEventTimer              = 0;
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        m_creature->Unmount();
++
++        if(Creature* pGrauf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_GRAUF))))
++        {
++            pGrauf->setFaction(14);
++            pGrauf->SetVisibility(VISIBILITY_ON);
++        }
++
++        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
++        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
+     }
+ 
+     void JustReachedHome()
+@@ -84,11 +164,55 @@ struct MANGOS_DLL_DECL boss_skadiAI : public ScriptedAI
+             m_pInstance->SetData(TYPE_SKADI, NOT_STARTED);
+     }
+ 
+-    void Aggro(Unit* pWho)
++    void AttackStart(Unit* pWho)
+     {
+-        DoScriptText(SAY_AGGRO, m_creature);
++        if (m_uiphase < 2)
++            return;
++
++        if (!pWho || pWho == m_creature)
++            return;
++
++        if (m_creature->Attack(pWho, true))
++        {
++            m_creature->AddThreat(pWho, 0.0f);
++            m_creature->SetInCombatWith(pWho);
++            pWho->SetInCombatWith(m_creature);
++            DoStartMovement(pWho);
++        }
+     }
+ 
++    void MoveInLineOfSight(Unit* pWho)
++    {
++    	if (!pWho)
++    	    return;
++
++        if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && m_creature->IsHostileTo(pWho) &&
++        	!m_uiphase && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 20))
++        {
++            if(m_pInstance)
++                m_pInstance->SetData(TYPE_SKADI, IN_PROGRESS);
++
++            if(Creature* pGrauf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_GRAUF))))
++            {
++                pGrauf->setFaction(35);
++                pGrauf->SetVisibility(VISIBILITY_OFF);
++            }
++
++            DoScriptText(SAY_AGGRO, m_creature);
++
++            m_creature->SetInCombatWithZone();
++            m_creature->Mount(27043);
++            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++            if (m_creature->HasSplineFlag(SPLINEFLAG_WALKMODE))
++                m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
++            m_creature->GetMotionMaster()->MovePoint(m_uiWaypointId, 340.259f, -510.541f, 120.869f);
++            m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
++            m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
++        	m_uiphase = 1;
++        }
++	}
++
+     void KilledUnit(Unit* pVictim)
+     {
+         switch(urand(0, 2))
+@@ -105,12 +229,225 @@ struct MANGOS_DLL_DECL boss_skadiAI : public ScriptedAI
+ 
+         if (m_pInstance)
+             m_pInstance->SetData(TYPE_SKADI, DONE);
++
++        if(!m_bIsRegularMode && m_uiEventTimer <= 180000)
++        {
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEV_LODI_DODI);
++        }
++    }
++
++    void MovementInform(uint32 uiType, uint32 uiPointId)
++    {
++        if(uiType != POINT_MOTION_TYPE)
++                return;
++
++        if ((m_uiSpawn_counter >= 4 && m_bIsRegularMode) || (m_uiSpawn_counter >= 5 && !m_bIsRegularMode))
++        {
++            m_uiWaypointId = 200;
++            m_uiMoveNext_Timer = 3000;
++        }
++        else
++        {
++            switch(uiPointId)
++            {
++                case 0:
++                    SpawnMobs(m_uiSpawn_counter);
++                    m_uiWaypointId = 1;
++                    ++m_uiSpawn_counter;
++                    m_uiMoveNext_Timer = 3000;
++                    break;
++                case 1:
++                    SpawnMobs(m_uiSpawn_counter);
++                    m_uiWaypointId = 0;
++                    ++m_uiSpawn_counter;
++                    m_uiMoveNext_Timer = 3000;
++                    break;
++            }
++        }
++    }
++
++    void SpawnMobs(uint32 uiSpot)
++    {
++        uint8 maxSpawn = (m_bIsRegularMode ? 4 : 6);
++        for(uint8 i = 0; i < maxSpawn; ++i)
++        {
++            Creature* pTemp;
++            switch (rand()%3)
++            {
++                case 0: pTemp = m_creature->SummonCreature(NPC_YMIRJAR_WARRIOR, SpawnLoc[uiSpot].x+rand()%5, SpawnLoc[uiSpot].y+rand()%5, SpawnLoc[uiSpot].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000); break;
++                case 1: pTemp = m_creature->SummonCreature(NPC_YMIRJAR_WITCH_DOCTOR, SpawnLoc[uiSpot].x+rand()%5, SpawnLoc[uiSpot].y+rand()%5, SpawnLoc[uiSpot].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000); break;
++                case 2: pTemp = m_creature->SummonCreature(NPC_YMIRJAR_HARPOONER, SpawnLoc[uiSpot].x+rand()%5, SpawnLoc[uiSpot].y+rand()%5, SpawnLoc[uiSpot].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000); break;
++            }
++            if (pTemp)
++            {
++                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                {
++                    pTemp->AddThreat(pTarget, 0.0f);
++                    pTemp->AI()->AttackStart(pTarget);
++                }
++            }
++        }
++        ++m_uiNextWaveCount;
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+     {
+-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+-            return;
++        //Achievement counter
++        if(m_uiphase > 0)
++            m_uiEventTimer += uiDiff;
++
++        if (m_uiphase == 0)
++             return;
++
++        // Flying & adds
++        else if (m_uiphase == 1)
++        {
++            if (m_uiPlayerCheck_Timer < uiDiff)
++            {
++                Map *map = m_creature->GetMap();
++                if (map->IsDungeon() && m_pInstance->GetData(TYPE_SKADI) == IN_PROGRESS)
++                {
++                    Map::PlayerList const &PlayerList = map->GetPlayers();
++ 
++                    if (PlayerList.isEmpty())
++                        return;
++
++                    bool bIsAlive = false;
++                    for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
++                        if (i->getSource()->isAlive() && i->getSource()->isTargetableForAttack())
++                        	 bIsAlive = true;
++
++                    if (!bIsAlive)
++                    {
++                        m_creature->GetMotionMaster()->Clear(false);
++                        m_creature->StopMoving();
++                        EnterEvadeMode();
++                        return;
++                    }
++                }
++                m_uiPlayerCheck_Timer = 1000;
++            } else m_uiPlayerCheck_Timer -= uiDiff;
++
++            if(m_uiGraufBrathTimer < uiDiff)
++            {
++                switch(urand(0, 2))
++                {
++                case 0: DoScriptText(SAY_DRAKEBREATH_1, m_creature); break;
++                case 1: DoScriptText(SAY_DRAKEBREATH_2, m_creature); break;
++                case 2: DoScriptText(SAY_DRAKEBREATH_3, m_creature); break;
++                }
++                //breath ID missing
++                /*if(Unit* pPlayer = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                {
++                    m_creature->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_POISONED_SPEAR : SPELL_POISONED_SPEAR_H, false);
++                    pPlayer->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_POISONED : SPELL_POISONED_H, true);
++                }*/
++                //Spell brath id ?
++                m_uiGraufBrathTimer = urand(10000,20000);
++            }else m_uiGraufBrathTimer -= uiDiff;
++
++            if (m_uiMoveNext_Timer < uiDiff)
++            {
++                switch(m_uiWaypointId)
++                {
++                    case 0: m_creature->GetMotionMaster()->MovePoint(m_uiWaypointId, 340.259f, -510.541f, 120.869f); break;
++                    case 1: m_creature->GetMotionMaster()->MovePoint(m_uiWaypointId, 472.977f, -513.636f, 120.869f); break;
++                    case 200:
++                        m_creature->GetMotionMaster()->Clear();
++                        m_creature->Unmount();
++                        m_uiphase = 2;
++                        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                        DoScriptText(SAY_DRAKE_DEATH, m_creature);
++                        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
++                        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
++                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                            AttackStart(pTarget);
++                    break;
++                }
++                m_uiMoveNext_Timer = 25000; // prevent stuck
++            } else m_uiMoveNext_Timer -= uiDiff;
++        }
++        // Land & attack
++        else if (m_uiphase == 2)
++        {
++            if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                return;
++
++        /*if(!m_bIsLandPhase)
++        {
++            if(m_uiNextWaveCount > 4)
++            {
++                m_bIsLandPhase = true;
++                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                m_creature->Unmount();
++                DoScriptText(SAY_DRAKE_DEATH, m_creature);
++                if(Creature* pGrauf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_GRAUF))))
++                {
++                    pGrauf->setFaction(35);
++                    pGrauf->SetVisibility(VISIBILITY_OFF);
++                }
++                /* needs fixing!
++                if(m_pInstance && m_pInstance->GetData(TYPE_HARPOONLUNCHER) != (m_bIsRegularMode ? DONE : SPECIAL))
++                {
++                    if(m_uiIsInHarpoonRangeTimer < uiDiff)
++                    {
++                        DoScriptText(EMOTE_HARPOON_RANGE, m_creature);
++
++                        //only 1 from 3 harpoons  is  aloowe to use at one time
++                        if (GameObject* pGo = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(goHarpoons[urand(0,2)])))
++                            pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++
++                        m_uiIsInHarpoonRangeTimer = urand(20000,30000);
++                    }else m_uiIsInHarpoonRangeTimer -= uiDiff;
++                }
++                else
++                {
++                    DoScriptText(SAY_DRAKE_DEATH, m_creature);
++                    m_bIsLandPhase = true;
++                    m_creature->SetVisibility(VISIBILITY_ON);
++                    if(m_pInstance)
++                    {
++                        m_pInstance->SetData(TYPE_SKADI, IN_PROGRESS);
++                        m_pInstance->SetData(TYPE_HARPOONLUNCHER, 0);
++                    }
++                }
++            }
++
++            if(m_uiNextWaveTimer < uiDiff)
++            {
++                SpawnMobs(m_uiNextWaveCount);
++                m_uiNextWaveTimer = urand(20000,30000);
++            }else m_uiNextWaveTimer -= uiDiff;
++        }
++        else
++        {*/
++
++            if(m_uiPoisonedSpearTimer < uiDiff)
++            {
++                if(Unit* pPlayer = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                {
++                    m_creature->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_POISONED_SPEAR : SPELL_POISONED_SPEAR_H, false);
++                    pPlayer->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_POISONED : SPELL_POISONED_H, true);
++                }
++                m_uiPoisonedSpearTimer = urand(5000,10000);
++            }else m_uiPoisonedSpearTimer -= uiDiff;
++
++            if(m_uiCrushTimer < uiDiff)
++            {
++                if(m_creature->getVictim())
++                    m_creature->CastSpell(m_creature->getVictim(), m_bIsRegularMode ? SPELL_CRUSH : SPELL_CRUSH_H, false);
++                m_uiCrushTimer = urand(10000,15000);
++            }else m_uiCrushTimer -= uiDiff;
++
++            if(m_uiWirlwhindTimer < uiDiff)
++            {
++                if(m_creature->getVictim())
++                    m_creature->CastSpell(m_creature->getVictim(), m_bIsRegularMode ? SPELL_WHIRLWIND : SPELL_WHIRLWIND_H, false);
++                m_uiWirlwhindTimer = urand(10000,20000);
++            }else m_uiWirlwhindTimer -= uiDiff;
++        }
+ 
+         DoMeleeAttackIfReady();
+     }
+@@ -132,6 +469,21 @@ bool AreaTrigger_at_skadi(Player* pPlayer, AreaTriggerEntry* pAt)
+     return false;
+ }
+ 
++bool GOHello_go_skaldi_harpoonluncher(Player* pPlayer, GameObject* pGo)
++{
++    ScriptedInstance* pInstance = (ScriptedInstance*)pGo->GetInstanceData();
++
++    if (!pInstance)
++        return false;
++
++    if(pPlayer->HasItemCount(ITEM_HARPOON,1))
++    {
++        pInstance->SetData(TYPE_HARPOONLUNCHER, IN_PROGRESS);
++        pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++    }
++    return false;
++}
++
+ void AddSC_boss_skadi()
+ {
+     Script *newscript;
+@@ -145,4 +497,9 @@ void AddSC_boss_skadi()
+     newscript->Name = "at_skadi";
+     newscript->pAreaTrigger = &AreaTrigger_at_skadi;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "go_skaldi_harpoonluncher";
++    newscript->pGOHello = &GOHello_go_skaldi_harpoonluncher;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_svala.cpp b/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_svala.cpp
+index 0e5a0a5..4063c60 100644
+--- a/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_svala.cpp
++++ b/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_svala.cpp
+@@ -45,6 +45,7 @@ enum
+ 
+     NPC_SVALA_SORROW            = 26668,
+     NPC_ARTHAS_IMAGE            = 29280,
++    NPC_CHANNELER               = 27281,
+ 
+     SPELL_ARTHAS_VISUAL         = 54134,
+ 
+@@ -55,8 +56,24 @@ enum
+ 
+     SPELL_RITUAL_OF_SWORD       = 48276,
+     SPELL_CALL_FLAMES           = 48258,
++    SPELL_BOLT                  = 39252,
+     SPELL_SINISTER_STRIKE       = 15667,
+-    SPELL_SINISTER_STRIKE_H     = 59409
++    SPELL_SINISTER_STRIKE_H     = 59409,
++    SPELL_KILL                  = 5,
++
++    //channelers spells
++    SPELL_PARALYZE              = 48278,
++    SPELL_SHADOWS               = 59407,
++
++    ACHIEV_THE_INCREDIBLE_HULK  = 2043,     //needs script support
++};
++
++float fCoord[4][4] =
++{
++    {296.498169f,-346.462433f,90.547546f,0},
++    {299.563782f,-343.736572f,90.559288f,3.93f},
++    {293.811676f,-343.331238f,90.529503f,5.340091f},
++    {296.490417f,-349.221039f,90.5550446f,1.578029f},
+ };
+ 
+ /*######
+@@ -69,6 +86,7 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
+     {
+         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+         m_bIsIntroDone = false;
+         Reset();
+     }
+@@ -82,10 +100,29 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
+     uint32 m_uiIntroTimer;
+     uint32 m_uiIntroCount;
+ 
++    bool   m_bIsSacrifice;
++    uint32 m_uiSinisterStrikeTimer;
++    uint32 m_uiCallFlamesTimer;
++    uint32 m_uiSacrificeTimer;
++    uint32 m_uiSacrificeEndTimer;
++
++    uint64 m_uiPlayerGUID;
++    uint64 m_uiAddsGUID[3];
++
+     void Reset()
+     {
+         pArthas = NULL;
+ 
++        m_uiPlayerGUID;
++        for(uint8 i=0; i<3; ++i)
++            m_uiAddsGUID[i] = 0;
++
++        m_bIsSacrifice = false;
++        m_uiSinisterStrikeTimer = urand(10000,20000);
++        m_uiCallFlamesTimer = urand(15000,25000);
++        m_uiSacrificeTimer = 20000;
++        m_uiSacrificeEndTimer = 120000;
++
+         m_uiIntroTimer = 2500;
+         m_uiIntroCount = 0;
+ 
+@@ -239,6 +276,75 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
+             return;
+         }
+ 
++        if(m_uiSacrificeEndTimer < uiDiff && m_bIsSacrifice)
++        {
++            for(uint8 i=0; i<3; ++i)
++            {
++                Unit* pAdd = Unit::GetUnit(*m_creature, m_uiAddsGUID[i]);
++                if(pAdd && pAdd->isAlive())
++                {
++                    Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiPlayerGUID);
++                    if(pPlayer)
++                        m_creature->CastSpell(pPlayer, SPELL_KILL, false);
++
++                    for(uint8 k=0; k<3; ++k)
++                    {
++                        Unit* pAdd = Unit::GetUnit(*m_creature, m_uiAddsGUID[i]);
++                        if(pAdd && pAdd->isAlive())
++                        {
++                            pAdd->SetVisibility(VISIBILITY_OFF);
++                            pAdd->setFaction(35);
++                        }
++                        m_uiAddsGUID[k] = 0;
++                    }
++                    m_bIsSacrifice = false;
++                    return;
++                }
++            }
++            m_uiPlayerGUID = 0;
++            m_bIsSacrifice = false;
++        }else m_uiSacrificeEndTimer -= uiDiff;
++
++        if(m_uiSinisterStrikeTimer < uiDiff)
++        {
++            if(m_creature->getVictim())
++                m_creature->CastSpell(m_creature->getVictim(), m_bIsRegularMode ? SPELL_SINISTER_STRIKE : SPELL_SINISTER_STRIKE_H, false);
++            m_uiSinisterStrikeTimer = urand(10000,20000);
++        }else m_uiSinisterStrikeTimer -= uiDiff;
++
++        if(m_uiCallFlamesTimer < uiDiff)
++        {
++            std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
++            for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++            {
++                Unit *TargetedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());  
++                if(TargetedPlayer && TargetedPlayer->isAlive())
++                    m_creature->CastSpell(TargetedPlayer, SPELL_BOLT, true);
++            }
++            m_uiCallFlamesTimer = urand(15000,25000);
++        }else m_uiCallFlamesTimer -= uiDiff;
++
++        if(m_uiSacrificeTimer < uiDiff)
++        {
++            m_uiPlayerGUID = 0;
++            if(Unit* pPlayer = SelectUnit(SELECT_TARGET_RANDOM,0))
++            {
++                m_uiPlayerGUID = pPlayer->GetGUID();
++                DoTeleportPlayer(pPlayer, fCoord[0][0], fCoord[0][1], fCoord[0][2], pPlayer->GetOrientation());
++                m_uiSacrificeEndTimer = 8000;
++
++                for(uint8 i=0; i<3; ++i)
++                    if(Creature* pAdd = m_creature->SummonCreature(NPC_CHANNELER, fCoord[i][0], fCoord[i][1], fCoord[i][2], fCoord[i][3], TEMPSUMMON_TIMED_DESPAWN, 9000))
++                    {
++                        m_uiAddsGUID[i] = pAdd->GetGUID();
++                        pAdd->AI()->AttackStart(pPlayer);
++                        pAdd->CastSpell(pPlayer, SPELL_PARALYZE, false);
++                    }
++            }
++            m_bIsSacrifice = true;
++            m_uiSacrificeTimer = 20000;
++        }else m_uiSacrificeTimer -= uiDiff;
++
+         DoMeleeAttackIfReady();
+     }
+ };
+@@ -248,6 +354,43 @@ CreatureAI* GetAI_boss_svala(Creature* pCreature)
+     return new boss_svalaAI(pCreature);
+ }
+ 
++/*######
++## npc_svala_channeler
++######*/
++struct MANGOS_DLL_DECL npc_svala_channelerAI : public Scripted_NoMovementAI
++{
++    npc_svala_channelerAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++
++    void Reset() {}
++
++    void DamageTaken(Unit* pDoneBy, uint32& uiDamage) 
++    {
++        if(!pDoneBy)
++            return;
++
++        m_creature->CastSpell(pDoneBy, SPELL_SHADOWS, false);
++    }
++
++    void UpdateAI(const uint32 uiDiff) 
++    {
++       if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++    }
++};
++
++CreatureAI* GetAI_npc_svala_channeler(Creature* pCreature)
++{
++    return new npc_svala_channelerAI(pCreature);
++}
++
+ bool AreaTrigger_at_svala_intro(Player* pPlayer, AreaTriggerEntry* pAt)
+ {
+     if (ScriptedInstance* pInstance = (ScriptedInstance*)pPlayer->GetInstanceData())
+diff --git a/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_ymiron.cpp b/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_ymiron.cpp
+index 30613e2..b43e82d 100644
+--- a/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_ymiron.cpp
++++ b/scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_ymiron.cpp
+@@ -22,6 +22,7 @@ SDCategory: Utgarde Pinnacle
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "utgarde_pinnacle.h"
+ 
+ enum
+ {
+@@ -34,7 +35,56 @@ enum
+     SAY_SLAY_2                  = -1575037,
+     SAY_SLAY_3                  = -1575038,
+     SAY_SLAY_4                  = -1575039,
+-    SAY_DEATH                   = -1575040
++    SAY_DEATH                   = -1575040,
++
++    ACHIEV_KINGS_BANE           = 2157,
++    SPELL_BANE_N                            = 48294,
++    SPELL_BANE_H                            = 59301,
++    SPELL_DARK_SLASH                        = 48292,
++    SPELL_FETID_ROT_N                       = 48291,
++    SPELL_FETID_ROT_H                       = 59300,
++    SPELL_SCREAMS_OF_THE_DEAD               = 51750,
++    SPELL_SPIRIT_BURST_N                    = 48529, // when Ranulf
++    SPELL_SPIRIT_BURST_H                    = 59305, // when Ranulf
++    SPELL_SPIRIT_STRIKE_N                   = 48423, // when Haldor
++    SPELL_SPIRIT_STRIKE_H                   = 59304, // when Haldor
++    SPELL_ANCESTORS_VENGEANCE               = 16939, // 2 normal, 4 heroic
++
++    SPELL_SUMMON_AVENGING_SPIRIT            = 48592,
++    SPELL_SUMMON_SPIRIT_FOUNT               = 48386,
++
++    SPELL_CHANNEL_SPIRIT_TO_YMIRON          = 48316,
++    SPELL_CHANNEL_YMIRON_TO_SPIRIT          = 48307,
++
++    SPELL_SPIRIT_FOUNT_N                    = 48380,
++    SPELL_SPIRIT_FOUNT_H                    = 59320,
++
++    NPC_BJORN                               = 27303, // Near Right Boat, summon Spirit Fount
++    NPC_BJORN_VISUAL                        = 27304,
++    NPC_HALDOR                              = 27307, // Near Left Boat, debuff Spirit Strike on player
++    NPC_HALDOR_VISUAL                       = 27310,
++    NPC_RANULF                              = 27308, // Far Left Boat, ability to cast spirit burst
++    NPC_RANULF_VISUAL                       = 27311,
++    NPC_TORGYN                              = 27309, // Far Right Boat, summon 4 Avenging Spirit
++    NPC_TORGYN_VISUAL                       = 27312,
++
++    NPC_SPIRIT_FOUNT                        = 27339,
++    NPC_AVENGING_SPIRIT                     = 27386
++};
++
++struct ActiveBoatStruct
++{
++    uint32 npc;
++    uint32 say;
++    float MoveX,MoveY,MoveZ,SpawnX,SpawnY,SpawnZ,SpawnO;
++};
++
++static ActiveBoatStruct ActiveBot[4] =
++{
++    {NPC_BJORN_VISUAL,  SAY_SUMMON_BJORN,  404.379f, -335.335f, 104.756f, 413.594f, -335.408f, 107.995f, 3.157f},
++    {NPC_HALDOR_VISUAL, SAY_SUMMON_HALDOR, 380.813f, -335.069f, 104.756f, 369.994f, -334.771f, 107.995f, 6.232f},
++    {NPC_RANULF_VISUAL, SAY_SUMMON_RANULF, 381.546f, -314.362f, 104.756f, 370.841f, -314.426f, 107.995f, 6.232f},
++    {NPC_TORGYN_VISUAL, SAY_SUMMON_TORGYN, 404.310f, -314.761f, 104.756f, 413.992f, -314.703f, 107.995f, 3.157f}
+ };
+ 
+ /*######
+@@ -48,18 +98,127 @@ struct MANGOS_DLL_DECL boss_ymironAI : public ScriptedAI
+         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+         Reset();
++
++        srand(time(NULL));
++        for (int i = 0; i < 4; ++i)
++            m_uiActiveOrder[i] = i;
++        for (int i = 0; i < 3; ++i)
++        {
++            int r = i + (rand()%(4-i));
++            int temp = m_uiActiveOrder[i];
++            m_uiActiveOrder[i] = m_uiActiveOrder[r];
++            m_uiActiveOrder[r] = temp;
++        }
++
++        SpellEntry* TempSpell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_CHANNEL_SPIRIT_TO_YMIRON);
++        if (TempSpell && TempSpell->EffectImplicitTargetB[0] != 16)
++        {
++               TempSpell->EffectImplicitTargetA[0] = 53;
++               TempSpell->EffectImplicitTargetA[1] = 0;
++               TempSpell->EffectImplicitTargetB[0] = 16;
++               TempSpell->EffectImplicitTargetB[1] = 0;
++        }
+     }
+ 
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    bool m_bIsWalking;
++    bool m_bIsPause;
++    bool m_bIsActiveWithBJORN;
++    bool m_bIsActiveWithHALDOR;
++    bool m_bIsActiveWithRANULF;
++    bool m_bIsActiveWithTORGYN;
++
++    uint8 m_uiActiveOrder[4];
++    uint8 m_uiActivedNumber;
++
++    uint32 m_uiFetidRot_Timer;
++    uint32 m_uiBane_Timer;
++    uint32 m_uiDarkSlash_Timer;
++    uint32 m_uiAncestors_Vengeance_Timer;
++
++    uint32 m_uiAbility_BJORN_Timer;
++    uint32 m_uiAbility_HALDOR_Timer;
++    uint32 m_uiAbility_RANULF_Timer;
++    uint32 m_uiAbility_TORGYN_Timer;
++
++    uint32 m_uiPause_Timer;
++    uint32 m_uiHealthAmountModifier;
++    uint32 m_uiHealthAmountMultipler;
++
++    uint64 m_uiActivedCreatureGUID;
++    uint64 m_uiOrbGUID;
++
++    bool m_bHasBane;
++
+     void Reset()
+     {
++        // exploit check
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++
++        m_bIsPause = false;
++        m_bIsActiveWithBJORN = false;
++        m_bIsActiveWithHALDOR = false;
++        m_bIsActiveWithRANULF = false;
++        m_bIsActiveWithTORGYN = false;
++
++        m_uiFetidRot_Timer            = 8000+rand()%5000;
++        m_uiBane_Timer                = 18000+rand()%5000;
++        m_uiDarkSlash_Timer           = 28000+rand()%5000;
++        m_uiAncestors_Vengeance_Timer = (m_bIsRegularMode ? 45000 : 60000);
++        m_uiPause_Timer               = 0;
++
++        m_uiAbility_BJORN_Timer  = 0;
++        m_uiAbility_HALDOR_Timer = 0;
++        m_uiAbility_RANULF_Timer = 0;
++        m_uiAbility_TORGYN_Timer = 0;
++
++        m_uiActivedNumber        = 0;
++        m_uiHealthAmountModifier = 1;
++        m_uiHealthAmountMultipler = (m_bIsRegularMode ? 25 : 20);
++
++        DespawnBoatGhosts(m_uiActivedCreatureGUID);
++        DespawnBoatGhosts(m_uiOrbGUID);
++
++		if(m_pInstance)
++            m_pInstance->SetData(TYPE_YMIRON, NOT_STARTED);
++
++        m_bHasBane = false;
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         DoScriptText(SAY_AGGRO, m_creature);
++
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_YMIRON, IN_PROGRESS);
++    }
++
++    void AttackStart(Unit* pWho)
++    {
++        if (m_bIsPause)
++            return;
++
++        if (!pWho || pWho == m_creature)
++            return;
++
++        if (m_creature->Attack(pWho, true))
++        {
++            m_creature->AddThreat(pWho, 0.0f);
++            m_creature->SetInCombatWith(pWho);
++            pWho->SetInCombatWith(m_creature);
++            DoStartMovement(pWho);
++        }
++    }
++
++    void DespawnBoatGhosts(uint64& m_uiCreatureGUID)
++    {
++        if (m_uiCreatureGUID)
++            if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, m_uiCreatureGUID))
++                //pTemp->ForcedDespawn();
++                pTemp->DealDamage(pTemp, pTemp->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
++        m_uiCreatureGUID = 0;
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -76,14 +235,193 @@ struct MANGOS_DLL_DECL boss_ymironAI : public ScriptedAI
+     void JustDied(Unit* pKiller)
+     {
+         DoScriptText(SAY_DEATH, m_creature);
++
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_YMIRON, DONE);
++
++        if(!m_bIsRegularMode && !m_bHasBane)
++        {
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEV_KINGS_BANE);
++        }
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+     {
++        // exploit check
++        if(m_pInstance && m_pInstance->GetData(TYPE_SKADI) == DONE)
++        {
++            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++        }
++
++        if(m_creature->HasAura(m_bIsRegularMode ? SPELL_BANE_N : SPELL_BANE_H, EFFECT_INDEX_0) && !m_bHasBane)
++            m_bHasBane = true;
++
++        if (m_bIsWalking)
++        {
++            if (m_uiPause_Timer < uiDiff)
++            {
++                DoScriptText(ActiveBot[m_uiActiveOrder[m_uiActivedNumber]].say, m_creature);
++                DoCast(m_creature, SPELL_CHANNEL_YMIRON_TO_SPIRIT); // should be on spirit
++                if (Creature* pTemp = m_creature->SummonCreature(ActiveBot[m_uiActiveOrder[m_uiActivedNumber]].npc, ActiveBot[m_uiActiveOrder[m_uiActivedNumber]].SpawnX, ActiveBot[m_uiActiveOrder[m_uiActivedNumber]].SpawnY, ActiveBot[m_uiActiveOrder[m_uiActivedNumber]].SpawnZ, ActiveBot[m_uiActiveOrder[m_uiActivedNumber]].SpawnO, TEMPSUMMON_CORPSE_DESPAWN, 0))
++                {
++                    m_uiActivedCreatureGUID = pTemp->GetGUID();
++                    pTemp->CastSpell(m_creature, SPELL_CHANNEL_SPIRIT_TO_YMIRON, true);
++                    pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                    pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                    pTemp->SetSplineFlags(SPLINEFLAG_FLYING);
++                    switch(m_uiActiveOrder[m_uiActivedNumber])
++                    {
++                        case 0: m_bIsActiveWithBJORN  = true; break;
++                        case 1: m_bIsActiveWithHALDOR = true; break;
++                        case 2: m_bIsActiveWithRANULF = true; break;
++                        case 3: m_bIsActiveWithTORGYN = true; break;
++                    }
++                }
++
++                m_bIsPause = true;
++                m_bIsWalking = false;
++                m_uiPause_Timer = 3000;
++            } else m_uiPause_Timer -= uiDiff;
++            return;
++        }
++        else if (m_bIsPause)
++        {
++            if (m_uiPause_Timer < uiDiff)
++            {
++                m_uiAbility_BJORN_Timer = 5000;
++                m_uiAbility_HALDOR_Timer = 5000;
++                m_uiAbility_RANULF_Timer = 5000;
++                m_uiAbility_TORGYN_Timer = 5000;
++
++                m_bIsPause = false;
++                m_uiPause_Timer = 0;
++            } else m_uiPause_Timer -= uiDiff;
++            return;
++        }
++
++        //Return since we have no target
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
+         DoMeleeAttackIfReady();
++        if (!m_bIsPause)
++        {
++            // Normal spells ------------------------------------------------------------------------
++            if (m_uiBane_Timer < uiDiff)
++            {
++                DoCast(m_creature, m_bIsRegularMode ? SPELL_BANE_N : SPELL_BANE_H);
++                m_uiBane_Timer = 20000+rand()%5000;
++            } else m_uiBane_Timer -= uiDiff;
++
++            if (m_uiFetidRot_Timer < uiDiff)
++            {
++                DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_FETID_ROT_N : SPELL_FETID_ROT_H);
++                m_uiFetidRot_Timer = 10000+rand()%5000;
++            } else m_uiFetidRot_Timer -= uiDiff;
++
++            if (m_uiDarkSlash_Timer < uiDiff)
++            {
++                //DoCast(m_creature->getVictim(), SPELL_DARK_SLASH); // not working
++                int32 dmg = m_creature->getVictim()->GetHealth() / 50; // workaround for damage
++                m_creature->CastCustomSpell(m_creature->getVictim(), SPELL_DARK_SLASH, &dmg, 0, 0, false);
++                m_uiDarkSlash_Timer = 30000+rand()%5000;
++            } else m_uiDarkSlash_Timer -= uiDiff;
++
++            if (m_uiAncestors_Vengeance_Timer < uiDiff)
++            {
++                DoCast(m_creature, SPELL_ANCESTORS_VENGEANCE);
++				m_uiAncestors_Vengeance_Timer = (m_bIsRegularMode ? 45000+rand()%5000 : 60000+rand()%5000);
++            } else m_uiAncestors_Vengeance_Timer -= uiDiff;
++
++            // Abilities ------------------------------------------------------------------------------
++            if (m_bIsActiveWithBJORN && m_uiAbility_BJORN_Timer < uiDiff)
++            {
++                //DoCast(m_creature, SPELL_SUMMON_SPIRIT_FOUNT); // works fine, but using summon has better control
++                if (Creature* pTemp = m_creature->SummonCreature(NPC_SPIRIT_FOUNT, 385+rand()%10, -330+rand()%10, 104.756f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 180000))
++                {
++                    pTemp->SetSpeedRate(MOVE_RUN, 0.4f);
++                    pTemp->CastSpell(pTemp, m_bIsRegularMode ? SPELL_SPIRIT_FOUNT_N : SPELL_SPIRIT_FOUNT_H, true);
++                    pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                    pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                    pTemp->SetDisplayId(11686);
++                    //pTemp->GetMotionMaster()->MoveChase(m_creature->getVictim());
++                    m_uiOrbGUID = pTemp->GetGUID();
++                }
++                m_bIsActiveWithBJORN = false; // only one orb
++            } else m_uiAbility_BJORN_Timer -= uiDiff;
++
++            if (m_bIsActiveWithHALDOR && m_uiAbility_HALDOR_Timer < uiDiff)
++            {
++                DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_SPIRIT_STRIKE_N : SPELL_SPIRIT_STRIKE_H);
++                m_uiAbility_HALDOR_Timer = 5000; // overtime
++            } else m_uiAbility_HALDOR_Timer -= uiDiff;
++
++            if (m_bIsActiveWithRANULF && m_uiAbility_RANULF_Timer < uiDiff)
++            {
++                DoCast(m_creature, m_bIsRegularMode ? SPELL_SPIRIT_BURST_N : SPELL_SPIRIT_BURST_H);
++                m_uiAbility_RANULF_Timer = 10000; // overtime
++            } else m_uiAbility_RANULF_Timer -= uiDiff;
++
++            if (m_bIsActiveWithTORGYN && m_uiAbility_TORGYN_Timer < uiDiff)
++            {
++                float x,y,z;
++                x = m_creature->GetPositionX()-5;
++                y = m_creature->GetPositionY()-5;
++                z = m_creature->GetPositionZ();
++                for(uint8 i = 0; i < 4; ++i)
++                {
++                    //DoCast(m_creature, SPELL_SUMMON_AVENGING_SPIRIT); // works fine, but using summon has better control
++                    if (Creature* pTemp = m_creature->SummonCreature(NPC_AVENGING_SPIRIT, x+rand()%10, y+rand()%10, z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
++                    {
++                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                        {
++                            pTemp->AddThreat(pTarget, 0.0f);
++                            pTemp->AI()->AttackStart(pTarget);
++                        }
++                    }
++                }
++                m_uiAbility_TORGYN_Timer = 15000; // overtime
++            } else m_uiAbility_TORGYN_Timer -= uiDiff;
++
++            // Health check -----------------------------------------------------------------------------
++            if ((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < (100-(m_uiHealthAmountMultipler * m_uiHealthAmountModifier)))
++            {
++            	uint8 m_uiOrder = m_uiHealthAmountModifier - 1;
++            	++m_uiHealthAmountModifier;
++
++                m_creature->InterruptNonMeleeSpells(true);
++                DoCast(m_creature, SPELL_SCREAMS_OF_THE_DEAD);
++                m_creature->GetMotionMaster()->Clear();
++                m_creature->StopMoving();
++                m_creature->AttackStop();
++                //m_creature->GetMotionMaster()->MovePoint(0, ActiveBot[m_uiActiveOrder[m_uiOrder]].MoveX, ActiveBot[m_uiActiveOrder[m_uiOrder]].MoveY, ActiveBot[m_uiActiveOrder[m_uiOrder]].MoveZ);
++                m_creature->GetMap()->CreatureRelocation(m_creature, ActiveBot[m_uiActiveOrder[m_uiOrder]].MoveX, ActiveBot[m_uiActiveOrder[m_uiOrder]].MoveY, ActiveBot[m_uiActiveOrder[m_uiOrder]].MoveZ, m_creature->GetOrientation());
++                m_creature->SendMonsterMove(ActiveBot[m_uiActiveOrder[m_uiOrder]].MoveX, ActiveBot[m_uiActiveOrder[m_uiOrder]].MoveY, ActiveBot[m_uiActiveOrder[m_uiOrder]].MoveZ, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
++
++                DespawnBoatGhosts(m_uiActivedCreatureGUID);
++                DespawnBoatGhosts(m_uiOrbGUID);
++
++                m_bIsActiveWithBJORN  = false;
++                m_bIsActiveWithHALDOR = false;
++                m_bIsActiveWithRANULF = false;
++                m_bIsActiveWithTORGYN = false;
++
++                m_uiBane_Timer                += 8000;
++                m_uiFetidRot_Timer            += 8000;
++                m_uiDarkSlash_Timer           += 8000;
++                m_uiAncestors_Vengeance_Timer += 8000;
++
++                m_uiActivedNumber = m_uiOrder;
++                m_bIsWalking = true;
++                //m_bIsPause = true;
++                m_uiPause_Timer = 2000;
++                return;
++            }
++
++            DoMeleeAttackIfReady();
++            }
+     }
+ };
+ 
+diff --git a/scripts/northrend/utgarde_keep/utgarde_pinnacle/instance_utgarde_pinnacle.cpp b/scripts/northrend/utgarde_keep/utgarde_pinnacle/instance_utgarde_pinnacle.cpp
+index 937d472..0b94267 100644
+--- a/scripts/northrend/utgarde_keep/utgarde_pinnacle/instance_utgarde_pinnacle.cpp
++++ b/scripts/northrend/utgarde_keep/utgarde_pinnacle/instance_utgarde_pinnacle.cpp
+@@ -32,12 +32,51 @@ struct MANGOS_DLL_DECL instance_pinnacle : public ScriptedInstance
+     std::string strInstData;
+ 
+     uint64 m_uiSkadiDoorGUID;
++    uint64 m_uiYmironDoorGUID;
++
++    uint64 m_uiRhinoGUID;
++    uint64 m_uiJormungarGUID;
++    uint64 m_uiWorgenGUID;
++    uint64 m_uiFurbolgGUID;
++    uint8  m_uiHarpoonsUsed;
++    uint64 m_uiHarpoon1GUID;
++    uint64 m_uiHarpoon2GUID;
++    uint64 m_uiHarpoon3GUID;
++    uint64 m_uiGraufGUID;
++    uint64 m_uiGortokGUID;
++    uint64 m_uiGeneratorGUID;
+ 
+     void Initialize()
+     {
+         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+ 
+         m_uiSkadiDoorGUID = 0;
++        m_uiYmironDoorGUID = 0;
++
++        m_uiRhinoGUID       = 0;
++        m_uiJormungarGUID   = 0;
++        m_uiWorgenGUID      = 0;
++        m_uiFurbolgGUID     = 0;
++        m_uiHarpoonsUsed    = 0;
++        m_uiHarpoon1GUID    = 0;
++        m_uiHarpoon2GUID    = 0;
++        m_uiHarpoon3GUID    = 0;
++        m_uiGraufGUID       = 0;
++        m_uiGortokGUID      = 0;
++        m_uiGeneratorGUID   = 0;
++    }
++
++    void OnCreatureCreate(Creature* pCreature)
++    {
++        switch(pCreature->GetEntry())
++        {
++            case NPC_RHINO:         m_uiRhinoGUID = pCreature->GetGUID();           break;
++            case NPC_JORMUNGAR:     m_uiJormungarGUID = pCreature->GetGUID();       break;
++            case NPC_WORGEN :       m_uiWorgenGUID = pCreature->GetGUID();          break;
++            case NPC_FURBOLG:       m_uiFurbolgGUID = pCreature->GetGUID();         break;
++            case NPC_GRAUF:         m_uiGraufGUID = pCreature->GetGUID();           break;
++            case NPC_GORTOK:        m_uiGortokGUID = pCreature->GetGUID();          break;
++        }
+     }
+ 
+     void OnObjectCreate(GameObject* pGo)
+@@ -46,14 +85,28 @@ struct MANGOS_DLL_DECL instance_pinnacle : public ScriptedInstance
+         {
+             case GO_DOOR_SKADI:
+                 m_uiSkadiDoorGUID = pGo->GetGUID();
+-
+                 if (m_auiEncounter[2] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+-
+                 break;
++            case GO_DOOR_YMIRON:
++                m_uiYmironDoorGUID = pGo->GetGUID();
++                if (m_auiEncounter[3] == DONE)
++                    pGo->SetGoState(GO_STATE_ACTIVE);
++                break;
++            case GO_HARPOON1: m_uiHarpoon1GUID = pGo->GetGUID(); pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1); break;
++            case GO_HARPOON2: m_uiHarpoon2GUID = pGo->GetGUID(); pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1); break;
++            case GO_HARPOON3: m_uiHarpoon3GUID = pGo->GetGUID(); pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1); break;
++            case GO_STASIS_GENERATOR: m_uiGeneratorGUID = pGo->GetGUID(); break;
+         }
+     }
+ 
++    void OpenDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
++    }
++
+     void SetData(uint32 uiType, uint32 uiData)
+     {
+         debug_log("SD2: Instance Pinnacle: SetData received for type %u with data %u", uiType, uiData);
+@@ -68,13 +121,23 @@ struct MANGOS_DLL_DECL instance_pinnacle : public ScriptedInstance
+                 break;
+             case TYPE_SKADI:
+                 if (uiData == DONE)
+-                    DoUseDoorOrButton(m_uiSkadiDoorGUID);
+-
++                    OpenDoor(m_uiSkadiDoorGUID);
+                 m_auiEncounter[2] = uiData;
+                 break;
+             case TYPE_YMIRON:
++                if (uiData == DONE)
++                    OpenDoor(m_uiYmironDoorGUID);
+                 m_auiEncounter[3] = uiData;
+                 break;
++            case TYPE_HARPOONLUNCHER:
++                if (uiData == IN_PROGRESS)
++                    if (m_uiHarpoonsUsed < 7)
++                        ++m_uiHarpoonsUsed;
++                if (m_uiHarpoonsUsed == 4)
++                    m_auiEncounter[4] = DONE;
++                if (m_uiHarpoonsUsed == 6)
++                    m_auiEncounter[4] = SPECIAL;
++                break;
+             default:
+                 error_log("SD2: Instance Pinnacle: SetData = %u for type %u does not exist/not implemented.", uiType, uiData);
+                 break;
+@@ -107,11 +170,31 @@ struct MANGOS_DLL_DECL instance_pinnacle : public ScriptedInstance
+                 return m_auiEncounter[2];
+             case TYPE_YMIRON:
+                 return m_auiEncounter[3];
++            case TYPE_HARPOONLUNCHER:
++                return m_auiEncounter[4];
+         }
+ 
+         return 0;
+     }
+ 
++    uint64 GetData64(uint32 uiData)
++    {
++        switch(uiData)
++        {
++            case NPC_RHINO:         return m_uiRhinoGUID;       
++            case NPC_JORMUNGAR:     return m_uiJormungarGUID; 
++            case NPC_WORGEN :       return m_uiWorgenGUID;  
++            case NPC_FURBOLG:       return m_uiFurbolgGUID;
++            case GO_HARPOON1:       return m_uiHarpoon1GUID;
++            case GO_HARPOON2:       return m_uiHarpoon2GUID;
++            case GO_HARPOON3:       return m_uiHarpoon3GUID;
++            case NPC_GRAUF:         return m_uiGraufGUID;
++            case DATA_GORTOK_PALEHOOF:  return m_uiGortokGUID;
++            case DATA_STATIS_GENERATOR: return m_uiGeneratorGUID;
++        }
++        return 0;
++    }
++
+     const char* Save()
+     {
+         return strInstData.c_str();
+diff --git a/scripts/northrend/utgarde_keep/utgarde_pinnacle/utgarde_pinnacle.h b/scripts/northrend/utgarde_keep/utgarde_pinnacle/utgarde_pinnacle.h
+index 5ab6aa4..b20eb29 100644
+--- a/scripts/northrend/utgarde_keep/utgarde_pinnacle/utgarde_pinnacle.h
++++ b/scripts/northrend/utgarde_keep/utgarde_pinnacle/utgarde_pinnacle.h
+@@ -7,20 +7,30 @@
+ 
+ enum
+ {
+-    MAX_ENCOUNTER                   = 4,
++    MAX_ENCOUNTER                   = 5,
+ 
+     TYPE_SVALA                      = 0,
+     TYPE_GORTOK                     = 1,
+     TYPE_SKADI                      = 2,
+     TYPE_YMIRON                     = 3,
++    TYPE_HARPOONLUNCHER             = 4,
+ 
+     GO_STASIS_GENERATOR             = 188593,
+     GO_DOOR_SKADI                   = 192173,
++    GO_DOOR_YMIRON                  = 192174,
++    GO_HARPOON1                     = 192175,
++    GO_HARPOON2                     = 192176,
++    GO_HARPOON3                     = 192177,
+ 
+     NPC_FURBOLG                     = 26684,
+     NPC_WORGEN                      = 26683,
+     NPC_JORMUNGAR                   = 26685,
+-    NPC_RHINO                       = 26686
++    NPC_RHINO                       = 26686,
++    NPC_GRAUF                       = 26893,
++    NPC_GORTOK                      = 26687,
++
++    DATA_GORTOK_PALEHOOF            = 1,
++    DATA_STATIS_GENERATOR           = 2,
+ };
+ 
+ #endif
+diff --git a/sql/Custom_Updates/Mangos/Northrend/UtgardePinnacle_Mangos.sql b/sql/Custom_Updates/Mangos/Northrend/UtgardePinnacle_Mangos.sql
+new file mode 100644
+index 0000000..cc99a7f
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Northrend/UtgardePinnacle_Mangos.sql
+@@ -0,0 +1,18 @@
++/* UTGARDE PINNACLE */
++-- Utgarde Doors
++UPDATE `gameobject_template` SET `faction` = 114, `data0` = '0' where `entry` in (192173, 192174);
++-- Svala
++update `creature` set `spawnMask` = 0 where `id` = 26668; -- Undead Svala should not be spawned
++update `creature` set `spawnMask` = 3 where `id` = 29281; -- Only human Svala should be spawned
++update `creature_template` set `ScriptName` = 'boss_svala' where `entry` = 29281;
++#update `creature_template` set `ScriptName` = 'boss_svala_sorrowgrave' where `entry` = 26668;
++update `creature_template` set `ScriptName` = 'mob_ritual_channeler' where `entry` = 27281;
++update `creature_template` set `ScriptName` = 'boss_skadi' where `entry` = 26693;
++update `creature_template` set `ScriptName` = 'mob_massive_jormungar' where `entry` = 26685;
++update `creature_template` set `ScriptName` = 'mob_ferocious_rhino' where `entry` = 26686;
++update `creature_template` set `ScriptName` = 'mob_ravenous_furbolg' where `entry` = 26684;
++update `creature_template` set `ScriptName` = 'mob_frenzied_worgen' where `entry` = 26683;
++UPDATE gameobject_template SET ScriptName = "go_statis_generator" WHERE entry = 188593;
++UPDATE gameobject_template SET ScriptName = "go_skaldi_harpoonluncher" WHERE entry in (192175, 192176, 192177);
++UPDATE `creature_template` SET `flags_extra` = 1 WHERE `entry` = 30809;
++Update `creature` set `spawnTimeSecs` = 43200 where `id` = 29281;
+\ No newline at end of file
