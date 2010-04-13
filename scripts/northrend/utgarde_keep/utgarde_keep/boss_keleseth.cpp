@@ -46,9 +46,7 @@ enum
     SPELL_BONE_ARMOR        = 59386,                        // casted on boss, heroic only
 
     NPC_FROST_TOMB          = 23965,
-    NPC_VRYKUL_SKELETON     = 23970,
-
-    ACHIEVEMENT_ON_THE_ROCKS    = 1919,
+    NPC_VRYKUL_SKELETON     = 23970
 };
 
 const float RUN_DISTANCE = 20.0;
@@ -212,9 +210,6 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
         m_uiShadowboltTimer = 0;
 
         DespawnAdds();
-
-        if(m_pInstance)
-            m_pInstance->SetData(TYPE_KELESETH, NOT_STARTED);
     }
 
     void AttackStart(Unit* pWho)
@@ -232,9 +227,6 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
     void Aggro(Unit* pWho)
     {
         DoScriptText(SAY_AGGRO, m_creature);
-
-        if(m_pInstance)
-            m_pInstance->SetData(TYPE_KELESETH, IN_PROGRESS);
     }
 
     void SummonAdds()
@@ -265,9 +257,6 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         DoScriptText(SAY_DEATH, m_creature);
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_KELESETH, DONE);
     }
 
     void KilledUnit(Unit* pVictim)
