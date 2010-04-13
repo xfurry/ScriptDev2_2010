@@ -46,10 +46,14 @@ enum
     SPELL_BONE_ARMOR        = 59386,                        // casted on boss, heroic only
 
     NPC_FROST_TOMB          = 23965,
-    NPC_VRYKUL_SKELETON     = 23970
+    NPC_VRYKUL_SKELETON     = 23970,
+
+    ACHIEVEMENT_ON_THE_ROCKS    = 1919,
 };
 
 const float RUN_DISTANCE = 20.0;
+
+bool m_bIsTombDead;         // needed for achiev
 
 static float fAddPosition[4] = {163.5727f, 252.1900f, 42.8684f, 5.57052f};
 
@@ -209,7 +213,12 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
         m_uiSummonTimer = 5000 ;
         m_uiShadowboltTimer = 0;
 
+        m_bIsTombDead = false;
+
         DespawnAdds();
+
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KELESETH, NOT_STARTED);
     }
 
     void AttackStart(Unit* pWho)
@@ -227,6 +236,9 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
     void Aggro(Unit* pWho)
     {
         DoScriptText(SAY_AGGRO, m_creature);
+
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KELESETH, IN_PROGRESS);
     }
 
     void SummonAdds()
@@ -257,6 +269,15 @@ struct MANGOS_DLL_DECL boss_kelesethAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         DoScriptText(SAY_DEATH, m_creature);
+
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_KELESETH, DONE);
+
+        if(!m_bIsRegularMode && !m_bIsTombDead)
+        {
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_ON_THE_ROCKS);
+        }
     }
 
     void KilledUnit(Unit* pVictim)
@@ -320,6 +341,43 @@ CreatureAI* GetAI_boss_keleseth(Creature* pCreature)
     return new boss_kelesethAI(pCreature);
 }
 
+/*######
+## mob_frost_tomb
+######*/
+
+struct MANGOS_DLL_DECL mob_frost_tombAI : public ScriptedAI
+{
+    mob_frost_tombAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    {
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        m_bIsRegularMode = m_creature->GetMap()->IsRegularDifficulty();
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+    bool m_bIsRegularMode;
+
+    void Reset()
+    {
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        m_bIsTombDead = true;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+    }
+};
+
+CreatureAI* GetAI_mob_frost_tomb(Creature* pCreature)
+{
+    return new mob_frost_tombAI(pCreature);
+}
+
 void AddSC_boss_keleseth()
 {
     Script* newscript;
@@ -332,5 +390,10 @@ void AddSC_boss_keleseth()
     newscript = new Script;
     newscript->Name = "mob_vrykul_skeleton";
     newscript->GetAI = &GetAI_mob_vrykul_skeleton;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_frost_tomb";
+    newscript->GetAI = &GetAI_mob_frost_tomb;
     newscript->RegisterSelf();
 }
