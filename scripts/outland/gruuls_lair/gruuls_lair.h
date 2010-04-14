@@ -18,7 +18,10 @@ enum
     DATA_BLINDEYE                   = 4,
     DATA_KIGGLER                    = 5,
     DATA_KROSH                      = 6,
-    DATA_OLM                        = 7
+    DATA_OLM                        = 7,
+
+    GO_DOOR_MAULGAR                 = 184468,
+    GO_DOOR_GRUUL                   = 184662
 };
 
 #endif

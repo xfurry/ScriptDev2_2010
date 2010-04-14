@@ -83,15 +83,29 @@ struct MANGOS_DLL_DECL instance_gruuls_lair : public ScriptedInstance
     {
         switch (pGo->GetEntry())
         {
-            case 184468:
+            case GO_DOOR_MAULGAR:
                 m_uiMaulgarDoorGUID = pGo->GetGUID();
                 if (m_auiEncounter[0] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 184662:
+            case GO_DOOR_GRUUL:
                 m_uiGruulEncounterDoorGUID = pGo->GetGUID();
                 break;
         }
+    }
+
+    void OpenDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
+    }
+
+    void CloseDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_READY);
     }
 
     void SetData(uint32 uiType, uint32 uiData)
@@ -104,7 +118,11 @@ struct MANGOS_DLL_DECL instance_gruuls_lair : public ScriptedInstance
                 m_auiEncounter[0] = uiData;
                 break;
             case TYPE_GRUUL_EVENT:
-                DoUseDoorOrButton(m_uiGruulEncounterDoorGUID);
+                //DoUseDoorOrButton(m_uiGruulEncounterDoorGUID);
+                if(uiData == IN_PROGRESS)
+                    CloseDoor(m_uiGruulEncounterDoorGUID);
+                else
+                    OpenDoor(m_uiGruulEncounterDoorGUID);
                 m_auiEncounter[1] = uiData;
                 break;
         }

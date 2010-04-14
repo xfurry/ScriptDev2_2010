@@ -199,6 +199,7 @@ struct MANGOS_DLL_DECL boss_vazruden_heraldAI : public ScriptedAI
             {
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 m_pInstance->SetData(TYPE_NAZAN, IN_PROGRESS);
+                m_creature->SetInCombatWithZone();
             }
         }
     }

@@ -24,7 +24,7 @@ EndScriptData */
 #include "precompiled.h"
 #include "sethekk_halls.h"
 
-#define IKISS_DOOR          177203
+#define IKISS_DOOR          175353//177203 changed because of a DB error
 
 struct MANGOS_DLL_DECL instance_sethekk_halls : public ScriptedInstance
 {

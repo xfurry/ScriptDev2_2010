@@ -46,7 +46,7 @@ struct MANGOS_DLL_DECL instance_ramparts : public ScriptedInstance
 
     void OnCreatureCreate(Creature* pCreature)
     {
-        if (pCreature->GetEntry() == 17307)
+        if (pCreature->GetEntry() == 17536) // changed from 17307
             m_uiHeraldGUID = pCreature->GetGUID();
     }
 

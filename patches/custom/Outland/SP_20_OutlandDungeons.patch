@@ -1,0 +1,134 @@
+diff --git a/scripts/outland/auchindoun/sethekk_halls/instance_sethekk_halls.cpp b/scripts/outland/auchindoun/sethekk_halls/instance_sethekk_halls.cpp
+index 6bd4bd4..8d5d246 100644
+--- a/scripts/outland/auchindoun/sethekk_halls/instance_sethekk_halls.cpp
++++ b/scripts/outland/auchindoun/sethekk_halls/instance_sethekk_halls.cpp
+@@ -24,7 +24,7 @@ EndScriptData */
+ #include "precompiled.h"
+ #include "sethekk_halls.h"
+ 
+-#define IKISS_DOOR          177203
++#define IKISS_DOOR          175353//177203 changed because of a DB error
+ 
+ struct MANGOS_DLL_DECL instance_sethekk_halls : public ScriptedInstance
+ {
+diff --git a/scripts/outland/gruuls_lair/gruuls_lair.h b/scripts/outland/gruuls_lair/gruuls_lair.h
+index 34cdf26..d00eaa8 100644
+--- a/scripts/outland/gruuls_lair/gruuls_lair.h
++++ b/scripts/outland/gruuls_lair/gruuls_lair.h
+@@ -18,7 +18,10 @@ enum
+     DATA_BLINDEYE                   = 4,
+     DATA_KIGGLER                    = 5,
+     DATA_KROSH                      = 6,
+-    DATA_OLM                        = 7
++    DATA_OLM                        = 7,
++
++    GO_DOOR_MAULGAR                 = 184468,
++    GO_DOOR_GRUUL                   = 184662
+ };
+ 
+ #endif
+diff --git a/scripts/outland/gruuls_lair/instance_gruuls_lair.cpp b/scripts/outland/gruuls_lair/instance_gruuls_lair.cpp
+index 449a186..976e575 100644
+--- a/scripts/outland/gruuls_lair/instance_gruuls_lair.cpp
++++ b/scripts/outland/gruuls_lair/instance_gruuls_lair.cpp
+@@ -83,17 +83,31 @@ struct MANGOS_DLL_DECL instance_gruuls_lair : public ScriptedInstance
+     {
+         switch (pGo->GetEntry())
+         {
+-            case 184468:
++            case GO_DOOR_MAULGAR:
+                 m_uiMaulgarDoorGUID = pGo->GetGUID();
+                 if (m_auiEncounter[0] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 184662:
++            case GO_DOOR_GRUUL:
+                 m_uiGruulEncounterDoorGUID = pGo->GetGUID();
+                 break;
+         }
+     }
+ 
++    void OpenDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
++    }
++
++    void CloseDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_READY);
++    }
++
+     void SetData(uint32 uiType, uint32 uiData)
+     {
+         switch (uiType)
+@@ -104,7 +118,11 @@ struct MANGOS_DLL_DECL instance_gruuls_lair : public ScriptedInstance
+                 m_auiEncounter[0] = uiData;
+                 break;
+             case TYPE_GRUUL_EVENT:
+-                DoUseDoorOrButton(m_uiGruulEncounterDoorGUID);
++                //DoUseDoorOrButton(m_uiGruulEncounterDoorGUID);
++                if(uiData == IN_PROGRESS)
++                    CloseDoor(m_uiGruulEncounterDoorGUID);
++                else
++                    OpenDoor(m_uiGruulEncounterDoorGUID);
+                 m_auiEncounter[1] = uiData;
+                 break;
+         }
+diff --git a/scripts/outland/hellfire_citadel/hellfire_ramparts/boss_nazan_and_vazruden.cpp b/scripts/outland/hellfire_citadel/hellfire_ramparts/boss_nazan_and_vazruden.cpp
+index 52d682c..91ff975 100644
+--- a/scripts/outland/hellfire_citadel/hellfire_ramparts/boss_nazan_and_vazruden.cpp
++++ b/scripts/outland/hellfire_citadel/hellfire_ramparts/boss_nazan_and_vazruden.cpp
+@@ -199,6 +199,7 @@ struct MANGOS_DLL_DECL boss_vazruden_heraldAI : public ScriptedAI
+             {
+                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                 m_pInstance->SetData(TYPE_NAZAN, IN_PROGRESS);
++                m_creature->SetInCombatWithZone();
+             }
+         }
+     }
+diff --git a/scripts/outland/hellfire_citadel/hellfire_ramparts/instance_hellfire_ramparts.cpp b/scripts/outland/hellfire_citadel/hellfire_ramparts/instance_hellfire_ramparts.cpp
+index 5791824..477fa80 100644
+--- a/scripts/outland/hellfire_citadel/hellfire_ramparts/instance_hellfire_ramparts.cpp
++++ b/scripts/outland/hellfire_citadel/hellfire_ramparts/instance_hellfire_ramparts.cpp
+@@ -46,7 +46,7 @@ struct MANGOS_DLL_DECL instance_ramparts : public ScriptedInstance
+ 
+     void OnCreatureCreate(Creature* pCreature)
+     {
+-        if (pCreature->GetEntry() == 17307)
++        if (pCreature->GetEntry() == 17536) // changed from 17307
+             m_uiHeraldGUID = pCreature->GetGUID();
+     }
+ 
+diff --git a/sql/Custom_Updates/Mangos/Outland/OutlandDungeons_Mangos.sql b/sql/Custom_Updates/Mangos/Outland/OutlandDungeons_Mangos.sql
+new file mode 100644
+index 0000000..4f11813
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Outland/OutlandDungeons_Mangos.sql
+@@ -0,0 +1,22 @@
++/* GRUUL'S LAIR */
++-- Gruuls Lair doors
++UPDATE `gameobject_template` SET `faction` = 114 where `entry` in (184662, 184468);
++
++/* WATER NPCS */
++Update `creature_template` set `InhabitType` = 2, `unit_flags` = 32768 where `entry` in (35061, 35324, 35071, 35060, 34925, 29392, 25203);
++
++/* HELLFIRE CITADEL */
++-- Hellfire Rampants
++UPDATE `gameobject_template` SET `faction` = 0 WHERE `entry` in (185168, 185169);
++Update `gameobject` set `spawntimesecs` = -604800 where `id` in (185168, 185169);
++update `creature_template` set `ScriptName` = 'boss_vazruden_herald', `inhabitType` = 4 where `entry` = 17536;
++update `creature_template` set `ScriptName` = 'boss_vazruden' where `entry` = 17537;
++update `creature_template` set `lootid` = 18435 where `entry` = 18435;
++Delete from `creature_loot_template` where `entry` = 17307 and `item` = 23901;
++Delete from `creature_loot_template` where `entry` = 18435 and (`item` = 23901 or `item` = 33833);
++INSERT INTO `creature_loot_template` VALUES (17307, 23901, -100, 0, 1, 1, 0, 0, 0), 
++(18435, 23901, -100, 0, 1, 1, 0, 0, 0),
++(18435, 33833, -100, 0, 1, 1, 0, 0, 0);
++-- Blood Furnace
++update `creature` set `position_y` = 50.55695 where `id` = 17380;
++UPDATE `gameobject_template` SET `faction` = 114 WHERE `entry` in (181766, 181811, 181812, 181822, 181819, 181823);
+\ No newline at end of file
