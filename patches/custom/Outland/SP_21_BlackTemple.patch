@@ -1,0 +1,237 @@
+diff --git a/scripts/outland/black_temple/black_temple.h b/scripts/outland/black_temple/black_temple.h
+index 439c9eb..f356485 100644
+--- a/scripts/outland/black_temple/black_temple.h
++++ b/scripts/outland/black_temple/black_temple.h
+@@ -39,7 +39,21 @@ enum
+     DATA_GO_COUNCIL_DOOR           = 26,
+     DATA_GAMEOBJECT_ILLIDAN_GATE   = 27,
+     DATA_GAMEOBJECT_ILLIDAN_DOOR_R = 28,
+-    DATA_GAMEOBJECT_ILLIDAN_DOOR_L = 29
++    DATA_GAMEOBJECT_ILLIDAN_DOOR_L = 29,
++
++    GO_DOOR_MAIN            = 185882,
++    GO_DOOR_COUNCIL_ENTER   = 185481,
++    GO_DOOR_SHADE_AKAMA     = 185478,
++    GO_DOOR_GURTOGG         = 185892,
++    GO_DOOR_GOREFIEND       = 185480,
++    GO_DOOR_MOTHER_ENTER    = 185479,
++    GO_DOOR_MOTHER_EXIT     = 185482,
++    GO_GATE_ILIDAN          = 185905,
++    GO_GATE_WARLORD         = 185483,
++    GO_DOOR_GOREFIEND_COMBAT= 186153,  
++    GO_DOOR_COUNCIL_COMBAT  = 186152,
++    GO_DOOR_ILI_RIGHT       = 186261,
++    GO_DOOR_ILI_LEFT        = 186262
+ };
+ 
+ #endif
+diff --git a/scripts/outland/black_temple/boss_shade_of_akama.cpp b/scripts/outland/black_temple/boss_shade_of_akama.cpp
+index 9003b38..2d355f1 100644
+--- a/scripts/outland/black_temple/boss_shade_of_akama.cpp
++++ b/scripts/outland/black_temple/boss_shade_of_akama.cpp
+@@ -213,6 +213,7 @@ struct MANGOS_DLL_DECL boss_shade_of_akamaAI : public ScriptedAI
+                 pSorcerer->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                 pSorcerer->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ());
+                 pSorcerer->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID());
++                pSorcerer->setFaction(14);
+ 
+                 m_lSorcerersGUIDList.push_back(pSorcerer->GetGUID());
+ 
+@@ -586,6 +587,7 @@ struct MANGOS_DLL_DECL npc_akamaAI : public ScriptedAI
+ 
+                         pBroken->GetMotionMaster()->MovePoint(0, wx, wy, wz);
+                         pBroken->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                        pBroken->setFaction(35);
+ 
+                         m_lBrokenGUIDList.push_back(pBroken->GetGUID());
+                     }
+diff --git a/scripts/outland/black_temple/instance_black_temple.cpp b/scripts/outland/black_temple/instance_black_temple.cpp
+index 7d101ef..ef66dee 100644
+--- a/scripts/outland/black_temple/instance_black_temple.cpp
++++ b/scripts/outland/black_temple/instance_black_temple.cpp
+@@ -64,6 +64,10 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
+     uint64 m_uiShahrazPreDoorGUID;
+     uint64 m_uiShahrazPostDoorGUID;
+     uint64 m_uiCouncilDoorGUID;
++    uint64 m_uiGorefiendDoorGUID;
++    uint64 m_uiGortoggDoorGUID;
++    uint64 m_uiCouncilCombatDoorGUID;
++    uint64 m_uiGorefiendCombatDoorGUID;
+ 
+     void Initialize()
+     {
+@@ -91,6 +95,10 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
+         m_uiShahrazPreDoorGUID  = 0;
+         m_uiShahrazPostDoorGUID = 0;
+         m_uiCouncilDoorGUID     = 0;
++        m_uiGorefiendDoorGUID   = 0;
++        m_uiGortoggDoorGUID     = 0;
++        m_uiCouncilCombatDoorGUID = 0;
++        m_uiGorefiendCombatDoorGUID = 0;
+     }
+ 
+     bool IsEncounterInProgress() const
+@@ -124,49 +132,79 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
+     {
+         switch(pGo->GetEntry())
+         {
+-            case 185483:                                    // Gate past Naj'entus (at the entrance to Supermoose's courtyards)
++            case GO_GATE_WARLORD:                                       // Gate past Naj'entus (at the entrance to Supermoose's courtyards)
+                 m_uiNajentusGateGUID = pGo->GetGUID();
+                 if (m_auiEncounter[0] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 185882:                                    // Main Temple Doors - right past Supermoose (Supremus)
++            case GO_DOOR_MAIN:                                          // Main Temple Doors - right past Supermoose (Supremus)
+                 m_uiMainTempleDoorsGUID = pGo->GetGUID();
+                 if (m_auiEncounter[1] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 185478:
+-                m_uiShadeAkamaDoorGUID = pGo->GetGUID();    // Door close during encounter
++            case GO_DOOR_SHADE_AKAMA:
++                m_uiShadeAkamaDoorGUID = pGo->GetGUID();                // Door close during encounter
+                 break;
+-            case 185479:                                    // Door leading to Mother Shahraz
++            case GO_DOOR_MOTHER_ENTER:                                  // Door leading to Mother Shahraz
+                 m_uiShahrazPreDoorGUID = pGo->GetGUID();
+                 if (CanPreMotherDoorOpen())
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 185481:                                    // Door leading to the Council (grand promenade)
++            case GO_DOOR_COUNCIL_ENTER:                                 // Door leading to the Council (grand promenade)
+                 m_uiCouncilDoorGUID = pGo->GetGUID();
+                 if (m_auiEncounter[6] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 185482:                                    // Door after shahraz
++            case GO_DOOR_MOTHER_EXIT:                                   // Door after shahraz
+                 m_uiShahrazPostDoorGUID = pGo->GetGUID();
+                 if (m_auiEncounter[6] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 185905:                                    // Gate leading to Temple Summit
++            case GO_GATE_ILIDAN:                                        // Gate leading to Temple Summit
+                 m_uiIllidanGateGUID = pGo->GetGUID();
+                 break;
+-            case 186261:                                    // Right door at Temple Summit
++            case GO_DOOR_ILI_RIGHT:                                     // Right door at Temple Summit
+                 m_uiIllidanDoorGUID[0] = pGo->GetGUID();
+                 break;
+-            case 186262:                                    // Left door at Temple Summit
++            case GO_DOOR_ILI_LEFT:                                      // Left door at Temple Summit
+                 m_uiIllidanDoorGUID[1] = pGo->GetGUID();
+                 break;
++            case GO_DOOR_GURTOGG:                                         // Door after Gurtogg is dead
++                m_uiGortoggDoorGUID = pGo->GetGUID();
++                if (m_auiEncounter[4] == DONE)
++                    pGo->SetGoState(GO_STATE_ACTIVE);
++                break;
++            case GO_DOOR_GOREFIEND:                                    // Door to Gorefiend
++                m_uiGorefiendDoorGUID = pGo->GetGUID();
++                if (m_auiEncounter[2] == DONE)
++                    pGo->SetGoState(GO_STATE_ACTIVE);
++                break;
++            case GO_DOOR_GOREFIEND_COMBAT:                             // Door combat Gorefiend
++                 m_uiGorefiendCombatDoorGUID = pGo->GetGUID();
++                break;
++            case GO_DOOR_COUNCIL_COMBAT:                               // Door combat Council
++                m_uiCouncilCombatDoorGUID = pGo->GetGUID();
++                break;
+         }
+     }
+ 
++    void OpenDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
++    }
++
++    void CloseDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_READY);
++    }
++
+     bool CanPreMotherDoorOpen()
+     {
+-        if (m_auiEncounter[2] == DONE && m_auiEncounter[3] == DONE && m_auiEncounter[4] == DONE && m_auiEncounter[5] == DONE)
++        if (m_auiEncounter[2] == DONE && m_auiEncounter[3] == DONE && m_auiEncounter[4] == DONE /*&& m_auiEncounter[5] == DONE Removed because the event sometimes gets bugged*/)
+         {
+             debug_log("SD2: Black Temple: door to Mother Shahraz can open");
+             return true;
+@@ -194,16 +232,35 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
+                 break;
+             case TYPE_SHADE:
+                 m_auiEncounter[2] = uiData;
++                if(uiData == IN_PROGRESS)
++                    CloseDoor(m_uiShadeAkamaDoorGUID);
++                else
++                    OpenDoor(m_uiShadeAkamaDoorGUID);
++
+                 if (uiData == DONE && CanPreMotherDoorOpen())
+                     DoUseDoorOrButton(m_uiShahrazPreDoorGUID);
++
++                if(uiData == DONE)
++                   OpenDoor(m_uiGorefiendDoorGUID);
++                else
++                   CloseDoor(m_uiGorefiendDoorGUID);
++
+                 break;
+             case TYPE_GOREFIEND:
+                 m_auiEncounter[3] = uiData;
++                if(uiData == IN_PROGRESS)
++                    CloseDoor(m_uiGorefiendCombatDoorGUID);
++                else
++                    OpenDoor(m_uiGorefiendCombatDoorGUID);
++
+                 if (uiData == DONE && CanPreMotherDoorOpen())
+                     DoUseDoorOrButton(m_uiShahrazPreDoorGUID);
+                 break;
+             case TYPE_BLOODBOIL:
+                 m_auiEncounter[4] = uiData;
++                if(uiData == DONE)
++                    OpenDoor(m_uiGortoggDoorGUID);
++
+                 if (uiData == DONE && CanPreMotherDoorOpen())
+                     DoUseDoorOrButton(m_uiShahrazPreDoorGUID);
+                 break;
+@@ -215,13 +272,22 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
+             case TYPE_SHAHRAZ:
+                 if (uiData == DONE)
+                 {
+-                    DoUseDoorOrButton(m_uiCouncilDoorGUID);
+-                    DoUseDoorOrButton(m_uiShahrazPostDoorGUID);
++                    OpenDoor(m_uiCouncilDoorGUID);
++                    OpenDoor(m_uiShahrazPostDoorGUID);
+                 }
+                 m_auiEncounter[6] = uiData;
+                 break;
+-            case TYPE_COUNCIL:    m_auiEncounter[7] = uiData; break;
+-            case TYPE_ILLIDAN:    m_auiEncounter[8] = uiData; break;
++            case TYPE_COUNCIL:
++                m_auiEncounter[7] = uiData;
++                if(uiData == IN_PROGRESS)
++                    CloseDoor(m_uiCouncilCombatDoorGUID);
++                else
++                    OpenDoor(m_uiCouncilCombatDoorGUID);
++
++                break;
++            case TYPE_ILLIDAN:    
++                m_auiEncounter[8] = uiData; 
++                break;
+             default:
+                 error_log("SD2: Instance Black Temple: ERROR SetData = %u for type %u does not exist/not implemented.",uiType,uiData);
+                 break;
+diff --git a/sql/Custom_Updates/Mangos/Outland/BlackTemple_Mangos.sql b/sql/Custom_Updates/Mangos/Outland/BlackTemple_Mangos.sql
+new file mode 100644
+index 0000000..d93ce6c
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Outland/BlackTemple_Mangos.sql
+@@ -0,0 +1,3 @@
++/* BLACK TEMPLE */
++update `creature_onkill_reputation` set `RewOnKillRepValue1` = 250 where `creature_id` = 22948;
++UPDATE `gameobject_template` SET `data0` = '0' where `entry` = 185480;
+\ No newline at end of file

@@ -64,6 +64,10 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
     uint64 m_uiShahrazPreDoorGUID;
     uint64 m_uiShahrazPostDoorGUID;
     uint64 m_uiCouncilDoorGUID;
+    uint64 m_uiGorefiendDoorGUID;
+    uint64 m_uiGortoggDoorGUID;
+    uint64 m_uiCouncilCombatDoorGUID;
+    uint64 m_uiGorefiendCombatDoorGUID;
 
     void Initialize()
     {
@@ -91,6 +95,10 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
         m_uiShahrazPreDoorGUID  = 0;
         m_uiShahrazPostDoorGUID = 0;
         m_uiCouncilDoorGUID     = 0;
+        m_uiGorefiendDoorGUID   = 0;
+        m_uiGortoggDoorGUID     = 0;
+        m_uiCouncilCombatDoorGUID = 0;
+        m_uiGorefiendCombatDoorGUID = 0;
     }
 
     bool IsEncounterInProgress() const
@@ -124,49 +132,79 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
     {
         switch(pGo->GetEntry())
         {
-            case 185483:                                    // Gate past Naj'entus (at the entrance to Supermoose's courtyards)
+            case GO_GATE_WARLORD:                                       // Gate past Naj'entus (at the entrance to Supermoose's courtyards)
                 m_uiNajentusGateGUID = pGo->GetGUID();
                 if (m_auiEncounter[0] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 185882:                                    // Main Temple Doors - right past Supermoose (Supremus)
+            case GO_DOOR_MAIN:                                          // Main Temple Doors - right past Supermoose (Supremus)
                 m_uiMainTempleDoorsGUID = pGo->GetGUID();
                 if (m_auiEncounter[1] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 185478:
-                m_uiShadeAkamaDoorGUID = pGo->GetGUID();    // Door close during encounter
+            case GO_DOOR_SHADE_AKAMA:
+                m_uiShadeAkamaDoorGUID = pGo->GetGUID();                // Door close during encounter
                 break;
-            case 185479:                                    // Door leading to Mother Shahraz
+            case GO_DOOR_MOTHER_ENTER:                                  // Door leading to Mother Shahraz
                 m_uiShahrazPreDoorGUID = pGo->GetGUID();
                 if (CanPreMotherDoorOpen())
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 185481:                                    // Door leading to the Council (grand promenade)
+            case GO_DOOR_COUNCIL_ENTER:                                 // Door leading to the Council (grand promenade)
                 m_uiCouncilDoorGUID = pGo->GetGUID();
                 if (m_auiEncounter[6] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 185482:                                    // Door after shahraz
+            case GO_DOOR_MOTHER_EXIT:                                   // Door after shahraz
                 m_uiShahrazPostDoorGUID = pGo->GetGUID();
                 if (m_auiEncounter[6] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 185905:                                    // Gate leading to Temple Summit
+            case GO_GATE_ILIDAN:                                        // Gate leading to Temple Summit
                 m_uiIllidanGateGUID = pGo->GetGUID();
                 break;
-            case 186261:                                    // Right door at Temple Summit
+            case GO_DOOR_ILI_RIGHT:                                     // Right door at Temple Summit
                 m_uiIllidanDoorGUID[0] = pGo->GetGUID();
                 break;
-            case 186262:                                    // Left door at Temple Summit
+            case GO_DOOR_ILI_LEFT:                                      // Left door at Temple Summit
                 m_uiIllidanDoorGUID[1] = pGo->GetGUID();
+                break;
+            case GO_DOOR_GURTOGG:                                         // Door after Gurtogg is dead
+                m_uiGortoggDoorGUID = pGo->GetGUID();
+                if (m_auiEncounter[4] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_DOOR_GOREFIEND:                                    // Door to Gorefiend
+                m_uiGorefiendDoorGUID = pGo->GetGUID();
+                if (m_auiEncounter[2] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_DOOR_GOREFIEND_COMBAT:                             // Door combat Gorefiend
+                 m_uiGorefiendCombatDoorGUID = pGo->GetGUID();
+                break;
+            case GO_DOOR_COUNCIL_COMBAT:                               // Door combat Council
+                m_uiCouncilCombatDoorGUID = pGo->GetGUID();
                 break;
         }
     }
 
+    void OpenDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
+    }
+
+    void CloseDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_READY);
+    }
+
     bool CanPreMotherDoorOpen()
     {
-        if (m_auiEncounter[2] == DONE && m_auiEncounter[3] == DONE && m_auiEncounter[4] == DONE && m_auiEncounter[5] == DONE)
+        if (m_auiEncounter[2] == DONE && m_auiEncounter[3] == DONE && m_auiEncounter[4] == DONE /*&& m_auiEncounter[5] == DONE Removed because the event sometimes gets bugged*/)
         {
             debug_log("SD2: Black Temple: door to Mother Shahraz can open");
             return true;
@@ -194,16 +232,35 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
                 break;
             case TYPE_SHADE:
                 m_auiEncounter[2] = uiData;
+                if(uiData == IN_PROGRESS)
+                    CloseDoor(m_uiShadeAkamaDoorGUID);
+                else
+                    OpenDoor(m_uiShadeAkamaDoorGUID);
+
                 if (uiData == DONE && CanPreMotherDoorOpen())
                     DoUseDoorOrButton(m_uiShahrazPreDoorGUID);
+
+                if(uiData == DONE)
+                   OpenDoor(m_uiGorefiendDoorGUID);
+                else
+                   CloseDoor(m_uiGorefiendDoorGUID);
+
                 break;
             case TYPE_GOREFIEND:
                 m_auiEncounter[3] = uiData;
+                if(uiData == IN_PROGRESS)
+                    CloseDoor(m_uiGorefiendCombatDoorGUID);
+                else
+                    OpenDoor(m_uiGorefiendCombatDoorGUID);
+
                 if (uiData == DONE && CanPreMotherDoorOpen())
                     DoUseDoorOrButton(m_uiShahrazPreDoorGUID);
                 break;
             case TYPE_BLOODBOIL:
                 m_auiEncounter[4] = uiData;
+                if(uiData == DONE)
+                    OpenDoor(m_uiGortoggDoorGUID);
+
                 if (uiData == DONE && CanPreMotherDoorOpen())
                     DoUseDoorOrButton(m_uiShahrazPreDoorGUID);
                 break;
@@ -215,13 +272,22 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
             case TYPE_SHAHRAZ:
                 if (uiData == DONE)
                 {
-                    DoUseDoorOrButton(m_uiCouncilDoorGUID);
-                    DoUseDoorOrButton(m_uiShahrazPostDoorGUID);
+                    OpenDoor(m_uiCouncilDoorGUID);
+                    OpenDoor(m_uiShahrazPostDoorGUID);
                 }
                 m_auiEncounter[6] = uiData;
                 break;
-            case TYPE_COUNCIL:    m_auiEncounter[7] = uiData; break;
-            case TYPE_ILLIDAN:    m_auiEncounter[8] = uiData; break;
+            case TYPE_COUNCIL:
+                m_auiEncounter[7] = uiData;
+                if(uiData == IN_PROGRESS)
+                    CloseDoor(m_uiCouncilCombatDoorGUID);
+                else
+                    OpenDoor(m_uiCouncilCombatDoorGUID);
+
+                break;
+            case TYPE_ILLIDAN:    
+                m_auiEncounter[8] = uiData; 
+                break;
             default:
                 error_log("SD2: Instance Black Temple: ERROR SetData = %u for type %u does not exist/not implemented.",uiType,uiData);
                 break;
