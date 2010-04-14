@@ -48,6 +48,11 @@ include/sc_grid_searchers.h \
 include/sc_instance.cpp \
 include/sc_instance.h \
 scripts/battlegrounds/battleground.cpp \
+scripts/battlegrounds/alterac_valley/alterac_valley.cpp \
+scripts/battlegrounds/alterac_valley/boss_balinda.cpp \
+scripts/battlegrounds/alterac_valley/boss_drekthar.cpp \
+scripts/battlegrounds/alterac_valley/boss_galvangar.cpp \
+scripts/battlegrounds/alterac_valley/boss_vanndar.cpp \
 scripts/eastern_kingdoms/alterac_mountains.cpp \
 scripts/eastern_kingdoms/arathi_highlands.cpp \
 scripts/eastern_kingdoms/blasted_lands.cpp \

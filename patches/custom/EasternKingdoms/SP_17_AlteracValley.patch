@@ -1,0 +1,1038 @@
+diff --git a/Makefile.am b/Makefile.am
+index 839898c..45346f0 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -48,6 +48,11 @@ include/sc_grid_searchers.h \
+ include/sc_instance.cpp \
+ include/sc_instance.h \
+ scripts/battlegrounds/battleground.cpp \
++scripts/battlegrounds/alterac_valley/alterac_valley.cpp \
++scripts/battlegrounds/alterac_valley/boss_balinda.cpp \
++scripts/battlegrounds/alterac_valley/boss_drekthar.cpp \
++scripts/battlegrounds/alterac_valley/boss_galvangar.cpp \
++scripts/battlegrounds/alterac_valley/boss_vanndar.cpp \
+ scripts/eastern_kingdoms/alterac_mountains.cpp \
+ scripts/eastern_kingdoms/arathi_highlands.cpp \
+ scripts/eastern_kingdoms/blasted_lands.cpp \
+diff --git a/VC90/90ScriptDev2.vcproj b/VC90/90ScriptDev2.vcproj
+index 53ad302..f124057 100644
+--- a/VC90/90ScriptDev2.vcproj
++++ b/VC90/90ScriptDev2.vcproj
+@@ -399,6 +399,30 @@
+ 					RelativePath="..\scripts\battlegrounds\battleground.cpp"
+ 					>
+ 				</File>
++				<Filter
++					Name="alterac_valley"
++					>
++					<File
++						RelativePath="..\scripts\battlegrounds\alterac_valley\alterac_valley.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\battlegrounds\alterac_valley\boss_balinda.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\battlegrounds\alterac_valley\boss_drekthar.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\battlegrounds\alterac_valley\boss_galvangar.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\battlegrounds\alterac_valley\boss_vanndar.cpp"
++						>
++					</File>
++				</Filter>
+ 			</Filter>
+ 			<Filter
+ 				Name="custom"
+diff --git a/scripts/battlegrounds/alterac_valley/alterac_valley.cpp b/scripts/battlegrounds/alterac_valley/alterac_valley.cpp
+new file mode 100644
+index 0000000..28a4083
+--- /dev/null
++++ b/scripts/battlegrounds/alterac_valley/alterac_valley.cpp
+@@ -0,0 +1,183 @@
++/* Copyright (C) 2008 - 2010 TrinityCore <http://www.trinitycore.org/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
++
++#include "precompiled.h"
++
++enum Spells
++{
++    SPELL_CHARGE                                  = 22911,
++    SPELL_CLEAVE                                  = 40504,
++    SPELL_DEMORALIZING_SHOUT                      = 23511,
++    SPELL_ENRAGE                                  = 8599,
++    SPELL_WHIRLWIND1                              = 15589,
++    SPELL_WHIRLWIND2                              = 13736,
++    SPELL_NORTH_MARSHAL                           = 45828,
++    SPELL_SOUTH_MARSHAL                           = 45829,
++    SPELL_STONEHEARTH_MARSHAL                     = 45830,
++    SPELL_ICEWING_MARSHAL                         = 45831,
++    SPELL_ICEBLOOD_WARMASTER                      = 45822,
++    SPELL_TOWER_POINT_WARMASTER                   = 45823,
++    SPELL_WEST_FROSTWOLF_WARMASTER                = 45824,
++    SPELL_EAST_FROSTWOLF_WARMASTER                = 45826
++};
++
++enum Creatures
++{
++    NPC_NORTH_MARSHAL                             = 14762,
++    NPC_SOUTH_MARSHAL                             = 14763,
++    NPC_ICEWING_MARSHAL                           = 14764,
++    NPC_STONEHEARTH_MARSHAL                       = 14765,
++    NPC_EAST_FROSTWOLF_WARMASTER                  = 14772,
++    NPC_ICEBLOOD_WARMASTER                        = 14773,
++    NPC_TOWER_POINT_WARMASTER                     = 14776,
++    NPC_WEST_FROSTWOLF_WARMASTER                  = 14777
++};
++
++struct MANGOS_DLL_DECL mob_av_marshal_or_warmasterAI : public ScriptedAI
++{
++    mob_av_marshal_or_warmasterAI(Creature *c) : ScriptedAI(c) {}
++
++    uint32 uiChargeTimer;
++    uint32 uiCleaveTimer;
++    uint32 uiDemoralizingShoutTimer;
++    uint32 uiWhirlwind1Timer;
++    uint32 uiWhirlwind2Timer;
++    uint32 uiEnrageTimer;
++    uint32 uiResetTimer;
++
++    bool bHasAura;
++
++    void Reset()
++    {
++        uiChargeTimer = urand(2*IN_MILLISECONDS,12*IN_MILLISECONDS);
++        uiCleaveTimer = urand(1*IN_MILLISECONDS,11*IN_MILLISECONDS);
++        uiDemoralizingShoutTimer = urand(2*IN_MILLISECONDS,2*IN_MILLISECONDS);
++        uiWhirlwind1Timer = urand(1*IN_MILLISECONDS,12*IN_MILLISECONDS);
++        uiWhirlwind2Timer = urand(5*IN_MILLISECONDS,20*IN_MILLISECONDS);
++        uiEnrageTimer = urand(5*IN_MILLISECONDS,20*IN_MILLISECONDS);
++        uiResetTimer = 5*IN_MILLISECONDS;
++
++        bHasAura = false;
++    }
++
++    void JustRespawned()
++    {
++        Reset();
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (!bHasAura)
++        {
++            switch(m_creature->GetEntry())
++            {
++                case NPC_NORTH_MARSHAL:
++                    DoCast(m_creature,SPELL_NORTH_MARSHAL);
++                    break;
++                case NPC_SOUTH_MARSHAL:
++                    DoCast(m_creature,SPELL_SOUTH_MARSHAL);
++                    break;
++                case NPC_STONEHEARTH_MARSHAL:
++                    DoCast(m_creature,SPELL_STONEHEARTH_MARSHAL);
++                    break;
++                case NPC_ICEWING_MARSHAL:
++                    DoCast(m_creature,SPELL_ICEWING_MARSHAL);
++                    break;
++                case NPC_EAST_FROSTWOLF_WARMASTER:
++                    DoCast(m_creature,SPELL_EAST_FROSTWOLF_WARMASTER);
++                    break;
++                case NPC_WEST_FROSTWOLF_WARMASTER:
++                    DoCast(m_creature,SPELL_WEST_FROSTWOLF_WARMASTER);
++                    break;
++                case NPC_ICEBLOOD_WARMASTER:
++                    DoCast(m_creature,SPELL_ICEBLOOD_WARMASTER);
++                    break;
++                case NPC_TOWER_POINT_WARMASTER:
++                    DoCast(m_creature,SPELL_TOWER_POINT_WARMASTER);
++                    break;
++            }
++
++            bHasAura = true;
++        }
++
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (uiChargeTimer <= diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_CHARGE);
++            uiChargeTimer = urand(10*IN_MILLISECONDS,25*IN_MILLISECONDS);
++        } else uiChargeTimer -= diff;
++
++        if (uiCleaveTimer <= diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
++            uiCleaveTimer =  urand(10*IN_MILLISECONDS,16*IN_MILLISECONDS);
++        } else uiCleaveTimer -= diff;
++
++        if (uiDemoralizingShoutTimer <= diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_DEMORALIZING_SHOUT);
++            uiDemoralizingShoutTimer = urand(10*IN_MILLISECONDS,15*IN_MILLISECONDS);
++        } else uiDemoralizingShoutTimer -= diff;
++
++        if (uiWhirlwind1Timer <= diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND1);
++            uiWhirlwind1Timer = urand(6*IN_MILLISECONDS,20*IN_MILLISECONDS);
++        } else uiWhirlwind1Timer -= diff;
++
++        if (uiWhirlwind2Timer <= diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND2);
++            uiWhirlwind2Timer = urand(10*IN_MILLISECONDS,25*IN_MILLISECONDS);
++        } else uiWhirlwind2Timer -= diff;
++
++        if (uiEnrageTimer <= diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_ENRAGE);
++            uiEnrageTimer = urand(10*IN_MILLISECONDS,30*IN_MILLISECONDS);
++        }else uiEnrageTimer -= diff;
++
++
++        // check if creature is not outside of building
++        if (uiResetTimer <= diff)
++        {
++            float x, y, z;
++            m_creature->GetPosition(x, y, z);
++            if(x > -6)
++                EnterEvadeMode();
++            uiResetTimer = 5*IN_MILLISECONDS;
++        } else uiResetTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_mob_av_marshal_or_warmaster(Creature *_Creature)
++{
++    return new mob_av_marshal_or_warmasterAI (_Creature);
++}
++
++void AddSC_alterac_valley()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name = "mob_av_marshal_or_warmaster";
++    newscript->GetAI = &GetAI_mob_av_marshal_or_warmaster;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/battlegrounds/alterac_valley/boss_balinda.cpp b/scripts/battlegrounds/alterac_valley/boss_balinda.cpp
+new file mode 100644
+index 0000000..13de659
+--- /dev/null
++++ b/scripts/battlegrounds/alterac_valley/boss_balinda.cpp
+@@ -0,0 +1,210 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
++
++/* ScriptData
++SDName: Boss_Balinda
++SD%Complete: 
++SDComment: Timers should be adjusted
++EndScriptData */
++
++#include "precompiled.h"
++
++enum Spells
++{
++    SPELL_ARCANE_EXPLOSION                        = 46608,
++    SPELL_CONE_OF_COLD                            = 38384,
++    SPELL_FIREBALL                                = 46988,
++    SPELL_FROSTBOLT                               = 46987
++};
++
++enum Yells
++{
++    YELL_AGGRO                                    = -2100019,
++    YELL_EVADE                                    = -2100020
++};
++
++enum Creatures
++{
++    NPC_WATER_ELEMENTAL                           = 25040
++};
++
++enum WaterElementalSpells
++{
++    SPELL_WATERBOLT                               = 46983
++};
++
++struct MANGOS_DLL_DECL mob_water_elementalAI : public ScriptedAI
++{
++    mob_water_elementalAI(Creature *c) : ScriptedAI(c) {}
++
++    uint32 uiWaterBoltTimer;
++    uint64 uiBalindaGUID;
++    uint32 uiResetTimer;
++
++    void Reset()
++    {
++        uiWaterBoltTimer            = 3*IN_MILLISECONDS;
++        uiResetTimer                = 5*IN_MILLISECONDS;
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (uiWaterBoltTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_WATERBOLT);
++            uiWaterBoltTimer = 5*IN_MILLISECONDS;
++        } else uiWaterBoltTimer -= diff;
++
++        // check if creature is not outside of building
++        if (uiResetTimer < diff)
++        {
++            if (Creature *pBalinda = ((Creature*)Unit::GetUnit((*m_creature), uiBalindaGUID)))
++            {
++                float x, y, z;
++                pBalinda->GetPosition(x, y, z);
++                if(x > -6)
++                    EnterEvadeMode();
++                uiResetTimer = 5*IN_MILLISECONDS;
++            }
++        } else uiResetTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++struct MANGOS_DLL_DECL boss_balindaAI : public ScriptedAI
++{
++    boss_balindaAI(Creature *c) : ScriptedAI(c) {Reset();}
++
++
++    uint32 ArcaneExplosionTimer;
++    uint32 ConeofcoldTimer;
++    uint32 FireboltTimer;
++    uint32 FrostboltTimer;
++    uint32 ResetTimer;
++    uint32 uiWaterElementalTimer;
++
++    std::list<uint64> Summons;
++
++    void Reset()
++    {
++        ArcaneExplosionTimer		= (10+rand()%5)*1000;
++        ConeofcoldTimer			= 8000;
++        FireboltTimer			= 1000;
++        FrostboltTimer			= 4000;
++        ResetTimer			    = 5000;
++        uiWaterElementalTimer   = 0;
++
++        Summons.clear();
++    }
++
++    void Aggro(Unit *who)
++    {
++        DoScriptText(YELL_AGGRO, m_creature);
++    }
++
++    void KilledUnit(Unit* victim){}
++
++    void JustDied(Unit* Killer){}
++
++    void JustSummoned(Creature* summoned)
++    {
++        ((mob_water_elementalAI*)summoned->AI())->uiBalindaGUID = m_creature->GetGUID();
++        summoned->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM,0));
++        summoned->setFaction(m_creature->getFaction());
++        Summons.push_back(summoned->GetGUID());
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (uiWaterElementalTimer < diff)
++        {
++            if (Summons.empty())
++                m_creature->SummonCreature(NPC_WATER_ELEMENTAL, 0, 0, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 45*IN_MILLISECONDS);
++            uiWaterElementalTimer = 50*IN_MILLISECONDS;
++        } else uiWaterElementalTimer -= diff;
++
++        if (ArcaneExplosionTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLOSION);
++            ArcaneExplosionTimer =  (10+rand()%5)*1000;
++        }else ArcaneExplosionTimer -= diff;
++
++        if (ConeofcoldTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_CONE_OF_COLD);
++            ConeofcoldTimer = (10+rand()%10)*1000;
++        }else ConeofcoldTimer -= diff;
++
++        if (FireboltTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_FIREBALL);
++            FireboltTimer = (5+rand()%4)*1000;
++        }else FireboltTimer -= diff;
++
++        if (FrostboltTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_FROSTBOLT);
++            FrostboltTimer = (4+rand()%8)*1000;
++        }else FrostboltTimer -= diff;
++
++        // check if creature is not outside of building
++        if(ResetTimer < diff)
++        {
++            float x, y, z;
++            m_creature->GetPosition(x, y, z);
++            if(x > -6)
++            {
++                DoScriptText(YELL_EVADE, m_creature);
++                EnterEvadeMode();
++            }
++            ResetTimer = 5000;
++        }else ResetTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_balinda(Creature *_Creature)
++{
++    return new boss_balindaAI (_Creature);
++}
++
++CreatureAI* GetAI_mob_water_elemental(Creature *_Creature)
++{
++    return new mob_water_elementalAI (_Creature);
++}
++
++void AddSC_boss_balinda()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name = "boss_balinda";
++    newscript->GetAI = &GetAI_boss_balinda;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_water_elemental";
++    newscript->GetAI = &GetAI_mob_water_elemental;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/battlegrounds/alterac_valley/boss_drekthar.cpp b/scripts/battlegrounds/alterac_valley/boss_drekthar.cpp
+new file mode 100644
+index 0000000..344db93
+--- /dev/null
++++ b/scripts/battlegrounds/alterac_valley/boss_drekthar.cpp
+@@ -0,0 +1,183 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
++
++/* ScriptData
++SDName: Boss_DrekThar
++SD%Complete: 50%
++SDComment: Some spells listed on wowwiki but doesn't exist on wowhead
++EndScriptData */
++
++#include "precompiled.h"
++
++enum Spells
++{
++    SPELL_WHIRLWIND                               = 15589,
++    SPELL_WHIRLWIND2                              = 13736,
++    SPELL_KNOCKDOWN                               = 19128,
++    SPELL_FRENZY                                  = 8269,
++    SPELL_SWEEPING_STRIKES                        = 18765, // not sure
++    SPELL_CLEAVE                                  = 20677, // not sure
++    SPELL_WINDFURY                                = 35886, // not sure
++    SPELL_STORMPIKE                               = 51876,  // not sure
++    SPELL_ENRAGE                                  = 8599,
++
++    NPC_DUROS                                     = 12122,
++    NPC_DRAKAN                                    = 12121,
++};
++
++enum Yells
++{
++    YELL_AGGRO                                    = -2100000,
++    YELL_EVADE                                    = -2100001,
++    YELL_RESPAWN                                  = -2100002,
++    YELL_RANDOM1                                  = -2100003,
++    YELL_RANDOM2                                  = -2100004,
++    YELL_RANDOM3                                  = -2100005,
++    YELL_RANDOM4                                  = -2100006,
++    YELL_RANDOM5                                  = -2100007
++};
++
++
++struct MANGOS_DLL_DECL boss_drektharAI : public ScriptedAI
++{
++    boss_drektharAI(Creature *c) : ScriptedAI(c) {Reset();}
++
++
++    uint32 WhirlwindTimer;
++    uint32 Whirlwind2Timer;
++    uint32 KnockdownTimer;
++    uint32 FrenzyTimer;
++    uint32 YellTimer;
++    uint32 ResetTimer;
++
++    void Reset()
++    {
++        WhirlwindTimer		= (rand()%20)*1000;
++        Whirlwind2Timer		= (rand()%25)*1000;
++        KnockdownTimer		= 12000;
++        FrenzyTimer		    = 6000;
++        ResetTimer		    = 5000;
++        YellTimer           = (20+rand()%10)*1000; //20 to 30 seconds
++
++        if(Creature* pDrakan = GetClosestCreatureWithEntry(m_creature, NPC_DRAKAN, 50.0f))
++        {
++            if(!pDrakan->isAlive())
++                pDrakan->Respawn();
++            else
++                pDrakan->CastSpell(pDrakan, SPELL_ENRAGE, false);
++        }
++        else
++            m_creature->SummonCreature(NPC_DRAKAN, m_creature->GetPositionX() + 3, m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000);
++
++        if(Creature* pDuros = GetClosestCreatureWithEntry(m_creature, NPC_DUROS, 50.0f))
++        {
++            if(!pDuros->isAlive())
++                pDuros->Respawn();
++            else
++                pDuros->CastSpell(pDuros, SPELL_ENRAGE, false);
++        }
++        else
++            m_creature->SummonCreature(NPC_DUROS, m_creature->GetPositionX() - 3, m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000);
++    }
++
++    void Aggro(Unit *who)
++    {
++        DoScriptText(YELL_AGGRO, m_creature);
++    }
++
++    void JustReachedHome()
++    {
++        DoScriptText(YELL_RESPAWN, m_creature);
++    }
++
++    void KilledUnit(Unit* victim){}
++
++    void JustDied(Unit* Killer){}
++
++    void UpdateAI(const uint32 diff)
++    {
++
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (WhirlwindTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND);
++            WhirlwindTimer =  (8+rand()%10)*1000;
++        }else WhirlwindTimer -= diff;
++
++        if (Whirlwind2Timer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND2);
++            Whirlwind2Timer = (7+rand()%18)*1000;
++        }else Whirlwind2Timer -= diff;
++
++        if (KnockdownTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_KNOCKDOWN);
++            KnockdownTimer = (10+rand()%5)*1000;
++        }else KnockdownTimer -= diff;
++
++        if (FrenzyTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_FRENZY);
++            FrenzyTimer = (20+rand()%5)*1000;
++        }else FrenzyTimer -= diff;
++
++        if (YellTimer < diff) {
++            switch(rand()%4)
++            {
++            case 0: DoScriptText(YELL_RANDOM1, m_creature); break;
++            case 1: DoScriptText(YELL_RANDOM2, m_creature); break;
++            case 2: DoScriptText(YELL_RANDOM3, m_creature); break;
++            case 3: DoScriptText(YELL_RANDOM4, m_creature); break;
++            case 4: DoScriptText(YELL_RANDOM5, m_creature); break;
++            }
++            YellTimer = (20+rand()%10)*1000; //20 to 30 seconds
++        } else YellTimer -= diff;
++
++        // check if creature is not outside of building
++        if(ResetTimer < diff)
++        {
++            float x, y, z;
++            m_creature->GetPosition(x, y, z);
++            if(y < -260)
++            {
++                DoScriptText(YELL_EVADE, m_creature);
++                EnterEvadeMode();
++            }
++            ResetTimer = 5000;
++        }else ResetTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++
++CreatureAI* GetAI_boss_drekthar(Creature *_Creature)
++{
++    return new boss_drektharAI (_Creature);
++}
++
++void AddSC_boss_drekthar()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name = "boss_drekthar";
++    newscript->GetAI = &GetAI_boss_drekthar;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/battlegrounds/alterac_valley/boss_galvangar.cpp b/scripts/battlegrounds/alterac_valley/boss_galvangar.cpp
+new file mode 100644
+index 0000000..d6ac1b9
+--- /dev/null
++++ b/scripts/battlegrounds/alterac_valley/boss_galvangar.cpp
+@@ -0,0 +1,138 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
++
++/* ScriptData
++SDName: Boss_Galvangar
++SD%Complete: 
++SDComment: timers should be adjusted
++EndScriptData */
++
++#include "precompiled.h"
++
++enum Spells
++{
++    SPELL_CLEAVE                                  = 15284,
++    SPELL_FRIGHTENING_SHOUT                       = 19134,
++    SPELL_WHIRLWIND1                              = 15589,
++    SPELL_WHIRLWIND2                              = 13736,
++    SPELL_MORTAL_STRIKE                           = 16856
++};
++
++enum Yells
++{
++    YELL_AGGRO                                    = -2100021,
++    YELL_EVADE                                    = -2100022
++};
++
++
++struct MANGOS_DLL_DECL boss_galvangarAI : public ScriptedAI
++{
++    boss_galvangarAI(Creature *c) : ScriptedAI(c) {Reset();}
++
++
++    uint32 CleaveTimer;
++    uint32 FrighteningShoutTimer;
++    uint32 Whirlwind1Timer;
++    uint32 Whirlwind2Timer;
++    uint32 MortalStrikeTimer;
++    uint32 ResetTimer;
++
++    void Reset()
++    {
++        CleaveTimer			    = (1+rand()%10)*1000;
++        FrighteningShoutTimer	= (2+rand()%18)*1000;
++        Whirlwind1Timer			= (1+rand()%12)*1000;
++        Whirlwind2Timer			= (5+rand()%15)*1000;
++        MortalStrikeTimer		= (5+rand()%20)*1000;
++        ResetTimer			    = 5000;
++    }
++
++    void Aggro(Unit *who)
++    {
++        DoScriptText(YELL_AGGRO, m_creature);
++    }
++
++    void KilledUnit(Unit* victim){}
++
++    void JustDied(Unit* Killer){}
++
++    void UpdateAI(const uint32 diff)
++    {
++
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (CleaveTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
++            CleaveTimer =  (10+rand()%6)*1000;
++        }else CleaveTimer -= diff;
++
++        if (FrighteningShoutTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_FRIGHTENING_SHOUT);
++            FrighteningShoutTimer = (10+rand()%5)*1000;
++        }else FrighteningShoutTimer -= diff;
++
++        if (Whirlwind1Timer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND1);
++            Whirlwind1Timer = (6+rand()%14)*1000;
++        }else Whirlwind1Timer -= diff;
++
++        if (Whirlwind2Timer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND2);
++            Whirlwind2Timer = (10+rand()%15)*1000;
++        }else Whirlwind2Timer -= diff;
++
++        if (MortalStrikeTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_MORTAL_STRIKE);
++            MortalStrikeTimer = (10+rand()%20)*1000;
++        }else MortalStrikeTimer -= diff;
++
++        // check if creature is not outside of building
++        if(ResetTimer < diff)
++        {
++            float x, y, z;
++            m_creature->GetPosition(x, y, z);
++            if(x > -504)
++            {
++                DoScriptText(YELL_EVADE, m_creature);
++                EnterEvadeMode();
++            }
++            ResetTimer = 5000;
++        }else ResetTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_galvangar(Creature *_Creature)
++{
++    return new boss_galvangarAI (_Creature);
++}
++
++void AddSC_boss_galvangar()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name = "boss_galvangar";
++    newscript->GetAI = &GetAI_boss_galvangar;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/battlegrounds/alterac_valley/boss_vanndar.cpp b/scripts/battlegrounds/alterac_valley/boss_vanndar.cpp
+new file mode 100644
+index 0000000..496e196
+--- /dev/null
++++ b/scripts/battlegrounds/alterac_valley/boss_vanndar.cpp
+@@ -0,0 +1,155 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
++
++/* ScriptData
++SDName: Boss_Vanndar
++SD%Complete: 
++SDComment: Some spells listed on wowwiki but doesn't exist on wowhead
++EndScriptData */
++
++#include "precompiled.h"
++
++enum Yells
++{
++    YELL_AGGRO                                    = -2100008,
++    YELL_EVADE                                    = -2100009,
++    YELL_RESPAWN1                                 = -2100010,
++    YELL_RESPAWN2                                 = -2100011,
++    YELL_RANDOM1                                  = -2100012,
++    YELL_RANDOM2                                  = -2100013,
++    YELL_RANDOM3                                  = -2100014,
++    YELL_RANDOM4                                  = -2100015,
++    YELL_RANDOM5                                  = -2100016,
++    YELL_RANDOM6                                  = -2100017,
++    YELL_RANDOM7                                  = -2100018
++};
++
++enum Spells
++{
++    SPELL_AVATAR                                  = 19135,
++    SPELL_THUNDERCLAP                             = 15588,
++    SPELL_STORMBOLT                               = 20685 // not sure
++};
++
++
++struct MANGOS_DLL_DECL boss_vanndarAI : public ScriptedAI
++{
++    boss_vanndarAI(Creature *c) : ScriptedAI(c) {Reset();}
++
++
++    uint32 AvatarTimer;
++    uint32 ThunderclapTimer;
++    uint32 StormboltTimer;
++    uint32 ResetTimer;
++    uint32 YellTimer;
++
++
++    void Reset()
++    {
++        AvatarTimer			    = 3000;
++        ThunderclapTimer		= 4000;
++        StormboltTimer			= 6000;
++        ResetTimer			    = 5000;
++        YellTimer		        = (20+rand()%10)*1000; //20 to 30 seconds
++    }
++
++    void Aggro(Unit *who)
++    {
++        DoScriptText(YELL_AGGRO, m_creature);
++    }
++
++    void JustReachedHome()
++    {
++        switch(rand()%1)
++        {
++        case 0: DoScriptText(YELL_RESPAWN1, m_creature); break;
++        case 1: DoScriptText(YELL_RESPAWN2, m_creature); break;
++        }
++    }
++
++    void KilledUnit(Unit* victim){}
++
++    void JustDied(Unit* Killer){}
++
++    void UpdateAI(const uint32 diff)
++    {
++
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (AvatarTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_AVATAR);
++            AvatarTimer =  (15+rand()%5)*1000;
++        }else AvatarTimer -= diff;
++
++        if (ThunderclapTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_THUNDERCLAP);
++            ThunderclapTimer = (5+rand()%10)*1000;
++        }else ThunderclapTimer -= diff;
++
++        if (StormboltTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_STORMBOLT);
++            StormboltTimer = (10+rand()%15)*1000;
++        }else StormboltTimer -= diff;
++
++        if (YellTimer < diff) {
++            switch(rand()%6)
++            {
++            case 0: DoScriptText(YELL_RANDOM1, m_creature); break;
++            case 1: DoScriptText(YELL_RANDOM2, m_creature); break;
++            case 2: DoScriptText(YELL_RANDOM3, m_creature); break;
++            case 3: DoScriptText(YELL_RANDOM4, m_creature); break;
++            case 4: DoScriptText(YELL_RANDOM5, m_creature); break;
++            case 5: DoScriptText(YELL_RANDOM6, m_creature); break;
++            case 6: DoScriptText(YELL_RANDOM7, m_creature); break;
++            }
++            YellTimer = (20+rand()%10)*1000; //20 to 30 seconds
++        } else YellTimer -= diff;
++
++        // check if creature is not outside of building
++        if(ResetTimer < diff)
++        {
++            float x, y, z;
++            m_creature->GetPosition(x, y, z);
++            if(x < 678)
++            {
++                DoScriptText(YELL_EVADE, m_creature);
++                EnterEvadeMode();
++            }
++            ResetTimer = 5000;
++        }else ResetTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_vanndar(Creature *_Creature)
++{
++    return new boss_vanndarAI (_Creature);
++}
++
++void AddSC_boss_vanndar()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name = "boss_vanndar";
++    newscript->GetAI = &GetAI_boss_vanndar;
++    newscript->RegisterSelf();
++}
+diff --git a/sql/Custom_Updates/Mangos/EasternKingdoms/AlteracValley_Mangos.sql b/sql/Custom_Updates/Mangos/EasternKingdoms/AlteracValley_Mangos.sql
+new file mode 100644
+index 0000000..64c6399
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/EasternKingdoms/AlteracValley_Mangos.sql
+@@ -0,0 +1,10 @@
++/* ALTERAC VALLEY */
++-- Scriptnames
++update `creature_template` set ScriptName = "boss_galvangar" where entry = 11947;
++update `creature_template` set ScriptName = "boss_balinda" where entry = 11949;
++update `creature_template` set ScriptName = "boss_vanndar" where entry = 11948;
++update `creature_template` set ScriptName = "boss_drekthar" where entry = 11946;
++update `creature_template` set ScriptName = "boss_drakan" where entry = 12121;
++update `creature_template` set ScriptName = "boss_duros" where entry = 12122;
++update `creature_template` set ScriptName = "mob_water_elemental" where entry = 25040;
++update `creature_template` set ScriptName = "mob_av_marshal_or_warmaster" where entry in (14762, 14763, 14764, 14765, 14772, 14773, 14776, 14777);
+\ No newline at end of file
+diff --git a/sql/Custom_Updates/ScriptDev2/EasternKingdoms/AlteracValley_Script.sql b/sql/Custom_Updates/ScriptDev2/EasternKingdoms/AlteracValley_Script.sql
+new file mode 100644
+index 0000000..4387b4e
+--- /dev/null
++++ b/sql/Custom_Updates/ScriptDev2/EasternKingdoms/AlteracValley_Script.sql
+@@ -0,0 +1,37 @@
++/* ALTERAC VALLEY */
++delete from custom_texts where comment in (11946,11948,11949,11947);
++
++-- Drek'thar
++INSERT INTO `custom_texts` (`entry`, `content_default`, `content_loc1`, `content_loc2`, `content_loc3`, `content_loc4`, `content_loc5`, `content_loc6`, `content_loc7`, `content_loc8`, `sound`, `type`, `language`, `emote`, `comment`) VALUES 
++(-2100000, 'Stormpike filth! In my keep?! Slay them all!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11946'),
++(-2100001, 'You seek to draw the General of the Frostwolf legion out from his fortress? PREPOSTEROUS!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11946'),
++(-2100002, 'Stormpike weaklings, face me in my fortress - if you dare!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11946'),
++(-2100003, 'Your attacks are slowed by the cold, I think!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11946'),
++(-2100004, 'Today, you will meet your ancestors!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11946'),
++(-2100005, 'If you will not leave Alterac Valley on your own, then the Frostwolves will force you out!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11946'),
++(-2100006, 'You cannot defeat the Frostwolf clan!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11946'),
++(-2100007, 'You are no match for the strength of the Horde!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11946');
++
++-- Vanndar
++INSERT INTO `custom_texts` (`entry`, `content_default`, `content_loc1`, `content_loc2`, `content_loc3`, `content_loc4`, `content_loc5`, `content_loc6`, `content_loc7`, `content_loc8`, `sound`, `type`, `language`, `emote`, `comment`) VALUES 
++(-2100008, 'Soldiers of Stormpike, your General is under attack! I require aid! Come! Come! Slay these mangy Frostwolf dogs.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948'),
++(-2100009, 'You''ll never get me out of me bunker, heathens!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948'),
++(-2100010, 'Why don''t ya try again without yer cheap tactics, pansies! Or are you too chicken?', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948'),
++(-2100011, 'Your attacks are weak! Go practice on some rabbits and come back when you''re stronger.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948'),
++(-2100012, 'I will tell you this much...Alterac Valley will be ours.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948'),
++(-2100013, 'We will not be swayed from our mission!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948'),
++(-2100014, 'It''ll take more than you rabble to bring me down!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948'),
++(-2100015, 'We, the Alliance, will prevail!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948'),
++(-2100016, 'The Stormpike clan bows to no one, especially the horde!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948'),
++(-2100017, 'Is that the best you can do?', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948'),
++(-2100018, 'Take no prisoners! Drive these heathens from our lands!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11948');
++
++-- Balinda
++INSERT INTO `custom_texts` (`entry`, `content_default`, `content_loc1`, `content_loc2`, `content_loc3`, `content_loc4`, `content_loc5`, `content_loc6`, `content_loc7`, `content_loc8`, `sound`, `type`, `language`, `emote`, `comment`) VALUES 
++(-2100019, 'Begone, uncouth scum! The Alliance will prevail in Alterac Valley!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11949'),
++(-2100020, 'Filthy Frostwolf cowards! If you want a fight, you''ll have to come to me!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11949');
++
++-- Galvangar
++INSERT INTO `custom_texts` (`entry`, `content_default`, `content_loc1`, `content_loc2`, `content_loc3`, `content_loc4`, `content_loc5`, `content_loc6`, `content_loc7`, `content_loc8`, `sound`, `type`, `language`, `emote`, `comment`) VALUES 
++(-2100021, 'Die! Your kind has no place in Alterac Valley!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11947'),
++(-2100022, 'I''ll never fall for that, fool! If you want a battle it will be on my terms and in my lair!', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, 0, 0, '11947');
+diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
+index 4e7955f..5848ae0 100644
+--- a/system/ScriptLoader.cpp
++++ b/system/ScriptLoader.cpp
+@@ -6,6 +6,11 @@
+ 
+ //battlegrounds
+ extern void AddSC_battleground();
++extern void AddSC_alterac_valley();                         // alterac valley
++extern void AddSC_boss_balinda();                       
++extern void AddSC_boss_drekthar();
++extern void AddSC_boss_galvangar();
++extern void AddSC_boss_vanndar();
+ 
+ //custom
+ 
+@@ -457,6 +462,11 @@ void AddScripts()
+ {
+     //battlegrounds
+     AddSC_battleground();
++    AddSC_alterac_valley();                             // alterac valley
++    AddSC_boss_balinda();                                   
++    AddSC_boss_drekthar();
++    AddSC_boss_galvangar();
++    AddSC_boss_vanndar();
+ 
+     //custom
+ 

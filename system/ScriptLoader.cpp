@@ -6,6 +6,11 @@
 
 //battlegrounds
 extern void AddSC_battleground();
+extern void AddSC_alterac_valley();                         // alterac valley
+extern void AddSC_boss_balinda();                       
+extern void AddSC_boss_drekthar();
+extern void AddSC_boss_galvangar();
+extern void AddSC_boss_vanndar();
 
 //custom
 
@@ -457,6 +462,11 @@ void AddScripts()
 {
     //battlegrounds
     AddSC_battleground();
+    AddSC_alterac_valley();                             // alterac valley
+    AddSC_boss_balinda();                                   
+    AddSC_boss_drekthar();
+    AddSC_boss_galvangar();
+    AddSC_boss_vanndar();
 
     //custom
 

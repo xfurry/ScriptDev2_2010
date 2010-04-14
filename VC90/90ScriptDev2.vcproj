@@ -399,6 +399,30 @@
 					RelativePath="..\scripts\battlegrounds\battleground.cpp"
 					>
 				</File>
+				<Filter
+					Name="alterac_valley"
+					>
+					<File
+						RelativePath="..\scripts\battlegrounds\alterac_valley\alterac_valley.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\battlegrounds\alterac_valley\boss_balinda.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\battlegrounds\alterac_valley\boss_drekthar.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\battlegrounds\alterac_valley\boss_galvangar.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\battlegrounds\alterac_valley\boss_vanndar.cpp"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="custom"
