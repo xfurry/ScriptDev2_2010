@@ -1,0 +1,1644 @@
+diff --git a/Makefile.am b/Makefile.am
+index 45346f0..827bbb9 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -448,6 +448,12 @@ scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_svala.cpp \
+ scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_ymiron.cpp \
+ scripts/northrend/utgarde_keep/utgarde_pinnacle/instance_utgarde_pinnacle.cpp \
+ scripts/northrend/utgarde_keep/utgarde_pinnacle/utgarde_pinnacle.h \
++scripts/northrend/vault_of_archavon/boss_archavon.cpp \
++scripts/northrend/vault_of_archavon/boss_emalon.cpp \
++scripts/northrend/vault_of_archavon/boss_koralon.cpp \
++scripts/northrend/vault_of_archavon/boss_toravon.cpp \
++scripts/northrend/vault_of_archavon/instance_vault_of_archavon.cpp \
++scripts/northrend/vault_of_archavon/vault_of_archavon.h \
+ scripts/northrend/violet_hold/boss_cyanigosa.cpp \
+ scripts/northrend/violet_hold/boss_erekem.cpp \
+ scripts/northrend/violet_hold/boss_ichoron.cpp \
+diff --git a/VC90/90ScriptDev2.vcproj b/VC90/90ScriptDev2.vcproj
+index f124057..0577046 100644
+--- a/VC90/90ScriptDev2.vcproj
++++ b/VC90/90ScriptDev2.vcproj
+@@ -2134,6 +2134,30 @@
+ 				<Filter
+ 					Name="vault_of_archavon"
+ 					>
++					<File
++						RelativePath="..\scripts\northrend\vault_of_archavon\boss_archavon.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\northrend\vault_of_archavon\boss_emalon.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\northrend\vault_of_archavon\boss_koralon.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\northrend\vault_of_archavon\boss_toravon.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\northrend\vault_of_archavon\instance_vault_of_archavon.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\northrend\vault_of_archavon\vault_of_archavon.h"
++						>
++					</File>
+ 				</Filter>
+ 				<Filter
+ 					Name="violet_hold"
+diff --git a/scripts/northrend/vault_of_archavon/boss_archavon.cpp b/scripts/northrend/vault_of_archavon/boss_archavon.cpp
+new file mode 100644
+index 0000000..cd189bc
+--- /dev/null
++++ b/scripts/northrend/vault_of_archavon/boss_archavon.cpp
+@@ -0,0 +1,274 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++/* ScriptData
++SDName: Boss_Archavon_The_Stone_Watcher
++SD%Complete: 0%
++SDComment:
++SDCategory: Vault of Archavon
++EndScriptData */
++
++#include "precompiled.h"
++#include "vault_of_archavon.h"
++
++enum
++{
++    SPELL_ROCK_SHARDS_LEFT_N                = 58695,
++    SPELL_ROCK_SHARDS_LEFT_H                = 60883,
++    SPELL_ROCK_SHARDS_RIGHT_N               = 58696,
++    SPELL_ROCK_SHARDS_RIGHT_H               = 60884,
++    SPELL_CRUSHING_LEAP_N                   = 58963,
++    SPELL_CRUSHING_LEAP_H                   = 60895,
++    SPELL_STOMP_N                           = 58663,
++    SPELL_STOMP_H                           = 60880,
++    SPELL_IMPALE_DMG_N                      = 58666,
++    SPELL_IMPALE_DMG_H                      = 60882,
++    SPELL_IMPALE_STUN                       = 50839,
++    SPELL_BERSERK                           = 47008
++};
++
++struct MANGOS_DLL_DECL boss_archavonAI : public ScriptedAI
++{
++    boss_archavonAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        m_fDefaultMoveSpeed = pCreature->GetSpeedRate(MOVE_RUN);
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++    float m_fDefaultMoveSpeed;
++    uint32 m_uiEvadeCheckCooldown;
++
++    uint32 m_uiBerserkTimer;
++    uint32 m_uiRockShardsTimer;
++    bool m_bRockShardsInProgress;
++    uint32 m_uiRockShardsProgressTimer;
++    uint32 m_uiRockShardTimer;
++    bool m_bRLRockShard;
++    Unit* m_pRockShardsTarget;
++    uint32 m_uiCrushingLeapTimer;
++    Unit* m_pCrushingLeapTarget;
++    bool m_bCrushingLeapInProgress;
++    uint32 m_uiCrushingLeapSecureTimer;
++    uint32 m_uiStompTimer;
++    uint32 m_uiImpaleAfterStompTimer;
++    bool m_bImpaleInProgress;
++
++    void Reset()
++    {
++        m_uiEvadeCheckCooldown = 2000;
++        m_creature->SetSpeedRate(MOVE_RUN, m_fDefaultMoveSpeed);
++        m_uiBerserkTimer = 300000;
++        m_uiRockShardsTimer = 15000;
++        m_bRockShardsInProgress = false;
++        m_uiRockShardsProgressTimer = 3000;
++        m_uiRockShardTimer = 0;
++        m_bRLRockShard = true;
++        m_pRockShardsTarget = NULL;
++        m_uiCrushingLeapTimer = 30000;
++        m_pCrushingLeapTarget = NULL;
++        m_bCrushingLeapInProgress = false;
++        m_uiCrushingLeapSecureTimer = 2000;
++        m_uiStompTimer = 45000;
++        m_uiImpaleAfterStompTimer = 1000;
++        m_bImpaleInProgress = false;
++
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_ARCHAVON, NOT_STARTED);
++    }
++
++    void Aggro(Unit *pWho)
++    {
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_ARCHAVON, IN_PROGRESS);
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_ARCHAVON, DONE);
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiEvadeCheckCooldown < uiDiff)
++        {
++            if (m_creature->GetDistance2d(138.287f, -101.09f) > 80.0f)
++                EnterEvadeMode();
++            m_uiEvadeCheckCooldown = 2000;
++        }
++        else
++            m_uiEvadeCheckCooldown -= uiDiff;
++
++        if (m_bImpaleInProgress)
++        {
++            if (m_uiImpaleAfterStompTimer < uiDiff)
++            {
++                if (Unit* pTarget = m_creature->getVictim())
++                {
++                    DoCast(pTarget, m_bIsRegularMode ? SPELL_IMPALE_DMG_N : SPELL_IMPALE_DMG_H);
++                    pTarget->CastSpell(pTarget, SPELL_IMPALE_STUN, true);
++                }
++                m_bImpaleInProgress = false;
++            }
++            else
++            {
++                m_uiImpaleAfterStompTimer -= uiDiff;
++                return;
++            }
++        }
++
++        if (m_bCrushingLeapInProgress)
++        {
++            if (m_pCrushingLeapTarget)
++            {
++                if (m_pCrushingLeapTarget->isDead() || !m_pCrushingLeapTarget->IsInWorld() && !m_pCrushingLeapTarget->IsInMap(m_creature))
++                {
++                    m_bCrushingLeapInProgress = false;
++                    return;
++                }
++            }
++            else
++            {
++                m_bCrushingLeapInProgress = false;
++                return;
++            }
++            if ((m_uiCrushingLeapSecureTimer < uiDiff) || (m_pCrushingLeapTarget && m_creature->IsWithinDist(m_pCrushingLeapTarget, 5.0f)))
++            {
++                m_creature->getThreatManager().addThreat(m_pCrushingLeapTarget, -100000000.0f);
++                m_creature->SetSpeedRate(MOVE_RUN, m_fDefaultMoveSpeed);
++                DoCast(m_pCrushingLeapTarget, m_bIsRegularMode ? SPELL_CRUSHING_LEAP_N : SPELL_CRUSHING_LEAP_H, true);
++                m_bCrushingLeapInProgress = false;
++            }
++            else
++                m_uiCrushingLeapSecureTimer -= uiDiff;
++
++            return;
++        }
++
++        if (m_bRockShardsInProgress)
++        {
++            if (m_uiRockShardsProgressTimer < uiDiff)
++            {
++                m_bRockShardsInProgress = false;
++                if (m_pRockShardsTarget)
++                    m_creature->getThreatManager().addThreat(m_pRockShardsTarget, -100000000.0f);
++                return;
++            }
++            else
++                m_uiRockShardsProgressTimer -= uiDiff;
++
++            if (m_uiRockShardTimer < uiDiff)
++            {
++                if (m_pRockShardsTarget && m_pRockShardsTarget->isAlive())
++                {
++                    DoCast(m_pRockShardsTarget, m_bIsRegularMode ? (m_bRLRockShard ? SPELL_ROCK_SHARDS_LEFT_N : SPELL_ROCK_SHARDS_RIGHT_N) : (m_bRLRockShard ? SPELL_ROCK_SHARDS_LEFT_H : SPELL_ROCK_SHARDS_RIGHT_H));
++                    m_bRLRockShard = !m_bRLRockShard;
++                }
++                m_uiRockShardTimer = 100;
++            }
++            else
++                m_uiRockShardsTimer -= uiDiff;
++
++            return;
++        }
++
++        if (m_uiRockShardsTimer < uiDiff)
++        {
++            m_bRockShardsInProgress = true;
++            m_uiRockShardsProgressTimer = 3000;
++            m_bRLRockShard = true;
++            m_pRockShardsTarget = NULL;
++            if (m_pRockShardsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                m_creature->getThreatManager().addThreat(m_pRockShardsTarget, 100000000.0f);
++            m_uiRockShardsTimer = 15000+rand()%15000;
++            return;
++        }
++        else
++            m_uiRockShardsTimer -= uiDiff;
++
++        if (m_uiCrushingLeapTimer < uiDiff)
++        {
++            ThreatList const& tList = m_creature->getThreatManager().getThreatList();
++            std::list<Unit*> lTargets;
++            for (ThreatList::const_iterator itr = tList.begin();itr != tList.end(); ++itr)
++            {
++                Unit *pTemp = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
++                if (pTemp && pTemp->GetTypeId() == TYPEID_PLAYER && !m_creature->IsWithinDist(pTemp, 10.0f) && m_creature->IsWithinDist(pTemp, 80.0f))
++                    lTargets.push_back(pTemp);
++            }
++            m_pCrushingLeapTarget = NULL;
++            if (!lTargets.empty())
++            {
++                std::list<Unit*>::iterator pTarget = lTargets.begin();
++                advance(pTarget, (rand() % lTargets.size()));
++                m_pCrushingLeapTarget = *pTarget;
++                if (m_pCrushingLeapTarget)
++                {
++                    m_creature->MonsterSay(m_pCrushingLeapTarget->GetName(), LANG_UNIVERSAL, NULL);
++                    m_creature->getThreatManager().addThreat(m_pCrushingLeapTarget, 100000000.0f);
++                    m_creature->SetSpeedRate(MOVE_RUN, m_fDefaultMoveSpeed*10.0f);
++                    m_bCrushingLeapInProgress = true;
++                    m_uiCrushingLeapSecureTimer = 2000;
++                }
++            }
++            m_uiCrushingLeapTimer = 30000+rand()%15000;
++            return;
++        }
++        else
++            m_uiCrushingLeapTimer -= uiDiff;
++
++        if (m_uiStompTimer < uiDiff)
++        {
++            DoCast(m_creature, m_bIsRegularMode ? SPELL_STOMP_N : SPELL_STOMP_H);
++            m_uiImpaleAfterStompTimer = 1000;
++            m_bImpaleInProgress = true;
++            m_uiStompTimer = 45000+rand()%15000;
++        }
++        else
++            m_uiStompTimer -= uiDiff;
++
++        if (m_uiBerserkTimer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_BERSERK);
++            m_uiBerserkTimer = 60000;
++        }
++        else
++            m_uiBerserkTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_archavon(Creature *pCreature)
++{
++    return new boss_archavonAI (pCreature);
++};
++
++void AddSC_boss_archavon()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name = "boss_archavon";
++    newscript->GetAI = &GetAI_boss_archavon;
++    newscript->RegisterSelf();
++};
+diff --git a/scripts/northrend/vault_of_archavon/boss_emalon.cpp b/scripts/northrend/vault_of_archavon/boss_emalon.cpp
+new file mode 100644
+index 0000000..eb06def
+--- /dev/null
++++ b/scripts/northrend/vault_of_archavon/boss_emalon.cpp
+@@ -0,0 +1,447 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++/* ScriptData
++SDName: Boss_Emalon_The_Storm_Watcher
++SD%Complete: 0%
++SDComment:
++SDCategory: Vault of Archavon
++EndScriptData */
++
++#include "precompiled.h"
++#include "vault_of_archavon.h"
++
++enum
++{
++    // Emalon spells
++    SPELL_CHAIN_LIGHTNING_N                 = 64213,
++    SPELL_CHAIN_LIGHTNING_H                 = 64215,
++    SPELL_LIGHTNING_NOVA_N                  = 64216,
++    SPELL_LIGHTNING_NOVA_H                  = 65279,
++    SPELL_OVERCHARGE                        = 64379,        //This spell is used by Time Warder, and temporary by Emalon, because 64218 is bugged
++    SPELL_BERSERK                           = 26662,
++
++    // Tempest Minion spells
++    SPELL_SHOCK                             = 64363,
++    SPELL_OVERCHARGED_BLAST                 = 64219,
++    SPELL_OVERCHARGED                       = 64217
++};
++
++/*######
++## npc_tempest_minion
++######*/
++
++struct MANGOS_DLL_DECL npc_tempest_minionAI : public ScriptedAI
++{
++    npc_tempest_minionAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_fDefaultX = m_creature->GetPositionX();
++        m_fDefaultY = m_creature->GetPositionY();
++        m_fDefaultZ = m_creature->GetPositionZ();
++        m_fDefaultO = m_creature->GetOrientation();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++    uint32 m_uiEvadeCheckCooldown;
++
++    uint32 m_uiShockTimer;
++    uint32 m_uiRespawnTimer;
++    uint32 m_uiOverchargedStacksCheckTimer;
++    bool m_bDead;
++    bool m_bTimeToDie;
++    float m_fDefaultX;
++    float m_fDefaultY;
++    float m_fDefaultZ;
++    float m_fDefaultO;
++
++    void Init()
++    {
++        m_uiEvadeCheckCooldown = 2000;
++        m_uiShockTimer = 8000+rand()%4000;
++        m_bDead = false;
++        m_bTimeToDie = false;
++        m_uiRespawnTimer = 4000;
++        m_uiOverchargedStacksCheckTimer = 2000;
++
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++        m_creature->SetStandState(UNIT_STAND_STATE_STAND);
++        m_creature->SetVisibility(VISIBILITY_ON);
++    }
++
++    void Reset()
++    {
++        Init();
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        m_creature->CallForHelp(80.0f);
++    }
++
++    void FakeDeath()
++    {
++        m_bDead = true;
++        m_bTimeToDie = false;
++        m_uiRespawnTimer = 4000;
++        m_creature->InterruptNonMeleeSpells(false);
++        m_creature->SetHealth(0);
++        m_creature->StopMoving();
++        m_creature->ClearComboPointHolders();
++        m_creature->RemoveAllAurasOnDeath();
++        m_creature->ModifyAuraState(AURA_STATE_HEALTHLESS_20_PERCENT, false);
++        m_creature->ModifyAuraState(AURA_STATE_HEALTHLESS_35_PERCENT, false);
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++        m_creature->ClearAllReactives();
++        m_creature->SetUInt64Value(UNIT_FIELD_TARGET,0);
++        m_creature->GetMotionMaster()->Clear();
++        m_creature->GetMotionMaster()->MoveIdle();
++        m_creature->SetStandState(UNIT_STAND_STATE_DEAD);
++        m_creature->GetMap()->CreatureRelocation(m_creature, m_fDefaultX, m_fDefaultY, m_fDefaultZ, m_fDefaultO);
++    }
++
++    void DamageTaken(Unit* pDoneBy, uint32& uiDamage)
++    {
++        if (uiDamage < m_creature->GetHealth())
++            return;
++
++        if (m_pInstance && (m_pInstance->GetData(TYPE_EMALON) != DONE))
++        {
++            uiDamage = 0;
++            FakeDeath();
++        }
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiEvadeCheckCooldown < uiDiff)
++        {
++            Creature* pEmalon = (Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_EMALON));
++            if ((pEmalon && pEmalon->IsInEvadeMode()) || (m_creature->GetDistance2d(-219.119f, -289.037f) > 80.0f))
++            {
++                EnterEvadeMode();
++                return;
++            }
++            m_uiEvadeCheckCooldown = 2000;
++        }
++        else
++            m_uiEvadeCheckCooldown -= uiDiff;
++
++        if (m_bTimeToDie)
++        {
++            FakeDeath();
++            return;
++        }
++
++        if (m_bDead)
++        {
++            if (m_uiRespawnTimer < uiDiff)
++            {
++                m_creature->SetHealth(m_creature->GetMaxHealth());
++                m_creature->SetVisibility(VISIBILITY_OFF);
++                Init();
++                m_creature->MonsterTextEmote("%s appears to defend Emalon!", 0, true);
++                m_creature->SetInCombatWithZone();
++                DoResetThreat();
++                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                    m_creature->GetMotionMaster()->MoveChase(pTarget);
++
++            }
++            else
++                m_uiRespawnTimer -= uiDiff;
++
++            return;
++        }
++
++        if (m_uiOverchargedStacksCheckTimer < uiDiff)
++        {
++            m_uiOverchargedStacksCheckTimer = 2000;
++            Aura* pAuraOvercharged = m_creature->GetAura(SPELL_OVERCHARGED, EFFECT_INDEX_0);
++            if(pAuraOvercharged && pAuraOvercharged->GetStackAmount() >= 10)
++            {
++                DoCast(m_creature, SPELL_OVERCHARGED_BLAST);
++                m_bTimeToDie = true;
++                return;
++            }
++        }
++        else
++            m_uiOverchargedStacksCheckTimer -= uiDiff;
++
++        if (m_uiShockTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_SHOCK);
++            m_uiShockTimer = 8000+rand()%4000;
++        }
++        else
++            m_uiShockTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++
++/*######
++## boss_emalon
++######*/
++
++struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
++{
++    boss_emalonAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++    uint32 m_uiEvadeCheckCooldown;
++
++    uint64 m_auiTempestMinionGUID[4];
++    uint32 m_uiChainLightningTimer;
++    uint32 m_uiChainLightningCount;
++    uint32 m_uiLightningNovaTimer;
++    uint32 m_uiOverchargeTimer;
++    uint32 m_uiEnrageTimer;
++
++    void Reset()
++    {
++        m_uiEvadeCheckCooldown = 2000;
++        memset(&m_auiTempestMinionGUID, 0, sizeof(m_auiTempestMinionGUID));
++        m_uiChainLightningTimer = 15000;
++        m_uiChainLightningCount = 0;
++        m_uiLightningNovaTimer = 20000;
++        m_uiOverchargeTimer = 45000;
++        m_uiEnrageTimer = 360000;
++
++        if (m_pInstance)
++        {
++            m_auiTempestMinionGUID[0] = m_pInstance->GetData64(DATA_TEMPEST_MINION_1);
++            m_auiTempestMinionGUID[1] = m_pInstance->GetData64(DATA_TEMPEST_MINION_2);
++            m_auiTempestMinionGUID[2] = m_pInstance->GetData64(DATA_TEMPEST_MINION_3);
++            m_auiTempestMinionGUID[3] = m_pInstance->GetData64(DATA_TEMPEST_MINION_4);
++        }
++
++        for (uint8 i=0; i<4; ++i)
++        {
++            Creature* pMinion = (Creature*)Unit::GetUnit((*m_creature), m_auiTempestMinionGUID[i]);
++            if (pMinion && pMinion->isDead())
++                pMinion->Respawn();
++        }
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_EMALON, NOT_STARTED);
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        if (m_pInstance)
++        {
++            m_auiTempestMinionGUID[0] = m_pInstance->GetData64(DATA_TEMPEST_MINION_1);
++            m_auiTempestMinionGUID[1] = m_pInstance->GetData64(DATA_TEMPEST_MINION_2);
++            m_auiTempestMinionGUID[2] = m_pInstance->GetData64(DATA_TEMPEST_MINION_3);
++            m_auiTempestMinionGUID[3] = m_pInstance->GetData64(DATA_TEMPEST_MINION_4);
++        }
++
++        m_creature->CallForHelp(80.0f);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_EMALON, IN_PROGRESS);
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_EMALON, DONE);
++        for (uint8 i=0; i<4; ++i)
++        {
++            Creature *pMinion = (Creature*)Unit::GetUnit((*m_creature), m_auiTempestMinionGUID[i]);
++            if (pMinion)
++                pMinion->DealDamage(pMinion, pMinion->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
++        }
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiEvadeCheckCooldown < uiDiff)
++        {
++            if (m_creature->GetDistance2d(-219.119f, -289.037f) > 80.0f)
++                EnterEvadeMode();
++            m_creature->CallForHelp(80.0f);
++            m_uiEvadeCheckCooldown = 2000;
++        }
++        else
++            m_uiEvadeCheckCooldown -= uiDiff;
++
++        if (m_uiOverchargeTimer < uiDiff)
++        {
++            Creature* pMinion = (Creature*)Unit::GetUnit((*m_creature), m_auiTempestMinionGUID[rand()%4]);
++            if(pMinion && pMinion->isAlive())
++            {
++                m_creature->MonsterTextEmote("%s overcharges Tempest Minion!", 0, true);
++                pMinion->SetHealth(pMinion->GetMaxHealth());
++                pMinion->CastSpell(pMinion, SPELL_OVERCHARGE, false);
++            }
++            m_uiOverchargeTimer = 45000;
++        }
++        else
++            m_uiOverchargeTimer -= uiDiff;
++
++        if (m_uiChainLightningTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, m_bIsRegularMode ? SPELL_CHAIN_LIGHTNING_N : SPELL_CHAIN_LIGHTNING_H);
++            m_uiChainLightningTimer = 10000 + rand()%15000;
++        }
++        else
++            m_uiChainLightningTimer -= uiDiff;
++
++        if (m_uiLightningNovaTimer < uiDiff)
++        {
++            DoCast(m_creature, m_bIsRegularMode ? SPELL_LIGHTNING_NOVA_N : SPELL_LIGHTNING_NOVA_H);
++            m_uiLightningNovaTimer = 45000;
++        }
++        else
++            m_uiLightningNovaTimer -= uiDiff;
++
++        if (m_uiEnrageTimer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_BERSERK);
++            m_uiEnrageTimer = 30000;
++        }
++        else
++            m_uiEnrageTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++/*######
++## npc_tempest_warder
++######*/
++
++struct MANGOS_DLL_DECL npc_tempest_warderAI : public ScriptedAI
++{
++    npc_tempest_warderAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++
++    uint32 m_uiShockTimer;
++    bool m_bOvercharged;
++    uint32 m_uiOverchargedStacksCheckTimer;
++    bool m_bTimeToDie;
++
++    void Reset()
++    {
++        m_uiShockTimer = 8000+rand()%4000;
++        m_bOvercharged = false;
++        uint32 m_uiOverchargedStacksCheckTimer = 2000;
++        m_bTimeToDie = false;
++    }
++
++    void Aggro(Unit* pWho) {}
++
++    void UpdateAI(const uint32 uiDiff)
++    {  
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_bTimeToDie)
++        {
++            m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
++            return;
++        }
++
++        if (!m_bOvercharged && ((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 37))
++        {
++            DoCast(m_creature, SPELL_OVERCHARGE);
++            m_bOvercharged = true;
++        }
++
++        if (m_bOvercharged)
++        {
++            if (m_uiOverchargedStacksCheckTimer < uiDiff)
++            {
++                m_uiOverchargedStacksCheckTimer = 2000;
++                Aura* pAuraOvercharged = m_creature->GetAura(SPELL_OVERCHARGED, EFFECT_INDEX_0);
++                if(pAuraOvercharged && pAuraOvercharged->GetStackAmount() >= 10)
++                {
++                    DoCast(m_creature, SPELL_OVERCHARGED_BLAST);
++                    m_bTimeToDie = true;
++                    return;
++                }
++            }
++            else
++                m_uiOverchargedStacksCheckTimer -= uiDiff;
++        }
++
++        if (m_uiShockTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_SHOCK);
++            m_uiShockTimer = 8000+rand()%4000;
++        }
++        else
++            m_uiShockTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_emalonAI(Creature* pCreature)
++{
++    return new boss_emalonAI(pCreature);
++}
++
++CreatureAI* GetAI_npc_tempest_minionAI(Creature* pCreature)
++{
++    return new npc_tempest_minionAI(pCreature);
++}
++
++CreatureAI* GetAI_npc_tempest_warderAI(Creature* pCreature)
++{
++    return new npc_tempest_warderAI(pCreature);
++}
++
++void AddSC_boss_emalon()
++{
++    Script *newscript;
++
++    newscript = new Script;
++    newscript->Name = "boss_emalon";
++    newscript->GetAI = &GetAI_boss_emalonAI;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "npc_tempest_minion";
++    newscript->GetAI = &GetAI_npc_tempest_minionAI;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "npc_tempest_warder";
++    newscript->GetAI = &GetAI_npc_tempest_warderAI;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/northrend/vault_of_archavon/boss_koralon.cpp b/scripts/northrend/vault_of_archavon/boss_koralon.cpp
+new file mode 100644
+index 0000000..acc26e0
+--- /dev/null
++++ b/scripts/northrend/vault_of_archavon/boss_koralon.cpp
+@@ -0,0 +1,243 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
++
++/* ScriptData
++SDName: Boss_Koralon
++SD%Complete: 
++SDComment: 
++EndScriptData */
++
++/*** SQL START ***
++UPDATE `creature_template` SET `ScriptName`='boss_koralon' WHERE `entry`='35013';
++UPDATE `creature_template` SET `ScriptName`='mob_flame_warder' WHERE `entry`='35143';
++*** SQL END ***/
++
++#include "precompiled.h"
++#include "vault_of_archavon.h"
++
++enum Spells
++{
++    // Spells Koralon
++    SPELL_BURNING_BREATH                        = 66665,
++    SPELL_BURNING_BREATH_H                      = 67328,
++    SPELL_BURNING_FURY                          = 66721,
++    SPELL_FLAME_CINDER_A                        = 66684,
++    SPELL_FLAME_CINDER_A_H                      = 67332,
++    SPELL_FLAME_CINDER_B                        = 66681, // don't know the real relation to SPELL_FLAME_CINDER_A atm.
++    SPELL_METEOR_FISTS_A                        = 66725,
++    SPELL_METEOR_FISTS_A_H                      = 66765,
++    SPELL_METEOR_FISTS_B                        = 67333,
++    SPELL_METEOR_FISTS_B_H                      = 68161,
++
++    // Spells Flame Warder
++    SPELL_FW_LAVA_BIRST                         = 66813,
++    SPELL_FW_LAVA_BIRST_H                       = 67330,
++    SPELL_FW_METEOR_FISTS_A                     = 66808,
++    SPELL_FW_METEOR_FISTS_A_H                   = 66809,
++    SPELL_FW_METEOR_FISTS_B                     = 67331,
++    SPELL_FW_METEOR_FISTS_B_H                   = 68160,
++};
++
++
++struct MANGOS_DLL_DECL boss_koralonAI : public ScriptedAI
++{
++    boss_koralonAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Regular = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++
++    ScriptedInstance* pInstance;
++    bool Regular;
++    uint32 BurningBreathTimer;
++    uint32 m_uiMeteorFistsATimer;
++    uint32 m_uiMeteorFistsBTimer;
++    uint32 FlamesTimer;
++
++    uint32 BBTickTimer;
++    uint32 BBTicks;
++    bool BB;
++
++    void Reset()
++    {
++        BurningBreathTimer = 15000;
++        m_uiMeteorFistsATimer   = 75000;
++        m_uiMeteorFistsBTimer   = 80000;
++        FlamesTimer = 30000;
++
++        BB = false;
++
++        if(pInstance) 
++            pInstance->SetData(TYPE_KORALON, NOT_STARTED);
++    }
++
++    void Aggro(Unit *who)
++    {
++        DoCast(m_creature, SPELL_BURNING_FURY);
++
++        if(pInstance) 
++            pInstance->SetData(TYPE_KORALON, IN_PROGRESS);
++    }
++
++    void JustDied(Unit *killer)
++    {
++        if(pInstance) 
++            pInstance->SetData(TYPE_KORALON, DONE);
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if(BurningBreathTimer < diff)
++        {
++            DoCast(m_creature, Regular ? SPELL_BURNING_BREATH : SPELL_BURNING_BREATH_H);
++            BurningBreathTimer = 45000;
++
++            BB = true;
++            BBTickTimer = 1000;
++            BBTicks = 0;
++        }
++        else BurningBreathTimer -= diff;
++
++        /*if(BB)
++        needs to be rewritten
++        {
++            if(BBTickTimer < diff)
++            {
++                DoCast(NULL, Regular ? SP_BB_EFFECT : H_SP_BB_EFFECT, true);
++                BBTickTimer = 1000;
++                ++BBTicks;
++                if(BBTicks > 2) BB = false;
++            }
++            else BBTickTimer -= diff;
++        }*/
++
++        if(FlamesTimer < diff)
++        {
++            int flames = Regular ? 3 : 5;
++            int i;
++            for(i=0; i< flames; ++i)
++            {
++                Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0);
++                if(target) 
++                    DoCast(target, Regular ? SPELL_FLAME_CINDER_A : SPELL_FLAME_CINDER_A_H);
++            }
++            FlamesTimer = 20000;
++        }
++        else FlamesTimer -= diff;
++
++        if(m_uiMeteorFistsATimer < diff)
++        {
++            DoCast(m_creature, Regular ? SPELL_METEOR_FISTS_A : SPELL_METEOR_FISTS_A_H);
++            m_uiMeteorFistsBTimer = 1500;
++            m_uiMeteorFistsATimer = 45000;
++        }
++        else m_uiMeteorFistsATimer -= diff;
++
++        if(m_uiMeteorFistsBTimer < diff)
++        {
++            DoCast(m_creature, Regular ? SPELL_METEOR_FISTS_B : SPELL_METEOR_FISTS_B_H);
++            m_uiMeteorFistsATimer = 45000;
++        }
++        else m_uiMeteorFistsBTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++/*######
++##  Mob Flame Warder
++######*/
++struct mob_flame_warderAI : public ScriptedAI
++{
++    mob_flame_warderAI(Creature *pCreature) : ScriptedAI(pCreature) 
++    {
++        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Regular = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++    ScriptedInstance* pInstance;
++    bool Regular;
++
++    uint32 m_uiLavaBurstTimer;
++    uint32 m_uiMeteorFistsATimer;
++    uint32 m_uiMeteorFistsBTimer;
++
++    void Reset()
++    {
++        m_uiLavaBurstTimer      = 5000;
++        m_uiMeteorFistsATimer   = 10000;
++        m_uiMeteorFistsBTimer   = 15000;
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if(m_uiLavaBurstTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), Regular ? SPELL_FW_LAVA_BIRST : SPELL_FW_LAVA_BIRST_H);
++            m_uiLavaBurstTimer = 15000;
++        }
++        else m_uiLavaBurstTimer -= diff;
++
++        if(m_uiMeteorFistsATimer < diff)
++        {
++            DoCast(m_creature, Regular ? SPELL_FW_METEOR_FISTS_A : SPELL_FW_METEOR_FISTS_A_H);
++            m_uiMeteorFistsBTimer = 1500;
++            m_uiMeteorFistsATimer = 45000;
++        }
++        else m_uiMeteorFistsATimer -= diff;
++
++        if(m_uiMeteorFistsBTimer < diff)
++        {
++            DoCast(m_creature, Regular ? SPELL_FW_METEOR_FISTS_B : SPELL_FW_METEOR_FISTS_B_H);
++            m_uiMeteorFistsATimer = 20000;
++        }
++        else m_uiMeteorFistsBTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_koralonAI(Creature* pCreature)
++{
++    return new boss_koralonAI(pCreature);
++}
++
++CreatureAI* GetAI_mob_flame_warder(Creature* pCreature)
++{
++    return new mob_flame_warderAI (pCreature);
++}
++
++void AddSC_boss_koralon()
++{
++    Script *newscript;
++
++    newscript = new Script;
++    newscript->Name = "boss_koralon";
++    newscript->GetAI = &GetAI_boss_koralonAI;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_flame_warder";
++    newscript->GetAI = &GetAI_mob_flame_warder;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/northrend/vault_of_archavon/boss_toravon.cpp b/scripts/northrend/vault_of_archavon/boss_toravon.cpp
+new file mode 100644
+index 0000000..26cfb22
+--- /dev/null
++++ b/scripts/northrend/vault_of_archavon/boss_toravon.cpp
+@@ -0,0 +1,295 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
++
++/* ScriptData
++SDName: Boss_Toravon
++SD%Complete: 
++SDComment: Timers should be adjusted
++EndScriptData */
++
++/*** SQL START ***
++UPDATE `creature_template` SET `ScriptName`='boss_toravon' WHERE `entry`='38433';
++UPDATE `creature_template` SET `ScriptName`='mob_frost_warder' WHERE `entry`='38482';
++UPDATE `creature_template` SET `ScriptName`='mob_frozen_orb_stalker' WHERE `entry`='38461';
++UPDATE `creature_template` SET `ScriptName`='mob_frozen_orb' WHERE `entry`='38456';
++*** SQL END ***/
++
++#include "precompiled.h"
++#include "vault_of_archavon.h"
++
++enum Spells
++{
++    // Spells Toravon
++    SPELL_FREEZING_GROUND       = 72090,  // don't know cd... using 20 secs.
++    SPELL_FREEZING_GROUND_H     = 72104,
++    SPELL_FROZEN_ORB            = 72091,
++    SPELL_FROZEN_ORB_H          = 72095,
++    SPELL_WHITEOUT              = 72034,  // Every 38 sec. cast. (after SPELL_FROZEN_ORB)
++    SPELL_WHITE0UT_H            = 72096,
++    SPELL_FROZEN_MALLET         = 71993,
++
++    // Spells Frost Warder
++    SPELL_FROST_BLAST           = 72123,      // don't know cd... using 20 secs.
++    SPELL_FROST_BLAST_H         = 72124,
++    SPELL_FROZEN_MALLET_FW      = 72122,
++
++    // Spell Frozen Orb
++    SPELL_FROZEN_ORB_DMG        = 72081,   // priodic dmg aura
++    SPELL_FROZEN_ORB_AURA       = 72067,   // make visible
++
++    // Spell Frozen Orb Stalker
++    SPELL_FROZEN_ORB_SUMMON     = 72093,   // summon orb
++
++    // Mob Frozen Orb
++    MOB_FROZEN_ORB              = 38456,    // 1 in 10 mode and 3 in 25 mode
++};
++
++struct MANGOS_DLL_DECL boss_toravonAI : public ScriptedAI
++{
++    boss_toravonAI(Creature *pCreature) : ScriptedAI(pCreature)
++    {
++        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Regular = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++
++    ScriptedInstance *pInstance;
++    bool Regular;
++    
++    uint32 m_uiFrozenOrbTimer;
++    uint32 m_uiWhiteOutTimer;
++    uint32 m_uiFreezingGroundTimer;
++
++    void Reset()
++    {
++        m_uiFrozenOrbTimer      = 11000;
++        m_uiWhiteOutTimer       = 13000;
++        m_uiFreezingGroundTimer = 15000;
++
++        if (pInstance)
++            pInstance->SetData(TYPE_TORAVON, NOT_STARTED);
++    }
++
++    void KilledUnit(Unit* Victim) {}
++
++    void JustDied(Unit* Killer)
++    {
++        if (pInstance)
++            pInstance->SetData(TYPE_TORAVON, DONE);
++    }
++
++    void Aggro(Unit *who)
++    {
++        DoCast(m_creature, SPELL_FROZEN_MALLET);
++
++        if(pInstance) 
++            pInstance->SetData(TYPE_TORAVON, IN_PROGRESS);
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if(m_uiFrozenOrbTimer < diff)
++        {
++            DoCast(m_creature, Regular ? SPELL_FROZEN_ORB : SPELL_FROZEN_ORB_H);
++            m_uiFrozenOrbTimer = 38000;
++        }
++        else m_uiFrozenOrbTimer -= diff;
++
++        if(m_uiWhiteOutTimer < diff)
++        {
++            DoCast(m_creature, Regular ? SPELL_WHITEOUT : SPELL_WHITE0UT_H);
++            m_uiWhiteOutTimer = 38000;
++        }
++        else m_uiWhiteOutTimer -= diff;
++
++        if(m_uiFreezingGroundTimer < diff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, Regular ? SPELL_FREEZING_GROUND : SPELL_FREEZING_GROUND_H);
++            m_uiFreezingGroundTimer = 20000;
++        }
++        else m_uiFreezingGroundTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++/*######
++##  Mob Frost Warder
++######*/
++struct MANGOS_DLL_DECL mob_frost_warderAI : public ScriptedAI
++{
++    mob_frost_warderAI(Creature *pCreature) : ScriptedAI(pCreature) 
++    {
++        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Regular = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++
++    ScriptedInstance* pInstance;
++    bool Regular;
++
++    uint32 m_uiFrostBlastTimer;
++
++    void Reset()
++    {
++        m_uiFrostBlastTimer = 5000;
++    }
++
++    void Aggro(Unit *who)
++    {
++        DoCast(m_creature, SPELL_FROZEN_MALLET_FW);
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if(m_uiFrostBlastTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_FROST_BLAST);
++            m_uiFrostBlastTimer = 2000;
++        }
++        else m_uiFrostBlastTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++
++/*######
++##  Mob Frozen Orb
++######*/
++struct MANGOS_DLL_DECL mob_frozen_orbAI : public ScriptedAI
++{
++    mob_frozen_orbAI(Creature *pCreature) : ScriptedAI(pCreature) {}
++
++    bool done;
++    uint32 killtimer;
++
++    void Reset()
++    {
++        done = false;
++        killtimer = 60000; // if after this time there is no victim -> destroy!
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (!done)
++        {
++            DoCast(m_creature, SPELL_FROZEN_ORB_AURA, true);
++            DoCast(m_creature, SPELL_FROZEN_ORB_DMG, true);
++            done = true;
++        }
++
++        if (killtimer <= diff)
++        {
++            if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                m_creature->ForcedDespawn();
++            killtimer = 10000;
++        }
++        else
++            killtimer -= diff;
++    }
++};
++
++/*######
++##  Mob Frozen Orb Stalker
++######*/
++struct MANGOS_DLL_DECL mob_frozen_orb_stalkerAI : public ScriptedAI
++{
++    mob_frozen_orb_stalkerAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        pCreature->SetVisibility(VISIBILITY_OFF);
++        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++
++        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Regular = pCreature->GetMap()->IsRegularDifficulty();
++        spawned = false;
++    }
++
++    ScriptedInstance *pInstance;
++    bool spawned;
++    bool Regular;
++
++    void UpdateAI(const uint32 diff)
++    {
++        if (!spawned)
++        {
++            Creature* pToravon;
++            if (pInstance && (pToravon = (Creature*)Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_TORAVON))))
++            {
++                uint8 num_orbs = Regular ? 1 : 3;
++                for (uint8 i=0; i<num_orbs; ++i)
++                {
++                    m_creature->GetMotionMaster()->MovePoint(0, pToravon->GetPositionX(), pToravon->GetPositionY() + 10, pToravon->GetPositionZ());
++                    DoCast(m_creature, SPELL_FROZEN_ORB_SUMMON);
++                }
++            }
++            spawned = true;
++        }
++    }
++};
++
++CreatureAI* GetAI_boss_toravon(Creature* pCreature)
++{
++    return new boss_toravonAI (pCreature);
++}
++
++CreatureAI* GetAI_mob_frost_warder(Creature* pCreature)
++{
++    return new mob_frost_warderAI (pCreature);
++}
++
++CreatureAI* GetAI_mob_frozen_orb(Creature* pCreature)
++{
++    return new mob_frozen_orbAI (pCreature);
++}
++
++/*CreatureAI* GetAI_mob_frozen_orb_stalker(Creature* pCreature)
++{
++    return new mob_frozen_orb_stalkerAI (pCreature);
++}*/
++
++void AddSC_boss_toravon()
++{
++    Script *newscript;
++
++    newscript = new Script;
++    newscript->Name = "boss_toravon";
++    newscript->GetAI = &GetAI_boss_toravon;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_frost_warder";
++    newscript->GetAI = &GetAI_mob_frost_warder;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_frozen_orb";
++    newscript->GetAI = &GetAI_mob_frozen_orb;
++    newscript->RegisterSelf();
++
++    /*newscript = new Script;
++    newscript->Name = "mob_frozen_orb_stalker";
++    newscript->GetAI = &GetAI_mob_frozen_orb_stalker;
++    newscript->RegisterSelf();*/
++}
+diff --git a/scripts/northrend/vault_of_archavon/instance_vault_of_archavon.cpp b/scripts/northrend/vault_of_archavon/instance_vault_of_archavon.cpp
+new file mode 100644
+index 0000000..8247c81
+--- /dev/null
++++ b/scripts/northrend/vault_of_archavon/instance_vault_of_archavon.cpp
+@@ -0,0 +1,216 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++/* ScriptData
++SDName: Instance_Vault_of_Archavon
++SD%Complete: 0
++SDComment:
++SDCategory: Vault of Archavon
++EndScriptData */
++
++#include "precompiled.h"
++#include "vault_of_archavon.h"
++
++struct MANGOS_DLL_DECL instance_vault_of_archavon : public ScriptedInstance
++{
++    instance_vault_of_archavon(Map* pMap) : ScriptedInstance(pMap) {Initialize();};
++
++    uint32 m_auiEncounter[MAX_ENCOUNTER];
++    std::string strInstData;
++
++    uint64 m_uiArchavonGUID;
++    uint64 m_uiEmalonGUID;
++    uint64 m_uiKoralonGUID;
++    uint64 m_uiToravonGUID;
++    uint64 m_uiTempestMinion1GUID;
++    uint64 m_uiTempestMinion2GUID;
++    uint64 m_uiTempestMinion3GUID;
++    uint64 m_uiTempestMinion4GUID;
++    uint8 m_uiMinion;
++
++    void Initialize()
++    {
++        memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
++        m_uiArchavonGUID = 0;
++        m_uiEmalonGUID = 0;
++        m_uiKoralonGUID = 0;
++        m_uiToravonGUID = 0;
++        m_uiTempestMinion1GUID = 0;
++        m_uiTempestMinion2GUID = 0;
++        m_uiTempestMinion3GUID = 0;
++        m_uiTempestMinion4GUID = 0;
++        m_uiMinion = 0;
++    }
++
++    void OnCreatureCreate(Creature* pCreature)
++    {
++        switch (pCreature->GetEntry())
++        {
++            case NPC_ARCHAVON:
++                m_uiArchavonGUID = pCreature->GetGUID();
++                break;
++            case NPC_EMALON:
++                m_uiEmalonGUID = pCreature->GetGUID();
++                break;
++            case NPC_KORALON:
++                m_uiKoralonGUID = pCreature->GetGUID();
++                break;
++            case NPC_TORAVON:
++                m_uiToravonGUID = pCreature->GetGUID();
++                break;
++            case NPC_TEMPEST_MINION:
++                ++m_uiMinion;
++                switch (m_uiMinion)
++                {
++                    case 1:
++                        m_uiTempestMinion1GUID = pCreature->GetGUID();
++                        break;
++                    case 2:
++                        m_uiTempestMinion2GUID = pCreature->GetGUID();
++                        break;
++                    case 3:
++                        m_uiTempestMinion3GUID = pCreature->GetGUID();
++                        break;
++                    case 4:
++                        m_uiTempestMinion4GUID = pCreature->GetGUID();
++                        break;
++                    case 5:
++                        m_uiMinion = 0;
++                        break;
++                }
++                break;
++        }
++    }
++
++    void SetData(uint32 uiType, uint32 uiData)
++    {
++        switch (uiType)
++        {
++            case TYPE_ARCHAVON:
++                m_auiEncounter[0] = uiData;
++                break;
++            case TYPE_EMALON:
++                m_auiEncounter[1] = uiData;
++                break;
++            case TYPE_KORALON:
++                m_auiEncounter[2] = uiData;
++                break;
++            case TYPE_TORAVON:
++                m_auiEncounter[3] = uiData;
++                break;
++        }
++        if (uiData == DONE)
++        {
++            OUT_SAVE_INST_DATA;
++
++            std::ostringstream saveStream;
++            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2];
++
++            strInstData = saveStream.str();
++
++            SaveToDB();
++            OUT_SAVE_INST_DATA_COMPLETE;
++        }
++    }
++
++    uint32 GetData(uint32 uiType)
++    {
++        switch (uiType)
++        {
++            case TYPE_ARCHAVON:
++                return m_auiEncounter[0];
++            case TYPE_EMALON:
++                return m_auiEncounter[1];
++            case TYPE_KORALON:
++                return m_auiEncounter[2];
++            case TYPE_TORAVON:
++                return m_auiEncounter[3];
++        }
++        return 0;
++    }
++
++    uint64 GetData64(uint32 uiData)
++    {
++        switch (uiData)
++        {
++            case DATA_ARCHAVON:
++                return m_uiArchavonGUID;
++            case DATA_EMALON:
++                return m_uiEmalonGUID;
++            case DATA_KORALON:
++                return m_uiKoralonGUID;
++            case DATA_TORAVON:
++                return m_uiToravonGUID;
++            case DATA_TEMPEST_MINION_1:
++                return m_uiTempestMinion1GUID;
++            case DATA_TEMPEST_MINION_2:
++                return m_uiTempestMinion2GUID;
++            case DATA_TEMPEST_MINION_3:
++                return m_uiTempestMinion3GUID;
++            case DATA_TEMPEST_MINION_4:
++                return m_uiTempestMinion4GUID;
++        }
++        return 0;
++    }
++    const char* Save()
++    {
++        return strInstData.c_str();
++    }
++
++    void Load(const char* in)
++    {
++        if (!in)
++        {
++            OUT_LOAD_INST_DATA_FAIL;
++            return;
++        }
++
++        OUT_LOAD_INST_DATA(in);
++
++        std::istringstream loadStream(in);
++        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1];
++
++        for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
++        {
++            if (m_auiEncounter[i] == IN_PROGRESS)
++                m_auiEncounter[i] = NOT_STARTED;
++        }
++
++        OUT_LOAD_INST_DATA_COMPLETE;
++    }
++
++    bool IsEncounterInProgress() const
++    {
++        for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
++            if (m_auiEncounter[i] == IN_PROGRESS)
++                return true;
++        return false;
++    }
++};
++
++InstanceData* GetInstanceData_instance_vault_of_archavon(Map* pMap)
++{
++    return new instance_vault_of_archavon(pMap);
++}
++
++void AddSC_instance_vault_of_archavon()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name = "instance_vault_of_archavon";
++    newscript->GetInstanceData = &GetInstanceData_instance_vault_of_archavon;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/northrend/vault_of_archavon/vault_of_archavon.h b/scripts/northrend/vault_of_archavon/vault_of_archavon.h
+new file mode 100644
+index 0000000..df6ffd0
+--- /dev/null
++++ b/scripts/northrend/vault_of_archavon/vault_of_archavon.h
+@@ -0,0 +1,33 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++ * This program is free software licensed under GPL version 2
++ * Please see the included DOCS/LICENSE.TXT for more information */
++
++#ifndef DEF_VAULT_OF_ARCHAVON_H
++#define DEF_VAULT_OF_ARCHAVON_H
++
++enum
++{
++    MAX_ENCOUNTER               = 4,
++
++    DATA_ARCHAVON               = 1,
++    DATA_EMALON                 = 2,
++    DATA_KORALON                = 3,
++    DATA_TORAVON                = 12,
++    DATA_TEMPEST_MINION_1       = 4,
++    DATA_TEMPEST_MINION_2       = 5,
++    DATA_TEMPEST_MINION_3       = 6,
++    DATA_TEMPEST_MINION_4       = 7,
++
++    TYPE_ARCHAVON               = 8,
++    TYPE_EMALON                 = 9,
++    TYPE_KORALON                = 10,
++    TYPE_TORAVON                = 11,
++
++    NPC_ARCHAVON                = 31125,
++    NPC_EMALON                  = 33993,
++    NPC_KORALON                 = 35013,
++    NPC_TORAVON                 = 38433,
++    NPC_TEMPEST_MINION          = 33998
++};
++
++#endif
+diff --git a/sql/Custom_Updates/Mangos/Northrend/VaultOfArchavon_Mangos.sql b/sql/Custom_Updates/Mangos/Northrend/VaultOfArchavon_Mangos.sql
+new file mode 100644
+index 0000000..0a857e5
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Northrend/VaultOfArchavon_Mangos.sql
+@@ -0,0 +1,13 @@
++/* VAULT OF ARCHAVON */
++-- Scriptnames
++update `creature_template` set `ScriptName` = 'boss_archavon' where `entry` = 31125;
++update `creature_template` set `ScriptName` = 'boss_koralon' where `entry` = 35013;
++update `creature_template` set `ScriptName` = 'boss_emalon' where `entry` = 33993;
++update `creature_template` set `ScriptName` = 'npc_tempest_minion' where `entry` = 26693;
++update `creature_template` set `ScriptName` = 'npc_tempest_warder' where `entry` in (33998, 34049);
++UPDATE `creature_template` SET `ScriptName` = 'mob_flame_warder' WHERE `entry`=35143;
++UPDATE `creature_template` SET `ScriptName` = 'boss_toravon' WHERE `entry`= 38433;
++UPDATE `creature_template` SET `ScriptName` = 'mob_frost_warder' WHERE `entry`= 38482;
++UPDATE `creature_template` SET `ScriptName` = 'mob_frozen_orb_stalker' WHERE `entry`= 38461;
++UPDATE `creature_template` SET `ScriptName` = 'mob_frozen_orb' WHERE `entry` = 38456;
++update `instance_template` set `script` = 'instance_vault_of_archavon' where `map` = 624;
+\ No newline at end of file
+diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
+index 5848ae0..faa6e0f 100644
+--- a/system/ScriptLoader.cpp
++++ b/system/ScriptLoader.cpp
+@@ -360,6 +360,11 @@ extern void AddSC_boss_skadi();
+ extern void AddSC_boss_svala();
+ extern void AddSC_boss_ymiron();
+ extern void AddSC_instance_pinnacle();
++extern void AddSC_boss_archavon();                          // Vault of Archvon
++extern void AddSC_boss_emalon();
++extern void AddSC_boss_koralon();
++extern void AddSC_boss_toravon();
++extern void AddSC_instance_vault_of_archavon();
+ extern void AddSC_boss_cyanigosa();                        // Violet hold
+ extern void AddSC_boss_erekem();
+ extern void AddSC_boss_ichoron();
+@@ -816,6 +821,11 @@ void AddScripts()
+     AddSC_boss_svala();
+     AddSC_boss_ymiron();
+     AddSC_instance_pinnacle();
++    AddSC_boss_archavon();                                  // Vault of Archvon
++    AddSC_boss_emalon();
++    AddSC_boss_koralon();
++    AddSC_boss_toravon();
++    AddSC_instance_vault_of_archavon();
+     AddSC_boss_cyanigosa();                                 // Violet hold
+     AddSC_boss_erekem();
+     AddSC_boss_ichoron();
