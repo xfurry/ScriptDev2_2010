@@ -26,6 +26,16 @@ enum
     TYPE_SHIELDGENERATOR1           = 20,
     TYPE_SHIELDGENERATOR2           = 21,
     TYPE_SHIELDGENERATOR3           = 22,
-    TYPE_SHIELDGENERATOR4           = 23
+    TYPE_SHIELDGENERATOR4           = 23,
+
+    DATA_WATER                      = 24,
+    DATA_TRASH                      = 25,
+
+    BRIDGE_CONSOLE                  = 184568,
+    CONSOLE_LURKER                  = 185118,
+    CONSOLE_HYDROSS                 = 185117,
+    CONSOLE_TIDEWALKER              = 185116,
+    CONSOLE_LEOTHERAS               = 185115,
+    CONSOLE_FATHOM                  = 185114
 };
 #endif

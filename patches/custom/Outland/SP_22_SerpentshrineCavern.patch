@@ -1,0 +1,1081 @@
+diff --git a/Makefile.am b/Makefile.am
+index 827bbb9..f267059 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -503,6 +503,7 @@ scripts/outland/coilfang_reservoir/serpent_shrine/boss_fathomlord_karathress.cpp
+ scripts/outland/coilfang_reservoir/serpent_shrine/boss_hydross_the_unstable.cpp \
+ scripts/outland/coilfang_reservoir/serpent_shrine/boss_lady_vashj.cpp \
+ scripts/outland/coilfang_reservoir/serpent_shrine/boss_leotheras_the_blind.cpp \
++scripts/outland/coilfang_reservoir/serpent_shrine/boss_lurker_below.cpp \
+ scripts/outland/coilfang_reservoir/serpent_shrine/boss_morogrim_tidewalker.cpp \
+ scripts/outland/coilfang_reservoir/serpent_shrine/instance_serpent_shrine.cpp \
+ scripts/outland/coilfang_reservoir/serpent_shrine/serpent_shrine.h \
+diff --git a/VC90/90ScriptDev2.vcproj b/VC90/90ScriptDev2.vcproj
+index 0577046..f1a6a1c 100644
+--- a/VC90/90ScriptDev2.vcproj
++++ b/VC90/90ScriptDev2.vcproj
+@@ -2534,6 +2534,10 @@
+ 							>
+ 						</File>
+ 						<File
++							RelativePath="..\scripts\outland\coilfang_reservoir\serpent_shrine\boss_lurker_below.cpp"
++							>
++						</File>
++						<File
+ 							RelativePath="..\scripts\outland\coilfang_reservoir\serpent_shrine\boss_morogrim_tidewalker.cpp"
+ 							>
+ 						</File>
+diff --git a/scripts/outland/coilfang_reservoir/serpent_shrine/boss_lurker_below.cpp b/scripts/outland/coilfang_reservoir/serpent_shrine/boss_lurker_below.cpp
+new file mode 100644
+index 0000000..3cad74f
+--- /dev/null
++++ b/scripts/outland/coilfang_reservoir/serpent_shrine/boss_lurker_below.cpp
+@@ -0,0 +1,510 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++/* ScriptData
++SDName: Boss_Lurker_below
++SD%Complete: 90
++SDComment: 
++SDCategory: Coilfang Resevoir, Serpent Shrine Cavern
++EndScriptData */
++
++#include "precompiled.h"
++#include "serpent_shrine.h"
++
++
++#define SPELL_SPOUT			37433	//unused until fixed
++#define SPELL_SPOUT_2		42835
++#define SPELL_KNOCKBACK		19813
++#define SPELL_GEYSER		37478
++#define SPELL_WHIRL			37660
++#define SPELL_WATERBOLT		37138
++#define SPELL_SUBMERGE		37550
++#define SPELL_EMERGE		20568	//Ragnaros' Emerge :P as long as it works I dont care xP
++
++#define EMOTE_SPOUT	"takes a deep breath."
++
++#define SpoutDist	30
++
++#define MOB_DUMMY				41003
++#define MOBID_COILFANG_GUARDIAN 21873
++#define MOBID_COILFANG_AMBUSHER 21865
++
++//Ambusher spells
++#define SPELL_MULTISHOT		30990
++
++//Guardian spells
++#define SPELL_ARCINGSMASH	38761 // Wrong SpellId. Can't find the right one.
++#define SPELL_HAMSTRING		26211
++
++#define PI 3.1415
++
++float AddPos[9][3] = 
++{
++    {2.855381f, -459.823914f, -19.182686f},	//MOVE_AMBUSHER_1 X, Y, Z
++    {12.4f, -466.042267f, -19.182686f},		//MOVE_AMBUSHER_2 X, Y, Z
++    {51.366653f, -460.836060f, -19.182686f},	//MOVE_AMBUSHER_3 X, Y, Z
++    {62.597980f, -457.433044f, -19.182686f},	//MOVE_AMBUSHER_4 X, Y, Z
++    {77.607452f, -384.302765f, -19.182686f},	//MOVE_AMBUSHER_5 X, Y, Z
++    {63.897900f, -378.984924f, -19.182686f},	//MOVE_AMBUSHER_6 X, Y, Z
++    {34.447250f, -387.333618f, -19.182686f},	//MOVE_GUARDIAN_1 X, Y, Z
++    {14.388216f, -423.468018f, -19.625271f},	//MOVE_GUARDIAN_2 X, Y, Z
++	{42.471519f, -445.115295f, -19.769423f}	//MOVE_GUARDIAN_3 X, Y, Z
++};
++
++struct MANGOS_DLL_DECL boss_the_lurker_belowAI : public ScriptedAI
++{
++    boss_the_lurker_belowAI(Creature *pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        pCreature->SetSplineFlags(SPLINEFLAG_FLYING);
++        SetCombatMovement(false);
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++
++	uint32 SpoutTimer;
++	uint32 SVTimer;
++	uint32 PhaseTimer;
++	uint32 GeyserTimer;
++	uint32 WaterboltTimer;
++	uint32 WhirlTimer;
++	uint32 OrientationUpdated;
++	double SpoutAngle;
++	std::map<uint64,bool>guids;
++	bool Spawned;
++	bool Submerged;
++	bool Clockwise;
++	Creature* Summoned;
++	int SpTimer;
++
++    void Reset()
++    {
++		//m_creature->RemoveAllAuras();
++        //m_creature->DeleteThreatList();
++		//m_creature->CombatStop(true);
++		//DoGoHome();
++
++        m_creature->SetSplineFlags(SPLINEFLAG_FLYING);
++		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
++		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);//if wiped when submerged flag wasn't removed
++		WhirlTimer = rand()%5000 + 15000;
++		PhaseTimer = 120000;
++		SpoutTimer = 15000;
++		SVTimer = 0;
++		OrientationUpdated = -1;
++		GeyserTimer = rand()%5000 + 15000;
++		WaterboltTimer = 3000;
++		Submerged = false;
++		Spawned = false;
++		Clockwise = true;
++		SpoutAngle = 0;
++		guids.clear();
++		SpTimer = 0;
++
++		//m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_DISARM, true);
++		//m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_FEAR, true);
++		//m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_POLYMORPH, true);
++		//m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPTED, true);
++		//m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_SILENCE, true);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_THELURKER_EVENT, NOT_STARTED);
++	}
++    /* Can get the event buggy
++	void MoveInLineOfSight(Unit *who)
++    {	
++		if (!who) 
++		return;
++
++		if (who->isTargetableForAttack() && who->isInAccessablePlaceFor(m_creature) && m_creature->IsHostileTo(who))
++        {
++            float attackRadius = m_creature->GetAttackDistance(who);
++            if (m_creature->IsWithinDistInMap(who, attackRadius) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))
++            {
++                if(who->HasStealthAura())
++                    who->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
++
++				if(!m_creature->isInCombat())
++					Aggro(who);
++			}
++		}
++    }
++
++	void AttackStart(Unit *who)
++    {
++		if (!who || m_creature->getVictim()) return;
++		
++		if (who->isTargetableForAttack() && who->isInAccessablePlaceFor(m_creature) && m_creature->IsHostileTo(who))
++        {
++            float attackRadius = m_creature->GetAttackDistance(who);
++            if (m_creature->IsWithinDistInMap(who, attackRadius) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))
++            {
++                if(who->HasStealthAura())
++                    who->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
++				m_creature->AddThreat(who,1.0f);
++				Aggro(who);
++			}else EnterEvadeMode();
++		}
++    }*/
++
++	void Aggro(Unit *who)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_THELURKER_EVENT, IN_PROGRESS);
++    }
++
++    void JustDied(Unit* pVictim)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_THELURKER_EVENT, DONE);
++    }
++	
++	void UpdateAI(const uint32 diff)
++    {
++		//Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() )
++            return;
++
++		if( m_creature->getVictim() && m_creature->isAlive())
++        {
++			if(!Submerged)
++			{
++				if(SpoutTimer < diff)
++				{
++					//Turning while spouting ;) bit fuzzy but working
++					if (OrientationUpdated == -1)
++					{
++						OrientationUpdated = 0;
++						Unit* target = NULL;
++						target = SelectUnit(SELECT_TARGET_TOPAGGRO,0);
++						m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
++						//DoScriptText(EMOTE_SPOUT, m_creature);
++						if(target)
++							SpoutAngle = target->GetAngle(m_creature)-PI;
++						else
++							SpoutAngle = 0;
++
++						SpoutTimer = 3000;
++
++						switch(rand()%2)
++						{
++						case 0:
++							Clockwise = true; 
++							break;
++						case 1: 
++							Clockwise = false; 
++							break;
++						}
++						guids.clear();	//clear targets
++						return;
++					} else {
++						if(Clockwise)
++							SpoutAngle += PI/30;
++						else
++							SpoutAngle -= PI/30;
++
++						if(SpoutAngle > 2*PI)
++							SpoutAngle -= 2*PI;
++						if(SpoutAngle < 0)
++							SpoutAngle += 2*PI;
++
++						//So spin around ya evil fish
++						m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
++						m_creature->SetOrientation(SpoutAngle);
++						m_creature->StopMoving();
++
++						//Spout part
++						if(SVTimer < diff)
++						{
++							DoCast(m_creature, SPELL_SPOUT_2);
++							SVTimer = 1250;
++						}
++						Unit* Temp = NULL;
++                        /*
++						std::list<HostileReference*>::iterator i = m_creature->getThreatManager().getThreatList().begin();
++						for (;i != m_creature->getThreatManager().getThreatList().end(); ++i)
++						{
++							Temp = Unit::GetUnit((*m_creature),(*i)->getUnitGuid());
++
++							std::map<uint64, bool>::iterator itr = guids.find(Temp->GetGUID());
++							if(itr == guids.end())
++							{
++								if (Temp != SelectUnit(SELECT_TARGET_TOPAGGRO,0))
++								{
++									if (Temp && m_creature->HasInArc(PI/4,Temp) && !Temp->IsInWater() && m_creature->GetDistance(Temp) < SpoutDist)
++									{
++										guids[Temp->GetGUID()] = false;
++										Creature* dummy0 = m_creature->SummonCreature(MOB_DUMMY,Temp->GetPositionX(),Temp->GetPositionY(),Temp->GetPositionZ(),m_creature->GetOrientation(),TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,5000);
++										if (dummy0)
++										{
++											dummy0->DealDamage(Temp, 2000+rand()%3500, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_FROST, NULL, false);
++											dummy0->CastSpell(Temp,SPELL_KNOCKBACK,true);
++											dummy0->DealDamage(dummy0, dummy0->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
++										}
++									}
++								}
++							}
++						}*/
++
++						SVTimer -= diff;
++						OrientationUpdated++;
++						SpoutTimer = 250;
++
++						if (OrientationUpdated == 60)
++						{
++							SpoutTimer = 45000;
++							OrientationUpdated = -1;
++							WhirlTimer = 0;
++						}
++					}
++				}else SpoutTimer -= diff;
++
++				if(PhaseTimer >= diff)
++					PhaseTimer -= diff; //need to count the phase timer while spouting too
++				if(OrientationUpdated != -1)
++					return;
++
++				//Whirl directly after a Spout and at random times
++				if(WhirlTimer < diff)
++				{
++					WhirlTimer = rand()%5000 + 15000;
++					DoCast(m_creature,SPELL_WHIRL);
++				}else WhirlTimer -= diff;
++
++				if(PhaseTimer < diff)
++				{
++					DoCast(m_creature,SPELL_SUBMERGE);
++					PhaseTimer = 60000;
++					Submerged = true;
++				}/*else PhaseTimer -= diff;*/
++
++				if(GeyserTimer < diff)
++				{
++					Unit* target = NULL;
++					target = SelectUnit(SELECT_TARGET_RANDOM,0);
++					if(target == SelectUnit(SELECT_TARGET_TOPAGGRO,0))
++						target = SelectUnit(SELECT_TARGET_TOPAGGRO,1);
++					GeyserTimer = rand()%5000 + 15000;
++					if(target)
++						DoCast(target,SPELL_GEYSER);
++					else
++						DoCast(m_creature->getVictim(),SPELL_GEYSER);
++				}else GeyserTimer -= diff;
++
++				if(WaterboltTimer < diff)
++				{
++					Unit* target = NULL;
++					int i = 0;
++					bool meleeTarget = false;
++					target = SelectUnit(SELECT_TARGET_TOPAGGRO,0);
++					if (!target)
++						target = m_creature->getVictim();
++					while (target)
++					{
++						if( m_creature->IsWithinDistInMap(target, 14))
++						{
++							meleeTarget = true;
++							break;
++						}
++						target = SelectUnit(SELECT_TARGET_TOPAGGRO,i);
++						i++;
++					}
++
++					if(!meleeTarget)
++					{
++						target = SelectUnit(SELECT_TARGET_RANDOM,0);
++						if(target)
++							DoCast(target,SPELL_WATERBOLT);
++						else
++							DoCast(m_creature->getVictim(),SPELL_WATERBOLT);
++						WaterboltTimer = 3000;
++					} else DoMeleeAttackIfReady();
++					
++				}else WaterboltTimer -= diff;
++
++				DoMeleeAttackIfReady();
++
++			} else {
++				if(PhaseTimer < diff)
++				{
++					Submerged = false;
++					m_creature->RemoveAllAuras();
++					m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++					m_creature->RemoveFlag(UNIT_NPC_EMOTESTATE,EMOTE_STATE_SUBMERGED);
++					m_creature->RemoveFlag(UNIT_FIELD_BYTES_1,9);
++					DoCast(m_creature,SPELL_EMERGE);
++					Spawned = false;
++					SpoutTimer = 2000;	// directly cast Spout after emerging!
++					PhaseTimer = 120000;
++					return;
++				}
++				else
++				{
++					if(!m_creature->isInCombat())
++						m_creature->SetInCombatState(false);
++					PhaseTimer -= diff;
++				}
++				if(!Spawned)
++				{
++					m_creature->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++					SummonAdd(MOBID_COILFANG_AMBUSHER,AddPos[0][0],AddPos[0][1],AddPos[0][2]);
++					SummonAdd(MOBID_COILFANG_AMBUSHER,AddPos[1][0],AddPos[1][1],AddPos[1][2]);
++					SummonAdd(MOBID_COILFANG_AMBUSHER,AddPos[2][0],AddPos[2][1],AddPos[2][2]);
++					SummonAdd(MOBID_COILFANG_AMBUSHER,AddPos[3][0],AddPos[3][1],AddPos[3][2]);
++					SummonAdd(MOBID_COILFANG_AMBUSHER,AddPos[4][0],AddPos[4][1],AddPos[4][2]);
++					SummonAdd(MOBID_COILFANG_AMBUSHER,AddPos[5][0],AddPos[5][1],AddPos[5][2]);
++					SummonAdd(MOBID_COILFANG_GUARDIAN,AddPos[6][0],AddPos[6][1],AddPos[6][2]);
++					SummonAdd(MOBID_COILFANG_GUARDIAN,AddPos[7][0],AddPos[7][1],AddPos[7][2]);
++					SummonAdd(MOBID_COILFANG_GUARDIAN,AddPos[8][0],AddPos[8][1],AddPos[8][2]);
++					Spawned = true;
++				}
++			}
++		}
++	}
++	void SummonAdd(uint32 entry, float x, float y, float z)
++	{
++		Summoned = m_creature->SummonCreature(entry, x, y, z, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
++		Unit *target = NULL;
++		target = SelectUnit(SELECT_TARGET_RANDOM, 0);
++		if(target)
++			Summoned->AI()->AttackStart(target);
++	}
++};
++
++CreatureAI* GetAI_boss_the_lurker_below(Creature *_Creature)
++{
++    return new boss_the_lurker_belowAI (_Creature);
++}
++
++
++void AddSC_boss_the_lurker_below()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name="boss_the_lurker_below";
++    newscript->GetAI = GetAI_boss_the_lurker_below;
++    newscript->RegisterSelf();
++}
++/* ?!?
++CreatureAI* GetAI_mob_coilfang_guardian(Creature *_Creature)
++{
++    SimpleAI* ai = new SimpleAI (_Creature);
++
++    ai->Spell[0].Enabled = true;
++    ai->Spell[0].Spell_Id = SPELL_ARCINGSMASH;
++    ai->Spell[0].Cooldown = 15000;
++    ai->Spell[0].First_Cast = 5000;
++    ai->Spell[0].Cast_Target_Type = CAST_HOSTILE_TARGET;
++
++    ai->Spell[1].Enabled = true;
++    ai->Spell[1].Spell_Id = SPELL_HAMSTRING;
++    ai->Spell[1].Cooldown = 10000;
++    ai->Spell[1].First_Cast = 2000;
++    ai->Spell[1].Cast_Target_Type = CAST_HOSTILE_TARGET;
++
++	return ai;
++}
++
++void AddSC_mob_coilfang_guardian()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name="mob_coilfang_guardian";
++    newscript->GetAI = GetAI_mob_coilfang_guardian;
++    newscript->RegisterSelf();
++}*/
++
++struct MANGOS_DLL_DECL mob_coilfang_ambusherAI : public ScriptedAI
++{
++    mob_coilfang_ambusherAI(Creature *c) : ScriptedAI(c) {Reset();}
++
++	uint32 MultiShotTimer;
++	uint32 ShootBowTimer;
++	uint32 GlobalCooldown;
++    
++    void Reset()
++    {
++		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
++
++		MultiShotTimer = 10000;
++		ShootBowTimer = 4000;
++		GlobalCooldown = 1500;
++        //DoGoHome();
++	}
++
++	void AttackStart(Unit *who)
++    {
++		if (!who || m_creature->getVictim()) return;
++
++		if (who->isTargetableForAttack() && who->isInAccessablePlaceFor(m_creature) && m_creature->IsHostileTo(who))
++        {
++			Aggro(who);
++        }
++    }
++
++    void MoveInLineOfSight(Unit *who)
++	{
++		if (!who || m_creature->getVictim()) return;
++
++		if (who->isTargetableForAttack() && who->isInAccessablePlaceFor(m_creature) && m_creature->IsHostileTo(who))
++        {
++			Aggro(who);
++        }
++	}
++
++	void Aggro(Unit *who)
++    {
++    }
++	
++	void UpdateAI(const uint32 diff)
++    {
++		if(MultiShotTimer < diff && GlobalCooldown < diff)
++		{
++			Unit* target = NULL;
++			target = m_creature->getVictim();
++			if(target)
++				DoCast(target,SPELL_MULTISHOT);
++			MultiShotTimer = 10000;
++			GlobalCooldown = 1500;
++		}else MultiShotTimer -= diff;
++
++		if(ShootBowTimer < diff && GlobalCooldown < diff)
++		{
++			Unit* target = NULL;
++			target = m_creature->getVictim();
++			if(target)
++				DoCast(target,30493);
++			ShootBowTimer = 5000;
++			GlobalCooldown = 1500;
++		}else ShootBowTimer -= diff;
++		GlobalCooldown -= diff;
++	}
++};
++
++CreatureAI* GetAI_mob_coilfang_ambusher(Creature *_Creature)
++{
++    return new mob_coilfang_ambusherAI (_Creature);
++}
++
++void AddSC_mob_coilfang_ambusher()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name="mob_coilfang_ambusher";
++    newscript->GetAI = GetAI_mob_coilfang_ambusher;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/outland/coilfang_reservoir/serpent_shrine/instance_serpent_shrine.cpp b/scripts/outland/coilfang_reservoir/serpent_shrine/instance_serpent_shrine.cpp
+index 737e219..8ad5ce1 100644
+--- a/scripts/outland/coilfang_reservoir/serpent_shrine/instance_serpent_shrine.cpp
++++ b/scripts/outland/coilfang_reservoir/serpent_shrine/instance_serpent_shrine.cpp
+@@ -1,18 +1,18 @@
+ /* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+- */
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
+ 
+ /* ScriptData
+ SDName: Instance_Serpent_Shrine
+@@ -33,6 +33,39 @@ EndScriptData */
+ 5 - Lady Vashj Event
+ */
+ 
++enum WaterEventState
++{
++    WATERSTATE_NONE     = 0,
++    WATERSTATE_FRENZY   = 1,
++    WATERSTATE_SCALDING = 2
++};
++#define SPELL_SCALDINGWATER 37284
++#define MOB_COILFANG_FRENZY 21508
++#define TRASHMOB_COILFANG_PRIESTESS 21220  //6*2
++#define TRASHMOB_COILFANG_SHATTERER 21301  //6*3
++
++#define MIN_KILLS 30
++
++bool GOHello_go_main_bridge_console(Player* pPlayer, GameObject* pGo)
++{
++    ScriptedInstance* pInstance = (ScriptedInstance*)pGo->GetInstanceData();
++
++    if (!pInstance)
++        return false;
++
++    switch(pGo->GetEntry())
++    {
++    case CONSOLE_LURKER: pInstance->SetData(TYPE_THELURKER_EVENT, SPECIAL); break;
++    case CONSOLE_HYDROSS: pInstance->SetData(TYPE_HYDROSS_EVENT, SPECIAL); break;
++    case CONSOLE_TIDEWALKER:  pInstance->SetData(TYPE_MOROGRIM_EVENT, SPECIAL);  break;
++    case CONSOLE_LEOTHERAS:  pInstance->SetData(TYPE_LEOTHERAS_EVENT, SPECIAL);  break;
++    case CONSOLE_FATHOM:  pInstance->SetData(TYPE_KARATHRESS_EVENT, SPECIAL);  break;
++    }
++
++    pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++    return false;
++}
++
+ const int MAX_ENCOUNTER = 6;
+ const int MAX_GENERATOR = 4;
+ 
+@@ -46,6 +79,17 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
+     uint64 m_uiLadyVashj;
+     uint64 m_uiKarathress;
+     uint64 m_uiKarathressEvent_Starter;
++    uint64 m_uiBridgeConsole;
++    uint64 m_uiLurkerConsole;
++    uint64 m_uiHydrossConsole;
++    uint64 m_uiLethorasConsole;
++    uint64 m_uiTidewalkerConsole;
++    uint64 m_uiFathomConsole;
++    uint32 WaterCheckTimer;
++    uint32 FrenzySpawnTimer;
++    uint32 Water;
++    uint32 TrashCount;
++    bool DoSpawnFrenzy;
+ 
+     uint32 m_auiShieldGenerator[MAX_GENERATOR];
+     uint32 m_auiEncounter[MAX_ENCOUNTER];
+@@ -61,6 +105,19 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
+         m_uiLadyVashj = 0;
+         m_uiKarathress = 0;
+         m_uiKarathressEvent_Starter = 0;
++
++        m_uiBridgeConsole = 0;
++        m_uiLurkerConsole = 0;
++        m_uiHydrossConsole  = 0;
++        m_uiLethorasConsole = 0;
++        m_uiTidewalkerConsole = 0;
++        m_uiFathomConsole   = 0;
++
++        WaterCheckTimer = 500;
++        FrenzySpawnTimer = 2000;
++        Water = WATERSTATE_FRENZY;
++        TrashCount = 0;
++        DoSpawnFrenzy = false;
+     }
+ 
+     bool IsEncounterInProgress()
+@@ -72,15 +129,97 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
+         return false;
+     }
+ 
++    void Update (uint32 diff)
++    {
++        //Water checks
++        if (WaterCheckTimer <= diff)
++        {
++            if(TrashCount >= MIN_KILLS)
++                Water = WATERSTATE_SCALDING;
++            else
++                Water = WATERSTATE_FRENZY;
++
++            Map::PlayerList const &PlayerList = instance->GetPlayers();
++            if (PlayerList.isEmpty())
++                return;
++            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
++            {
++                if (Player* pPlayer = i->getSource())
++                {
++                    if (pPlayer->isAlive() && /*i->getSource()->GetPositionZ() <= -21.434931f*/pPlayer->IsInWater())
++                    {
++                        if(Water == WATERSTATE_SCALDING)
++                        {
++
++                            if(!pPlayer->HasAura(SPELL_SCALDINGWATER))
++                            {
++                                pPlayer->CastSpell(pPlayer, SPELL_SCALDINGWATER,true);
++                            }
++                        } else if(Water == WATERSTATE_FRENZY)
++                        {
++                            //spawn frenzy
++                            if(DoSpawnFrenzy)
++                            {
++                                if(Creature* frenzy = pPlayer->SummonCreature(MOB_COILFANG_FRENZY,pPlayer->GetPositionX(),pPlayer->GetPositionY(),pPlayer->GetPositionZ(),pPlayer->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,2000))
++                                {
++                                    frenzy->Attack(pPlayer,false);
++                                    frenzy->SetSplineFlags(SPLINEFLAG_UNKNOWN12);
++                                }
++                                DoSpawnFrenzy = false;
++                            }
++                        }
++                    }
++                    if(!pPlayer->IsInWater())
++                        pPlayer->RemoveAurasDueToSpell(SPELL_SCALDINGWATER);
++                }
++
++            }
++            WaterCheckTimer = 500;//remove stress from core
++        } else WaterCheckTimer -= diff;
++        if (FrenzySpawnTimer <= diff)
++        {
++            DoSpawnFrenzy = true;
++            FrenzySpawnTimer = 2000;
++        } else FrenzySpawnTimer -= diff;
++    }
++
+     void OnCreatureCreate(Creature* pCreature)
+     {
+         switch(pCreature->GetEntry())
+         {
+-            case 21212: m_uiLadyVashj  = pCreature->GetGUID(); break;
+-            case 21214: m_uiKarathress = pCreature->GetGUID(); break;
+-            case 21966: m_uiSharkkis   = pCreature->GetGUID(); break;
+-            case 21965: m_uiTidalvess  = pCreature->GetGUID(); break;
+-            case 21964: m_uiCaribdis   = pCreature->GetGUID(); break;
++        case 21212: m_uiLadyVashj  = pCreature->GetGUID(); break;
++        case 21214: m_uiKarathress = pCreature->GetGUID(); break;
++        case 21966: m_uiSharkkis   = pCreature->GetGUID(); break;
++        case 21965: m_uiTidalvess  = pCreature->GetGUID(); break;
++        case 21964: m_uiCaribdis   = pCreature->GetGUID(); break;
++        }
++    }
++
++    void OnGameObjectCreate(GameObject* pGo, bool add)
++    {
++        switch(pGo->GetEntry())
++        {
++        case BRIDGE_CONSOLE:   m_uiBridgeConsole = pGo->GetGUID(); break;
++        case CONSOLE_LURKER:   m_uiLurkerConsole = pGo->GetGUID();
++            if (m_auiEncounter[2] == DONE)
++                pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++            break;
++        case CONSOLE_HYDROSS:   m_uiHydrossConsole = pGo->GetGUID(); 
++            if (m_auiEncounter[0] == DONE)
++                pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++            break;
++        case CONSOLE_TIDEWALKER:   m_uiTidewalkerConsole = pGo->GetGUID();
++            if (m_auiEncounter[4] == DONE)
++                pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++            break;
++        case CONSOLE_LEOTHERAS:   m_uiLethorasConsole = pGo->GetGUID();
++            if (m_auiEncounter[1] == DONE)
++                pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++            break;
++        case CONSOLE_FATHOM:   m_uiFathomConsole = pGo->GetGUID(); 
++            if (m_auiEncounter[3] == DONE)
++                pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++            break;
+         }
+     }
+ 
+@@ -94,18 +233,18 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
+     {
+         switch(uiIdentifier)
+         {
+-            case DATA_SHARKKIS:
+-                return m_uiSharkkis;
+-            case DATA_TIDALVESS:
+-                return m_uiTidalvess;
+-            case DATA_CARIBDIS:
+-                return m_uiCaribdis;
+-            case DATA_LADYVASHJ:
+-                return m_uiLadyVashj;
+-            case DATA_KARATHRESS:
+-                return m_uiKarathress;
+-            case DATA_KARATHRESS_STARTER:
+-                return m_uiKarathressEvent_Starter;
++        case DATA_SHARKKIS:
++            return m_uiSharkkis;
++        case DATA_TIDALVESS:
++            return m_uiTidalvess;
++        case DATA_CARIBDIS:
++            return m_uiCaribdis;
++        case DATA_LADYVASHJ:
++            return m_uiLadyVashj;
++        case DATA_KARATHRESS:
++            return m_uiKarathress;
++        case DATA_KARATHRESS_STARTER:
++            return m_uiKarathressEvent_Starter;
+         }
+         return 0;
+     }
+@@ -114,86 +253,160 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
+     {
+         switch(uiType)
+         {
+-            case TYPE_HYDROSS_EVENT:
++        case DATA_TRASH:
++            {
++                if(uiData == 1 && TrashCount < MIN_KILLS)
++                    ++TrashCount;//+1 died
++                SaveToDB();
++            }
++            break;
++        case TYPE_HYDROSS_EVENT:
++            if (uiData == SPECIAL)
++                if (uiData == DONE)
++                {
++                    if (GameObject* pGo = instance->GetGameObject(m_uiHydrossConsole))
++                        pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++                }
+                 m_auiEncounter[0] = uiData;
+                 break;
+-            case TYPE_LEOTHERAS_EVENT:
+-                m_auiEncounter[1] = uiData;
+-                break;
+-            case TYPE_THELURKER_EVENT:
+-                m_auiEncounter[2] = uiData;
+-                break;
+-            case TYPE_KARATHRESS_EVENT:
+-                m_auiEncounter[3] = uiData;
+-                break;
+-            case TYPE_MOROGRIM_EVENT:
+-                m_auiEncounter[4] = uiData;
+-                break;
+-            case TYPE_LADYVASHJ_EVENT:
+-                if (uiData == NOT_STARTED)
+-                    memset(&m_auiShieldGenerator, 0, sizeof(m_auiShieldGenerator));
+-                m_auiEncounter[5] = uiData;
+-                break;
+-            case TYPE_SHIELDGENERATOR1:
+-                m_auiShieldGenerator[0] = uiData;
+-                break;
+-            case TYPE_SHIELDGENERATOR2:
+-                m_auiShieldGenerator[1] = uiData;
+-                break;
+-            case TYPE_SHIELDGENERATOR3:
+-                m_auiShieldGenerator[2] = uiData;
+-                break;
+-            case TYPE_SHIELDGENERATOR4:
+-                m_auiShieldGenerator[3] = uiData;
+-                break;
++        case TYPE_LEOTHERAS_EVENT:
++            if (uiData == DONE)
++            {
++                if (GameObject* pGo = instance->GetGameObject(m_uiLethorasConsole))
++                    pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++            }
++            m_auiEncounter[1] = uiData;
++            break;
++        case TYPE_THELURKER_EVENT:
++            if (uiData == DONE)
++            {
++                if (GameObject* pGo = instance->GetGameObject(m_uiLurkerConsole))
++                    pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++            }
++            m_auiEncounter[2] = uiData;
++            break;
++        case TYPE_KARATHRESS_EVENT:
++            if (uiData == DONE)
++            {
++                if (GameObject* pGo = instance->GetGameObject(m_uiFathomConsole))
++                    pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++            }
++            m_auiEncounter[3] = uiData;
++            break;
++        case TYPE_MOROGRIM_EVENT:
++            if (uiData == DONE)
++            {
++                if (GameObject* pGo = instance->GetGameObject(m_uiTidewalkerConsole))
++                    pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
++            }
++            m_auiEncounter[4] = uiData;
++            break;
++        case TYPE_LADYVASHJ_EVENT:
++            if (uiData == NOT_STARTED)
++                memset(&m_auiShieldGenerator, 0, sizeof(m_auiShieldGenerator));
++            m_auiEncounter[5] = uiData;
++            break;
++        case TYPE_SHIELDGENERATOR1:
++            m_auiShieldGenerator[0] = uiData;
++            break;
++        case TYPE_SHIELDGENERATOR2:
++            m_auiShieldGenerator[1] = uiData;
++            break;
++        case TYPE_SHIELDGENERATOR3:
++            m_auiShieldGenerator[2] = uiData;
++            break;
++        case TYPE_SHIELDGENERATOR4:
++            m_auiShieldGenerator[3] = uiData;
++            break;
++        }
++
++        if (TYPE_HYDROSS_EVENT == SPECIAL && TYPE_LEOTHERAS_EVENT == SPECIAL && TYPE_THELURKER_EVENT == SPECIAL && 
++            TYPE_KARATHRESS_EVENT == SPECIAL && TYPE_MOROGRIM_EVENT == SPECIAL)
++        {
++            DoUseDoorOrButton(m_uiBridgeConsole);
+         }
++        if (uiData == DONE || uiData == SPECIAL)
++            SaveToDB();
+     }
+ 
+     uint32 GetData(uint32 uiType)
+     {
+         switch(uiType)
+         {
+-            case TYPE_HYDROSS_EVENT:
+-                return m_auiEncounter[0];
++        case TYPE_HYDROSS_EVENT:
++            return m_auiEncounter[0];
+ 
+-            case TYPE_LEOTHERAS_EVENT:
+-                return m_auiEncounter[1];
++        case TYPE_LEOTHERAS_EVENT:
++            return m_auiEncounter[1];
+ 
+-            case TYPE_THELURKER_EVENT:
+-                return m_auiEncounter[2];
++        case TYPE_THELURKER_EVENT:
++            return m_auiEncounter[2];
+ 
+-            case TYPE_KARATHRESS_EVENT:
+-                return m_auiEncounter[3];
++        case TYPE_KARATHRESS_EVENT:
++            return m_auiEncounter[3];
+ 
+-            case TYPE_MOROGRIM_EVENT:
+-                return m_auiEncounter[4];
++        case TYPE_MOROGRIM_EVENT:
++            return m_auiEncounter[4];
+ 
+-            case TYPE_LADYVASHJ_EVENT:
+-                return m_auiEncounter[5];
++        case TYPE_LADYVASHJ_EVENT:
++            return m_auiEncounter[5];
+ 
+-            case TYPE_SHIELDGENERATOR1:
+-                return m_auiShieldGenerator[0];
++        case TYPE_SHIELDGENERATOR1:
++            return m_auiShieldGenerator[0];
+ 
+-            case TYPE_SHIELDGENERATOR2:
+-                return m_auiShieldGenerator[1];
++        case TYPE_SHIELDGENERATOR2:
++            return m_auiShieldGenerator[1];
+ 
+-            case TYPE_SHIELDGENERATOR3:
+-                return m_auiShieldGenerator[2];
++        case TYPE_SHIELDGENERATOR3:
++            return m_auiShieldGenerator[2];
+ 
+-            case TYPE_SHIELDGENERATOR4:
+-                return m_auiShieldGenerator[3];
++        case TYPE_SHIELDGENERATOR4:
++            return m_auiShieldGenerator[3];
+ 
+-            case TYPE_VASHJ_PHASE3_CHECK:
+-                for(uint8 i = 0; i < MAX_GENERATOR; ++i)
+-                {
+-                    if (m_auiShieldGenerator[i] != DONE)
+-                        return NOT_STARTED;
+-                }
+-                return DONE;
++        case TYPE_VASHJ_PHASE3_CHECK:
++            for(uint8 i = 0; i < MAX_GENERATOR; ++i)
++            {
++                if (m_auiShieldGenerator[i] != DONE)
++                    return NOT_STARTED;
++            }
++            return DONE;
+         }
+ 
+         return 0;
+     }
++
++    std::string GetSaveData()
++    {
++        OUT_SAVE_INST_DATA;
++        std::ostringstream stream;
++        stream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
++            << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " " << TrashCount;
++        char* out = new char[stream.str().length() + 1];
++        strcpy(out, stream.str().c_str());
++        if (out)
++        {
++            OUT_SAVE_INST_DATA_COMPLETE;
++            return out;
++        }
++        return NULL;
++    }
++
++    void Load(const char* in)
++    {
++        if (!in)
++        {
++            OUT_LOAD_INST_DATA_FAIL;
++            return;
++        }
++        OUT_LOAD_INST_DATA(in);
++        std::istringstream stream(in);
++        stream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3]
++        >> m_auiEncounter[4] >> m_auiEncounter[5] >> TrashCount;
++        for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
++            if (m_auiEncounter[i] == IN_PROGRESS)                // Do not load an encounter as "In Progress" - reset it instead.
++                m_auiEncounter[i] = NOT_STARTED;
++        OUT_LOAD_INST_DATA_COMPLETE;
++    }
+ };
+ 
+ InstanceData* GetInstanceData_instance_serpentshrine_cavern(Map* pMap)
+@@ -208,4 +421,9 @@ void AddSC_instance_serpentshrine_cavern()
+     newscript->Name = "instance_serpent_shrine";
+     newscript->GetInstanceData = &GetInstanceData_instance_serpentshrine_cavern;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "go_main_bridge_console";
++    newscript->pGOHello = &GOHello_go_main_bridge_console;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/outland/coilfang_reservoir/serpent_shrine/serpent_shrine.h b/scripts/outland/coilfang_reservoir/serpent_shrine/serpent_shrine.h
+index 6d2b9f4..4cf06f4 100644
+--- a/scripts/outland/coilfang_reservoir/serpent_shrine/serpent_shrine.h
++++ b/scripts/outland/coilfang_reservoir/serpent_shrine/serpent_shrine.h
+@@ -26,6 +26,16 @@ enum
+     TYPE_SHIELDGENERATOR1           = 20,
+     TYPE_SHIELDGENERATOR2           = 21,
+     TYPE_SHIELDGENERATOR3           = 22,
+-    TYPE_SHIELDGENERATOR4           = 23
++    TYPE_SHIELDGENERATOR4           = 23,
++
++    DATA_WATER                      = 24,
++    DATA_TRASH                      = 25,
++
++    BRIDGE_CONSOLE                  = 184568,
++    CONSOLE_LURKER                  = 185118,
++    CONSOLE_HYDROSS                 = 185117,
++    CONSOLE_TIDEWALKER              = 185116,
++    CONSOLE_LEOTHERAS               = 185115,
++    CONSOLE_FATHOM                  = 185114
+ };
+ #endif
+diff --git a/sql/Custom_Updates/Mangos/Outland/SerpentshrineCavern_Mangos.sql b/sql/Custom_Updates/Mangos/Outland/SerpentshrineCavern_Mangos.sql
+new file mode 100644
+index 0000000..428f7ff
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Outland/SerpentshrineCavern_Mangos.sql
+@@ -0,0 +1,12 @@
++/* SERPENT SHRINE CAVERN */
++-- Bridge
++Update `gameobject_template` set `ScriptName` = 'go_main_bridge_console' where `entry` in (184568, 185118, 185117, 185116, 185115, 185114);
++-- Bridge faction must be 114, but for the moment will be 0 because the bridge script doesn't always work properly
++Update `gameobject_template` set `faction` = 0 where `entry` = 184568;
++-- Lurker; made some changes in z position. Original: -116.154; also set the unit flags to swimming
++Update `creature_template` set `ScriptName` = 'boss_the_lurker_below', `unit_flags` = 32768 where `entry` = 21217;
++Update `creature` set `position_z` = -21.59 where `id` = 21217;
++-- Corect the Lurker's loot
++Update `creature_loot_template` set `item` = 29434 where `entry` = 21217  and `item` = 33054;
++-- Coilfang frenzy
++Update `creature_template` set `InhabitType` = 2, `unit_flags` = 32768  where `entry` = 21508;
+\ No newline at end of file
+diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
+index faa6e0f..56f2730 100644
+--- a/system/ScriptLoader.cpp
++++ b/system/ScriptLoader.cpp
+@@ -412,6 +412,7 @@ extern void AddSC_boss_fathomlord_karathress();             //CR, serpent_shrine
+ extern void AddSC_boss_hydross_the_unstable();
+ extern void AddSC_boss_lady_vashj();
+ extern void AddSC_boss_leotheras_the_blind();
++extern void AddSC_boss_the_lurker_below();
+ extern void AddSC_boss_morogrim_tidewalker();
+ extern void AddSC_instance_serpentshrine_cavern();
+ extern void AddSC_boss_hydromancer_thespia();               //CR, steam_vault
+@@ -873,6 +874,7 @@ void AddScripts()
+     AddSC_boss_hydross_the_unstable();
+     AddSC_boss_lady_vashj();
+     AddSC_boss_leotheras_the_blind();
++    AddSC_boss_the_lurker_below();
+     AddSC_boss_morogrim_tidewalker();
+     AddSC_instance_serpentshrine_cavern();
+     AddSC_boss_hydromancer_thespia();                       //CR, steam_vault

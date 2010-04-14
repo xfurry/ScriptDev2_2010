@@ -2534,6 +2534,10 @@
 							>
 						</File>
 						<File
+							RelativePath="..\scripts\outland\coilfang_reservoir\serpent_shrine\boss_lurker_below.cpp"
+							>
+						</File>
+						<File
 							RelativePath="..\scripts\outland\coilfang_reservoir\serpent_shrine\boss_morogrim_tidewalker.cpp"
 							>
 						</File>
