@@ -57,7 +57,22 @@ struct MANGOS_DLL_DECL boss_sulfuronAI : public ScriptedAI
         Inspire_Timer = 13000;
         Knockdown_Timer = 6000;
         Flamespear_Timer = 2000;
+
+        if (m_pInstance && m_pInstance->GetData(TYPE_SULFURON) != DONE)
+			m_pInstance->SetData(TYPE_SULFURON, NOT_STARTED);
     }
+
+    void Aggro(Unit* pWho)
+	{
+		if(m_pInstance)
+			m_pInstance->SetData(TYPE_SULFURON, IN_PROGRESS);
+	}
+
+	void JustDied(Unit* pKiller)
+    {
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_SULFURON, DONE);
+	}
 
     void UpdateAI(const uint32 diff)
     {

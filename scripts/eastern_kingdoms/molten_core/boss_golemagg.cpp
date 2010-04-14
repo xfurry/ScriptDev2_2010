@@ -62,6 +62,13 @@ struct MANGOS_DLL_DECL boss_golemaggAI : public ScriptedAI
         m_creature->CastSpell(m_creature, SPELL_MAGMASPLASH, true);
     }
 
+    void Aggro(Unit* pWho)
+    {	
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_GOLEMAGG, IN_PROGRESS);
+        m_creature->CallForHelp(30.0f);
+    }
+
     void JustDied(Unit* pKiller)
     {
         if (m_pInstance)

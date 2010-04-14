@@ -22,6 +22,7 @@ SDCategory: Molten Core
 EndScriptData */
 
 #include "precompiled.h"
+#include "molten_core.h"
 
 enum
 {
@@ -34,7 +35,13 @@ enum
 
 struct MANGOS_DLL_DECL boss_shazzrahAI : public ScriptedAI
 {
-    boss_shazzrahAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+    boss_shazzrahAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
 
     uint32 ArcaneExplosion_Timer;
     uint32 ShazzrahCurse_Timer;
@@ -49,7 +56,22 @@ struct MANGOS_DLL_DECL boss_shazzrahAI : public ScriptedAI
         DeadenMagic_Timer = 24000;
         Countspell_Timer = 15000;
         Blink_Timer = 30000;
+
+        if (m_pInstance)
+			m_pInstance->SetData(TYPE_SHAZZRAH, NOT_STARTED);
     }
+
+    void Aggro(Unit* pWho)
+    {
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_SHAZZRAH, IN_PROGRESS);
+    }
+
+	void JustDied(Unit* pKiller)
+    {
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_SHAZZRAH, DONE);
+	}
 
     void UpdateAI(const uint32 diff)
     {

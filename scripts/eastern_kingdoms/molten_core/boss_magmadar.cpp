@@ -22,6 +22,7 @@ SDCategory: Molten Core
 EndScriptData */
 
 #include "precompiled.h"
+#include "molten_core.h"
 
 enum
 {
@@ -36,7 +37,13 @@ enum
 
 struct MANGOS_DLL_DECL boss_magmadarAI : public ScriptedAI
 {
-    boss_magmadarAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+    boss_magmadarAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
 
     uint32 Frenzy_Timer;
     uint32 Panic_Timer;
@@ -49,6 +56,21 @@ struct MANGOS_DLL_DECL boss_magmadarAI : public ScriptedAI
         Lavabomb_Timer = 12000;
 
         m_creature->CastSpell(m_creature,SPELL_MAGMASPIT,true);
+
+        if (m_pInstance && m_pInstance->GetData(TYPE_MAGMADAR) != DONE)
+			m_pInstance->SetData(TYPE_MAGMADAR, NOT_STARTED);
+    }
+
+    void Aggro(Unit* pWho)
+    {
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_MAGMADAR, IN_PROGRESS);
+    }
+
+	void JustDied(Unit* Killer)
+    {
+		if (m_pInstance)
+    		m_pInstance->SetData(TYPE_MAGMADAR, DONE);
     }
 
     void UpdateAI(const uint32 diff)

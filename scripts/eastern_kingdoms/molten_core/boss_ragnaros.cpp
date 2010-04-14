@@ -22,6 +22,7 @@ SDCategory: Molten Core
 EndScriptData */
 
 #include "precompiled.h"
+#include "molten_core.h"
 
 #define SAY_REINFORCEMENTS1         -1409013
 #define SAY_REINFORCEMENTS2         -1409014
@@ -87,9 +88,12 @@ struct MANGOS_DLL_DECL boss_ragnarosAI : public ScriptedAI
 {
     boss_ragnarosAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         SetCombatMovement(false);
         Reset();
     }
+
+    ScriptedInstance* m_pInstance;
 
     uint32 WrathOfRagnaros_Timer;
     uint32 HandOfRagnaros_Timer;
@@ -121,6 +125,9 @@ struct MANGOS_DLL_DECL boss_ragnarosAI : public ScriptedAI
 
         m_creature->CastSpell(m_creature,SPELL_MELTWEAPON,true);
         HasAura = true;
+
+        if (m_pInstance)
+			m_pInstance->SetData(TYPE_RAGNAROS, NOT_STARTED);
     }
 
     void KilledUnit(Unit* victim)
@@ -130,6 +137,24 @@ struct MANGOS_DLL_DECL boss_ragnarosAI : public ScriptedAI
 
         DoScriptText(SAY_KILL, m_creature);
     }
+
+    void JustDied(Unit* pKiller)
+    {
+         if (m_pInstance)
+			m_pInstance->SetData(TYPE_RAGNAROS, DONE);
+    }
+
+    void MoveInLineOfSight(Unit* pWho)
+	{
+		if (m_pInstance && m_pInstance->GetData(DATA_VAR_RAGNAROS_INTRO) == DONE && m_creature->IsWithinDistInMap(pWho, m_creature->GetAttackDistance(pWho)))
+			AttackStart(pWho);
+	}
+
+    void Aggro(Unit* pWho)
+	{
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_RAGNAROS, IN_PROGRESS);
+	}
 
     void UpdateAI(const uint32 diff)
     {

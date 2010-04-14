@@ -22,6 +22,7 @@ SDCategory: Molten Core
 EndScriptData */
 
 #include "precompiled.h"
+#include "molten_core.h"
 
 #define SPELL_IMPENDINGDOOM 19702
 #define SPELL_LUCIFRONCURSE 19703
@@ -29,7 +30,13 @@ EndScriptData */
 
 struct MANGOS_DLL_DECL boss_lucifronAI : public ScriptedAI
 {
-    boss_lucifronAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+    boss_lucifronAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
 
     uint32 ImpendingDoom_Timer;
     uint32 LucifronCurse_Timer;
@@ -40,6 +47,22 @@ struct MANGOS_DLL_DECL boss_lucifronAI : public ScriptedAI
         ImpendingDoom_Timer = 10000;                        //Initial cast after 10 seconds so the debuffs alternate
         LucifronCurse_Timer = 20000;                        //Initial cast after 20 seconds
         ShadowShock_Timer = 6000;                           //6 seconds
+
+        if (m_pInstance && m_pInstance->GetData(TYPE_LUCIFRON) != DONE)
+			m_pInstance->SetData(TYPE_LUCIFRON, NOT_STARTED);
+    }
+
+    void Aggro(Unit* pWho)
+	{
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_LUCIFRON, IN_PROGRESS);
+        m_creature->CallForHelp(20.0f);        
+    }
+
+	void JustDied(Unit* pKiller)
+    {
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_LUCIFRON, DONE);
     }
 
     void UpdateAI(const uint32 diff)

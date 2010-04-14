@@ -1,0 +1,1061 @@
+diff --git a/scripts/eastern_kingdoms/molten_core/boss_baron_geddon.cpp b/scripts/eastern_kingdoms/molten_core/boss_baron_geddon.cpp
+index 0280593..0dd5da6 100644
+--- a/scripts/eastern_kingdoms/molten_core/boss_baron_geddon.cpp
++++ b/scripts/eastern_kingdoms/molten_core/boss_baron_geddon.cpp
+@@ -22,6 +22,7 @@ SDCategory: Molten Core
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "molten_core.h"
+ 
+ #define EMOTE_SERVICE               -1409000
+ 
+@@ -32,8 +33,13 @@ EndScriptData */
+ 
+ struct MANGOS_DLL_DECL boss_baron_geddonAI : public ScriptedAI
+ {
+-    boss_baron_geddonAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_baron_geddonAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
+ 
++    ScriptedInstance* m_pInstance;
+     uint32 Inferno_Timer;
+     uint32 IgniteMana_Timer;
+     uint32 LivingBomb_Timer;
+@@ -43,8 +49,23 @@ struct MANGOS_DLL_DECL boss_baron_geddonAI : public ScriptedAI
+         Inferno_Timer = 45000;                              //These times are probably wrong
+         IgniteMana_Timer = 30000;
+         LivingBomb_Timer = 35000;
++
++        if (m_pInstance && m_pInstance->GetData(TYPE_GEDDON) != DONE)
++			m_pInstance->SetData(TYPE_GEDDON, NOT_STARTED);
+     }
+ 
++    void Aggro(Unit* pWho)
++	{
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_GEDDON, IN_PROGRESS);
++	}
++
++	void JustDied(Unit* pKiller)
++    {	
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_GEDDON, DONE);
++	}
++
+     void UpdateAI(const uint32 diff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+diff --git a/scripts/eastern_kingdoms/molten_core/boss_garr.cpp b/scripts/eastern_kingdoms/molten_core/boss_garr.cpp
+index e256b8b..23f2f4d 100644
+--- a/scripts/eastern_kingdoms/molten_core/boss_garr.cpp
++++ b/scripts/eastern_kingdoms/molten_core/boss_garr.cpp
+@@ -22,6 +22,7 @@ SDCategory: Molten Core
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "molten_core.h"
+ 
+ // Garr spells
+ #define SPELL_ANTIMAGICPULSE        19492
+@@ -34,7 +35,13 @@ EndScriptData */
+ 
+ struct MANGOS_DLL_DECL boss_garrAI : public ScriptedAI
+ {
+-    boss_garrAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_garrAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
+ 
+     uint32 AntiMagicPulse_Timer;
+     uint32 MagmaShackles_Timer;
+@@ -47,8 +54,23 @@ struct MANGOS_DLL_DECL boss_garrAI : public ScriptedAI
+         AntiMagicPulse_Timer = 25000;                       //These times are probably wrong
+         MagmaShackles_Timer = 15000;
+         CheckAdds_Timer = 2000;
++
++        if (m_pInstance && m_pInstance->GetData(TYPE_GARR) != DONE)
++			m_pInstance->SetData(TYPE_GARR, NOT_STARTED);
+     }
+ 
++    void Aggro(Unit* pWho)
++    {	
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_GARR, IN_PROGRESS);
++    }
++
++	void JustDied(Unit* pKiller)
++    {
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_GARR, DONE);
++	}
++
+     void UpdateAI(const uint32 diff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+diff --git a/scripts/eastern_kingdoms/molten_core/boss_gehennas.cpp b/scripts/eastern_kingdoms/molten_core/boss_gehennas.cpp
+index 7783310..a6c423b 100644
+--- a/scripts/eastern_kingdoms/molten_core/boss_gehennas.cpp
++++ b/scripts/eastern_kingdoms/molten_core/boss_gehennas.cpp
+@@ -22,6 +22,7 @@ SDCategory: Molten Core
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "molten_core.h"
+ 
+ #define SPELL_SHADOWBOLT            19728
+ #define SPELL_RAINOFFIRE            19717
+@@ -29,7 +30,13 @@ EndScriptData */
+ 
+ struct MANGOS_DLL_DECL boss_gehennasAI : public ScriptedAI
+ {
+-    boss_gehennasAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_gehennasAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
+ 
+     uint32 ShadowBolt_Timer;
+     uint32 RainOfFire_Timer;
+@@ -40,8 +47,24 @@ struct MANGOS_DLL_DECL boss_gehennasAI : public ScriptedAI
+         ShadowBolt_Timer = 6000;
+         RainOfFire_Timer = 10000;
+         GehennasCurse_Timer = 12000;
++
++        if (m_pInstance && m_pInstance->GetData(TYPE_GEHENNAS) != DONE)
++			m_pInstance->SetData(TYPE_GEHENNAS, NOT_STARTED);
+     }
+ 
++    void Aggro(Unit* pwho)
++	{
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_GEHENNAS, IN_PROGRESS);
++		m_creature->CallForHelp(50.0f);
++	}
++
++	void JustDied(Unit* pKiller)
++    {
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_GEHENNAS, DONE);
++	}
++
+     void UpdateAI(const uint32 diff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+diff --git a/scripts/eastern_kingdoms/molten_core/boss_golemagg.cpp b/scripts/eastern_kingdoms/molten_core/boss_golemagg.cpp
+index d71f45c..16d2781 100644
+--- a/scripts/eastern_kingdoms/molten_core/boss_golemagg.cpp
++++ b/scripts/eastern_kingdoms/molten_core/boss_golemagg.cpp
+@@ -62,6 +62,13 @@ struct MANGOS_DLL_DECL boss_golemaggAI : public ScriptedAI
+         m_creature->CastSpell(m_creature, SPELL_MAGMASPLASH, true);
+     }
+ 
++    void Aggro(Unit* pWho)
++    {	
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_GOLEMAGG, IN_PROGRESS);
++        m_creature->CallForHelp(30.0f);
++    }
++
+     void JustDied(Unit* pKiller)
+     {
+         if (m_pInstance)
+diff --git a/scripts/eastern_kingdoms/molten_core/boss_lucifron.cpp b/scripts/eastern_kingdoms/molten_core/boss_lucifron.cpp
+index 44dc42e..3956907 100644
+--- a/scripts/eastern_kingdoms/molten_core/boss_lucifron.cpp
++++ b/scripts/eastern_kingdoms/molten_core/boss_lucifron.cpp
+@@ -22,6 +22,7 @@ SDCategory: Molten Core
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "molten_core.h"
+ 
+ #define SPELL_IMPENDINGDOOM 19702
+ #define SPELL_LUCIFRONCURSE 19703
+@@ -29,7 +30,13 @@ EndScriptData */
+ 
+ struct MANGOS_DLL_DECL boss_lucifronAI : public ScriptedAI
+ {
+-    boss_lucifronAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_lucifronAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
+ 
+     uint32 ImpendingDoom_Timer;
+     uint32 LucifronCurse_Timer;
+@@ -40,6 +47,22 @@ struct MANGOS_DLL_DECL boss_lucifronAI : public ScriptedAI
+         ImpendingDoom_Timer = 10000;                        //Initial cast after 10 seconds so the debuffs alternate
+         LucifronCurse_Timer = 20000;                        //Initial cast after 20 seconds
+         ShadowShock_Timer = 6000;                           //6 seconds
++
++        if (m_pInstance && m_pInstance->GetData(TYPE_LUCIFRON) != DONE)
++			m_pInstance->SetData(TYPE_LUCIFRON, NOT_STARTED);
++    }
++
++    void Aggro(Unit* pWho)
++	{
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_LUCIFRON, IN_PROGRESS);
++        m_creature->CallForHelp(20.0f);        
++    }
++
++	void JustDied(Unit* pKiller)
++    {
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_LUCIFRON, DONE);
+     }
+ 
+     void UpdateAI(const uint32 diff)
+diff --git a/scripts/eastern_kingdoms/molten_core/boss_magmadar.cpp b/scripts/eastern_kingdoms/molten_core/boss_magmadar.cpp
+index 5c5ac09..6744437 100644
+--- a/scripts/eastern_kingdoms/molten_core/boss_magmadar.cpp
++++ b/scripts/eastern_kingdoms/molten_core/boss_magmadar.cpp
+@@ -22,6 +22,7 @@ SDCategory: Molten Core
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "molten_core.h"
+ 
+ enum
+ {
+@@ -36,7 +37,13 @@ enum
+ 
+ struct MANGOS_DLL_DECL boss_magmadarAI : public ScriptedAI
+ {
+-    boss_magmadarAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_magmadarAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
+ 
+     uint32 Frenzy_Timer;
+     uint32 Panic_Timer;
+@@ -49,6 +56,21 @@ struct MANGOS_DLL_DECL boss_magmadarAI : public ScriptedAI
+         Lavabomb_Timer = 12000;
+ 
+         m_creature->CastSpell(m_creature,SPELL_MAGMASPIT,true);
++
++        if (m_pInstance && m_pInstance->GetData(TYPE_MAGMADAR) != DONE)
++			m_pInstance->SetData(TYPE_MAGMADAR, NOT_STARTED);
++    }
++
++    void Aggro(Unit* pWho)
++    {
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_MAGMADAR, IN_PROGRESS);
++    }
++
++	void JustDied(Unit* Killer)
++    {
++		if (m_pInstance)
++    		m_pInstance->SetData(TYPE_MAGMADAR, DONE);
+     }
+ 
+     void UpdateAI(const uint32 diff)
+diff --git a/scripts/eastern_kingdoms/molten_core/boss_majordomo_executus.cpp b/scripts/eastern_kingdoms/molten_core/boss_majordomo_executus.cpp
+index 24cfb9d..d92dece 100644
+--- a/scripts/eastern_kingdoms/molten_core/boss_majordomo_executus.cpp
++++ b/scripts/eastern_kingdoms/molten_core/boss_majordomo_executus.cpp
+@@ -22,6 +22,9 @@ SDCategory: Molten Core
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "molten_core.h"
++
++#define GOSSIP_ITEM_DOMO   "Let me talk with your master!"
+ 
+ #define SAY_AGGRO           -1409003
+ #define SAY_SPAWN           -1409004
+@@ -33,7 +36,7 @@ EndScriptData */
+ #define SAY_ARRIVAL1_RAG    -1409009
+ #define SAY_ARRIVAL2_MAJ    -1409010
+ #define SAY_ARRIVAL3_RAG    -1409011
+-#define SAY_ARRIVAL5_RAG    -1409012
++#define SAY_ARRIVAL4_RAG    -1409012
+ 
+ #define SPAWN_RAG_X         838.51
+ #define SPAWN_RAG_Y         -829.84
+@@ -50,6 +53,41 @@ EndScriptData */
+ #define ENTRY_FLAMEWALKER_HEALER    11663
+ #define ENTRY_FLAMEWALKER_ELITE     11664
+ 
++enum
++{
++    FACTION_DARK_IRON_DWARVES	=	54,
++    FACTION_MONSTER				=	14,
++    NPC_FLAMEWAKER_PRIEST		=	11663,
++    NPC_FLAMEWAKER_ELITE		=	11664,
++
++    //Priest spells
++    SPELL_GREATER_HELL			=	29564,      // Not Yet Implemented
++    SPELL_SHADOW_BOLT           =   21077,      // Not Yet Implemented
++
++    //Elite spells
++    SPELL_FIRE_BLAST			=	20623,      // Not Yet Implemented
++
++    //For Intro Handling
++    SPELL_VISUAL_TELEPORT       =   19484,
++    SPELL_BLAST_WAVE			=	20229,      // Also used by Flamewaker Elites!
++
++    SPELL_RAGE_MERGE			=	20568,
++    SPELL_ELEMENTAL_FIRE		=	19773
++};
++
++//Orientation	= 3.541
++float PositionOfAdds[8][3]=
++{	
++    {760.444f, -1183.175f, -119.181f},		//First Elite, right Side
++    {753.009f, -1198.237f, -118.346f},		//Second Elite, right Side
++    {746.649f, -1154.512f, -119.181f},		//Third Elite, left Side		
++    {729.771f, -1153.243f, -119.181f},		//Fourth Elite, left side
++    {761.088f, -1174.606f, -119.181f},		//First Priest, right Side
++    {756.907f, -1191.007f, -119.181f},		//Second Priest, right Side
++    {753.748f, -1159.354f, -119.181f},		//Third Priest , left Side
++    {738.322f, -1152.389f, -119.181f},		//Fourth Pirest, left Side
++};
++
+ struct MANGOS_DLL_DECL boss_majordomoAI : public ScriptedAI
+ {
+     boss_majordomoAI(Creature* pCreature) : ScriptedAI(pCreature)
+@@ -60,15 +98,53 @@ struct MANGOS_DLL_DECL boss_majordomoAI : public ScriptedAI
+ 
+     ScriptedInstance* m_pInstance;
+ 
+-    uint32 MagicReflection_Timer;
+-    uint32 DamageReflection_Timer;
+-    uint32 Blastwave_Timer;
++    uint32 uiMagicReflection_Timer;
++    uint32 uiDamageReflection_Timer;
++    uint32 uiBlastwave_Timer;
++    uint32 uiTeleport_Timer;
++
++    Creature* pAdds[8]; //First four elite, second four priests
++
++    Creature* pRagnaros; // for intro handling
++
++    uint32 uiCheckFlamewaker_Timer;
++
++    uint32 uiIntro_Timer;
++    uint8 uiIntroCounter;
++    uint8 uiWPdone;
++
++    bool bSaySpawn;
++    bool bIntroDone;
++    bool bMoving;
++    bool bSetVisible;
+ 
+     void Reset()
+     {
+-        MagicReflection_Timer =  30000;                     //Damage reflection first so we alternate
+-        DamageReflection_Timer = 15000;
+-        Blastwave_Timer = 10000;
++        if (!m_pInstance)
++            return;
++
++        if (m_pInstance->GetData(TYPE_MAJORDOMO) != SPECIAL)
++        {
++            m_pInstance->SetData(TYPE_MAJORDOMO, NOT_STARTED);
++
++            uiMagicReflection_Timer =  30000;
++            uiDamageReflection_Timer = 15000;
++            uiBlastwave_Timer = 10000;
++            uiTeleport_Timer = 20000;
++
++            uiCheckFlamewaker_Timer = 2000;
++            bSaySpawn = false;
++            bSetVisible = false;
++        }
++        else
++        {
++            //Intro handling
++            uiIntro_Timer = 36000;
++            uiWPdone = 0;
++
++            bIntroDone = false;
++            bMoving = false;
++        }
+     }
+ 
+     void KilledUnit(Unit* victim)
+@@ -79,60 +155,329 @@ struct MANGOS_DLL_DECL boss_majordomoAI : public ScriptedAI
+         DoScriptText(SAY_SLAY, m_creature);
+     }
+ 
+-    void Aggro(Unit *who)
++    void BeginEvent(Player* pTarget)
+     {
+-        DoScriptText(SAY_AGGRO, m_creature);
++        uiIntroCounter = 2;
+     }
+ 
+-    void UpdateAI(const uint32 diff)
++    void Aggro(Unit *pWho)
+     {
+-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++
++        for(uint8 i = 0; i < 8 ; ++i)
++        {
++            if (i < 4)
++                pAdds[i] = m_creature->SummonCreature(NPC_FLAMEWAKER_ELITE,PositionOfAdds[i][0],PositionOfAdds[i][1],PositionOfAdds[i][2],3.541f,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,1200000);
++            else
++                pAdds[i] = m_creature->SummonCreature(NPC_FLAMEWAKER_PRIEST,PositionOfAdds[i][0],PositionOfAdds[i][1],PositionOfAdds[i][2],3.541f,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,1200000);
++            pAdds[i]->SetInCombatWithZone();
++        }
++        m_pInstance->SetData(DATA_DOMO_ADDS_SPAWNED,DONE);
++    }
++
++    void DamageTaken(Unit* pDoneBy, uint32& uiDamage)
++    {
++        //reset the health points of majordomo, when his health is too low, because he can't get defeated
++        if ((m_creature->GetHealth() - uiDamage)*100 / m_creature->GetMaxHealth() <= 30)
++            m_creature->SetHealth(m_creature->GetHealth());
++    } 
++
++    void MovementInform(uint32 uiType, uint32 uiWaypointId)
++    {
++        if (uiType != POINT_MOTION_TYPE)
+             return;
+ 
+-        //Cast Ageis if less than 50% hp
+-        if (m_creature->GetHealthPercent() < 50.0f)
++        if (uiWaypointId == 1)
++        {
++            DoCast(m_creature,SPELL_SUMMON_RAGNAROS);
++            uiWPdone = 1;
++            bMoving = false;
++        }
++
++        else if (uiWaypointId == 2)
++        {
++            uiWPdone = 2;
++            bMoving = false;
++        }
++    }
++
++    bool AddsAreDead()
++    {
++        for(uint8 i = 0; i < 8 ; ++i)
+         {
+-            DoCastSpellIfCan(m_creature,SPELL_AEGIS);
++            if (pAdds[i] && pAdds[i]->isAlive())
++                return false;
+         }
++        return true;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_pInstance || m_creature->GetVisibility() == VISIBILITY_OFF)
++            return;
++
++        if (!bIntroDone)
++        {
++            switch(uiIntroCounter)
++            {
++            case 1:
++
++                if (uiIntro_Timer < uiDiff && m_pInstance->GetData(DATA_DOMO_PORTED) != DONE)
++                {
++                    DoCast(m_creature,SPELL_VISUAL_TELEPORT);
++                    m_creature->SetVisibility(VISIBILITY_OFF);
++
++                    // "teleport" Majordomo to Ragnaros - this has to be handeld in that way
++                    // because nothing will happen or the server will crash, when we relocate him
++                    // when the grid isn't load at the moment
++                    Creature* pDomo = m_creature->SummonCreature(12018, 854.975f, -827.593f, -228.504f, 4.99008f, TEMPSUMMON_TIMED_DESPAWN,3600000);
+ 
+-        //MagicReflection_Timer
+-        //        if (MagicReflection_Timer < diff)
+-        //        {
+-        //            DoCastSpellIfCan(m_creature, SPELL_MAGICREFLECTION);
++                    /// make him friendly and talkable
++                    pDomo->setFaction(35);
++                    pDomo->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
++                    pDomo->SetVisibility(VISIBILITY_ON);
++                    m_pInstance->SetData(DATA_DOMO_PORTED, DONE);
++                }
++                else 
++                    uiIntro_Timer -= uiDiff;
+ 
+-        //60 seconds until we should cast this agian
+-        //            MagicReflection_Timer = 30000;
+-        //        }else MagicReflection_Timer -= diff;
++                break;
+ 
+-        //DamageReflection_Timer
+-        //        if (DamageReflection_Timer < diff)
+-        //        {
+-        //            DoCastSpellIfCan(m_creature, SPELL_DAMAGEREFLECTION);
++            case 2:
++                if (!bMoving && uiWPdone == 0 )
++                {
++                    m_creature->GetMotionMaster()->Clear();
++                    m_creature->GetMotionMaster()->MovePoint(1,851.266f,-816.847f,-229.358f);
++                    bMoving = true;
++                }
+ 
+-        //60 seconds until we should cast this agian
+-        //            DamageReflection_Timer = 30000;
+-        //        }else DamageReflection_Timer -= diff;
++                if (uiWPdone == 1)
++                {
++                    m_creature->GetMotionMaster()->Clear();
++                    m_creature->GetMotionMaster()->MovePoint(2,843.145f,-813.479f,-230.067f);
++                    bMoving = true;
++                    ++uiIntroCounter;
++                }
++                break;
+ 
+-        //Blastwave_Timer
+-        if (Blastwave_Timer < diff)
++            case 3:
++                if (uiIntro_Timer < uiDiff)
++                {
++                    DoScriptText(SAY_SUMMON_MAJ, m_creature);
++                    pRagnaros = m_creature->SummonCreature(NPC_RAGNAROS, 839.380066f ,-833.359558f, -229.358f, 1.380336f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,7200000);
++                    pRagnaros->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                    pRagnaros->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                    ++uiIntroCounter;
++                    uiIntro_Timer = 15000;
++                }
++                else 
++                    uiIntro_Timer -= uiDiff;
++
++                break;
++
++            case 4:
++                if (uiIntro_Timer < uiDiff)
++                {   
++                    if (pRagnaros)
++                    {
++                        pRagnaros->SetVisibility(VISIBILITY_ON);
++                        pRagnaros->CastSpell(pRagnaros,SPELL_RAGE_MERGE,false);
++                    }
++                    ++uiIntroCounter;
++                    uiIntro_Timer = 5000;
++                }
++                else 
++                    uiIntro_Timer -= uiDiff;
++                break;
++
++            case 5:
++                if (uiIntro_Timer < uiDiff)
++                {
++                    if (pRagnaros)
++                        DoScriptText(SAY_ARRIVAL1_RAG, pRagnaros);
++
++                    ++uiIntroCounter;
++                    uiIntro_Timer = 17000;
++                }
++                else 
++                    uiIntro_Timer -=uiDiff;
++                break;
++
++            case 6:
++                if (uiIntro_Timer < uiDiff)
++                {
++                    DoScriptText(SAY_ARRIVAL2_MAJ, m_creature);
++                    ++uiIntroCounter;
++                    uiIntro_Timer = 10000;
++                }
++                else 
++                    uiIntro_Timer -= uiDiff;
++
++                break;
++
++            case 7:
++                if (uiIntro_Timer < uiDiff)
++                {   
++                    if (pRagnaros)
++                        DoScriptText(SAY_ARRIVAL3_RAG, pRagnaros);
++
++                    ++uiIntroCounter;
++                    uiIntro_Timer = 22000;
++                }
++                else 
++                    uiIntro_Timer -= uiDiff;
++                break;
++
++            case 8:
++                if (uiIntro_Timer < uiDiff)
++                {
++                    DoScriptText(SAY_ARRIVAL4_RAG, pRagnaros);
++                    pRagnaros->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                    pRagnaros->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                    m_pInstance->SetData(DATA_VAR_RAGNAROS_INTRO,DONE);
++                    bIntroDone = true;
++
++                    //kill majordomo
++                    if (pRagnaros)
++                        pRagnaros->CastSpell(m_creature,SPELL_ELEMENTAL_FIRE,false);
++
++                    ++uiIntroCounter;
++                    uiIntro_Timer = 6000;
++                }
++                else 
++                    uiIntro_Timer -= uiDiff;
++                break;
++
++            case 9:
++                if (uiIntro_Timer < uiDiff)
++                {
++                    DoScriptText(SAY_ARRIVAL4_RAG, pRagnaros);
++                    pRagnaros->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                    pRagnaros->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                    m_pInstance->SetData(DATA_VAR_RAGNAROS_INTRO,DONE);
++                    bIntroDone = true;
++
++                }
++                else 
++                    uiIntro_Timer -= uiDiff;
++            }
++        }
++
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() /*|| m_pInstance->GetData(TYPE_MAJORDOMO) == SPECIAL*/)
++            return;
++
++        if (uiCheckFlamewaker_Timer < uiDiff)
+         {
+-            DoCastSpellIfCan(m_creature->getVictim(),SPELL_BLASTWAVE);
+-            Blastwave_Timer = 10000;
+-        }else Blastwave_Timer -= diff;
++            if (AddsAreDead())
++            {
++                m_pInstance->SetData(TYPE_MAJORDOMO, SPECIAL);
++
++                uiCheckFlamewaker_Timer = 600000;
++
++                DoScriptText(SAY_DEFEAT, m_creature);
++                uiIntroCounter = 1;
++
++                EnterEvadeMode();
++                m_creature->setFaction(35);
++            }
++            uiCheckFlamewaker_Timer = 2000;
++        }
++        else 
++            uiCheckFlamewaker_Timer -= uiDiff;
++
++        if (m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 50)        
++            DoCast(m_creature,SPELL_AEGIS);        
++
++        if (uiMagicReflection_Timer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_MAGIC_REFLECTION);
++            /*for(uint8 i = 0 ; i < 8 ; ++i)
++            {
++            if (pAdds[i] && pAdds[i]->isAlive())
++            DoCast(pAdds[i],SPELL_MAGIC_REFLECTION);
++            }*/
++            uiMagicReflection_Timer = 30000;
++        }
++        else 
++            uiMagicReflection_Timer -= uiDiff;
++
++        if (uiDamageReflection_Timer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_DAMAGE_REFLECTION);
++            /*for(uint8 i = 0 ; i < 8 ; ++i)
++            {
++            if( pAdds[i] && pAdds[i]->isAlive())
++            DoCast(pAdds[i],SPELL_DAMAGE_REFLECTION);
++            }*/
++            uiDamageReflection_Timer = 30000;
++        }
++        else 
++            uiDamageReflection_Timer -= uiDiff;
++
++        if (uiBlastwave_Timer < uiDiff)
++        {
++            DoCast(m_creature,SPELL_BLAST_WAVE);
++
++            uiBlastwave_Timer = 10000;
++        }
++        else 
++            uiBlastwave_Timer -= uiDiff;
++
++        if (uiTeleport_Timer < uiDiff)
++        {
++            Unit* pTarget = NULL;
++
++            if(rand()%2 == 1)
++                m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(), 80);
++            else
++                pTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
++
++            if (pTarget)
++            {
++                //DoCast(pTarget,SPELL_TELEPORT_TO_COALS);
++                DoScriptText(SAY_SPECIAL,m_creature);
++                //while on the fire ground, player gets randomly 2000-3000 damage
++                DoCast(pTarget,SPELL_FIRE_BLAST);
++            }
++
++            uiTeleport_Timer = 20000 + rand()%5000;
++        }
++        else 
++            uiTeleport_Timer -= uiDiff;
+ 
+         DoMeleeAttackIfReady();
+     }
+ };
++
+ CreatureAI* GetAI_boss_majordomo(Creature* pCreature)
+ {
+     return new boss_majordomoAI(pCreature);
+ }
+ 
++bool GossipHello_boss_majordomo(Player* pPlayer, Creature* pCreature)
++{
++    pPlayer->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_DOMO , GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
++    pPlayer->SEND_GOSSIP_MENU(68,pCreature->GetGUID());
++    return true;
++}
++
++bool GossipSelect_boss_majordomo(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction )
++{
++    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
++    {
++        pPlayer->CLOSE_GOSSIP_MENU();
++        pCreature->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
++        ((boss_majordomoAI*)pCreature->AI())->BeginEvent(pPlayer);
++    }
++    return true;
++}
++
+ void AddSC_boss_majordomo()
+ {
+     Script *newscript;
+     newscript = new Script;
+     newscript->Name = "boss_majordomo";
+     newscript->GetAI = &GetAI_boss_majordomo;
++    newscript->pGossipHello = &GossipHello_boss_majordomo;
++    newscript->pGossipSelect = &GossipSelect_boss_majordomo;
+     newscript->RegisterSelf();
+ }
+diff --git a/scripts/eastern_kingdoms/molten_core/boss_ragnaros.cpp b/scripts/eastern_kingdoms/molten_core/boss_ragnaros.cpp
+index 5b24169..073a961 100644
+--- a/scripts/eastern_kingdoms/molten_core/boss_ragnaros.cpp
++++ b/scripts/eastern_kingdoms/molten_core/boss_ragnaros.cpp
+@@ -22,6 +22,7 @@ SDCategory: Molten Core
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "molten_core.h"
+ 
+ #define SAY_REINFORCEMENTS1         -1409013
+ #define SAY_REINFORCEMENTS2         -1409014
+@@ -87,10 +88,13 @@ struct MANGOS_DLL_DECL boss_ragnarosAI : public ScriptedAI
+ {
+     boss_ragnarosAI(Creature* pCreature) : ScriptedAI(pCreature)
+     {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+         SetCombatMovement(false);
+         Reset();
+     }
+ 
++    ScriptedInstance* m_pInstance;
++
+     uint32 WrathOfRagnaros_Timer;
+     uint32 HandOfRagnaros_Timer;
+     uint32 LavaBurst_Timer;
+@@ -121,6 +125,9 @@ struct MANGOS_DLL_DECL boss_ragnarosAI : public ScriptedAI
+ 
+         m_creature->CastSpell(m_creature,SPELL_MELTWEAPON,true);
+         HasAura = true;
++
++        if (m_pInstance)
++			m_pInstance->SetData(TYPE_RAGNAROS, NOT_STARTED);
+     }
+ 
+     void KilledUnit(Unit* victim)
+@@ -131,6 +138,24 @@ struct MANGOS_DLL_DECL boss_ragnarosAI : public ScriptedAI
+         DoScriptText(SAY_KILL, m_creature);
+     }
+ 
++    void JustDied(Unit* pKiller)
++    {
++         if (m_pInstance)
++			m_pInstance->SetData(TYPE_RAGNAROS, DONE);
++    }
++
++    void MoveInLineOfSight(Unit* pWho)
++	{
++		if (m_pInstance && m_pInstance->GetData(DATA_VAR_RAGNAROS_INTRO) == DONE && m_creature->IsWithinDistInMap(pWho, m_creature->GetAttackDistance(pWho)))
++			AttackStart(pWho);
++	}
++
++    void Aggro(Unit* pWho)
++	{
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_RAGNAROS, IN_PROGRESS);
++	}
++
+     void UpdateAI(const uint32 diff)
+     {
+         if (WasBanished && Attack_Timer < diff)
+diff --git a/scripts/eastern_kingdoms/molten_core/boss_shazzrah.cpp b/scripts/eastern_kingdoms/molten_core/boss_shazzrah.cpp
+index 428a142..14f9350 100644
+--- a/scripts/eastern_kingdoms/molten_core/boss_shazzrah.cpp
++++ b/scripts/eastern_kingdoms/molten_core/boss_shazzrah.cpp
+@@ -22,6 +22,7 @@ SDCategory: Molten Core
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "molten_core.h"
+ 
+ enum
+ {
+@@ -34,7 +35,13 @@ enum
+ 
+ struct MANGOS_DLL_DECL boss_shazzrahAI : public ScriptedAI
+ {
+-    boss_shazzrahAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_shazzrahAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
+ 
+     uint32 ArcaneExplosion_Timer;
+     uint32 ShazzrahCurse_Timer;
+@@ -49,8 +56,23 @@ struct MANGOS_DLL_DECL boss_shazzrahAI : public ScriptedAI
+         DeadenMagic_Timer = 24000;
+         Countspell_Timer = 15000;
+         Blink_Timer = 30000;
++
++        if (m_pInstance)
++			m_pInstance->SetData(TYPE_SHAZZRAH, NOT_STARTED);
+     }
+ 
++    void Aggro(Unit* pWho)
++    {
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_SHAZZRAH, IN_PROGRESS);
++    }
++
++	void JustDied(Unit* pKiller)
++    {
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_SHAZZRAH, DONE);
++	}
++
+     void UpdateAI(const uint32 diff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+diff --git a/scripts/eastern_kingdoms/molten_core/boss_sulfuron_harbinger.cpp b/scripts/eastern_kingdoms/molten_core/boss_sulfuron_harbinger.cpp
+index 732a6e8..a59bfe1 100644
+--- a/scripts/eastern_kingdoms/molten_core/boss_sulfuron_harbinger.cpp
++++ b/scripts/eastern_kingdoms/molten_core/boss_sulfuron_harbinger.cpp
+@@ -57,8 +57,23 @@ struct MANGOS_DLL_DECL boss_sulfuronAI : public ScriptedAI
+         Inspire_Timer = 13000;
+         Knockdown_Timer = 6000;
+         Flamespear_Timer = 2000;
++
++        if (m_pInstance && m_pInstance->GetData(TYPE_SULFURON) != DONE)
++			m_pInstance->SetData(TYPE_SULFURON, NOT_STARTED);
+     }
+ 
++    void Aggro(Unit* pWho)
++	{
++		if(m_pInstance)
++			m_pInstance->SetData(TYPE_SULFURON, IN_PROGRESS);
++	}
++
++	void JustDied(Unit* pKiller)
++    {
++		if (m_pInstance)
++			m_pInstance->SetData(TYPE_SULFURON, DONE);
++	}
++
+     void UpdateAI(const uint32 diff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+diff --git a/scripts/eastern_kingdoms/molten_core/instance_molten_core.cpp b/scripts/eastern_kingdoms/molten_core/instance_molten_core.cpp
+index 70b9fa6..027781f 100644
+--- a/scripts/eastern_kingdoms/molten_core/instance_molten_core.cpp
++++ b/scripts/eastern_kingdoms/molten_core/instance_molten_core.cpp
+@@ -34,6 +34,11 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
+     uint64 m_uiLucifronGUID, m_uiMagmadarGUID, m_uiGehennasGUID, m_uiGarrGUID, m_uiGeddonGUID, m_uiShazzrahGUID, m_uiSulfuronGUID, m_uiGolemaggGUID, m_uiMajorDomoGUID, m_uiRagnarosGUID, m_uiFlamewakerPriestGUID;
+     uint64 m_uiRuneKoroGUID, m_uiRuneZethGUID, m_uiRuneMazjGUID, m_uiRuneTheriGUID, m_uiRuneBlazGUID, m_uiRuneKressGUID, m_uiRuneMohnGUID, m_uiFirelordCacheGUID;
+ 
++    uint32 m_uiVarRagnarosIntro;
++	uint32 m_uiDomoPorted;
++	uint32 m_uiDomosAddsSpawned;
++	uint32 m_uiBossesAreDead;
++
+     void Initialize()
+     {
+         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+@@ -58,6 +63,11 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
+         m_uiRuneKressGUID = 0;
+         m_uiRuneMohnGUID = 0;
+ 
++        m_uiVarRagnarosIntro = 0;
++		m_uiDomosAddsSpawned = 0;
++		m_uiDomoPorted		= 0;
++		m_uiBossesAreDead	= 0;
++
+         m_uiFirelordCacheGUID = 0;
+     }
+ 
+@@ -91,7 +101,7 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
+             case 176957:                                    //Gehennas
+                 m_uiRuneMohnGUID = pGo->GetGUID();
+                 break;
+-            case 179703:
++            case GO_CACHE_OF_THE_FIRE_LORD:
+                 m_uiFirelordCacheGUID = pGo->GetGUID();     //majordomo event chest
+                 break;
+         }
+@@ -127,9 +137,13 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
+                 break;
+             case NPC_DOMO:
+                 m_uiMajorDomoGUID = pCreature->GetGUID();
++                // Implement this when save is properly done
++                //pCreature->SetVisibility(VISIBILITY_OFF);
++                //pCreature->setFaction(35);
+                 break;
+             case NPC_RAGNAROS:
+                 m_uiRagnarosGUID = pCreature->GetGUID();
++                pCreature->SetVisibility(VISIBILITY_OFF);
+                 break;
+             case NPC_FLAMEWAKERPRIEST:
+                 m_uiFlamewakerPriestGUID = pCreature->GetGUID();
+@@ -173,8 +187,33 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
+             case TYPE_RAGNAROS:
+                 m_auiEncounter[9] = uiData;
+                 break;
++            case DATA_DOMO_ADDS_SPAWNED:
++				m_uiDomosAddsSpawned = uiData;
++				break;
++			case DATA_DOMO_PORTED:
++				m_uiDomoPorted = uiData;
++				if(uiData == DONE)
++					DoRespawnGameObject(m_uiFirelordCacheGUID);
++				break;
++			case DATA_VAR_RAGNAROS_INTRO:
++				m_uiVarRagnarosIntro = uiData;
++				break;
+         }
+ 
++        if (CanSpawnMajorDomo() && m_uiBossesAreDead != DONE)
++		{
++			debug_log("SD2 : Majordomo was summoned!");
++
++			Creature* pDomo = instance->GetCreature(m_uiMajorDomoGUID);
++			if (pDomo && m_uiDomoPorted != DONE)
++            {
++				pDomo->SetVisibility(VISIBILITY_ON);
++                pDomo->setFaction(14);
++            }
++
++			m_uiBossesAreDead = DONE;
++		}
++
+         if (uiData == DONE)
+         {
+             OUT_SAVE_INST_DATA;
+@@ -183,7 +222,7 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
+             saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
+                 << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " "
+                 << m_auiEncounter[6] << " " << m_auiEncounter[7] << " " << m_auiEncounter[8] << " "
+-                << m_auiEncounter[9];
++                << m_auiEncounter[9] << " " << m_uiDomoPorted	 << " ";
+ 
+             strInstData = saveStream.str();
+ 
+@@ -227,6 +266,14 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
+                 return m_auiEncounter[8];
+             case TYPE_RAGNAROS:
+                 return m_auiEncounter[9];
++            case DATA_DOMO_ADDS_SPAWNED:
++				return m_uiDomosAddsSpawned;
++			case DATA_DOMO_PORTED:
++				return m_uiDomoPorted;
++			case DATA_VAR_RAGNAROS_INTRO:
++				return m_uiVarRagnarosIntro;
++			case DATA_BOSSES_ARE_DEAD:
++				return m_uiBossesAreDead;
+         }
+         return 0;
+     }
+@@ -262,7 +309,7 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
+ 
+         loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3]
+             >> m_auiEncounter[4] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7]
+-            >> m_auiEncounter[8] >> m_auiEncounter[9];
++            >> m_auiEncounter[8] >> m_auiEncounter[9] >> m_uiDomoPorted;
+ 
+         for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
+             if (m_auiEncounter[i] == IN_PROGRESS)           // Do not load an encounter as "In Progress" - reset it instead.
+diff --git a/scripts/eastern_kingdoms/molten_core/molten_core.h b/scripts/eastern_kingdoms/molten_core/molten_core.h
+index f7ed5e9..8a294bb 100644
+--- a/scripts/eastern_kingdoms/molten_core/molten_core.h
++++ b/scripts/eastern_kingdoms/molten_core/molten_core.h
+@@ -37,6 +37,13 @@ enum
+     DATA_GARR               = 13,
+     DATA_MAJORDOMO          = 14,
+ 
++    GO_CACHE_OF_THE_FIRE_LORD		= 179703,
++
++    DATA_BOSSES_ARE_DEAD			= 15,
++	DATA_VAR_RAGNAROS_INTRO			= 16,
++	DATA_DOMO_ADDS_SPAWNED			= 17,
++	DATA_DOMO_PORTED				= 18,
++
+     DATA_BOSSES_DEAD_CHECK  = 15
+ };
+ 
+diff --git a/sql/Custom_Updates/Mangos/EasternKingdoms/MoltenCore_Mangos.sql b/sql/Custom_Updates/Mangos/EasternKingdoms/MoltenCore_Mangos.sql
+new file mode 100644
+index 0000000..1e9bb97
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/EasternKingdoms/MoltenCore_Mangos.sql
+@@ -0,0 +1,26 @@
++/* MOLTEN CORE */
++Update `gameobject` set `spawntimesecs` = -604800 where `id` = 179703;
++-- Ragnaros shouldn't be spawned
++update `creature` set `spawnMask` = 0 where `id` in (11502);
++Update `areatrigger_teleport` set `required_quest_done` = 0 where `id` in (2886, 3529, 3528);
++
++/* LOOT CHESTS */
++update gameobject_template set faction = 0, data15 = 1 where entry in 
++-- Halls of Stone
++(190586, 193996, 
++-- Culling of Stratholme
++190663, 193597, 
++-- Naxxramas
++181366, 193426,
++-- Hellfire Rampants
++185168, 185169,
++-- Molten Core
++179703,
++-- Halls of Reflection
++202212, 201710, 202337, 202336,
++-- Trial of the Champion
++195709, 195710, 195374, 195375, 195323, 195324,
++-- Trial of the Crusader
++195631, 195632, 195633, 195635, 195665, 195666, 195667, 195668, 195669, 195670, 195671, 195672,
++-- Ulduar
++195046, 195047, 194307, 194308, 194200, 194201, 194312, 194314, 194326, 194331, 194749, 194956, 194822, 194821);
+\ No newline at end of file

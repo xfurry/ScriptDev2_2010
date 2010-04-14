@@ -34,6 +34,11 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
     uint64 m_uiLucifronGUID, m_uiMagmadarGUID, m_uiGehennasGUID, m_uiGarrGUID, m_uiGeddonGUID, m_uiShazzrahGUID, m_uiSulfuronGUID, m_uiGolemaggGUID, m_uiMajorDomoGUID, m_uiRagnarosGUID, m_uiFlamewakerPriestGUID;
     uint64 m_uiRuneKoroGUID, m_uiRuneZethGUID, m_uiRuneMazjGUID, m_uiRuneTheriGUID, m_uiRuneBlazGUID, m_uiRuneKressGUID, m_uiRuneMohnGUID, m_uiFirelordCacheGUID;
 
+    uint32 m_uiVarRagnarosIntro;
+	uint32 m_uiDomoPorted;
+	uint32 m_uiDomosAddsSpawned;
+	uint32 m_uiBossesAreDead;
+
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
@@ -57,6 +62,11 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
         m_uiRuneBlazGUID = 0;
         m_uiRuneKressGUID = 0;
         m_uiRuneMohnGUID = 0;
+
+        m_uiVarRagnarosIntro = 0;
+		m_uiDomosAddsSpawned = 0;
+		m_uiDomoPorted		= 0;
+		m_uiBossesAreDead	= 0;
 
         m_uiFirelordCacheGUID = 0;
     }
@@ -91,7 +101,7 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
             case 176957:                                    //Gehennas
                 m_uiRuneMohnGUID = pGo->GetGUID();
                 break;
-            case 179703:
+            case GO_CACHE_OF_THE_FIRE_LORD:
                 m_uiFirelordCacheGUID = pGo->GetGUID();     //majordomo event chest
                 break;
         }
@@ -127,9 +137,13 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
                 break;
             case NPC_DOMO:
                 m_uiMajorDomoGUID = pCreature->GetGUID();
+                // Implement this when save is properly done
+                //pCreature->SetVisibility(VISIBILITY_OFF);
+                //pCreature->setFaction(35);
                 break;
             case NPC_RAGNAROS:
                 m_uiRagnarosGUID = pCreature->GetGUID();
+                pCreature->SetVisibility(VISIBILITY_OFF);
                 break;
             case NPC_FLAMEWAKERPRIEST:
                 m_uiFlamewakerPriestGUID = pCreature->GetGUID();
@@ -173,7 +187,32 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
             case TYPE_RAGNAROS:
                 m_auiEncounter[9] = uiData;
                 break;
+            case DATA_DOMO_ADDS_SPAWNED:
+				m_uiDomosAddsSpawned = uiData;
+				break;
+			case DATA_DOMO_PORTED:
+				m_uiDomoPorted = uiData;
+				if(uiData == DONE)
+					DoRespawnGameObject(m_uiFirelordCacheGUID);
+				break;
+			case DATA_VAR_RAGNAROS_INTRO:
+				m_uiVarRagnarosIntro = uiData;
+				break;
         }
+
+        if (CanSpawnMajorDomo() && m_uiBossesAreDead != DONE)
+		{
+			debug_log("SD2 : Majordomo was summoned!");
+
+			Creature* pDomo = instance->GetCreature(m_uiMajorDomoGUID);
+			if (pDomo && m_uiDomoPorted != DONE)
+            {
+				pDomo->SetVisibility(VISIBILITY_ON);
+                pDomo->setFaction(14);
+            }
+
+			m_uiBossesAreDead = DONE;
+		}
 
         if (uiData == DONE)
         {
@@ -183,7 +222,7 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
             saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
                 << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " "
                 << m_auiEncounter[6] << " " << m_auiEncounter[7] << " " << m_auiEncounter[8] << " "
-                << m_auiEncounter[9];
+                << m_auiEncounter[9] << " " << m_uiDomoPorted	 << " ";
 
             strInstData = saveStream.str();
 
@@ -227,6 +266,14 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
                 return m_auiEncounter[8];
             case TYPE_RAGNAROS:
                 return m_auiEncounter[9];
+            case DATA_DOMO_ADDS_SPAWNED:
+				return m_uiDomosAddsSpawned;
+			case DATA_DOMO_PORTED:
+				return m_uiDomoPorted;
+			case DATA_VAR_RAGNAROS_INTRO:
+				return m_uiVarRagnarosIntro;
+			case DATA_BOSSES_ARE_DEAD:
+				return m_uiBossesAreDead;
         }
         return 0;
     }
@@ -262,7 +309,7 @@ struct MANGOS_DLL_DECL instance_molten_core : public ScriptedInstance
 
         loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3]
             >> m_auiEncounter[4] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7]
-            >> m_auiEncounter[8] >> m_auiEncounter[9];
+            >> m_auiEncounter[8] >> m_auiEncounter[9] >> m_uiDomoPorted;
 
         for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
             if (m_auiEncounter[i] == IN_PROGRESS)           // Do not load an encounter as "In Progress" - reset it instead.
