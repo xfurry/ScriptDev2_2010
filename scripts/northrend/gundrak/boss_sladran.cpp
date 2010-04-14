@@ -53,7 +53,9 @@ enum
     NPC_SLADRAN_CONSTRICTOR   = 29713,
     NPC_SLADRAN_VIPER         = 29680,
     NPC_SNAKE_WRAP            = 29742,
-    NPC_SLADRAN_SUMMON_TARGET = 29682
+    NPC_SLADRAN_SUMMON_TARGET = 29682,
+
+    ACHIEV_SNAKES               = 2058,
 };
 
 /*######

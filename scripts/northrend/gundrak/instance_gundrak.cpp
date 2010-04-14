@@ -24,6 +24,16 @@ EndScriptData */
 #include "precompiled.h"
 #include "gundrak.h"
 
+enum WaterEventState
+{
+    WATERSTATE_NONE     = 0,
+    WATERSTATE_FRENZY   = 1,
+    WATERSTATE_SCALDING = 2
+};
+
+#define SPELL_SCALDINGWATER 37284
+#define MOB_DRAKKARI_FRENZY 29834
+
 bool GOHello_go_gundrak_altar(Player* pPlayer, GameObject* pGo)
 {
     ScriptedInstance* pInstance = (ScriptedInstance*)pGo->GetInstanceData();
@@ -57,12 +67,20 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
     uint64 m_uiSnakeKeyGUID;
     uint64 m_uiMammothKeyGUID;
     uint64 m_uiTrollKeyGUID;
+    uint64 m_uiGaldarahKeyGUID;
     uint64 m_uiAltarOfSladranGUID;
     uint64 m_uiAltarOfMoorabiGUID;
     uint64 m_uiAltarOfColossusGUID;
     uint64 m_uiBridgeGUID;
+    uint64 m_uiCollisionGUID;
 
     uint64 m_uiSladranGUID;
+    uint64 m_uiColossusGUID;
+
+    uint32 WaterCheckTimer;
+    uint32 FrenzySpawnTimer;
+    uint32 Water;
+    bool DoSpawnFrenzy;
 
     void Initialize()
     {
@@ -79,9 +97,17 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         m_uiSnakeKeyGUID          = 0;
         m_uiTrollKeyGUID          = 0;
         m_uiMammothKeyGUID        = 0;
+        m_uiGaldarahKeyGUID       = 0;
         m_uiBridgeGUID            = 0;
+        m_uiCollisionGUID         = 0;
 
         m_uiSladranGUID           = 0;
+        m_uiColossusGUID          = 0;
+
+        WaterCheckTimer = 500;
+        FrenzySpawnTimer = 2000;
+        Water = WATERSTATE_FRENZY;
+        DoSpawnFrenzy = false;
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -89,6 +115,7 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         switch(pCreature->GetEntry())
         {
             case NPC_SLADRAN: m_uiSladranGUID = pCreature->GetGUID(); break;
+            case NPC_COLOSSUS: m_uiColossusGUID = pCreature->GetGUID(); break;
         }
     }
 
@@ -108,7 +135,6 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
                 break;
             case GO_GALDARAH_DOOR: 
                 m_uiGaldarahDoorGUID = pGo->GetGUID();
-                DoUseDoorOrButton(m_uiGaldarahDoorGUID);
                 break;
             case GO_EXIT_DOOR_L:
                 m_uiExitDoorLeftGUID = pGo->GetGUID();
@@ -150,10 +176,32 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
                 if (m_auiEncounter[2] == SPECIAL)
                     DoUseDoorOrButton(m_uiMammothKeyGUID);
                 break;
+            case GO_GALDARAH_KEY:
+                m_uiGaldarahKeyGUID = pGo->GetGUID();
+                if (m_auiEncounter[2] == SPECIAL && m_auiEncounter[1] == SPECIAL && m_auiEncounter[0] == SPECIAL)
+                    DoUseDoorOrButton(m_uiGaldarahKeyGUID);
+                break;
             case GO_BRIDGE: 
                 m_uiBridgeGUID = pGo->GetGUID();
                 break;
+            case GO_COLLISION:
+                m_uiCollisionGUID = pGo->GetGUID();
+                break;
         }
+    }
+
+    void OpenDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
+    }
+
+    void CloseDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_READY);
     }
     
     void SetData(uint32 uiType, uint32 uiData)
@@ -192,11 +240,16 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
                 break;
             case TYPE_GALDARAH:
                 m_auiEncounter[3] = uiData;
-                DoUseDoorOrButton(m_uiGaldarahDoorGUID);
+                if(uiData == IN_PROGRESS)
+                    CloseDoor(m_uiGaldarahDoorGUID);
+                if(uiData == NOT_STARTED)
+                    OpenDoor(m_uiGaldarahDoorGUID);
+                // Open exit doors
                 if (uiData == DONE)
                 {
                     DoUseDoorOrButton(m_uiExitDoorLeftGUID);
                     DoUseDoorOrButton(m_uiExitDoorRightGUID);
+                    DoUseDoorOrButton(m_uiGaldarahDoorGUID);
                 }
                 break;
             case TYPE_ECK:
@@ -275,8 +328,60 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         {
             case NPC_SLADRAN:
                 return m_uiSladranGUID;
+            case NPC_COLOSSUS:
+                return m_uiColossusGUID;
         }
         return 0;
+    }
+
+    void Update (uint32 diff)
+    {
+        //Water checks
+        if (WaterCheckTimer <= diff)
+        {
+            Water = WATERSTATE_FRENZY;
+            Map::PlayerList const &PlayerList = instance->GetPlayers();
+            if (PlayerList.isEmpty())
+                return;
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (Player* pPlayer = i->getSource())
+                {
+                    if (pPlayer->isAlive() && /*i->getSource()->GetPositionZ() <= -21.434931f*/pPlayer->IsInWater())
+                    {
+                        if(Water == WATERSTATE_SCALDING)
+                        {
+
+                            if(!pPlayer->HasAura(SPELL_SCALDINGWATER))
+                            {
+                                pPlayer->CastSpell(pPlayer, SPELL_SCALDINGWATER,true);
+                            }
+                        } else if(Water == WATERSTATE_FRENZY)
+                        {
+                            //spawn frenzy
+                            if(DoSpawnFrenzy)
+                            {
+                                if(Creature* frenzy = pPlayer->SummonCreature(MOB_DRAKKARI_FRENZY,pPlayer->GetPositionX(),pPlayer->GetPositionY(),pPlayer->GetPositionZ(),pPlayer->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,2000))
+                                {
+                                    frenzy->Attack(pPlayer,false);
+                                    frenzy->SetSplineFlags(SPLINEFLAG_UNKNOWN12);
+                                }
+                                DoSpawnFrenzy = false;
+                            }
+                        }
+                    }
+                    if(!pPlayer->IsInWater())
+                        pPlayer->RemoveAurasDueToSpell(SPELL_SCALDINGWATER);
+                }
+
+            }
+            WaterCheckTimer = 500;//remove stress from core
+        } else WaterCheckTimer -= diff;
+        if (FrenzySpawnTimer <= diff)
+        {
+            DoSpawnFrenzy = true;
+            FrenzySpawnTimer = 2000;
+        } else FrenzySpawnTimer -= diff;
     }
 };
 

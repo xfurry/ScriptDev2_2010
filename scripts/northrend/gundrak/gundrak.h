@@ -22,10 +22,12 @@ enum
     TYPE_ECK               = 5,
 
     NPC_SLADRAN            = 29304,
-    NPC_MOORABI            = 29307,
-    NPC_COLOSSUS           = 29305,
+    NPC_MOORABI            = 29305,
+    NPC_COLOSSUS           = 29307,
     NPC_GALDARAH           = 29306,
     NPC_ECK                = 29932,
+
+    DATA_COLOSSUS           = 1,
 
     GO_ECK_DOOR            = 192632,
     GO_ECK_UNDERWATER_DOOR = 192569,
@@ -40,6 +42,8 @@ enum
     GO_SNAKE_KEY           = 192564,
     GO_TROLL_KEY           = 192567,
     GO_MAMMOTH_KEY         = 192565,
+    GO_GALDARAH_KEY        = 192566,
+    GO_COLLISION           = 192633,
 
     GO_BRIDGE              = 193188
 };

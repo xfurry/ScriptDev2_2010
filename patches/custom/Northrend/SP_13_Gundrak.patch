@@ -1,0 +1,1161 @@
+diff --git a/Makefile.am b/Makefile.am
+index a0e6a69..ca2c7ec 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -331,6 +331,7 @@ scripts/northrend/draktharon_keep/boss_novos.cpp \
+ scripts/northrend/draktharon_keep/boss_tharonja.cpp \
+ scripts/northrend/draktharon_keep/boss_trollgore.cpp \
+ scripts/northrend/gundrak/boss_colossus.cpp \
++scripts/northrend/gundrak/boss_eck.cpp \
+ scripts/northrend/gundrak/boss_galdarah.cpp \
+ scripts/northrend/gundrak/boss_moorabi.cpp \
+ scripts/northrend/gundrak/boss_sladran.cpp \
+diff --git a/VC90/90ScriptDev2.vcproj b/VC90/90ScriptDev2.vcproj
+index c566c85..9128712 100644
+--- a/VC90/90ScriptDev2.vcproj
++++ b/VC90/90ScriptDev2.vcproj
+@@ -1723,6 +1723,10 @@
+ 						>
+ 					</File>
+ 					<File
++						RelativePath="..\scripts\northrend\gundrak\boss_eck.cpp"
++						>
++					</File>
++					<File
+ 						RelativePath="..\scripts\northrend\gundrak\boss_galdarah.cpp"
+ 						>
+ 					</File>
+@@ -2007,34 +2011,6 @@
+ 					Name="utgarde_keep"
+ 					>
+ 					<Filter
+-						Name="utgarde_keep"
+-						>
+-						<File
+-							RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\boss_ingvar.cpp"
+-							>
+-						</File>
+-						<File
+-							RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\boss_keleseth.cpp"
+-							>
+-						</File>
+-						<File
+-							RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\boss_skarvald_and_dalronn.cpp"
+-							>
+-						</File>
+-						<File
+-							RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\instance_utgarde_keep.cpp"
+-							>
+-						</File>
+-						<File
+-							RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\utgarde_keep.cpp"
+-							>
+-						</File>
+-						<File
+-							RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\utgarde_keep.h"
+-							>
+-						</File>
+-					</Filter>
+-					<Filter
+ 						Name="utgarde_pinnacle"
+ 						>
+ 						<File
+@@ -2061,6 +2037,34 @@
+ 							RelativePath="..\scripts\northrend\utgarde_keep\utgarde_pinnacle\utgarde_pinnacle.h"
+ 							>
+ 						</File>
++						<Filter
++							Name="utgarde_keep"
++							>
++							<File
++								RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\boss_ingvar.cpp"
++								>
++							</File>
++							<File
++								RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\boss_keleseth.cpp"
++								>
++							</File>
++							<File
++								RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\boss_skarvald_and_dalronn.cpp"
++								>
++							</File>
++							<File
++								RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\instance_utgarde_keep.cpp"
++								>
++							</File>
++							<File
++								RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\utgarde_keep.cpp"
++								>
++							</File>
++							<File
++								RelativePath="..\scripts\northrend\utgarde_keep\utgarde_keep\utgarde_keep.h"
++								>
++							</File>
++						</Filter>
+ 					</Filter>
+ 				</Filter>
+ 				<Filter
+diff --git a/scripts/northrend/gundrak/boss_colossus.cpp b/scripts/northrend/gundrak/boss_colossus.cpp
+index 36acff3..da3842b 100644
+--- a/scripts/northrend/gundrak/boss_colossus.cpp
++++ b/scripts/northrend/gundrak/boss_colossus.cpp
+@@ -22,18 +22,31 @@ SDCategory: Gundrak
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "gundrak.h"
+ 
+ enum
+ {
+     EMOTE_SURGE                 = -1604008,
+     EMOTE_SEEP                  = -1604009,
+-    EMOTE_GLOW                  = -1604010
++    EMOTE_GLOW                  = -1604010,
++
++    SPELL_EMERGE                = 54850,
++    SPELL_MIGHTY_BLOW           = 54719,
++    SPELL_MERGE                 = 54878,
++    SPELL_SURGE                 = 54801,
++    SPELL_FREEZE_ANIM           = 16245,
++    SPELL_MOJO_PUDDLE           = 55627,
++    SPELL_MOJO_PUDDLE_H         = 58994,
++    SPELL_MOJO_WAVE             = 55626,
++    SPELL_MOJO_WAVE_H           = 58993,
++
++    NPC_LIVING_MOJO             = 29830,
++    NPC_DRAKKARI_ELEMENTAL      = 29573,
+ };
+ 
+ /*######
+ ## boss_colossus
+ ######*/
+-
+ struct MANGOS_DLL_DECL boss_colossusAI : public ScriptedAI
+ {
+     boss_colossusAI(Creature* pCreature) : ScriptedAI(pCreature)
+@@ -46,15 +59,284 @@ struct MANGOS_DLL_DECL boss_colossusAI : public ScriptedAI
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    uint32 m_uiMightyBlowTimer;
++    uint32 m_uiFreezeTimer;
++
++    uint64 m_uiElementalGUID;
++
++    bool m_bMustDie;
++    bool m_bHasEmerged;
++    bool m_bHasSummoned;
++    bool m_bIsPhase;
++
+     void Reset()
+     {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_COLOSSUS, NOT_STARTED);
++        
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        DoCast(m_creature,SPELL_FREEZE_ANIM);
++        m_uiMightyBlowTimer = 10000;
++        m_uiFreezeTimer = 3000;
++        m_bMustDie      = false;
++        m_bHasEmerged   = false;
++        m_bHasSummoned  = false;
++        m_bIsPhase      = false;
++        m_uiElementalGUID   = 0;
++
++        if(Creature* pElemental = GetClosestCreatureWithEntry(m_creature, NPC_DRAKKARI_ELEMENTAL, 50.0f))
++            pElemental->ForcedDespawn();
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_COLOSSUS, IN_PROGRESS);
++
++        if(m_bIsPhase)
++            m_creature->SetHealth(m_creature->GetMaxHealth()/2);
++
++        if (m_creature->HasAura(SPELL_FREEZE_ANIM, EFFECT_INDEX_0))
++            m_creature->RemoveAurasDueToSpell(SPELL_FREEZE_ANIM);
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++       if (m_pInstance)
++            m_pInstance->SetData(TYPE_COLOSSUS, SPECIAL);
++    }
++
++    void DamageTaken(Unit *done_by, uint32 &uiDamage)
++    {
++        if(uiDamage > m_creature->GetHealth())
++        {
++            DoCast(m_creature,SPELL_EMERGE);
++            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++            m_creature->RemoveAllAuras();
++            m_creature->DeleteThreatList();
++            m_creature->CombatStop(true);
++            m_creature->InterruptNonMeleeSpells(false);
++            m_bHasEmerged = true;
++            m_bMustDie = true;
++            m_uiFreezeTimer = 3000;
++            m_creature->SetHealth(m_creature->GetMaxHealth());
++        }
++    }
++
++    void StartPhase()
++    {
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++        m_creature->setFaction(14);
++        m_bIsPhase = true;
++        m_creature->SetHealth(m_creature->GetMaxHealth()/2);
++        if (m_creature->HasAura(SPELL_FREEZE_ANIM, EFFECT_INDEX_0))
++            m_creature->RemoveAurasDueToSpell(SPELL_FREEZE_ANIM);
++
++        m_creature->GetMotionMaster()->Clear();
++        m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if(m_creature->GetHealthPercent() <= 50.0f && !m_bHasSummoned)
++        {
++            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++            m_creature->setFaction(35);
++            m_creature->RemoveAllAuras();
++            m_creature->DeleteThreatList();
++            m_creature->CombatStop(true);
++            m_creature->GetMotionMaster()->MoveIdle();
++            m_creature->InterruptNonMeleeSpells(false);
++            DoCast(m_creature,SPELL_EMERGE);
++            m_bHasEmerged   = true;
++            m_bHasSummoned  = true;
++            m_uiFreezeTimer = 3000;
++            m_bMustDie      = false;
++        }
++
++        if (m_uiFreezeTimer <= uiDiff && m_bHasEmerged)
++        {
++            if(!m_bMustDie)
++            {
++                DoCast(m_creature,SPELL_FREEZE_ANIM);
++                m_bHasEmerged = false;
++                if(Creature* pElemental = m_creature->SummonCreature(NPC_DRAKKARI_ELEMENTAL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
++                {
++                    pElemental->AI()->AttackStart(m_creature->getVictim());
++                    m_uiElementalGUID = pElemental->GetGUID();
++                }
++            }
++            else
++                m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
++        } else m_uiFreezeTimer -= uiDiff;
++
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiMightyBlowTimer <= uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_MIGHTY_BLOW);
++            m_uiMightyBlowTimer = 10000;
++        } else m_uiMightyBlowTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++struct MANGOS_DLL_DECL boss_drakkari_elementalAI : public ScriptedAI
++{
++    boss_drakkari_elementalAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++    }
++
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++
++    uint32 m_uiSurgeTimer;
++    uint32 m_uiMojoPuddleTimer;
++
++    bool m_bGoToColossus;
++
++    void Reset()
++    {
++        m_uiSurgeTimer = 7000;
++        m_uiMojoPuddleTimer = 2000;
++        m_bGoToColossus = false;
++    }
++
++    void JustReachedHome()
++    {
++        m_creature->ForcedDespawn();
++        if(Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_COLOSSUS))))
++        {
++            if(!pColossus->isAlive())
++                pColossus->Respawn();
++        }
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+     {
++        if(m_pInstance && m_pInstance->GetData(TYPE_COLOSSUS) == SPECIAL)
++        {
++            m_creature->SetVisibility(VISIBILITY_ON);
++            m_creature->SetHealth(m_creature->GetMaxHealth()/2);
++            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++            if (m_creature->HasAura(SPELL_FREEZE_ANIM, EFFECT_INDEX_0))
++                m_creature->RemoveAurasDueToSpell(SPELL_FREEZE_ANIM);
++
++            if (m_pInstance)
++                m_pInstance->SetData(TYPE_COLOSSUS, IN_PROGRESS);
++        }
++
++        if(m_creature->GetHealthPercent() <= 50.0f && !m_bGoToColossus)
++        {
++            m_bGoToColossus = true;
++            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++            DoCast(m_creature,SPELL_FREEZE_ANIM);
++            m_creature->RemoveAllAuras();
++            m_creature->DeleteThreatList();
++            m_creature->CombatStop(true);
++            m_creature->InterruptNonMeleeSpells(false);
++            m_creature->SetVisibility(VISIBILITY_OFF);
++            DoCast(m_creature, SPELL_MERGE);
++            if(Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_COLOSSUS))))
++            {
++                if(pColossus->isAlive())
++                    ((boss_colossusAI*)pColossus->AI())->StartPhase();
++            }
++        }
++
++        //Return since we have no target
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        if (m_uiSurgeTimer <= uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_SURGE);
++            m_uiSurgeTimer = 7000;
++        } else m_uiSurgeTimer -= uiDiff;
++
++        if (m_uiMojoPuddleTimer <= uiDiff)
++        {
++            DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_MOJO_PUDDLE : SPELL_MOJO_PUDDLE_H);
++            m_uiMojoPuddleTimer = 2000;
++        } else m_uiMojoPuddleTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++
++    void JustDied(Unit* killer)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_COLOSSUS, DONE);
++    }
++};
++
++struct MANGOS_DLL_DECL npc_living_mojoAI : public ScriptedAI
++{
++    npc_living_mojoAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++    }
++
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++
++    uint32 uiMojoWaveTimer;
++    uint32 uiMojoPuddleTimer;
++
++    void Reset()
++    {
++        uiMojoWaveTimer = 2000;
++        uiMojoPuddleTimer = 7000;
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        //Check if the npc is near of Drakkari Colossus.
++        if(Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_COLOSSUS))))
++        {
++            if(pColossus->isAlive() && m_creature->IsWithinDist(pColossus, 15.0f))
++                m_creature->GetMotionMaster()->MovePoint(0, pColossus->GetPositionX(), pColossus->GetPositionY(), pColossus->GetPositionZ());
++        }
++    }
++
++    void MovementInform(uint32 uiType, uint32 uiPointId)
++    {
++        if(uiType != POINT_MOTION_TYPE)
++                return;
++
++        switch(uiPointId)
++        {
++        case 0:
++            m_creature->ForcedDespawn();
++            break;
++        }
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (uiMojoWaveTimer <= diff)
++        {
++            DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_MOJO_WAVE : SPELL_MOJO_WAVE_H);
++            uiMojoWaveTimer = 5000;
++        } else uiMojoWaveTimer -= diff;
++
++        if (uiMojoPuddleTimer <= diff)
++        {
++            DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_MOJO_PUDDLE : SPELL_MOJO_PUDDLE_H);
++            uiMojoPuddleTimer = 3000;
++        } else uiMojoPuddleTimer -= diff;
++
+         DoMeleeAttackIfReady();
+     }
+ };
+@@ -64,6 +346,16 @@ CreatureAI* GetAI_boss_colossus(Creature* pCreature)
+     return new boss_colossusAI(pCreature);
+ }
+ 
++CreatureAI* GetAI_boss_drakkari_elemental(Creature* pCreature)
++{
++    return new boss_drakkari_elementalAI (pCreature);
++}
++
++CreatureAI* GetAI_npc_living_mojo(Creature* pCreature)
++{
++    return new npc_living_mojoAI (pCreature);
++}
++
+ void AddSC_boss_colossus()
+ {
+     Script *newscript;
+@@ -72,4 +364,14 @@ void AddSC_boss_colossus()
+     newscript->Name = "boss_colossus";
+     newscript->GetAI = &GetAI_boss_colossus;
+     newscript->RegisterSelf();
++    
++    newscript = new Script;
++    newscript->Name = "boss_drakkari_elemental";
++    newscript->GetAI = &GetAI_boss_drakkari_elemental;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "npc_living_mojo";
++    newscript->GetAI = &GetAI_npc_living_mojo;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/northrend/gundrak/boss_eck.cpp b/scripts/northrend/gundrak/boss_eck.cpp
+new file mode 100644
+index 0000000..1c85613
+--- /dev/null
++++ b/scripts/northrend/gundrak/boss_eck.cpp
+@@ -0,0 +1,155 @@
++/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++/* ScriptData
++SDName: Boss_Eck
++SD%Complete: 20%
++SDComment:
++SDCategory: Gundrak
++EndScriptData */
++
++#include "precompiled.h"
++#include "gundrak.h"
++
++enum Spells
++{
++    SPELL_ECK_BERSERK                       = 55816, //Eck goes berserk, increasing his attack speed by 150% and all damage he deals by 500%.
++    SPELL_ECK_BITE                          = 55813, //Eck bites down hard, inflicting 150% of his normal damage to an enemy.
++    SPELL_ECK_SPIT                          = 55814, //Eck spits toxic bile at enemies in a cone in front of him, inflicting 2970 Nature damage and draining 220 mana every 1 sec for 3 sec.
++    SPELL_ECK_SPRING_1                      = 55815, //Eck leaps at a distant target.  --> Drops aggro and charges a random player. Tank can simply taunt him back.
++    SPELL_ECK_SPRING_2                      = 55837,  //Eck leaps at a distant target.
++    SPELL_ECK_RESIDUE                       = 55817
++};
++
++/*######
++## boss_eck
++######*/
++
++struct MANGOS_DLL_DECL boss_eckAI : public ScriptedAI
++{
++    boss_eckAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++    bool m_bIsRegularMode;
++
++    uint32 uiBerserkTimer;
++    uint32 uiBiteTimer;
++    uint32 uiSpitTimer;
++    uint32 uiSpringTimer;
++    bool bBerserk;
++
++    void Reset()
++    {
++        uiBerserkTimer = 60000 + rand()%30000; //60-90 secs according to wowwiki
++        uiBiteTimer = 5000;
++        uiSpitTimer = 10000;
++        uiSpringTimer = 8000;
++
++        bBerserk = false;
++
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_ECK, NOT_STARTED);
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_ECK, IN_PROGRESS);
++    }
++
++    void KilledUnit(Unit* pVictim)
++    {
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_ECK, DONE);
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (uiBiteTimer <= uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_ECK_BITE);
++            uiBiteTimer = 8000 + rand()%4000;
++        } else uiBiteTimer -= uiDiff;
++
++        if (uiSpitTimer <= uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_ECK_SPIT);
++            uiSpitTimer = 8000 + rand()%8000;
++        } else uiSpitTimer -= uiDiff;
++
++        if (uiSpringTimer <= uiDiff)
++        {
++            Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,1);
++            if(pTarget && pTarget->GetTypeId() == TYPEID_PLAYER)
++            {
++                switch(urand(0, 1))
++                {
++                    case 0: DoCast(pTarget, SPELL_ECK_SPRING_1); break;
++                    case 1: DoCast(pTarget, SPELL_ECK_SPRING_2); break;
++                }
++                uiSpringTimer = 5000 + rand()%10000;
++            }
++        } else uiSpringTimer -= uiDiff;
++
++        //Berserk on timer or 20% of health
++        if (!bBerserk)
++        {
++            if (uiBerserkTimer <= uiDiff)
++            {
++                DoCast(m_creature, SPELL_ECK_BERSERK);
++                bBerserk = true;
++            }
++            else
++            {
++                uiBerserkTimer -= uiDiff;
++                if (m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 20)
++                {
++                    DoCast(m_creature, SPELL_ECK_BERSERK);
++                    bBerserk = true;
++                }
++            }
++        }
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_eck(Creature* pCreature)
++{
++    return new boss_eckAI(pCreature);
++}
++
++void AddSC_boss_eck()
++{
++    Script *newscript;
++
++    newscript = new Script;
++    newscript->Name = "boss_eck";
++    newscript->GetAI = &GetAI_boss_eck;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/northrend/gundrak/boss_galdarah.cpp b/scripts/northrend/gundrak/boss_galdarah.cpp
+index 2c440d6..dfff98d 100644
+--- a/scripts/northrend/gundrak/boss_galdarah.cpp
++++ b/scripts/northrend/gundrak/boss_galdarah.cpp
+@@ -22,6 +22,7 @@ SDCategory: Gundrak
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "gundrak.h"
+ 
+ enum
+ {
+@@ -37,6 +38,40 @@ enum
+     SAY_DEATH                       = -1604028
+ };
+ 
++enum Spells
++{
++    SPELL_ENRAGE                                  = 55285,
++    H_SPELL_ENRAGE                                = 59828,
++    SPELL_IMPALING_CHARGE                         = 54956,
++    H_SPELL_IMPALING_CHARGE                       = 59827,
++    SPELL_STOMP                                   = 55292,
++    H_SPELL_STOMP                                 = 59826,
++    SPELL_PUNCTURE                                = 55276,
++    H_SPELL_PUNCTURE                              = 59826,
++    SPELL_STAMPEDE                                = 55218,
++    SPELL_WHIRLING_SLASH                          = 55250,
++    H_SPELL_WHIRLING_SLASH                        = 59824,
++    SPELL_ECK_RESIDUE                             = 55817
++};
++
++enum Achievements
++{
++    ACHIEVEMENT_WHAT_THE_ECK      = 1864,
++    ACHIEVEMENT_SHARE_THE_LOVE    = 2152
++};
++
++enum Displays
++{
++    DISPLAY_RHINO                                 = 26265,
++    DISPLAY_TROLL                                 = 27061
++};
++
++enum CombatPhase
++{
++    TROLL       = 1,
++    RHINO       = 2,
++};
++
+ /*######
+ ## boss_galdarah
+ ######*/
+@@ -53,13 +88,49 @@ struct MANGOS_DLL_DECL boss_galdarahAI : public ScriptedAI
+     ScriptedInstance* m_pInstance;
+     bool m_bIsRegularMode;
+ 
++    uint32 uiStampedeTimer;
++    uint32 uiWhirlingSlashTimer;
++    uint32 uiPunctureTimer;
++    uint32 uiEnrageTimer;
++    uint32 uiImpalingChargeTimer;
++    uint32 uiStompTimer;
++
++    uint8 m_uiCombatPhase;
++
++    bool bStartOfTransformation;
++    uint32 uiTransformationTimer;
++
++    uint8 uiPhaseCounter;
++    std::set<uint64> lImpaledPlayers;
++
+     void Reset()
+     {
++        uiStampedeTimer = 10000;
++        uiWhirlingSlashTimer = 20000;
++        uiPunctureTimer = 10000;
++        uiEnrageTimer = 15000;
++        uiImpalingChargeTimer = 20000;
++        uiStompTimer = 25000;
++
++        m_uiCombatPhase = TROLL;
++        bStartOfTransformation = true;
++        uiTransformationTimer = 2000;
++        uiPhaseCounter = 0;
++
++        m_creature->SetDisplayId(DISPLAY_TROLL);
++
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_GALDARAH, NOT_STARTED);
++
++        lImpaledPlayers.clear();
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         DoScriptText(SAY_AGGRO, m_creature);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_GALDARAH, IN_PROGRESS);
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -75,6 +146,31 @@ struct MANGOS_DLL_DECL boss_galdarahAI : public ScriptedAI
+     void JustDied(Unit* pKiller)
+     {
+         DoScriptText(SAY_DEATH, m_creature);
++
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_GALDARAH, DONE);
++
++        if (!m_bIsRegularMode)
++        {
++            AchievementEntry const *achievWhatTheEck = GetAchievementStore()->LookupEntry(ACHIEVEMENT_WHAT_THE_ECK);
++            if (achievWhatTheEck)
++            {
++                Map* pMap = m_creature->GetMap();
++                if (pMap && pMap->IsDungeon())
++                {
++                    Map::PlayerList const &players = pMap->GetPlayers();
++                    for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
++                        if (itr->getSource()->HasAura(SPELL_ECK_RESIDUE))
++                            itr->getSource()->CompletedAchievement(achievWhatTheEck);
++                }
++            }
++
++            if(lImpaledPlayers.size() == 5)
++            {
++                if(m_pInstance)
++                    m_pInstance->DoCompleteAchievement(ACHIEVEMENT_SHARE_THE_LOVE);
++            }
++        }
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+@@ -82,6 +178,105 @@ struct MANGOS_DLL_DECL boss_galdarahAI : public ScriptedAI
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        switch (m_uiCombatPhase)
++        {
++            case TROLL:
++                if (uiPhaseCounter == 2)
++                {
++                    if (uiTransformationTimer <= uiDiff)
++                    {
++                        m_creature->SetDisplayId(DISPLAY_RHINO);
++                        m_uiCombatPhase = RHINO;
++                        uiPhaseCounter = 0;
++                        DoScriptText(SAY_TRANSFORM_1,m_creature);
++                        uiTransformationTimer = 2000;
++                        bStartOfTransformation = true;
++                    }
++                    else
++                    {
++                        uiTransformationTimer -= uiDiff;
++
++                        if (bStartOfTransformation)
++                            bStartOfTransformation = false;
++                    }
++                }
++                else
++                {
++                    if (uiStampedeTimer <= uiDiff)
++                    {
++                        DoCast(m_creature, SPELL_STAMPEDE);
++                        switch(urand(0, 2))
++                        {
++                            case 0: DoScriptText(SAY_SUMMON_1, m_creature); break;
++                            case 1: DoScriptText(SAY_SUMMON_2, m_creature); break;
++                            case 2: DoScriptText(SAY_SUMMON_3, m_creature); break;
++                        }
++                        uiStampedeTimer = 15000;
++                    } else uiStampedeTimer -= uiDiff;
++
++                    if (uiWhirlingSlashTimer <= uiDiff)
++                    {
++                        DoCast(m_creature, m_bIsRegularMode ? SPELL_WHIRLING_SLASH : H_SPELL_WHIRLING_SLASH);
++                        ++uiPhaseCounter;
++                        uiWhirlingSlashTimer = 20000;
++                    } else uiWhirlingSlashTimer -= uiDiff;
++                }
++            break;
++            case RHINO:
++                if (uiPhaseCounter == 2)
++                {
++                    if (uiTransformationTimer <= uiDiff)
++                    {
++                        m_creature->SetDisplayId(DISPLAY_TROLL);
++                        m_uiCombatPhase = TROLL;
++                        uiPhaseCounter = 0;
++                        DoScriptText(SAY_TRANSFORM_2,m_creature);
++                        uiTransformationTimer = 2000;
++                        bStartOfTransformation = true;
++                    }
++                    else
++                    {
++                        uiTransformationTimer -= uiDiff;
++
++                        if (bStartOfTransformation)
++                            bStartOfTransformation = false;
++                    }
++                }
++                else
++                {
++                    if (uiPunctureTimer <= uiDiff)
++                    {
++                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                            DoCast(pTarget, m_bIsRegularMode ? SPELL_PUNCTURE : H_SPELL_PUNCTURE);
++                        uiPunctureTimer = 8000;
++                    } else uiPunctureTimer -= uiDiff;
++
++                    if (uiEnrageTimer <= uiDiff)
++                    {
++                        DoCast(m_creature, m_bIsRegularMode ? SPELL_ENRAGE : H_SPELL_ENRAGE);
++                        uiEnrageTimer = 20000;
++                    } else uiEnrageTimer -= uiDiff;
++
++                    if (uiStompTimer <= uiDiff)
++                    {
++                        DoCast(m_creature, m_bIsRegularMode ? SPELL_STOMP : H_SPELL_STOMP);
++                        uiStompTimer = 20000;
++                    } else uiStompTimer -= uiDiff;
++
++                    if (uiImpalingChargeTimer <= uiDiff)
++                    {
++                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                        {
++                            DoCast(pTarget, m_bIsRegularMode ? SPELL_IMPALING_CHARGE : H_SPELL_IMPALING_CHARGE);
++                            lImpaledPlayers.insert(pTarget->GetGUID());
++                            ++uiPhaseCounter;
++                            uiImpalingChargeTimer = 30000;
++                        }                        
++                    } else uiImpalingChargeTimer -= uiDiff;
++                }
++            break;
++        }
++
+         DoMeleeAttackIfReady();
+     }
+ };
+diff --git a/scripts/northrend/gundrak/boss_moorabi.cpp b/scripts/northrend/gundrak/boss_moorabi.cpp
+index b17d5db..292cbee 100644
+--- a/scripts/northrend/gundrak/boss_moorabi.cpp
++++ b/scripts/northrend/gundrak/boss_moorabi.cpp
+@@ -50,6 +50,11 @@ enum
+     SPELL_NUMBING_ROAR      = 55100,
+ };
+ 
++enum eArchivements
++{
++    ACHIEVEMENT_LESS_RABI       =   2040
++};
++
+ /*######
+ ## boss_moorabi
+ ######*/
+@@ -111,6 +116,12 @@ struct MANGOS_DLL_DECL boss_moorabiAI : public ScriptedAI
+ 
+         if (m_pInstance)
+             m_pInstance->SetData(TYPE_MOORABI, DONE);
++
++        if (!m_bIsRegularMode && !m_bMammothPhase)
++        {
++            if(m_pInstance)
++                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_LESS_RABI);
++        }
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+diff --git a/scripts/northrend/gundrak/boss_sladran.cpp b/scripts/northrend/gundrak/boss_sladran.cpp
+index 77d67e3..c33cfa0 100644
+--- a/scripts/northrend/gundrak/boss_sladran.cpp
++++ b/scripts/northrend/gundrak/boss_sladran.cpp
+@@ -53,7 +53,9 @@ enum
+     NPC_SLADRAN_CONSTRICTOR   = 29713,
+     NPC_SLADRAN_VIPER         = 29680,
+     NPC_SNAKE_WRAP            = 29742,
+-    NPC_SLADRAN_SUMMON_TARGET = 29682
++    NPC_SLADRAN_SUMMON_TARGET = 29682,
++
++    ACHIEV_SNAKES               = 2058,
+ };
+ 
+ /*######
+diff --git a/scripts/northrend/gundrak/gundrak.h b/scripts/northrend/gundrak/gundrak.h
+index 54119ee..be1683f 100644
+--- a/scripts/northrend/gundrak/gundrak.h
++++ b/scripts/northrend/gundrak/gundrak.h
+@@ -22,11 +22,13 @@ enum
+     TYPE_ECK               = 5,
+ 
+     NPC_SLADRAN            = 29304,
+-    NPC_MOORABI            = 29307,
+-    NPC_COLOSSUS           = 29305,
++    NPC_MOORABI            = 29305,
++    NPC_COLOSSUS           = 29307,
+     NPC_GALDARAH           = 29306,
+     NPC_ECK                = 29932,
+ 
++    DATA_COLOSSUS           = 1,
++
+     GO_ECK_DOOR            = 192632,
+     GO_ECK_UNDERWATER_DOOR = 192569,
+     GO_GALDARAH_DOOR       = 192568,
+@@ -40,6 +42,8 @@ enum
+     GO_SNAKE_KEY           = 192564,
+     GO_TROLL_KEY           = 192567,
+     GO_MAMMOTH_KEY         = 192565,
++    GO_GALDARAH_KEY        = 192566,
++    GO_COLLISION           = 192633,
+ 
+     GO_BRIDGE              = 193188
+ };
+diff --git a/scripts/northrend/gundrak/instance_gundrak.cpp b/scripts/northrend/gundrak/instance_gundrak.cpp
+index 669eca8..c5fb861 100644
+--- a/scripts/northrend/gundrak/instance_gundrak.cpp
++++ b/scripts/northrend/gundrak/instance_gundrak.cpp
+@@ -24,6 +24,16 @@ EndScriptData */
+ #include "precompiled.h"
+ #include "gundrak.h"
+ 
++enum WaterEventState
++{
++    WATERSTATE_NONE     = 0,
++    WATERSTATE_FRENZY   = 1,
++    WATERSTATE_SCALDING = 2
++};
++
++#define SPELL_SCALDINGWATER 37284
++#define MOB_DRAKKARI_FRENZY 29834
++
+ bool GOHello_go_gundrak_altar(Player* pPlayer, GameObject* pGo)
+ {
+     ScriptedInstance* pInstance = (ScriptedInstance*)pGo->GetInstanceData();
+@@ -57,12 +67,20 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
+     uint64 m_uiSnakeKeyGUID;
+     uint64 m_uiMammothKeyGUID;
+     uint64 m_uiTrollKeyGUID;
++    uint64 m_uiGaldarahKeyGUID;
+     uint64 m_uiAltarOfSladranGUID;
+     uint64 m_uiAltarOfMoorabiGUID;
+     uint64 m_uiAltarOfColossusGUID;
+     uint64 m_uiBridgeGUID;
++    uint64 m_uiCollisionGUID;
+ 
+     uint64 m_uiSladranGUID;
++    uint64 m_uiColossusGUID;
++
++    uint32 WaterCheckTimer;
++    uint32 FrenzySpawnTimer;
++    uint32 Water;
++    bool DoSpawnFrenzy;
+ 
+     void Initialize()
+     {
+@@ -79,9 +97,17 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
+         m_uiSnakeKeyGUID          = 0;
+         m_uiTrollKeyGUID          = 0;
+         m_uiMammothKeyGUID        = 0;
++        m_uiGaldarahKeyGUID       = 0;
+         m_uiBridgeGUID            = 0;
++        m_uiCollisionGUID         = 0;
+ 
+         m_uiSladranGUID           = 0;
++        m_uiColossusGUID          = 0;
++
++        WaterCheckTimer = 500;
++        FrenzySpawnTimer = 2000;
++        Water = WATERSTATE_FRENZY;
++        DoSpawnFrenzy = false;
+     }
+ 
+     void OnCreatureCreate(Creature* pCreature)
+@@ -89,6 +115,7 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
+         switch(pCreature->GetEntry())
+         {
+             case NPC_SLADRAN: m_uiSladranGUID = pCreature->GetGUID(); break;
++            case NPC_COLOSSUS: m_uiColossusGUID = pCreature->GetGUID(); break;
+         }
+     }
+ 
+@@ -108,7 +135,6 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
+                 break;
+             case GO_GALDARAH_DOOR: 
+                 m_uiGaldarahDoorGUID = pGo->GetGUID();
+-                DoUseDoorOrButton(m_uiGaldarahDoorGUID);
+                 break;
+             case GO_EXIT_DOOR_L:
+                 m_uiExitDoorLeftGUID = pGo->GetGUID();
+@@ -150,11 +176,33 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
+                 if (m_auiEncounter[2] == SPECIAL)
+                     DoUseDoorOrButton(m_uiMammothKeyGUID);
+                 break;
++            case GO_GALDARAH_KEY:
++                m_uiGaldarahKeyGUID = pGo->GetGUID();
++                if (m_auiEncounter[2] == SPECIAL && m_auiEncounter[1] == SPECIAL && m_auiEncounter[0] == SPECIAL)
++                    DoUseDoorOrButton(m_uiGaldarahKeyGUID);
++                break;
+             case GO_BRIDGE: 
+                 m_uiBridgeGUID = pGo->GetGUID();
+                 break;
++            case GO_COLLISION:
++                m_uiCollisionGUID = pGo->GetGUID();
++                break;
+         }
+     }
++
++    void OpenDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
++    }
++
++    void CloseDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_READY);
++    }
+     
+     void SetData(uint32 uiType, uint32 uiData)
+     {
+@@ -192,11 +240,16 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
+                 break;
+             case TYPE_GALDARAH:
+                 m_auiEncounter[3] = uiData;
+-                DoUseDoorOrButton(m_uiGaldarahDoorGUID);
++                if(uiData == IN_PROGRESS)
++                    CloseDoor(m_uiGaldarahDoorGUID);
++                if(uiData == NOT_STARTED)
++                    OpenDoor(m_uiGaldarahDoorGUID);
++                // Open exit doors
+                 if (uiData == DONE)
+                 {
+                     DoUseDoorOrButton(m_uiExitDoorLeftGUID);
+                     DoUseDoorOrButton(m_uiExitDoorRightGUID);
++                    DoUseDoorOrButton(m_uiGaldarahDoorGUID);
+                 }
+                 break;
+             case TYPE_ECK:
+@@ -275,9 +328,61 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
+         {
+             case NPC_SLADRAN:
+                 return m_uiSladranGUID;
++            case NPC_COLOSSUS:
++                return m_uiColossusGUID;
+         }
+         return 0;
+     }
++
++    void Update (uint32 diff)
++    {
++        //Water checks
++        if (WaterCheckTimer <= diff)
++        {
++            Water = WATERSTATE_FRENZY;
++            Map::PlayerList const &PlayerList = instance->GetPlayers();
++            if (PlayerList.isEmpty())
++                return;
++            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
++            {
++                if (Player* pPlayer = i->getSource())
++                {
++                    if (pPlayer->isAlive() && /*i->getSource()->GetPositionZ() <= -21.434931f*/pPlayer->IsInWater())
++                    {
++                        if(Water == WATERSTATE_SCALDING)
++                        {
++
++                            if(!pPlayer->HasAura(SPELL_SCALDINGWATER))
++                            {
++                                pPlayer->CastSpell(pPlayer, SPELL_SCALDINGWATER,true);
++                            }
++                        } else if(Water == WATERSTATE_FRENZY)
++                        {
++                            //spawn frenzy
++                            if(DoSpawnFrenzy)
++                            {
++                                if(Creature* frenzy = pPlayer->SummonCreature(MOB_DRAKKARI_FRENZY,pPlayer->GetPositionX(),pPlayer->GetPositionY(),pPlayer->GetPositionZ(),pPlayer->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,2000))
++                                {
++                                    frenzy->Attack(pPlayer,false);
++                                    frenzy->SetSplineFlags(SPLINEFLAG_UNKNOWN12);
++                                }
++                                DoSpawnFrenzy = false;
++                            }
++                        }
++                    }
++                    if(!pPlayer->IsInWater())
++                        pPlayer->RemoveAurasDueToSpell(SPELL_SCALDINGWATER);
++                }
++
++            }
++            WaterCheckTimer = 500;//remove stress from core
++        } else WaterCheckTimer -= diff;
++        if (FrenzySpawnTimer <= diff)
++        {
++            DoSpawnFrenzy = true;
++            FrenzySpawnTimer = 2000;
++        } else FrenzySpawnTimer -= diff;
++    }
+ };
+ 
+ InstanceData* GetInstanceData_instance_gundrak(Map* pMap)
+diff --git a/sql/Custom_Updates/Mangos/Northrend/Gundrak_Mangos.sql b/sql/Custom_Updates/Mangos/Northrend/Gundrak_Mangos.sql
+new file mode 100644
+index 0000000..b3bd59f
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Northrend/Gundrak_Mangos.sql
+@@ -0,0 +1,17 @@
++/* GUNDRAK */
++-- Temporary change the Drakkari colossus with Drakkari Elemental: original id = 29307
++update `creature` set `id` = 29307 where `guid` = 85546;
++-- Script name 
++update `creature_template` set `scriptName` = 'boss_colossus' where `entry` = 29307;
++update `creature_template` set `scriptName` = 'boss_drakkari_elemental' where `entry` = 29573;
++update `creature_template` set `scriptName` = 'npc_living_mojo' where `entry` = 29830;
++update `creature_template` set `scriptName` = 'boss_eck' where `entry` = 29932;
++-- Fish fixing
++Update `creature_template` set `InhabitType` = 2 where `entry` in (29834, 30928);
++-- Objects
++Update `gameobject` set `spawnMask` = 3 where `id` in (192632, 192569, 192568, 193208, 193209, 192564, 192567, 192565, 192566);
++update `gameobject_template` set `faction` = 114 where `entry` in (192564, 192567, 192565, 192566);
++UPDATE `gameobject_template` SET `faction` = 114, `data0` = '0' where `entry` in (192632, 192569, 192568, 193208, 193209);
++Update `creature` set `spawnMask` = 0 where `id` = 29748;
++-- Galdarah rhinos: temporary -> original faction = 35; min & max hp = 1, min & max dmg = 1
++#Update `creature_template` set `faction_A` = 14, `faction_H` = 14, `minhealth` = 10000, `maxhealth` = 20000, `mindmg` = 388, `maxdmg` = 582, `dmg_multiplier` = 10, `minrangedmg` = 388, `maxrangedmg` = 582  where `entry` = 29791;
+\ No newline at end of file
+diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
+index 909d20f..c041f93 100644
+--- a/system/ScriptLoader.cpp
++++ b/system/ScriptLoader.cpp
+@@ -271,6 +271,7 @@ extern void AddSC_boss_novos();                             //draktharon_keep
+ extern void AddSC_boss_tharonja();
+ extern void AddSC_boss_trollgore();
+ extern void AddSC_boss_colossus();                          //gundrak
++extern void AddSC_boss_eck();
+ extern void AddSC_boss_galdarah();
+ extern void AddSC_boss_moorabi();
+ extern void AddSC_boss_sladran();
+@@ -706,6 +707,7 @@ void AddScripts()
+     AddSC_boss_tharonja();
+     AddSC_boss_trollgore();
+     AddSC_boss_colossus();                                  //gundrak
++    AddSC_boss_eck();
+     AddSC_boss_galdarah();
+     AddSC_boss_moorabi();
+     AddSC_boss_sladran();
