@@ -22,30 +22,97 @@ SDCategory: Ruins of Ahn'Qiraj
 EndScriptData */
 
 #include "precompiled.h"
+#include "ruins_of_ahnqiraj.h"
 
 enum
 {
-    SPELL_TRASH        = 3391,
-    SPELL_WIDE_SLASH   = 25814,
-    SPELL_MORTAL_WOUND = 25646,
-    SPELL_SANDTRAP     = 25656,
-    SPELL_ENRAGE       = 28798
+    GO_TRAP                 =   180647,
+ 
+    SPELL_MORTALWOUND       =   25646,
+    SPELL_SUMMON_SANDTRAP   =   25648,
+    SPELL_SANDTRAP_EFFECT   =   25656,
+    SPELL_ENRAGE            =   26527,
+    SPELL_SUMMON_PLAYER     =   26446,
+    SPELL_WIDE_SLASH        =   25814,
+    SPELL_TRASH             =   3391,
+
+    SAY_BREACHED            =   -1509022
+};
+
+struct SpawnLocations
+{
+    float x, y, z, an;
+    uint32 id;
+};
+
+static SpawnLocations NPCs[]=
+{
+    {-8873.42f,1647.67f,21.386f,5.69141f, NPC_GENERAL_ANDOROV}
 };
 
 struct MANGOS_DLL_DECL boss_kurinnaxxAI : public ScriptedAI
 {
-    boss_kurinnaxxAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+    boss_kurinnaxxAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();
+    }
 
-    uint32 m_uiMortalWoundTimer;
-    uint32 m_uiSandTrapTimer;
-    bool m_bEnraged;
+    ScriptedInstance* m_pInstance;
+
+    Unit *pTarget;
+    uint32 m_uiMortalWound_Timer;
+    uint32 m_uiSandTrap_Timer;
+    uint32 m_uiTrash_Timer;
+    uint32 m_uiWideSlash_Timer;
+
+    bool m_bHasEnraged;
+    bool m_bHasSummonedTrap;
 
     void Reset()
     {
-        m_bEnraged = false;
+        pTarget = NULL;
 
-        m_uiMortalWoundTimer = 30000;
-        m_uiSandTrapTimer    = 30000;
+        m_uiMortalWound_Timer = 7000;
+        m_uiSandTrap_Timer = 30000;
+        m_uiTrash_Timer = 10000;
+        m_uiWideSlash_Timer = 15000;
+
+        m_bHasEnraged = false;
+        m_bHasSummonedTrap = false;
+    }
+
+    void Aggro(Unit *who)
+    {
+        pTarget = who;
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        if (!m_pInstance)
+            return;
+
+        //tempsummon since ossirian is not created when this event occurs
+        if (Unit* pOssirian = m_creature->SummonCreature(NPC_OSSIRIAN,m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ() - 40.0f,0,TEMPSUMMON_TIMED_DESPAWN,1000))
+            DoScriptText(SAY_BREACHED, pOssirian);
+
+        m_pInstance->SetData(TYPE_KURINNAXX,DONE);
+
+       Creature* pAndorov = m_creature->SummonCreature(NPC_GENERAL_ANDOROV,NPCs[0].x,NPCs[0].y,NPCs[0].z,NPCs[0].an,TEMPSUMMON_CORPSE_DESPAWN,0);
+        if (pAndorov)
+        {
+            pAndorov->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pAndorov->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_VENDOR);
+        }
+    }
+
+    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+     {
+        if (!m_bHasEnraged && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 30 && !m_creature->IsNonMeleeSpellCasted(false))
+        {
+            DoCast(m_creature->getVictim(),SPELL_ENRAGE);
+            m_bHasEnraged = true;
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -53,30 +120,70 @@ struct MANGOS_DLL_DECL boss_kurinnaxxAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        // If we are belowe 30% HP cast enrage
-        if (!m_bEnraged && m_creature->GetHealthPercent() <= 30.0f)
-        {
-            m_bEnraged = true;
-            DoCastSpellIfCan(m_creature->getVictim(), SPELL_ENRAGE);
+        //m_uiMortalWound_Timer
+        if (m_uiMortalWound_Timer < uiDiff)
+         {
+            DoCast(m_creature->getVictim(),SPELL_MORTALWOUND);
+            m_uiMortalWound_Timer = 30000;
+         }
+        else 
+            m_uiMortalWound_Timer -= uiDiff;
+
+        //Summon our trap and wait 5 seconds
+        if (!m_bHasSummonedTrap && m_uiSandTrap_Timer < 10000)
+         {
+            if (Unit* pUnit = SelectUnit(SELECT_TARGET_RANDOM,0))
+            {
+                pUnit->CastSpell(pUnit,SPELL_SUMMON_SANDTRAP,false);
+                m_bHasSummonedTrap = true;
+            }
         }
 
-        // Mortal Wound
-        if (m_uiMortalWoundTimer < uiDiff)
-        {
-            DoCastSpellIfCan(m_creature->getVictim(), SPELL_MORTAL_WOUND);
-            m_uiMortalWoundTimer = 30000;
-        }
-        else
-            m_uiMortalWoundTimer -= uiDiff;
+        //if random target gets close to the trap, trap will cast
+        if (m_uiSandTrap_Timer < 5000)
+         {
 
-        // Sand Trap
-        if (m_uiSandTrapTimer < uiDiff)
+            if (Unit* pUnit = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (GameObject *pTrap = GetClosestGameObjectWithEntry(pUnit,GO_TRAP,ATTACK_DISTANCE))
+                {
+                    DoCast(pUnit, SPELL_SANDTRAP_EFFECT);
+                    pTrap->Delete();
+                    m_bHasSummonedTrap = false;
+                    m_uiSandTrap_Timer = 30000;
+                }
+        }
+
+        if (m_uiSandTrap_Timer < uiDiff)
         {
-            DoCastSpellIfCan(m_creature->getVictim(), SPELL_SANDTRAP);
-            m_uiSandTrapTimer = 30000;
+            if (GameObject *pTrap = GetClosestGameObjectWithEntry(m_creature,GO_TRAP,DEFAULT_VISIBILITY_DISTANCE))
+            {
+                m_creature->SendObjectDeSpawnAnim(pTrap->GetGUID());
+                pTrap->Delete();
+                m_bHasSummonedTrap = false;
+                m_uiSandTrap_Timer = 30000;
+            }
         }
         else
-            m_uiSandTrapTimer -= uiDiff;
+            m_uiSandTrap_Timer -= uiDiff;
+
+        if (Player* pPlayer = GetPlayerAtMinimumRange(DEFAULT_VISIBILITY_DISTANCE))
+            DoCast(pPlayer, SPELL_SUMMON_PLAYER);
+
+        if (m_uiWideSlash_Timer < uiDiff)
+        {
+            DoCast(m_creature->getVictim(), SPELL_WIDE_SLASH);
+            m_uiWideSlash_Timer = 10000 + rand()%10000;
+        }
+        else
+            m_uiWideSlash_Timer -= uiDiff;
+
+        if (m_uiTrash_Timer < uiDiff)
+        {
+            DoCast(m_creature->getVictim(), SPELL_TRASH);
+            m_uiTrash_Timer = 10000 + rand()%10000;
+        }
+        else
+            m_uiTrash_Timer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }

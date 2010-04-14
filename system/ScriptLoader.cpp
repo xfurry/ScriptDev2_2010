@@ -226,9 +226,13 @@ extern void AddSC_boss_onyxia();                            //onyxias_lair
 extern void AddSC_boss_amnennar_the_coldbringer();          //razorfen_downs
 extern void AddSC_razorfen_downs();
 extern void AddSC_boss_ayamiss();                           //ruins_of_ahnqiraj
+extern void AddSC_boss_buru();
+extern void AddSC_boss_ossirian();
 extern void AddSC_boss_kurinnaxx();
+extern void AddSC_boss_rajaxx();
 extern void AddSC_boss_moam();
 extern void AddSC_ruins_of_ahnqiraj();
+extern void AddSC_instance_ruins_of_ahnqiraj();
 extern void AddSC_boss_cthun();                             //temple_of_ahnqiraj
 extern void AddSC_boss_fankriss();
 extern void AddSC_boss_huhuran();
@@ -691,6 +695,10 @@ void AddScripts()
     AddSC_razorfen_downs();
     AddSC_boss_ayamiss();                                   //ruins_of_ahnqiraj
     AddSC_boss_kurinnaxx();
+    AddSC_boss_buru();
+    AddSC_boss_ossirian();
+    AddSC_boss_rajaxx();
+    AddSC_instance_ruins_of_ahnqiraj();
     AddSC_boss_moam();
     AddSC_ruins_of_ahnqiraj();
     AddSC_boss_cthun();                                     //temple_of_ahnqiraj

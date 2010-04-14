@@ -1,0 +1,2115 @@
+diff --git a/scripts/kalimdor/ruins_of_ahnqiraj/boss_ayamiss.cpp b/scripts/kalimdor/ruins_of_ahnqiraj/boss_ayamiss.cpp
+index d94f6a0..d16e9f2 100644
+--- a/scripts/kalimdor/ruins_of_ahnqiraj/boss_ayamiss.cpp
++++ b/scripts/kalimdor/ruins_of_ahnqiraj/boss_ayamiss.cpp
+@@ -22,39 +22,101 @@ SDCategory: Ruins of Ahn'Qiraj
+ EndScriptData */
+ 
+ #include "precompiled.h"
+-
+-/*
+-To do:
+-make him fly from 70-100%
+-*/
++#include "ruins_of_ahnqiraj.h"
+ 
+ enum
+ {
+-    SPELL_STINGERSPRAY  = 25749,
+-    SPELL_POISONSTINGER = 25748,                            //only used in phase1
+-    SPELL_SUMMONSWARMER = 25844,                            //might be 25708
+-    //SPELL_PARALYZE 23414 doesnt work correct (core)
++     SPELL_STINGERSPRAY          =  25749,
++     SPELL_POISONSTINGER         =  25748,                          //only used in phase1
++     SPELL_PARALYZE              =  25725,
++     SPELL_TRASH                 =  3391,
++     SPELL_FRENZY                =  8269,
++     SPELL_LASH                  =  25852,
++ 
++     EMOTE_FRENZY                =  -1000002,
++ 
++     NPC_HIVEZARA_LARVA          =  15555,
++
++     SPELL_FEED                  =  25721,
++
++     NPC_HIVEZARA_HORNET         =  15934,
++     NPC_HIVEZARA_SWARMER        =  15546
++};
++
++struct SpawnLocations
++{
++    float x, y, z;
++};
++
++static SpawnLocations Larva[]=
++{
++    {-9695,1585,25},
++    {-9627,1538,21.44f}
++};
+ 
+-    PHASE_AIR           = 0,
+-    PHASE_GROUND        = 1
++static SpawnLocations Swarmers[]=
++{
++    {-9650,1577,47}
+ };
+ 
+ struct MANGOS_DLL_DECL boss_ayamissAI : public ScriptedAI
+ {
+     boss_ayamissAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+ 
+-    uint32 m_uiStingerSprayTimer;
+-    uint32 m_uiPoisonStingerTimer;
+-    uint32 m_uiSummonSwarmerTimer;
+-    uint8 m_uiPhase;
++    Unit *pTarget;
++    Creature *pLarva;
++ 
++    uint32 m_uiStingerSpray_Timer;
++    uint32 m_uiPoisonStinger_Timer;
++    uint32 m_uiSummonSwarmer_Timer;
++    uint32 m_uiSummonPlayer_Timer;
++    uint32 m_uiTrash_Timer;
++    uint32 m_uiRelocate_Timer;
++    uint32 m_uiLash_Timer;
++
++    uint64 m_uiLarvaTargetGUID;
++   
++    bool m_bIsInPhaseTwo;
++    bool m_bIsEnraged;
++    bool m_bRelocated;
+ 
+     void Reset()
+     {
+-        m_uiStingerSprayTimer  = 30000;
+-        m_uiPoisonStingerTimer = 30000;
+-        m_uiSummonSwarmerTimer = 60000;
++        pTarget = NULL;
++        pLarva = NULL;
++
++        m_uiStingerSpray_Timer = 10000;
++        m_uiPoisonStinger_Timer = 5000;
++        m_uiSummonSwarmer_Timer = 60000;
++        m_uiSummonPlayer_Timer = 10000;
++        m_uiTrash_Timer = 10000;
++        m_uiRelocate_Timer = 5000;
++        m_uiLash_Timer = 15000;
++
++        m_uiLarvaTargetGUID = NULL;
++
++        m_bIsInPhaseTwo = false;
++        m_bIsEnraged = false;
++        m_bRelocated = false;
++
++        SetCombatMovement(false);
++    }
++
++    void Aggro(Unit *who)
++    {
++        m_creature->SendMonsterMove(m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ()+20.0f,SPLINETYPE_NORMAL,m_creature->GetSplineFlags(),3000); 
++    }
++
++    void JustSummoned(Creature* pSummoned)
++    {
++        //disabled for testing
++        if (pSummoned->GetEntry() == NPC_HIVEZARA_LARVA)
++            if (Unit* pLarvaTarget = Unit::GetUnit(*m_creature,m_uiLarvaTargetGUID))
++                pSummoned->AI()->AttackStart(pLarvaTarget);
+         
+-        m_uiPhase = PHASE_AIR;
++        if (pSummoned->GetEntry() == NPC_HIVEZARA_SWARMER)
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                pSummoned->AI()->AttackStart(pTarget);
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+@@ -62,53 +124,133 @@ struct MANGOS_DLL_DECL boss_ayamissAI : public ScriptedAI
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
+-        // Stinger Spray
+-        if (m_uiStingerSprayTimer < uiDiff)
+-        {
+-            DoCastSpellIfCan(m_creature->getVictim(), SPELL_STINGERSPRAY);
+-            m_uiStingerSprayTimer = 30000;
+-        }
++        if (!m_bRelocated && m_uiRelocate_Timer < uiDiff)
++         {
++            m_creature->Relocate(m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ()+20.0f,0.0f);
++            m_bRelocated = true;
++         }
+         else
+-            m_uiStingerSprayTimer -= uiDiff;
+-        
+-        if (m_uiPhase == PHASE_AIR)
++            m_uiRelocate_Timer -= uiDiff;
++ 
++        if (!m_bIsInPhaseTwo && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 70)
++         {
++            SetCombatMovement(true);
++            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++            m_creature->AttackerStateUpdate(m_creature->getVictim(),BASE_ATTACK,true);
++            m_bIsInPhaseTwo = true;
++        }
++ 
++        if (!m_bIsEnraged && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 20)
++         {
++            DoCast(m_creature,SPELL_FRENZY);
++            DoScriptText(EMOTE_FRENZY,m_creature);
++            m_bIsEnraged = true;
++        }
++ 
++        if (m_uiSummonSwarmer_Timer < uiDiff)
++         {
++            for (uint8 i = 0; i < 20; ++i)
++                m_creature->SummonCreature(NPC_HIVEZARA_SWARMER,Swarmers[0].x + rand()%10, Swarmers[0].y + rand()%10,Swarmers[0].z + rand()%10,0,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,15000);
++            m_uiSummonSwarmer_Timer = 60000;
++        }
++        else 
++            m_uiSummonSwarmer_Timer -= uiDiff;
++ 
++        if (m_uiSummonPlayer_Timer < uiDiff)
+         {
+-            // Start ground phase at 70% of HP
+-            if (m_creature->GetHealthPercent() <= 70.0f)
++            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+             {
+-                m_uiPhase = PHASE_GROUND;
+-                DoResetThreat();
++                m_creature->CastSpell(pTarget,SPELL_PARALYZE,false);
++                uint32 random = rand()%2;
++                m_creature->SummonCreature(NPC_HIVEZARA_LARVA,Larva[random].x,Larva[random].y,Larva[random].z,0,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,5000);
++                m_uiLarvaTargetGUID = pTarget->GetGUID();
+             }
+-
+-            // Poison Stinger
+-            if (m_uiPoisonStingerTimer < uiDiff)
++            m_uiSummonPlayer_Timer = 15000;
++        }
++        else
++            m_uiSummonPlayer_Timer -= uiDiff;
++            
++        if (!m_bIsInPhaseTwo)
++        {
++            if (m_uiPoisonStinger_Timer < uiDiff)
+             {
+-                DoCastSpellIfCan(m_creature->getVictim(), SPELL_POISONSTINGER);
+-                m_uiPoisonStingerTimer = 30000;
++                DoCast(m_creature->getVictim(),SPELL_POISONSTINGER);
++                m_uiPoisonStinger_Timer = 3000;
+             }
+             else
+-                m_uiPoisonStingerTimer -= uiDiff;
++                m_uiPoisonStinger_Timer -= uiDiff;
+         }
+         else
+-        {     
+-            //m_uiSummonSwarmerTimer
+-            if (m_uiSummonSwarmerTimer < uiDiff)
++        {
++            if (m_uiStingerSpray_Timer < uiDiff)
++            {
++                DoCast(m_creature->getVictim(),SPELL_STINGERSPRAY);
++                m_uiStingerSpray_Timer = 10000;
++            }
++            else 
++                m_uiStingerSpray_Timer -= uiDiff;
++
++            if (m_uiLash_Timer < uiDiff)
+             {
+-                DoCastSpellIfCan(m_creature->getVictim(), SPELL_SUMMONSWARMER);
+-                m_uiSummonSwarmerTimer = 60000;
++                DoCast(m_creature->getVictim(),SPELL_LASH);
++                m_uiLash_Timer = 10000 + rand()%10000;
+             }
+             else
+-                m_uiSummonSwarmerTimer -= uiDiff;
++                m_uiLash_Timer -= uiDiff;
+ 
+-            DoMeleeAttackIfReady();
++            if (m_uiTrash_Timer < uiDiff)
++            {
++                DoCast(m_creature->getVictim(), SPELL_TRASH);
++                m_uiTrash_Timer = 10000 + rand()%10000;
++            }
++            else
++                m_uiTrash_Timer -= uiDiff;
+         }
++
++        DoMeleeAttackIfReady();
+     }
+ };
++
++struct MANGOS_DLL_DECL mob_zara_larvaAI : public ScriptedAI
++{
++    mob_zara_larvaAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint64 m_uiTargetGUID;
++
++    void Aggro(Unit *pWho)
++    {
++        m_uiTargetGUID = pWho->GetGUID();
++    }
++
++    void Reset() 
++    {
++        m_uiTargetGUID = NULL;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_creature->getVictim() || !m_creature->SelectHostileTarget())
++            return;
++
++        if (Unit* pTarget = Unit::GetUnit(*m_creature,m_uiTargetGUID))
++            if (m_creature->IsWithinDistInMap(pTarget,ATTACK_DISTANCE))
++                if(m_creature->getVictim()->HasAura(SPELL_PARALYZE))
++                    DoCast(pTarget, SPELL_FEED);
++
++         DoMeleeAttackIfReady();
++     }
++ };
++
+ CreatureAI* GetAI_boss_ayamiss(Creature* pCreature)
+ {
+     return new boss_ayamissAI(pCreature);
+ }
+ 
++CreatureAI* GetAI_mob_zara_larva(Creature* pCreature)
++{
++    return new mob_zara_larvaAI(pCreature);
++}
++
+ void AddSC_boss_ayamiss()
+ {
+     Script* newscript;
+@@ -116,4 +258,9 @@ void AddSC_boss_ayamiss()
+     newscript->Name = "boss_ayamiss";
+     newscript->GetAI = &GetAI_boss_ayamiss;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_zara_larva";
++    newscript->GetAI = &GetAI_mob_zara_larva;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/kalimdor/ruins_of_ahnqiraj/boss_buru.cpp b/scripts/kalimdor/ruins_of_ahnqiraj/boss_buru.cpp
+index 2eddb5e..f4cccdb 100644
+--- a/scripts/kalimdor/ruins_of_ahnqiraj/boss_buru.cpp
++++ b/scripts/kalimdor/ruins_of_ahnqiraj/boss_buru.cpp
+@@ -22,5 +22,188 @@ SDCategory: Ruins of Ahn'Qiraj
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "ruins_of_ahnqiraj.h"
+ 
+-#define EMOTE_TARGET        -1509002
++enum
++{
++    EMOTE_TARGET                =   -1509002,
++
++    SPELL_CREEPING_PLAGUE       =   20512,
++    SPELL_DISMEMBER             =   96,
++    SPELL_FULL_SPEED            =   1557,
++    SPELL_THORNS                =   25640,
++    SPELL_GATHERING_SPEED       =   1834,
++    SPELL_BURU_TRANSFORM        =   24721,
++
++    NPC_BURU_EGG                =   15514,
++    SPELL_SUMMON_HATCHLING      =   1881,
++    SPELL_EXPLODE               =   19593,
++    NPC_BURU_EGG_TRIGGER        =   15964,
++
++    NPC_HIVEZARA_HATCHLING      =   15521
++};
++
++struct MANGOS_DLL_DECL boss_buruAI : public ScriptedAI
++{
++    boss_buruAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++
++    bool m_bIsEnraged;
++
++    uint32 m_uiDismember_Timer;
++    uint32 m_uiSpeed_Timer;
++    uint32 m_uiCreepingPlague_Timer;
++
++    void Reset() 
++    {
++        m_creature->RemoveAllAuras();        
++        m_creature->SetSpeedRate(MOVE_RUN,0.5f);
++        m_bIsEnraged = false;
++        m_uiDismember_Timer = 5000;
++        m_uiSpeed_Timer = 5000;
++        m_uiCreepingPlague_Timer = 6000;
++    }
++
++    void SpellHit(Unit *pCaster, const SpellEntry *pSpell)        //not working
++    {
++        if (pSpell->Id == SPELL_EXPLODE)
++        {
++            m_creature->SetSpeedRate(MOVE_RUN,0.5f);
++        }
++    }
++
++    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
++    {
++        if (!m_bIsEnraged && (m_creature->GetHealth()+uiDamage)*100 / m_creature->GetMaxHealth() < 20)
++        {            
++            DoCast(m_creature,SPELL_BURU_TRANSFORM);
++            m_creature->SetArmor(0);
++            m_bIsEnraged = true;
++        }
++    }
++
++    void Aggro(Unit *pWho)
++    {
++        DoCast(m_creature,SPELL_THORNS);
++        m_creature->SetArmor(20000);
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiDismember_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(),SPELL_DISMEMBER);
++            m_uiDismember_Timer = 20000;
++        }
++        else
++            m_uiDismember_Timer -= uiDiff;
++
++        if (m_bIsEnraged)
++            if (m_uiCreepingPlague_Timer < uiDiff)
++            {
++                DoCast(m_creature,SPELL_CREEPING_PLAGUE);
++                m_uiCreepingPlague_Timer = 6000;
++            }
++            else
++                m_uiCreepingPlague_Timer -= uiDiff;
++
++        if (m_uiSpeed_Timer < uiDiff)
++        {
++            m_creature->SetSpeedRate(MOVE_RUN,m_creature->GetSpeedRate(MOVE_RUN) + 0.1f);
++            m_uiSpeed_Timer = 5000;
++        }
++        else
++            m_uiSpeed_Timer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++struct MANGOS_DLL_DECL mob_buru_eggAI : public ScriptedAI
++{
++    mob_buru_eggAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++    ScriptedInstance* m_pInstance;
++    Creature *pBuru;
++
++    void Reset()
++    {
++        SetCombatMovement(false);
++    }
++
++    void EnterCombat(Unit* pWho)
++    {
++        if (!m_pInstance)
++            return;
++
++        if (Creature* pBuru = (Creature*)Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_BURU)))
++            if (pBuru->isAlive())
++            {
++                pBuru->GetMotionMaster()->MoveChase(pWho);
++                pBuru->AI()->AttackStart(pWho);
++            }
++    }
++    void JustSummoned(Creature *pSummoned)
++    {
++        if (pSummoned->GetEntry() == NPC_BURU_EGG_TRIGGER)
++        {
++            pSummoned->CastSpell(pBuru,SPELL_EXPLODE,true);            
++            pSummoned->CastSpell(pBuru,SPELL_SUMMON_HATCHLING,true);
++        }
++    }
++
++    void JustDied(Unit *pKiller)
++    {
++        if (!m_pInstance)
++            return;
++
++        if (Unit* pBuru = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_BURU)))
++            if (pBuru->isAlive())
++            {
++                pBuru->GetMotionMaster()->MoveChase(pKiller);
++                pBuru->Attack(pKiller,true);
++                DoScriptText(EMOTE_TARGET,pBuru,pKiller);
++                pBuru->CastSpell(pBuru,SPELL_EXPLODE,true);            
++                pBuru->CastSpell(pBuru,SPELL_SUMMON_HATCHLING,true);
++                //pBuru->RemoveAurasDueToSpell(SPELL_FULL_SPEED);
++                //m_creature->SummonCreature(NPC_BURU_EGG_TRIGGER,m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ(),0,TEMPSUMMON_TIMED_DESPAWN,1000);                
++                pBuru->SetHealth(pBuru->GetHealth() - 45000);
++                pBuru->SetSpeedRate(MOVE_RUN,0.5f);
++            }
++    }
++};
++
++CreatureAI* GetAI_boss_buru(Creature* pCreature)
++{
++    return new boss_buruAI(pCreature);
++}
++
++CreatureAI* GetAI_mob_buru_egg(Creature* pCreature)
++{
++    return new mob_buru_eggAI(pCreature);
++}
++
++void AddSC_boss_buru()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name = "boss_buru";
++    newscript->GetAI = &GetAI_boss_buru;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_buru_egg";
++    newscript->GetAI = &GetAI_mob_buru_egg;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/kalimdor/ruins_of_ahnqiraj/boss_kurinnaxx.cpp b/scripts/kalimdor/ruins_of_ahnqiraj/boss_kurinnaxx.cpp
+index e6b65c3..bc57ce6 100644
+--- a/scripts/kalimdor/ruins_of_ahnqiraj/boss_kurinnaxx.cpp
++++ b/scripts/kalimdor/ruins_of_ahnqiraj/boss_kurinnaxx.cpp
+@@ -22,30 +22,97 @@ SDCategory: Ruins of Ahn'Qiraj
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "ruins_of_ahnqiraj.h"
+ 
+ enum
+ {
+-    SPELL_TRASH        = 3391,
+-    SPELL_WIDE_SLASH   = 25814,
+-    SPELL_MORTAL_WOUND = 25646,
+-    SPELL_SANDTRAP     = 25656,
+-    SPELL_ENRAGE       = 28798
++    GO_TRAP                 =   180647,
++ 
++    SPELL_MORTALWOUND       =   25646,
++    SPELL_SUMMON_SANDTRAP   =   25648,
++    SPELL_SANDTRAP_EFFECT   =   25656,
++    SPELL_ENRAGE            =   26527,
++    SPELL_SUMMON_PLAYER     =   26446,
++    SPELL_WIDE_SLASH        =   25814,
++    SPELL_TRASH             =   3391,
++
++    SAY_BREACHED            =   -1509022
++};
++
++struct SpawnLocations
++{
++    float x, y, z, an;
++    uint32 id;
++};
++
++static SpawnLocations NPCs[]=
++{
++    {-8873.42f,1647.67f,21.386f,5.69141f, NPC_GENERAL_ANDOROV}
+ };
+ 
+ struct MANGOS_DLL_DECL boss_kurinnaxxAI : public ScriptedAI
+ {
+-    boss_kurinnaxxAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_kurinnaxxAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
+ 
+-    uint32 m_uiMortalWoundTimer;
+-    uint32 m_uiSandTrapTimer;
+-    bool m_bEnraged;
++    ScriptedInstance* m_pInstance;
++
++    Unit *pTarget;
++    uint32 m_uiMortalWound_Timer;
++    uint32 m_uiSandTrap_Timer;
++    uint32 m_uiTrash_Timer;
++    uint32 m_uiWideSlash_Timer;
++
++    bool m_bHasEnraged;
++    bool m_bHasSummonedTrap;
+ 
+     void Reset()
+     {
+-        m_bEnraged = false;
++        pTarget = NULL;
++
++        m_uiMortalWound_Timer = 7000;
++        m_uiSandTrap_Timer = 30000;
++        m_uiTrash_Timer = 10000;
++        m_uiWideSlash_Timer = 15000;
++
++        m_bHasEnraged = false;
++        m_bHasSummonedTrap = false;
++    }
++
++    void Aggro(Unit *who)
++    {
++        pTarget = who;
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if (!m_pInstance)
++            return;
++
++        //tempsummon since ossirian is not created when this event occurs
++        if (Unit* pOssirian = m_creature->SummonCreature(NPC_OSSIRIAN,m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ() - 40.0f,0,TEMPSUMMON_TIMED_DESPAWN,1000))
++            DoScriptText(SAY_BREACHED, pOssirian);
+ 
+-        m_uiMortalWoundTimer = 30000;
+-        m_uiSandTrapTimer    = 30000;
++        m_pInstance->SetData(TYPE_KURINNAXX,DONE);
++
++       Creature* pAndorov = m_creature->SummonCreature(NPC_GENERAL_ANDOROV,NPCs[0].x,NPCs[0].y,NPCs[0].z,NPCs[0].an,TEMPSUMMON_CORPSE_DESPAWN,0);
++        if (pAndorov)
++        {
++            pAndorov->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
++            pAndorov->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_VENDOR);
++        }
++    }
++
++    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
++     {
++        if (!m_bHasEnraged && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 30 && !m_creature->IsNonMeleeSpellCasted(false))
++        {
++            DoCast(m_creature->getVictim(),SPELL_ENRAGE);
++            m_bHasEnraged = true;
++        }
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+@@ -53,30 +120,70 @@ struct MANGOS_DLL_DECL boss_kurinnaxxAI : public ScriptedAI
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
+-        // If we are belowe 30% HP cast enrage
+-        if (!m_bEnraged && m_creature->GetHealthPercent() <= 30.0f)
++        //m_uiMortalWound_Timer
++        if (m_uiMortalWound_Timer < uiDiff)
++         {
++            DoCast(m_creature->getVictim(),SPELL_MORTALWOUND);
++            m_uiMortalWound_Timer = 30000;
++         }
++        else 
++            m_uiMortalWound_Timer -= uiDiff;
++
++        //Summon our trap and wait 5 seconds
++        if (!m_bHasSummonedTrap && m_uiSandTrap_Timer < 10000)
++         {
++            if (Unit* pUnit = SelectUnit(SELECT_TARGET_RANDOM,0))
++            {
++                pUnit->CastSpell(pUnit,SPELL_SUMMON_SANDTRAP,false);
++                m_bHasSummonedTrap = true;
++            }
++        }
++
++        //if random target gets close to the trap, trap will cast
++        if (m_uiSandTrap_Timer < 5000)
++         {
++
++            if (Unit* pUnit = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (GameObject *pTrap = GetClosestGameObjectWithEntry(pUnit,GO_TRAP,ATTACK_DISTANCE))
++                {
++                    DoCast(pUnit, SPELL_SANDTRAP_EFFECT);
++                    pTrap->Delete();
++                    m_bHasSummonedTrap = false;
++                    m_uiSandTrap_Timer = 30000;
++                }
++        }
++
++        if (m_uiSandTrap_Timer < uiDiff)
+         {
+-            m_bEnraged = true;
+-            DoCastSpellIfCan(m_creature->getVictim(), SPELL_ENRAGE);
++            if (GameObject *pTrap = GetClosestGameObjectWithEntry(m_creature,GO_TRAP,DEFAULT_VISIBILITY_DISTANCE))
++            {
++                m_creature->SendObjectDeSpawnAnim(pTrap->GetGUID());
++                pTrap->Delete();
++                m_bHasSummonedTrap = false;
++                m_uiSandTrap_Timer = 30000;
++            }
+         }
++        else
++            m_uiSandTrap_Timer -= uiDiff;
++
++        if (Player* pPlayer = GetPlayerAtMinimumRange(DEFAULT_VISIBILITY_DISTANCE))
++            DoCast(pPlayer, SPELL_SUMMON_PLAYER);
+ 
+-        // Mortal Wound
+-        if (m_uiMortalWoundTimer < uiDiff)
++        if (m_uiWideSlash_Timer < uiDiff)
+         {
+-            DoCastSpellIfCan(m_creature->getVictim(), SPELL_MORTAL_WOUND);
+-            m_uiMortalWoundTimer = 30000;
++            DoCast(m_creature->getVictim(), SPELL_WIDE_SLASH);
++            m_uiWideSlash_Timer = 10000 + rand()%10000;
+         }
+         else
+-            m_uiMortalWoundTimer -= uiDiff;
++            m_uiWideSlash_Timer -= uiDiff;
+ 
+-        // Sand Trap
+-        if (m_uiSandTrapTimer < uiDiff)
++        if (m_uiTrash_Timer < uiDiff)
+         {
+-            DoCastSpellIfCan(m_creature->getVictim(), SPELL_SANDTRAP);
+-            m_uiSandTrapTimer = 30000;
++            DoCast(m_creature->getVictim(), SPELL_TRASH);
++            m_uiTrash_Timer = 10000 + rand()%10000;
+         }
+         else
+-            m_uiSandTrapTimer -= uiDiff;
++            m_uiTrash_Timer -= uiDiff;
+ 
+         DoMeleeAttackIfReady();
+     }
+diff --git a/scripts/kalimdor/ruins_of_ahnqiraj/boss_moam.cpp b/scripts/kalimdor/ruins_of_ahnqiraj/boss_moam.cpp
+index b64c214..2dfe6a5 100644
+--- a/scripts/kalimdor/ruins_of_ahnqiraj/boss_moam.cpp
++++ b/scripts/kalimdor/ruins_of_ahnqiraj/boss_moam.cpp
+@@ -29,44 +29,60 @@ enum
+     EMOTE_MANA_FULL          = -1509001,
+     EMOTE_ENERGIZING         = -1509028,
+ 
+-    SPELL_TRAMPLE            = 15550,
+-    SPELL_DRAIN_MANA         = 25671,
+-    SPELL_ARCANE_ERUPTION    = 25672,
+-    SPELL_SUMMON_MANAFIEND_1 = 25681,
+-    SPELL_SUMMON_MANAFIEND_2 = 25682,
+-    SPELL_SUMMON_MANAFIEND_3 = 25683,
+-    SPELL_ENERGIZE           = 25685,
+-
+-    PHASE_ATTACKING          = 0,
+-    PHASE_ENERGIZING         = 1
++     SPELL_TRAMPLE           =  15550,
++     SPELL_DRAIN_MANA         = 25671,
++     SPELL_ARCANEERUPTION    =  25672,
++     SPELL_SUMMON_MANA_FIEND =  25681,                      //25682,25683 
++     SPELL_ENERGIZE          =  25685,
++ 
++    //mana fiend
++     NPC_MANA_FIEND          =  15527,
+ };
+ 
+ struct MANGOS_DLL_DECL boss_moamAI : public ScriptedAI
+ {
+     boss_moamAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+ 
+-    uint8 m_uiPhase;
+-    
+     uint32 m_uiTrample_Timer;
+-    uint32 m_uiManaDrain_Timer;
+-    uint32 m_uiCheckoutMana_Timer;
+-    uint32 m_uiSummonManaFiends_Timer;
++    uint32 m_uiSummonManaFiend_Timer;
++    uint32 m_uiManaGain_Timer;
++    uint32 m_uiWait_Timer;
++    uint8 m_uiFiendCount;
++    uint32 m_uiDrainMana_Timer;
+ 
+     void Reset()
+     {
+-        m_uiTrample_Timer           = 9000;
+-        m_uiManaDrain_Timer         = 3000;
+-        m_uiSummonManaFiends_Timer  = 90000;
+-        m_uiCheckoutMana_Timer      = 1500;
+-        m_uiPhase                   = PHASE_ATTACKING;
+-        m_creature->SetPower(POWER_MANA, 0);
+-        m_creature->SetMaxPower(POWER_MANA, 0);
++        m_uiTrample_Timer = 10000;
++        m_uiSummonManaFiend_Timer = 90000;
++        m_uiManaGain_Timer = 5000;
++        m_uiWait_Timer = 20000;
++        m_uiDrainMana_Timer = 3000;
++
++        m_uiFiendCount = 0;
+     }
+ 
+-    void Aggro(Unit* pWho)
++    void Aggro(Unit *who)
+     {
+         DoScriptText(EMOTE_AGGRO, m_creature);
+-        m_creature->SetMaxPower(POWER_MANA, m_creature->GetCreatureInfo()->maxmana);
++        m_creature->SetPower(POWER_MANA,0);
++    }
++
++    void JustSummoned(Creature* pSummoned)
++    {
++        if (Unit* pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO,0))
++            pSummoned->AI()->AttackStart(pTarget);
++
++        if (pSummoned->GetEntry() == NPC_MANA_FIEND)
++             ++m_uiFiendCount;
++    }
++
++    void SummonedCreatureDespawn(Creature* pCreature) 
++    {
++         if (pCreature->GetEntry() == NPC_MANA_FIEND)
++             --m_uiFiendCount;
++
++         if (!m_uiFiendCount)
++             m_creature->RemoveAurasDueToSpell(SPELL_ENERGIZE);
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+@@ -74,87 +90,56 @@ struct MANGOS_DLL_DECL boss_moamAI : public ScriptedAI
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
+-        switch(m_uiPhase)
++        if (m_uiManaGain_Timer < uiDiff)
++        {
++            m_creature->SetPower(POWER_MANA,m_creature->GetPower(POWER_MANA)+1000);
++            m_uiManaGain_Timer = 5000;
++        }
++        else
++            m_uiManaGain_Timer -= uiDiff;
++
++         //If we are 100%MANA cast Arcane Erruption
++        if (m_creature->GetPower(POWER_MANA) == m_creature->GetMaxPower(POWER_MANA) && !m_creature->IsNonMeleeSpellCasted(false))
++         {
++            m_creature->RemoveAurasDueToSpell(SPELL_ENERGIZE);
++             DoCast(m_creature->getVictim(),SPELL_ARCANEERUPTION);
++             DoScriptText(EMOTE_MANA_FULL, m_creature);
++         }
++ 
++        //m_uiSummonManaFiend_Timer
++        if (m_uiSummonManaFiend_Timer < uiDiff)
++         {
++            //DoCast(m_creature,SUMMON_MANA_FIEND); //summons only one
++            for (uint8 i = 0; i < 3; ++i)
++                m_creature->SummonCreature(NPC_MANA_FIEND,m_creature->GetPositionX()+2,m_creature->GetPositionY(),m_creature->GetPositionZ(),0,TEMPSUMMON_CORPSE_DESPAWN,0);            
++            m_uiSummonManaFiend_Timer = 90000;
++            m_creature->AttackStop();
++            DoCast(m_creature,SPELL_ENERGIZE);
++            DoScriptText(EMOTE_ENERGIZING,m_creature);
++            m_uiWait_Timer = 10000;
++         }
++        else
++            m_uiSummonManaFiend_Timer -= uiDiff;
++ 
++        //m_uiTrample_Timer
++        if (m_uiTrample_Timer < uiDiff)
++         {
++             DoCast(m_creature->getVictim(),SPELL_TRAMPLE);
++            m_uiTrample_Timer = 10000;
++        }
++        else
++            m_uiTrample_Timer -= uiDiff;
++ 
++        //m_uiDrainMana_Timer
++        if (m_uiDrainMana_Timer < uiDiff)
+         {
+-            case PHASE_ATTACKING:
+-                if (m_uiCheckoutMana_Timer <= uiDiff)
+-                {
+-                    m_uiCheckoutMana_Timer = 1500;
+-                    if (m_creature->GetPower(POWER_MANA) * 100 / m_creature->GetMaxPower(POWER_MANA) > 75.0f)
+-                    {
+-                        DoCastSpellIfCan(m_creature, SPELL_ENERGIZE);
+-                        DoScriptText(EMOTE_ENERGIZING, m_creature);
+-                        m_uiPhase = PHASE_ENERGIZING;
+-                        return;
+-                    }
+-                } 
+-                else
+-                    m_uiCheckoutMana_Timer -= uiDiff;
+-
+-                if (m_uiSummonManaFiends_Timer <= uiDiff)
+-                {
+-                    DoCastSpellIfCan(m_creature->getVictim(), SPELL_SUMMON_MANAFIEND_1, CAST_TRIGGERED);
+-                    DoCastSpellIfCan(m_creature->getVictim(), SPELL_SUMMON_MANAFIEND_2, CAST_TRIGGERED);
+-                    DoCastSpellIfCan(m_creature->getVictim(), SPELL_SUMMON_MANAFIEND_3, CAST_TRIGGERED);
+-                    m_uiSummonManaFiends_Timer = 90000;
+-                }
+-                else
+-                    m_uiSummonManaFiends_Timer -= uiDiff;
+-
+-                if (m_uiManaDrain_Timer <= uiDiff)
+-                {
+-                    m_uiManaDrain_Timer = urand(2000, 6000);
+-                    // choose random target with mana
+-                    std::list<Unit*> lTargets;
+-                    ThreatList const& threatlist = m_creature->getThreatManager().getThreatList();
+-                    if (threatlist.empty())
+-                        return;
+-
+-                    for (ThreatList::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
+-                    {
+-                        Unit* pUnit = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+-                        if (pUnit && pUnit->isAlive() && pUnit->GetPower(POWER_MANA))
+-                            lTargets.push_back(pUnit);
+-                    }
+-
+-                    if (lTargets.empty())
+-                        return;
+-
+-                    std::list<Unit*>::iterator itr = lTargets.begin();
+-                    std::advance(itr, urand(0, lTargets.size()-1));
+-
+-                    DoCastSpellIfCan(*itr, SPELL_DRAIN_MANA);
+-                } 
+-                else
+-                    m_uiManaDrain_Timer -= uiDiff;
+-
+-                if (m_uiTrample_Timer <= uiDiff)
+-                {
+-                    DoCastSpellIfCan(m_creature->getVictim(), SPELL_TRAMPLE);
+-                    m_uiTrample_Timer = 15000;
+-                } 
+-                else
+-                    m_uiTrample_Timer -= uiDiff;
+-
+-                DoMeleeAttackIfReady();
+-                break;
+-            case PHASE_ENERGIZING:
+-                if (m_uiCheckoutMana_Timer <= uiDiff)
+-                {
+-                    m_uiCheckoutMana_Timer = 1500;
+-                    if (m_creature->GetPower(POWER_MANA) == m_creature->GetMaxPower(POWER_MANA))
+-                    {
+-                        m_creature->RemoveAurasDueToSpell(SPELL_ENERGIZE);
+-                        DoCastSpellIfCan(m_creature, SPELL_ARCANE_ERUPTION);
+-                        DoScriptText(EMOTE_MANA_FULL, m_creature);
+-                        m_uiPhase = PHASE_ATTACKING;
+-                        return;
+-                    }
+-                } 
+-                else
+-                    m_uiCheckoutMana_Timer -= uiDiff;
+-                break;
++             DoCast(m_creature->getVictim(),SPELL_DRAIN_MANA);
++            m_uiDrainMana_Timer = 30000;
+         }
++        else
++            m_uiDrainMana_Timer -= uiDiff;
++
++        DoMeleeAttackIfReady();
+     }
+ };
+ 
+diff --git a/scripts/kalimdor/ruins_of_ahnqiraj/boss_ossirian.cpp b/scripts/kalimdor/ruins_of_ahnqiraj/boss_ossirian.cpp
+index e176b7c..b08fafb 100644
+--- a/scripts/kalimdor/ruins_of_ahnqiraj/boss_ossirian.cpp
++++ b/scripts/kalimdor/ruins_of_ahnqiraj/boss_ossirian.cpp
+@@ -22,17 +22,282 @@ SDCategory: Ruins of Ahn'Qiraj
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "world.h"
++#include "Weather.h"
+ 
+-#define SAY_SURPREME1   -1509018
+-#define SAY_SURPREME2   -1509019
+-#define SAY_SURPREME3   -1509020
++enum
++{
++     SAY_SURPREME1               =    -1509018,
++     SAY_SURPREME2               =    -1509019,
++     SAY_SURPREME3               =    -1509020,
+ 
+-#define SAY_RAND_INTRO1 -1509021
+-#define SAY_RAND_INTRO2 -1509022
+-#define SAY_RAND_INTRO3 -1509023
+-#define SAY_RAND_INTRO4 -1509024                            //possibly old?
++     SAY_RAND_INTRO1             =    -1509021,
++     SAY_RAND_INTRO2             =    -1509022,
++     SAY_RAND_INTRO3             =    -1509023,
++     SAY_RAND_INTRO4             =    -1509024,                           //possibly old?
++     SAY_AGGRO                   =    -1509025,
+ 
+-#define SAY_AGGRO       -1509025
++     SAY_SLAY                    =    -1509026,
++     SAY_DEATH                   =    -1509027,
+ 
+-#define SAY_SLAY        -1509026
+-#define SAY_DEATH       -1509027
++     SPELL_CURSE_OF_TONGUES      =  25195,
++     SPELL_STRENGTH_OF_OSSIRIAN  =  25176,
++     SPELL_SUMMON_PLAYER         =  20477,
++     SPELL_WAR_STOMP             =  25188,
++
++     //Crystal Weaknesses
++     SPELL_FIRE_WEAKNESS         =   25177,
++     SPELL_NATURE_WEAKNESS       =   25180,
++     SPELL_FROST_WEAKNESS        =   25178,
++     SPELL_ARCANE_WEAKNESS       =   25171,
++     SPELL_SHADOW_WEAKNESS       =   25183,
++
++     //Tornado
++     NPC_TORNADO                 =  19922,
++     SPELL_ENVELOPING_WINDS      =  25189,
++
++     GO_OSSIRIAN_CRYSTAL        =   180619,
++     CRYSTAL_TRIGGER            =   15590
++};
++struct SpawnLocations
++{
++    float x,y,z;
++};
++
++static SpawnLocations TornadoSpawn[]=
++{
++    {-9444,1857,85.55f},
++    {-9352,2012,85.55f}
++};
++
++struct MANGOS_DLL_DECL boss_ossirianAI : public ScriptedAI
++{
++    boss_ossirianAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
++    GameObject *pCrystal;
++    Creature *pTornado;
++
++    uint32 m_uiCurseOfTongues_Timer;
++    uint32 m_uiStrengthOfOssirian_Timer;
++    uint32 m_uiWarStomp_Timer;
++    uint32 m_uiSummonTornado_Timer;
++    uint32 m_uiCastWeakness_Timer;
++    uint32 m_uiCrystalCheck_Timer;
++    
++    bool m_bIsEnraged;
++    bool m_bCastWeakness;
++        
++    void Reset()
++    {
++        Unit *pTarget = NULL;
++        GameObject *pCrystal = NULL;
++
++        m_uiCurseOfTongues_Timer = 30000;
++        m_uiStrengthOfOssirian_Timer = 25000;
++        m_uiWarStomp_Timer = 25000;
++        m_uiCastWeakness_Timer = 5000;
++
++        m_bCastWeakness = true;
++        m_bIsEnraged = true;
++
++        std::list<GameObject*> lCrystals;
++        GetGameObjectListWithEntryInGrid(lCrystals,m_creature,GO_OSSIRIAN_CRYSTAL,MAX_VISIBILITY_DISTANCE);
++        if (lCrystals.empty())
++            debug_log("SD2 ERROR : In AQ 20 no ossirian crystals with the entry %i were found",GO_OSSIRIAN_CRYSTAL);
++        else
++        {
++            for(std::list<GameObject*>::iterator iter = lCrystals.begin(); iter != lCrystals.end(); ++iter)
++                if ((*iter)) 
++                {
++                    (*iter)->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);
++                    (*iter)->ResetDoorOrButton();
++                }
++        }
++        SetWeather(WEATHER_STATE_FINE, 0.0f);  
++        //Weather *wth 
++        //Weather *wth = Weather::SetWeather(WEATHER_TYPE_STORM,1.0f);
++        
++        //SetWeather(WEATHER_STATE_HEAVY_SANDSTORM, 0.0f);
++        /*if (Weather* wth = sWorld.FindWeather(m_creature->GetZoneId()))
++            wth->SetWeather(WEATHER_TYPE_STORM, 0);*/
++    }
++    void SpellHit(Unit* pUnit, const SpellEntry* pSpell)
++    {
++        if (pUnit != m_creature)
++            return;
++
++        if (pSpell->Id == SPELL_FIRE_WEAKNESS || pSpell->Id == SPELL_FROST_WEAKNESS || pSpell->Id == SPELL_SHADOW_WEAKNESS || pSpell->Id == SPELL_NATURE_WEAKNESS || pSpell->Id == SPELL_ARCANE_WEAKNESS)
++        {
++            if (pCrystal)
++                pCrystal->Delete();
++            m_creature->RemoveAurasDueToSpell(SPELL_STRENGTH_OF_OSSIRIAN);
++            m_uiStrengthOfOssirian_Timer = 45000;
++            m_bIsEnraged = false;
++            m_bCastWeakness = true;
++        }
++    }
++
++    void SetWeather(uint32 weather, float grade)
++    {
++        Map *map = m_creature->GetMap();
++        if (!map->IsDungeon()) return;
++        WorldPacket data(SMSG_WEATHER, (4+4+4));
++        data << uint32(weather) << (float)grade << uint8(0);
++        ((InstanceMap*)map)->SendToPlayers(&data);
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        DoScriptText(SAY_AGGRO,m_creature);
++        DoCast(m_creature,SPELL_STRENGTH_OF_OSSIRIAN);
++        for (uint8 i = 0; i < 2; ++i)
++            m_creature->SummonCreature(NPC_TORNADO,TornadoSpawn[i].x,TornadoSpawn[i].y,TornadoSpawn[i].z,0,TEMPSUMMON_MANUAL_DESPAWN,0);
++
++        /*uint32 zoneid = m_creature->GetZoneId();
++        Weather* wth = sWorld.FindWeather(zoneid);
++        if (wth)
++            wth->SetWeather(WeatherType(3), 2);*/
++
++        SetWeather(WEATHER_STATE_HEAVY_SANDSTORM, 0.0f);
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        DoScriptText(SAY_DEATH,m_creature);
++        std::list<Creature*> m_lTornados;
++        SetWeather(WEATHER_STATE_FINE, 0.0f);  
++        GetCreatureListWithEntryInGrid(m_lTornados,m_creature,NPC_TORNADO,MAX_VISIBILITY_DISTANCE);
++            if (!m_lTornados.empty())
++                for(std::list<Creature*>::iterator iter = m_lTornados.begin(); iter != m_lTornados.end(); ++iter)
++                    if ((*iter) && (*iter)->isAlive())
++                        (*iter)->ForcedDespawn();
++    }
++
++    void KilledUnit(Unit* pVictim)
++    {
++        if (pVictim->GetTypeId() == TYPEID_PLAYER)
++        DoScriptText(SAY_SLAY,m_creature);
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_bIsEnraged)
++        {
++            if (GameObject *pCrystal = GetClosestGameObjectWithEntry(m_creature,GO_OSSIRIAN_CRYSTAL,ATTACK_DISTANCE))
++            {
++                if (pCrystal->HasFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND))
++                    pCrystal->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);      //make it usable
++                if (pCrystal->getLootState() == GO_ACTIVATED)
++                {   
++                    if (m_bCastWeakness)
++                    {
++                        Creature *pTrigger = m_creature->SummonCreature(CRYSTAL_TRIGGER,pCrystal->GetPositionX(),pCrystal->GetPositionY(),pCrystal->GetPositionZ(),0,TEMPSUMMON_TIMED_DESPAWN,6000);
++                        if (pTrigger)
++                        {
++                            pTrigger->Attack(m_creature,false);    //if removed, spell won't hit ossirian, but still not 100%
++                            switch (rand()%5)
++                            {
++                            case 0:
++                                pTrigger->CastSpell(m_creature,SPELL_FIRE_WEAKNESS,false);
++                                break; 
++                            case 1:
++                                pTrigger->CastSpell(m_creature,SPELL_ARCANE_WEAKNESS,false);
++                                break; 
++                            case 2:
++                                pTrigger->CastSpell(m_creature,SPELL_NATURE_WEAKNESS,false);
++                                break; 
++                            case 3:
++                                pTrigger->CastSpell(m_creature,SPELL_FROST_WEAKNESS,false);
++                                break; 
++                            case 4:
++                                pTrigger->CastSpell(m_creature,SPELL_SHADOW_WEAKNESS,false);
++                                break;
++                            default:
++                                pTrigger->CastSpell(m_creature,SPELL_SHADOW_WEAKNESS,false);
++                                break;
++                            }
++                            m_bCastWeakness = false;
++                        }
++                    }
++
++                    if (m_uiCastWeakness_Timer < uiDiff)
++                    {
++                        m_creature->SendObjectDeSpawnAnim(pCrystal->GetGUID());
++                        pCrystal->SetRespawnTime(300);
++                        m_creature->RemoveAurasDueToSpell(SPELL_STRENGTH_OF_OSSIRIAN);
++                        m_uiStrengthOfOssirian_Timer = 45000;
++                        m_bIsEnraged = false;
++                        m_bCastWeakness = true;
++                        m_uiCastWeakness_Timer = 5000;
++                    }
++                    else
++                        m_uiCastWeakness_Timer -= uiDiff;
++                }
++            }
++
++            if (m_uiCrystalCheck_Timer < uiDiff)
++            {
++                std::list<GameObject*> lCrystals2;
++                GetGameObjectListWithEntryInGrid(lCrystals2,m_creature,GO_OSSIRIAN_CRYSTAL,MAX_VISIBILITY_DISTANCE);
++                if (!lCrystals2.empty())
++                     for(std::list<GameObject*>::iterator iter = lCrystals2.begin(); iter != lCrystals2.end(); ++iter)
++                         if ((*iter))
++                             (*iter)->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);
++                m_uiCrystalCheck_Timer = 5000;
++            }
++            else
++                m_uiCrystalCheck_Timer -= uiDiff;
++        }
++
++        if (m_uiCurseOfTongues_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(),SPELL_CURSE_OF_TONGUES);
++            m_uiCurseOfTongues_Timer = 10000 + rand()%10000;
++        }
++        else
++            m_uiCurseOfTongues_Timer -= uiDiff;
++
++        if (!m_bIsEnraged && m_uiStrengthOfOssirian_Timer < uiDiff)
++        {
++            DoCast(m_creature,SPELL_STRENGTH_OF_OSSIRIAN);
++            m_bIsEnraged = true;
++        }
++        else
++            m_uiStrengthOfOssirian_Timer -= uiDiff;
++
++        if (Player* pPlayer = GetPlayerAtMinimumRange(DEFAULT_VISIBILITY_DISTANCE))           //port player back if he gets too far
++            DoCast(pPlayer, SPELL_SUMMON_PLAYER);
++
++        if (m_uiWarStomp_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(),SPELL_WAR_STOMP);
++            m_uiWarStomp_Timer = 25000 + rand()%10000;
++        }
++        else
++            m_uiWarStomp_Timer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_ossirian(Creature* pCreature)
++{
++    return new boss_ossirianAI(pCreature);
++}
++
++void AddSC_boss_ossirian()
++{
++    Script *newscript;
++    newscript = new Script;
++    newscript->Name = "boss_ossirian";
++    newscript->GetAI = &GetAI_boss_ossirian;
++    newscript->RegisterSelf();
++}
+\ No newline at end of file
+diff --git a/scripts/kalimdor/ruins_of_ahnqiraj/boss_rajaxx.cpp b/scripts/kalimdor/ruins_of_ahnqiraj/boss_rajaxx.cpp
+index 3abfe4d..340c5fc 100644
+--- a/scripts/kalimdor/ruins_of_ahnqiraj/boss_rajaxx.cpp
++++ b/scripts/kalimdor/ruins_of_ahnqiraj/boss_rajaxx.cpp
+@@ -22,23 +22,580 @@ SDCategory: Ruins of Ahn'Qiraj
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "ruins_of_ahnqiraj.h"
+ 
+-#define SAY_ANDOROV_INTRO   -1509003
+-#define SAY_ANDOROV_ATTACK  -1509004
++#define GOSSIP_START  "Let's find out."
++ 
++enum
++{
++    SAY_ANDOROV_READY   =   -1509003,
++    SAY_ANDOROV_INTRO2  =   -1509029,
++    SAY_ANDOROV_ATTACK  =   -1509030,
++    SAY_ANDOROV_INTRO   =   -1509004,
++    
++    SAY_WAVE3           =   -1509005,
++    SAY_WAVE4           =   -1509006,
++    SAY_WAVE5           =   -1509007,
++    SAY_WAVE6           =   -1509008,
++    SAY_WAVE7           =   -1509009,
++    SAY_WAVE8           =   -1509010,
++    SAY_UNK1            =   -1509011,
++    SAY_UNK2            =   -1509012,
++    SAY_UNK3            =   -1509013,
++    SAY_DEATH           =   -1509014,
++    SAY_DEAGGRO         =   -1509015,
++    SAY_KILLS_ANDOROV   =   -1509016,                       //Yell when realm complete quest 8743 for world event
++    SAY_COMPLETE_QUEST  =   -1509017,                       //Yell when realm complete quest 8743 for world event
++    EMOTE_FRENZY        =   -1000001,
++    //General Rajaxx
++    SPELL_DISARM            =   6713,
++    SPELL_FRENZY            =   8269,
++    SPELL_SUMMON_PLAYER     =   20477,
++    SPELL_THUNDERCRASH      =   25599,
++    
++    //NPC General Andorov
+ 
+-#define SAY_WAVE3           -1509005
+-#define SAY_WAVE4           -1509006
+-#define SAY_WAVE5           -1509007
+-#define SAY_WAVE6           -1509008
+-#define SAY_WAVE7           -1509009
+-#define SAY_INTRO           -1509010
++    SPELL_AURA_OF_COMMAND   =   25516,
++    SPELL_BASH              =   25515,
++    SPELL_STRIKE            =   22591,
+ 
+-#define SAY_UNK1            -1509011
+-#define SAY_UNK2            -1509012
+-#define SAY_UNK3            -1509013
+-#define SAY_UNK4            -1509014
++    NPC_SWARMGUARD_NEEDLER  =   15344,
++    NPC_QIRAJI_WARRIOR      =   15387
++};
+ 
+-#define SAY_DEAGGRO         -1509015
+-#define SAY_KILLS_ANDOROV   -1509016
++struct MoveLocations
++{
++    float x, y, z, an;
++};
+ 
+-#define SAY_COMPLETE_QUEST  -1509017                        //Yell when realm complete quest 8743 for world event
++struct SpawnLocations
++{
++    uint32 id;
++    float x, y, z, an;
++};
++
++static SpawnLocations NPCs[]=
++{
++    {NPC_KALDOREI_ELITE,-8871.37f,1650.34f,21.386f,5.49113f},
++    {NPC_KALDOREI_ELITE,-8872.51f,1648.88f,21.386f,5.62072f},   
++    {NPC_KALDOREI_ELITE,-8874.36f,1646.08f,21.386f,5.69533f},
++    {NPC_KALDOREI_ELITE,-8875.29f,1644.89f,21.386f,5.69533f},
++    {NPC_GENERAL_ANDOROV,-8873.42f,1647.67f,21.386f,5.69141f}
++};
++
++static MoveLocations Andorov[]=
++{
++    {-8872,1628,21.386f},
++    {-8919.6f,1550,21.38f},
++    {-8939.8f,1550.3f,21.58f}
++};
++
++static SpawnLocations WaveOne[]=
++{
++    {15387, -9012.73f, 1559.7f, 21.3877f, 3.07796f},
++    {15387, -9013.22f, 1552.06f, 21.3877f, 3.07796f},
++    {15387, -9013.77f, 1543.49f, 21.3863f, 3.07796f},
++    {15387, -9014.38f, 1533.8f, 21.3863f, 3.07796f},
++    {15344, -9007.9f, 1543.82f, 21.3867f, 3.10152f},
++    {15344, -9007.6f, 1551.29f, 21.4505f, 3.10152f},
++    {15391, -9021.57f, 1550.71f, 21.5396f, 2.97586f}
++};
++
++static SpawnLocations WaveTwo[]=
++{
++    {15387, -9029.46f, 1515.14f, 21.3873f, 2.0648f},
++    {15387, -9037.19f, 1510.98f, 21.398f, 2.0648f},
++    {15387, -9045.89f, 1506.29f, 21.4754f, 2.0648f},
++    {15344, -9041.85f, 1498.79f, 21.9046f, 2.0648f},
++    {15344, -9034.38f, 1502.82f, 21.615f, 2.0648f},
++    {15344, -9025.83f, 1507.42f, 21.4418f, 2.0648f},
++    {15392, -9041.76f, 1517.72f, 21.3877f, 2.0648f}
++};
++
++static SpawnLocations WaveThree[]=
++{
++    {15389, -9025, 1595.24f, 21.3867f, 4.0393f},
++    {15387, -9019.72f, 1601.85f, 21.5376f, 4.0393f},
++    {15344, -9012.63f, 1595.78f, 21.3866f, 4.00395f},
++    {15344, -9021.2f, 1589.84f, 21.3866f, 4.03223f},
++    {15344, -9030.41f, 1589.14f, 21.3866f, 3.94976f},
++    {15344, -9030.8f, 1598.04f, 21.3866f, 3.97725f},
++    {15344, -9027.72f, 1607.21f, 21.4041f, 4.00867f} 
++};
++
++static SpawnLocations WaveFour[]=
++{
++    {15390, -9084.72f, 1526.44f, 21.3864f, 1.82841f},
++    {15344, -9083.12f, 1520.36f, 21.3864f, 1.82841f},
++    {15344, -9076.62f, 1522.07f, 21.3864f, 1.82841f},
++    {15344, -9090.98f, 1518.29f, 21.3864f, 1.82841f},
++    {15387, -9081.5f, 1513.86f, 21.3864f, 1.82841f},
++    {15387, -9089.45f, 1511.77f, 21.42f, 1.82841f},
++    {15387, -9075.02f, 1515.57f, 21.3876f, 1.82841f}
++};
++
++static SpawnLocations WaveFive[]=
++{
++    {15386, -9077.43f, 1625.86f, 21.3873f, 3.3725f},
++    {15387, -9073.02f, 1623.79f, 21.3873f, 3.36464f},
++    {15387, -9074.51f, 1630.35f, 21.3873f, 3.36464f},
++    {15344, -9067.97f, 1616.7f, 21.397f, 3.36464f},
++    {15344, -9069.66f, 1624.16f, 21.387f, 3.36464f},
++    {15344, -9071.27f, 1631.26f, 21.389f, 3.36464f},
++    {15344, -9072.92f, 1638.55f, 21.3867f, 3.36464f}
++};
++
++static SpawnLocations WaveSix[]=
++{
++    {15388, -9136.52f, 1547.56f, 21.3871f, 1.51111f},
++    {15344, -9140.45f, 1542.85f, 21.3871f, 1.53074f},
++    {15344, -9134.11f, 1542.6f, 21.3871f, 1.53074f},
++    {15387, -9134.36f, 1536.43f, 21.3877f, 1.53074f},
++    {15387, -9141.08f, 1536.69f, 21.3877f, 1.53074f},
++    {15387, -9148.35f, 1536.99f, 21.3863f, 1.53074f},
++    {15387, -9126.9f, 1536.13f, 21.4453f, 1.53074f}
++};
++
++static SpawnLocations WaveSeven[]=
++{
++    {15385, -9109.64f, 1586.35f, 21.387f, 2.5714f},
++    {15344, -9098.42f, 1589.87f, 21.3873f, 2.53998f},
++    {15344, -9103.71f, 1582.17f, 21.3875f, 2.53998f},
++    {15344, -9108.99f, 1574.48f, 21.4036f, 2.53998f},
++    {15387, -9102.06f, 1569.72f, 21.393f, 2.53998f},
++    {15387, -9096.78f, 1577.42f, 21.3871f, 2.53998f},
++    {15387, -9091.7f, 1584.81f, 21.3871f, 2.53998f}
++};
++
++struct MANGOS_DLL_DECL boss_rajaxxAI : public ScriptedAI
++{
++    boss_rajaxxAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }    
++
++    ScriptedInstance* m_pInstance;
++
++    uint32 m_uiThunderCrash_Timer;
++    uint32 m_uiDisarm_Timer;
++    uint32 m_uiWave_Timer;
++
++    uint8 m_uiWaveCount;
++
++    bool m_bHasEnraged;
++
++    void Reset()
++    {
++        //Rajaxx's spells
++        m_uiThunderCrash_Timer = 25000;
++        m_uiDisarm_Timer = 5000;
++
++        m_bHasEnraged = false;
++
++        //his army
++        m_uiWaveCount = 0;
++        m_uiWave_Timer = 1000;
++    }
++    void JustDied(Unit* pKiller)
++    {
++        DoScriptText(SAY_DEATH,m_creature);
++    }
++
++    void KilledUnit(Unit *pKilled)
++    {
++        if (!m_creature->isInCombat())
++            DoScriptText(SAY_DEAGGRO,m_creature,pKilled);
++    }
++
++    void StartEvent()
++    {
++        if (!m_pInstance)
++            return;
++        if (Unit* pAndorov = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_ANDOROV)))
++        {
++            pAndorov->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
++            DoScriptText(SAY_ANDOROV_INTRO,pAndorov);
++            DoScriptText(SAY_ANDOROV_INTRO2,pAndorov);
++            pAndorov->GetMotionMaster()->MovePoint(0,Andorov[0].x, Andorov[0].y,Andorov[0].z);
++        }
++    }
++
++    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
++    {
++        if (!m_bHasEnraged && (m_creature->GetHealth()+uiDamage)*100 / m_creature->GetMaxHealth() < 30)
++        {
++            DoCast(m_creature,SPELL_FRENZY);
++            DoScriptText(EMOTE_FRENZY,m_creature);
++            m_bHasEnraged = true;
++        }
++    }
++
++    void AttackWave(uint32 entry)
++    {
++        if (!m_pInstance)
++           return;
++
++        if (!entry)
++            return;
++
++        if (Creature *pCommander = (Creature*)Unit::GetUnit(*m_creature,m_pInstance->GetData64(entry)))
++        {
++            pCommander->CallForHelp(20.0f);
++            pCommander->SetInCombatWithZone();
++            if (Creature* pAndorov = (Creature*)Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_ANDOROV)))
++            {
++                if (pAndorov->isInCombat())
++                    pAndorov->CombatStop(true);
++                pAndorov->AI()->AttackStart(pCommander);
++                pAndorov->CallForHelp(5.0f);
++            }
++
++            //kaldoer attack
++            std::list<Creature*> m_lKaldorei;
++            GetCreatureListWithEntryInGrid(m_lKaldorei,pCommander,NPC_KALDOREI_ELITE,DEFAULT_VISIBILITY_DISTANCE);
++            if (!m_lKaldorei.empty())
++                for(std::list<Creature*>::iterator iter = m_lKaldorei.begin(); iter != m_lKaldorei.end(); ++iter)
++                    if ((*iter))
++                        (*iter)->AI()->AttackStart(pCommander);
++        }
++    }
++    
++    void ResetEvent()
++    {
++        if (!m_pInstance)
++            return;
++
++        m_pInstance->SetData(TYPE_RAJAXX,NOT_STARTED);
++        m_uiWaveCount = 0;
++        m_uiWave_Timer = 1000;
++
++        //for despawning current army
++        uint32 CreatureDespawnEntries[]=
++        {{NPC_SWARMGUARD_NEEDLER},{NPC_QIRAJI_WARRIOR},{NPC_CAPTAIN_QEEZ},{NPC_CAPTAIN_TUUBID},{NPC_CAPTAIN_DRENN},{NPC_CAPTAIN_XURREM},{NPC_MAJOR_YEGGETH},{NPC_MAJOR_PAKKON},{NPC_COLONEL_ZERRAN},{NPC_KALDOREI_ELITE},{NPC_GENERAL_ANDOROV}};
++
++        for (uint8 i=0; i < 11; ++i)
++        {
++            std::list<Creature*> m_lCreatures;
++            GetCreatureListWithEntryInGrid(m_lCreatures,m_creature,CreatureDespawnEntries[i],MAX_VISIBILITY_DISTANCE);
++            if (!m_lCreatures.empty())
++                for(std::list<Creature*>::iterator iter = m_lCreatures.begin(); iter != m_lCreatures.end(); ++iter)
++                    if ((*iter) && (*iter)->isAlive())
++                        (*iter)->setDeathState(JUST_DIED);
++        }
++
++        // Summon them again
++        Creature* pAndorov = m_creature->SummonCreature(NPC_GENERAL_ANDOROV,NPCs[4].x,NPCs[4].y,NPCs[4].z,NPCs[4].an,TEMPSUMMON_CORPSE_DESPAWN,0);
++        if (pAndorov)
++        {
++            pAndorov->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
++            pAndorov->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_VENDOR);
++        }
++    }
++    
++    bool IsWaveDead(uint32 entry)
++    {
++        if (!entry)
++            return true;
++
++        //simplify this!
++        if (Unit* pCommander = Unit::GetUnit(*m_creature,m_pInstance->GetData64(entry)))
++            if (pCommander->isAlive())
++                if (!pCommander->isInCombat())
++                {
++                    ResetEvent();
++                    return false;
++                }
++                else
++                    return false;
++            else
++                return true;
++        else
++            return false;
++    }
++
++    uint32 WaveConversion(uint8 Count)
++   {
++        switch(Count)
++        {
++        case 1: return DATA_QEEZ; break;
++        case 2: return DATA_TUUBID; break;
++        case 3: return DATA_DRENN; break;
++        case 4: return DATA_XURREM; break;
++        case 5: return DATA_YEGGETH; break;
++        case 6: return DATA_PAKKON; break;
++        case 7: return DATA_ZERRAN; break;
++        case 8: return DATA_RAJAXX; break;
++        default: return NULL; break;
++        }
++    }
++
++    void DoSummonArmy()
++    {
++        //Wave 1
++        for (uint8 i = 0; i < 7; ++i)  // for (uint8 i = 0; i < (sizeof(WaveOne)); ++i)
++            m_creature->SummonCreature(WaveOne[i].id,WaveOne[i].x,WaveOne[i].y,WaveOne[i].z,WaveOne[i].an,TEMPSUMMON_CORPSE_TIMED_DESPAWN,1000);
++        
++        //Wave 2
++        for (uint8 i = 0; i < 7; ++i)  // for (uint8 i = 0; i < (sizeof(WaveTwo)); ++i)
++            m_creature->SummonCreature(WaveTwo[i].id,WaveTwo[i].x,WaveTwo[i].y,WaveTwo[i].z,WaveTwo[i].an,TEMPSUMMON_CORPSE_TIMED_DESPAWN,1000);
++
++        //Wave 3
++        for (uint8 i = 0; i < 7; ++i)  // for (uint8 i = 0; i < (sizeof(WaveThree)); ++i)
++            m_creature->SummonCreature(WaveThree[i].id,WaveThree[i].x,WaveThree[i].y,WaveThree[i].z,WaveThree[i].an,TEMPSUMMON_CORPSE_TIMED_DESPAWN,1000);
++
++        //Wave 4
++        for (uint8 i = 0; i < 7; ++i)  // for (uint8 i = 0; i < (sizeof(WaveFour)); ++i)
++            m_creature->SummonCreature(WaveFour[i].id,WaveFour[i].x,WaveFour[i].y,WaveFour[i].z,WaveFour[i].an,TEMPSUMMON_CORPSE_TIMED_DESPAWN,1000);
++
++        //Wave 5
++        for (uint8 i = 0; i < 7; ++i)  // for (uint8 i = 0; i < (sizeof(WaveFive)); ++i)
++            m_creature->SummonCreature(WaveFive[i].id,WaveFive[i].x,WaveFive[i].y,WaveFive[i].z,WaveFive[i].an,TEMPSUMMON_CORPSE_TIMED_DESPAWN,1000);
++
++        //Wave 6
++        for (uint8 i = 0; i < 7; ++i)  // for (uint8 i = 0; i < (sizeof(WaveSix)); ++i)
++            m_creature->SummonCreature(WaveSix[i].id,WaveSix[i].x,WaveSix[i].y,WaveSix[i].z,WaveSix[i].an,TEMPSUMMON_CORPSE_TIMED_DESPAWN,1000);
++
++        //Wave 7
++        for (uint8 i = 0; i < 7; ++i)  // for (uint8 i = 0; i < (sizeof(WaveSeven)); ++i)
++            m_creature->SummonCreature(WaveSeven[i].id,WaveSeven[i].x,WaveSeven[i].y,WaveSeven[i].z,WaveSeven[i].an,TEMPSUMMON_CORPSE_TIMED_DESPAWN,1000);
++
++        //Kaldorei Elite's
++        for(uint8 i = 0; i < 4 ; ++i)
++        {
++            Unit *pKaldorei = m_creature->SummonCreature(NPC_KALDOREI_ELITE,NPCs[i].x,NPCs[i].y,NPCs[i].z,NPCs[i].an,TEMPSUMMON_CORPSE_DESPAWN,0);
++                if (pKaldorei)
++                if (Unit *pAndorov = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_ANDOROV)))
++                    pKaldorei->GetMotionMaster()->MoveFollow(pAndorov,2,i+1.5);
++        }
++    }  
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_pInstance)
++            return;
++
++        if (m_pInstance->GetData(TYPE_RAJAXX) == IN_PROGRESS)
++        {
++            if (m_uiWave_Timer < uiDiff || IsWaveDead(WaveConversion(m_uiWaveCount)))
++            {
++                ++m_uiWaveCount;
++                AttackWave(WaveConversion(m_uiWaveCount));
++                if (m_uiWaveCount > 2)
++                    DoScriptText(SAY_WAVE3 - m_uiWaveCount + 3,m_creature);
++                m_uiWave_Timer = 180000;
++            }
++            else
++                m_uiWave_Timer -= uiDiff;
++        }
++
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++        
++        if (m_uiThunderCrash_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(),SPELL_THUNDERCRASH);
++            m_uiThunderCrash_Timer = 30000;
++        }
++        else
++            m_uiThunderCrash_Timer -= uiDiff;
++
++        if (m_uiDisarm_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(),SPELL_DISARM);
++            m_uiDisarm_Timer = 15000;
++        }
++        else
++            m_uiDisarm_Timer -= uiDiff;
++
++        if (Player* pPlayer = GetPlayerAtMinimumRange(DEFAULT_VISIBILITY_DISTANCE))           //port player back if he gets too far
++            DoCast(pPlayer, SPELL_SUMMON_PLAYER);
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++struct MANGOS_DLL_DECL npc_andorovAI : public ScriptedAI
++{
++    npc_andorovAI(Creature* pCreature) : ScriptedAI(pCreature)
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++    ScriptedInstance* m_pInstance;
++
++    uint32 m_uiWaypoint;
++    uint32 m_uiWaitForOthers_Timer;
++    uint32 m_uiCommandAura_Timer;
++    uint32 m_uiBash_Timer;
++    uint32 m_uiStrike_Timer;
++
++    bool m_bCanMoveNext;
++    bool m_bWaypointEnd;
++    bool m_bSummonOnCreate;
++
++    void Reset() 
++    {
++        m_uiWaypoint = 0; 
++
++        m_bCanMoveNext = false;
++        m_bWaypointEnd = false;
++
++        m_uiWaitForOthers_Timer = 500;
++
++        m_uiCommandAura_Timer = 10000;
++        m_uiBash_Timer = 5000;
++        m_uiStrike_Timer = 15000;
++        m_bSummonOnCreate = false;
++        //m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        std::list<Creature*> m_lKaldorei;
++        GetCreatureListWithEntryInGrid(m_lKaldorei,m_creature,NPC_KALDOREI_ELITE,DEFAULT_VISIBILITY_DISTANCE);
++        if (!m_lKaldorei.empty())
++            for(std::list<Creature*>::iterator iter = m_lKaldorei.begin(); iter != m_lKaldorei.end(); ++iter)
++                if ((*iter))
++                    (*iter)->AI()->AttackStart(pWho);
++    }
++
++    void JustDied(Unit *pKiller)
++    {
++        if (Unit *pRajaxx = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_RAJAXX)))
++            if (pRajaxx->isAlive())
++                DoScriptText(SAY_KILLS_ANDOROV,pRajaxx);
++    }
++
++   void MovementInform(uint32 uiType, uint32 uiPointId)
++    {
++        if (uiType != POINT_MOTION_TYPE || m_bWaypointEnd)
++            return;
++
++        uint32 uiCount = (sizeof(Andorov)/sizeof(MoveLocations));
++
++        m_uiWaypoint = uiPointId+1;
++
++        if (uiCount == m_uiWaypoint)
++        {
++            DoScriptText(SAY_ANDOROV_READY,m_creature);
++            DoScriptText(SAY_ANDOROV_ATTACK,m_creature);
++            m_creature->HandleEmoteCommand(EMOTE_STATE_READY1H);
++            std::list<Creature*> m_lKaldorei;
++            GetCreatureListWithEntryInGrid(m_lKaldorei,m_creature,NPC_KALDOREI_ELITE,10.0f);
++            if (!m_lKaldorei.empty())
++                for(std::list<Creature*>::iterator iter = m_lKaldorei.begin(); iter != m_lKaldorei.end(); ++iter)
++                    if ((*iter))
++                        (*iter)->HandleEmoteCommand(EMOTE_STATE_READY1H);
++            m_bWaypointEnd = true;
++        }
++
++        m_bCanMoveNext = true;
++        m_uiWaitForOthers_Timer = 500;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_pInstance)
++            return;
++
++        if (!m_bSummonOnCreate)
++        {
++            ((boss_rajaxxAI*)m_creature->AI())->DoSummonArmy();
++           m_bSummonOnCreate = true;
++        }
++
++        if (m_bWaypointEnd)
++            m_pInstance->SetData(TYPE_RAJAXX, IN_PROGRESS);
++        else
++        {
++            if (m_bCanMoveNext && m_uiWaitForOthers_Timer < uiDiff)
++            {
++                m_bCanMoveNext = false;
++                if (m_bWaypointEnd)
++                    m_creature->GetMotionMaster()->Clear();
++                else
++                    m_creature->GetMotionMaster()->MovePoint(m_uiWaypoint, Andorov[m_uiWaypoint].x, Andorov[m_uiWaypoint].y, Andorov[m_uiWaypoint].z); 
++            }
++            else
++                m_uiWaitForOthers_Timer -= uiDiff;
++        }
++
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiBash_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(),SPELL_BASH);
++            m_uiBash_Timer = 30000;
++        }
++        else
++            m_uiBash_Timer -= uiDiff;
++
++        if (m_uiStrike_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(),SPELL_STRIKE);
++            m_uiStrike_Timer = 15000;
++        }
++        else
++            m_uiStrike_Timer -= uiDiff;
++
++        if (m_uiCommandAura_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(),SPELL_AURA_OF_COMMAND);
++            m_uiCommandAura_Timer = 15000;
++        }
++        else
++            m_uiCommandAura_Timer -= uiDiff; 
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++bool GossipHello_npc_andorov(Player* pPlayer, Creature* pCreature)
++{
++    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_START , GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
++    pPlayer->SEND_GOSSIP_MENU(14442, pCreature->GetGUID());       //insert into `npc_text` (`ID`, `text0_0`, `text0_1`, `lang0`, `prob0`, `em0_0`, `em0_1`, `em0_2`, `em0_3`, `em0_4`, `em0_5`, `text1_0`, `text1_1`, `lang1`, `prob1`, `em1_0`, `em1_1`, `em1_2`, `em1_3`, `em1_4`, `em1_5`, `text2_0`, `text2_1`, `lang2`, `prob2`, `em2_0`, `em2_1`, `em2_2`, `em2_3`, `em2_4`, `em2_5`, `text3_0`, `text3_1`, `lang3`, `prob3`, `em3_0`, `em3_1`, `em3_2`, `em3_3`, `em3_4`, `em3_5`, `text4_0`, `text4_1`, `lang4`, `prob4`, `em4_0`, `em4_1`, `em4_2`, `em4_3`, `em4_4`, `em4_5`, `text5_0`, `text5_1`, `lang5`, `prob5`, `em5_0`, `em5_1`, `em5_2`, `em5_3`, `em5_4`, `em5_5`, `text6_0`, `text6_1`, `lang6`, `prob6`, `em6_0`, `em6_1`, `em6_2`, `em6_3`, `em6_4`, `em6_5`, `text7_0`, `text7_1`, `lang7`, `prob7`, `em7_0`, `em7_1`, `em7_2`, `em7_3`, `em7_4`, `em7_5`) values('14442','<Andorov looks at you grimly.>$B$BIf it bleeds, we can kill it.','','0','1','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0');
++
++    return true;
++}
++
++bool GossipSelect_npc_andorov(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
++{
++    switch(uiAction)
++    {
++    case GOSSIP_ACTION_INFO_DEF+1:
++        pPlayer->CLOSE_GOSSIP_MENU(); 
++        pCreature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
++        ((boss_rajaxxAI*)pCreature->AI())->StartEvent();
++        break;
++    }
++    return true;
++}
++
++CreatureAI* GetAI_boss_rajaxx(Creature* pCreature)
++{
++    return new boss_rajaxxAI(pCreature);
++}
++
++CreatureAI* GetAI_npc_andorov(Creature* pCreature)
++{
++    return new npc_andorovAI(pCreature);
++}
++
++void AddSC_boss_rajaxx()
++{
++    Script* newscript;
++
++    newscript = new Script;
++    newscript->Name = "npc_andorov";
++    newscript->GetAI = &GetAI_npc_andorov;
++    newscript->pGossipHello = &GossipHello_npc_andorov;
++    newscript->pGossipSelect = &GossipSelect_npc_andorov;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_rajaxx";
++    newscript->GetAI = &GetAI_boss_rajaxx;
++    newscript->RegisterSelf();
++}
+\ No newline at end of file
+diff --git a/sql/Custom_Updates/Mangos/Kalimdor/Onyxia.sql b/sql/Custom_Updates/Mangos/Kalimdor/Onyxia.sql
+deleted file mode 100644
+index 1acc0c5..0000000
+--- a/sql/Custom_Updates/Mangos/Kalimdor/Onyxia.sql
++++ /dev/null
+@@ -1,116 +0,0 @@
+-/* ONYXIA */
+--- Onyxia wheps original: minhp= 63000; maxhp= 63000; dmg_mult= 1.4 -> this is for 10 player
+-update `creature_template` set `minhealth` = 126000, `maxhealth` = 126000, `dmg_multiplier` = 2.8 where `entry` = 11262;
+--- Onyxia wheps original: minhp= 189000; maxhp= 189000; dmg_mult= 1.4 -> this is for 25 player
+-update `creature_template` set `minhealth` = 378000, `maxhealth` = 378000, `dmg_multiplier` = 2.8 where `entry` = 10308;
+--- SPELL_BREATH_EAST_TO_WEST
+-DELETE FROM spell_target_position WHERE id IN (18576, 18578, 18579, 18580, 18581, 18582, 18583);
+-INSERT INTO spell_target_position VALUES (18576, 249, -37.743851, -243.667923, -88.217651, 1.416);
+-INSERT INTO spell_target_position VALUES (18578, 249, -35.805332, -232.028900, -87.749153, 1.416);
+-INSERT INTO spell_target_position VALUES (18579, 249, -34.045738, -224.714661, -85.529465, 1.416);
+-INSERT INTO spell_target_position VALUES (18580, 249, -32.081570, -214.916962, -88.327438, 1.416);
+-INSERT INTO spell_target_position VALUES (18581, 249, -36.611721, -202.684677, -85.653786, 1.416);
+-INSERT INTO spell_target_position VALUES (18582, 249, -37.067261, -195.758652, -87.745834, 1.416);
+-INSERT INTO spell_target_position VALUES (18583, 249, -37.728523, -188.616806, -88.074898, 1.416);
+--- SPELL_BREATH_WEST_TO_EAST
+-DELETE FROM spell_target_position WHERE id IN (18609, 18611, 18612, 18613, 18614, 18615, 18616);
+-INSERT INTO spell_target_position VALUES (18609, 249, -37.728523, -188.616806, -88.074898, 4.526);
+-INSERT INTO spell_target_position VALUES (18611, 249, -37.067261, -195.758652, -87.745834, 4.526);
+-INSERT INTO spell_target_position VALUES (18612, 249, -36.611721, -202.684677, -85.653786, 4.526);
+-INSERT INTO spell_target_position VALUES (18613, 249, -32.081570, -214.916962, -88.327438, 4.526);
+-INSERT INTO spell_target_position VALUES (18614, 249, -34.045738, -224.714661, -85.529465, 4.526);
+-INSERT INTO spell_target_position VALUES (18615, 249, -35.805332, -232.028900, -87.749153, 4.526);
+-INSERT INTO spell_target_position VALUES (18616, 249, -37.743851, -243.667923, -88.217651, 4.526);
+--- SPELL_BREATH_NW_TO_SE
+-DELETE FROM spell_target_position WHERE id IN (18584, 18585, 18586, 18587, 18588, 18589, 18590, 18591, 18592, 18593, 18594, 18595);
+-INSERT INTO spell_target_position VALUES (18584, 249, 6.016711, -181.305771, -85.654648, 3.776);
+-INSERT INTO spell_target_position VALUES (18585, 249, 3.860220, -183.227249, -86.375381, 3.776);
+-INSERT INTO spell_target_position VALUES (18586, 249, -2.529650, -188.690491, -87.172859, 3.776);
+-INSERT INTO spell_target_position VALUES (18587, 249, -8.449303, -193.957962, -87.564957, 3.776);
+-INSERT INTO spell_target_position VALUES (18588, 249, -14.321238, -199.462219, -87.922478, 3.776);
+-INSERT INTO spell_target_position VALUES (18589, 249, -15.602085, -216.893936, -88.403183, 3.776);
+-INSERT INTO spell_target_position VALUES (18590, 249, -23.650263, -221.969086, -89.172699, 3.776);
+-INSERT INTO spell_target_position VALUES (18591, 249, -29.495876, -213.014359, -88.910423, 3.776);
+-INSERT INTO spell_target_position VALUES (18592, 249, -35.439922, -217.260284, -87.336311, 3.776);
+-INSERT INTO spell_target_position VALUES (18593, 249, -41.762104, -221.896545, -86.114113, 3.776);
+-INSERT INTO spell_target_position VALUES (18594, 249, -51.067528, -228.909988, -85.765556, 3.776);
+-INSERT INTO spell_target_position VALUES (18595, 249, -56.559654, -241.223923, -85.423607, 3.776);
+--- SPELL_BREATH_SE_TO_NW
+-DELETE FROM spell_target_position WHERE id IN (18564, 18565, 18566, 18567, 18568, 18569, 18570, 18571, 18572, 18573, 18574, 18575);
+-INSERT INTO spell_target_position VALUES (18564, 249, -56.559654, -241.223923, -85.423607, 0.666);
+-INSERT INTO spell_target_position VALUES (18565, 249, -51.067528, -228.909988, -85.765556, 0.666);
+-INSERT INTO spell_target_position VALUES (18566, 249, -41.762104, -221.896545, -86.114113, 0.666);
+-INSERT INTO spell_target_position VALUES (18567, 249, -35.439922, -217.260284, -87.336311, 0.666);
+-INSERT INTO spell_target_position VALUES (18568, 249, -29.495876, -213.014359, -88.910423, 0.666);
+-INSERT INTO spell_target_position VALUES (18569, 249, -23.650263, -221.969086, -89.172699, 0.666);
+-INSERT INTO spell_target_position VALUES (18570, 249, -15.602085, -216.893936, -88.403183, 0.666);
+-INSERT INTO spell_target_position VALUES (18571, 249, -14.321238, -199.462219, -87.922478, 0.666);
+-INSERT INTO spell_target_position VALUES (18572, 249, -8.449303, -193.957962, -87.564957, 0.666);
+-INSERT INTO spell_target_position VALUES (18573, 249, -2.529650, -188.690491, -87.172859, 0.666);
+-INSERT INTO spell_target_position VALUES (18574, 249, 3.860220, -183.227249, -86.375381, 0.666);
+-INSERT INTO spell_target_position VALUES (18575, 249, 6.016711, -181.305771, -85.654648, 0.666);
+--- SPELL_BREATH_SW_TO_NE
+-DELETE FROM spell_target_position WHERE id IN (18596, 18597, 18598, 18599, 18600, 18601, 18602, 18603, 18604, 18605, 18606, 18607);
+-INSERT INTO spell_target_position VALUES (18596, 249, -58.250900, -189.020004, -85.292267, 5.587);
+-INSERT INTO spell_target_position VALUES (18597, 249, -52.006271, -193.796570, -85.808769, 5.587);
+-INSERT INTO spell_target_position VALUES (18598, 249, -46.135464, -198.548553, -85.901764, 5.587);
+-INSERT INTO spell_target_position VALUES (18599, 249, -40.500187, -203.001053, -85.555107, 5.587);
+-INSERT INTO spell_target_position VALUES (18600, 249, -30.907579, -211.058197, -88.592125, 5.587);
+-INSERT INTO spell_target_position VALUES (18601, 249, -20.098139, -218.681427, -88.937088, 5.587);
+-INSERT INTO spell_target_position VALUES (18602, 249, -12.223192, -224.666168, -87.856300, 5.587);
+-INSERT INTO spell_target_position VALUES (18603, 249, -6.475297, -229.098724, -87.076401, 5.587);
+-INSERT INTO spell_target_position VALUES (18604, 249, -2.010256, -232.541992, -86.995140, 5.587);
+-INSERT INTO spell_target_position VALUES (18605, 249, 2.736300, -236.202347, -86.790367, 5.587);
+-INSERT INTO spell_target_position VALUES (18606, 249, 7.197779, -239.642868, -86.307297, 5.587);
+-INSERT INTO spell_target_position VALUES (18607, 249, 12.120926, -243.439407, -85.874260, 5.587);
+--- SPELL_BREATH_NE_TO_SW
+-DELETE FROM spell_target_position WHERE id IN (18617, 18619, 18620, 18621, 18622, 18623, 18624, 18625, 18626, 18627, 18628, 18618);
+-INSERT INTO spell_target_position VALUES (18617, 249, 12.120926, -243.439407, -85.874260, 2.428);
+-INSERT INTO spell_target_position VALUES (18619, 249, 7.197779, -239.642868, -86.307297, 2.428);
+-INSERT INTO spell_target_position VALUES (18620, 249, 2.736300, -236.202347, -86.790367, 2.428);
+-INSERT INTO spell_target_position VALUES (18621, 249, -2.010256, -232.541992, -86.995140, 2.428);
+-INSERT INTO spell_target_position VALUES (18622, 249, -6.475297, -229.098724, -87.076401, 2.428);
+-INSERT INTO spell_target_position VALUES (18623, 249, -12.223192, -224.666168, -87.856300, 2.428);
+-INSERT INTO spell_target_position VALUES (18624, 249, -20.098139, -218.681427, -88.937088, 2.428);
+-INSERT INTO spell_target_position VALUES (18625, 249, -30.907579, -211.058197, -88.592125, 2.428);
+-INSERT INTO spell_target_position VALUES (18626, 249, -40.500187, -203.001053, -85.555107, 2.428);
+-INSERT INTO spell_target_position VALUES (18627, 249, -46.135464, -198.548553, -85.901764, 2.428);
+-INSERT INTO spell_target_position VALUES (18628, 249, -52.006271, -193.796570, -85.808769, 2.428);
+-INSERT INTO spell_target_position VALUES (18618, 249, -58.250900, -189.020004, -85.292267, 2.428);
+-
+--- Below is not needed for current script
+--- SPELL_BREATH_SOUTH_TO_NORTH
+-DELETE FROM spell_target_position WHERE id IN (18351, 18352, 18353, 18354, 18355, 18356, 18357, 18358, 18359, 18360, 18361);
+-INSERT INTO spell_target_position VALUES (18351, 249, -68.834236, -215.036163, -84.018875, 6.280);
+-INSERT INTO spell_target_position VALUES (18352, 249, -61.834255, -215.051910, -84.673416, 6.280);
+-INSERT INTO spell_target_position VALUES (18353, 249, -53.343277, -215.071014, -85.597191, 6.280);
+-INSERT INTO spell_target_position VALUES (18354, 249, -42.619305, -215.095139, -86.663605, 6.280);
+-INSERT INTO spell_target_position VALUES (18355, 249, -35.899323, -215.110245, -87.196548, 6.280);
+-INSERT INTO spell_target_position VALUES (18356, 249, -28.248341, -215.127457, -89.191750, 6.280);
+-INSERT INTO spell_target_position VALUES (18357, 249, -20.324360, -215.145279, -88.963997, 6.280);
+-INSERT INTO spell_target_position VALUES (18358, 249, -11.189384, -215.165833, -87.817093, 6.280);
+-INSERT INTO spell_target_position VALUES (18359, 249, -2.047405, -215.186386, -86.279655, 6.280);
+-INSERT INTO spell_target_position VALUES (18360, 249, 7.479571, -215.207809, -86.075531, 6.280);
+-INSERT INTO spell_target_position VALUES (18361, 249, 20.730539, -215.237610, -85.254387, 6.280);
+--- SPELL_BREATH_NORTH_TO_SOUTH
+-DELETE FROM spell_target_position WHERE id IN (17086, 17087, 17088, 17089, 17090, 17091, 17092, 17093, 17094, 17095, 17097, 22267, 22268, 21132, 21133, 21135, 21136, 21137, 21138, 21139);
+-INSERT INTO spell_target_position VALUES (17086, 249, 20.730539, -215.237610, -85.254387, 3.142);
+-INSERT INTO spell_target_position VALUES (17087, 249, 7.479571, -215.207809, -86.075531, 3.142);
+-INSERT INTO spell_target_position VALUES (17088, 249, -2.047405, -215.186386, -86.279655, 3.142);
+-INSERT INTO spell_target_position VALUES (17089, 249, -11.189384, -215.165833, -87.817093, 3.142);
+-INSERT INTO spell_target_position VALUES (17090, 249, -20.324360, -215.145279, -88.963997, 3.142);
+-INSERT INTO spell_target_position VALUES (17091, 249, -28.248341, -215.127457, -89.191750, 3.142);
+-INSERT INTO spell_target_position VALUES (17092, 249, -35.899323, -215.110245, -87.196548, 3.142);
+-INSERT INTO spell_target_position VALUES (17093, 249, -42.619305, -215.095139, -86.663605, 3.142);
+-INSERT INTO spell_target_position VALUES (17094, 249, -53.343277, -215.071014, -85.597191, 3.142);
+-INSERT INTO spell_target_position VALUES (17095, 249, -61.834255, -215.051910, -84.673416, 3.142);
+-INSERT INTO spell_target_position VALUES (17097, 249, -68.834236, -215.036163, -84.018875, 3.142);
+-INSERT INTO spell_target_position VALUES (22267, 249, -75.736046, -214.984970, -83.394188, 3.142);
+-INSERT INTO spell_target_position VALUES (22268, 249, -84.087578, -214.857834, -82.640053, 3.142);
+-INSERT INTO spell_target_position VALUES (21132, 249, -90.424416, -214.601974, -82.482697, 3.142);
+-INSERT INTO spell_target_position VALUES (21133, 249, -96.572411, -214.353745, -82.239967, 3.142);
+-INSERT INTO spell_target_position VALUES (21135, 249, -102.069931, -214.131775, -80.571190, 3.142);
+-INSERT INTO spell_target_position VALUES (21136, 249, -107.385597, -213.917145, -77.447037, 3.142);
+-INSERT INTO spell_target_position VALUES (21137, 249, -114.281258, -213.866486, -73.851128, 3.142);
+-INSERT INTO spell_target_position VALUES (21138, 249, -123.328560, -213.607910, -71.559921, 3.142);
+-INSERT INTO spell_target_position VALUES (21139, 249, -130.788300, -213.424026, -70.751007, 3.142);
+\ No newline at end of file
+diff --git a/sql/Custom_Updates/Mangos/Kalimdor/Onyxia_Mangos.sql b/sql/Custom_Updates/Mangos/Kalimdor/Onyxia_Mangos.sql
+new file mode 100644
+index 0000000..1acc0c5
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Kalimdor/Onyxia_Mangos.sql
+@@ -0,0 +1,116 @@
++/* ONYXIA */
++-- Onyxia wheps original: minhp= 63000; maxhp= 63000; dmg_mult= 1.4 -> this is for 10 player
++update `creature_template` set `minhealth` = 126000, `maxhealth` = 126000, `dmg_multiplier` = 2.8 where `entry` = 11262;
++-- Onyxia wheps original: minhp= 189000; maxhp= 189000; dmg_mult= 1.4 -> this is for 25 player
++update `creature_template` set `minhealth` = 378000, `maxhealth` = 378000, `dmg_multiplier` = 2.8 where `entry` = 10308;
++-- SPELL_BREATH_EAST_TO_WEST
++DELETE FROM spell_target_position WHERE id IN (18576, 18578, 18579, 18580, 18581, 18582, 18583);
++INSERT INTO spell_target_position VALUES (18576, 249, -37.743851, -243.667923, -88.217651, 1.416);
++INSERT INTO spell_target_position VALUES (18578, 249, -35.805332, -232.028900, -87.749153, 1.416);
++INSERT INTO spell_target_position VALUES (18579, 249, -34.045738, -224.714661, -85.529465, 1.416);
++INSERT INTO spell_target_position VALUES (18580, 249, -32.081570, -214.916962, -88.327438, 1.416);
++INSERT INTO spell_target_position VALUES (18581, 249, -36.611721, -202.684677, -85.653786, 1.416);
++INSERT INTO spell_target_position VALUES (18582, 249, -37.067261, -195.758652, -87.745834, 1.416);
++INSERT INTO spell_target_position VALUES (18583, 249, -37.728523, -188.616806, -88.074898, 1.416);
++-- SPELL_BREATH_WEST_TO_EAST
++DELETE FROM spell_target_position WHERE id IN (18609, 18611, 18612, 18613, 18614, 18615, 18616);
++INSERT INTO spell_target_position VALUES (18609, 249, -37.728523, -188.616806, -88.074898, 4.526);
++INSERT INTO spell_target_position VALUES (18611, 249, -37.067261, -195.758652, -87.745834, 4.526);
++INSERT INTO spell_target_position VALUES (18612, 249, -36.611721, -202.684677, -85.653786, 4.526);
++INSERT INTO spell_target_position VALUES (18613, 249, -32.081570, -214.916962, -88.327438, 4.526);
++INSERT INTO spell_target_position VALUES (18614, 249, -34.045738, -224.714661, -85.529465, 4.526);
++INSERT INTO spell_target_position VALUES (18615, 249, -35.805332, -232.028900, -87.749153, 4.526);
++INSERT INTO spell_target_position VALUES (18616, 249, -37.743851, -243.667923, -88.217651, 4.526);
++-- SPELL_BREATH_NW_TO_SE
++DELETE FROM spell_target_position WHERE id IN (18584, 18585, 18586, 18587, 18588, 18589, 18590, 18591, 18592, 18593, 18594, 18595);
++INSERT INTO spell_target_position VALUES (18584, 249, 6.016711, -181.305771, -85.654648, 3.776);
++INSERT INTO spell_target_position VALUES (18585, 249, 3.860220, -183.227249, -86.375381, 3.776);
++INSERT INTO spell_target_position VALUES (18586, 249, -2.529650, -188.690491, -87.172859, 3.776);
++INSERT INTO spell_target_position VALUES (18587, 249, -8.449303, -193.957962, -87.564957, 3.776);
++INSERT INTO spell_target_position VALUES (18588, 249, -14.321238, -199.462219, -87.922478, 3.776);
++INSERT INTO spell_target_position VALUES (18589, 249, -15.602085, -216.893936, -88.403183, 3.776);
++INSERT INTO spell_target_position VALUES (18590, 249, -23.650263, -221.969086, -89.172699, 3.776);
++INSERT INTO spell_target_position VALUES (18591, 249, -29.495876, -213.014359, -88.910423, 3.776);
++INSERT INTO spell_target_position VALUES (18592, 249, -35.439922, -217.260284, -87.336311, 3.776);
++INSERT INTO spell_target_position VALUES (18593, 249, -41.762104, -221.896545, -86.114113, 3.776);
++INSERT INTO spell_target_position VALUES (18594, 249, -51.067528, -228.909988, -85.765556, 3.776);
++INSERT INTO spell_target_position VALUES (18595, 249, -56.559654, -241.223923, -85.423607, 3.776);
++-- SPELL_BREATH_SE_TO_NW
++DELETE FROM spell_target_position WHERE id IN (18564, 18565, 18566, 18567, 18568, 18569, 18570, 18571, 18572, 18573, 18574, 18575);
++INSERT INTO spell_target_position VALUES (18564, 249, -56.559654, -241.223923, -85.423607, 0.666);
++INSERT INTO spell_target_position VALUES (18565, 249, -51.067528, -228.909988, -85.765556, 0.666);
++INSERT INTO spell_target_position VALUES (18566, 249, -41.762104, -221.896545, -86.114113, 0.666);
++INSERT INTO spell_target_position VALUES (18567, 249, -35.439922, -217.260284, -87.336311, 0.666);
++INSERT INTO spell_target_position VALUES (18568, 249, -29.495876, -213.014359, -88.910423, 0.666);
++INSERT INTO spell_target_position VALUES (18569, 249, -23.650263, -221.969086, -89.172699, 0.666);
++INSERT INTO spell_target_position VALUES (18570, 249, -15.602085, -216.893936, -88.403183, 0.666);
++INSERT INTO spell_target_position VALUES (18571, 249, -14.321238, -199.462219, -87.922478, 0.666);
++INSERT INTO spell_target_position VALUES (18572, 249, -8.449303, -193.957962, -87.564957, 0.666);
++INSERT INTO spell_target_position VALUES (18573, 249, -2.529650, -188.690491, -87.172859, 0.666);
++INSERT INTO spell_target_position VALUES (18574, 249, 3.860220, -183.227249, -86.375381, 0.666);
++INSERT INTO spell_target_position VALUES (18575, 249, 6.016711, -181.305771, -85.654648, 0.666);
++-- SPELL_BREATH_SW_TO_NE
++DELETE FROM spell_target_position WHERE id IN (18596, 18597, 18598, 18599, 18600, 18601, 18602, 18603, 18604, 18605, 18606, 18607);
++INSERT INTO spell_target_position VALUES (18596, 249, -58.250900, -189.020004, -85.292267, 5.587);
++INSERT INTO spell_target_position VALUES (18597, 249, -52.006271, -193.796570, -85.808769, 5.587);
++INSERT INTO spell_target_position VALUES (18598, 249, -46.135464, -198.548553, -85.901764, 5.587);
++INSERT INTO spell_target_position VALUES (18599, 249, -40.500187, -203.001053, -85.555107, 5.587);
++INSERT INTO spell_target_position VALUES (18600, 249, -30.907579, -211.058197, -88.592125, 5.587);
++INSERT INTO spell_target_position VALUES (18601, 249, -20.098139, -218.681427, -88.937088, 5.587);
++INSERT INTO spell_target_position VALUES (18602, 249, -12.223192, -224.666168, -87.856300, 5.587);
++INSERT INTO spell_target_position VALUES (18603, 249, -6.475297, -229.098724, -87.076401, 5.587);
++INSERT INTO spell_target_position VALUES (18604, 249, -2.010256, -232.541992, -86.995140, 5.587);
++INSERT INTO spell_target_position VALUES (18605, 249, 2.736300, -236.202347, -86.790367, 5.587);
++INSERT INTO spell_target_position VALUES (18606, 249, 7.197779, -239.642868, -86.307297, 5.587);
++INSERT INTO spell_target_position VALUES (18607, 249, 12.120926, -243.439407, -85.874260, 5.587);
++-- SPELL_BREATH_NE_TO_SW
++DELETE FROM spell_target_position WHERE id IN (18617, 18619, 18620, 18621, 18622, 18623, 18624, 18625, 18626, 18627, 18628, 18618);
++INSERT INTO spell_target_position VALUES (18617, 249, 12.120926, -243.439407, -85.874260, 2.428);
++INSERT INTO spell_target_position VALUES (18619, 249, 7.197779, -239.642868, -86.307297, 2.428);
++INSERT INTO spell_target_position VALUES (18620, 249, 2.736300, -236.202347, -86.790367, 2.428);
++INSERT INTO spell_target_position VALUES (18621, 249, -2.010256, -232.541992, -86.995140, 2.428);
++INSERT INTO spell_target_position VALUES (18622, 249, -6.475297, -229.098724, -87.076401, 2.428);
++INSERT INTO spell_target_position VALUES (18623, 249, -12.223192, -224.666168, -87.856300, 2.428);
++INSERT INTO spell_target_position VALUES (18624, 249, -20.098139, -218.681427, -88.937088, 2.428);
++INSERT INTO spell_target_position VALUES (18625, 249, -30.907579, -211.058197, -88.592125, 2.428);
++INSERT INTO spell_target_position VALUES (18626, 249, -40.500187, -203.001053, -85.555107, 2.428);
++INSERT INTO spell_target_position VALUES (18627, 249, -46.135464, -198.548553, -85.901764, 2.428);
++INSERT INTO spell_target_position VALUES (18628, 249, -52.006271, -193.796570, -85.808769, 2.428);
++INSERT INTO spell_target_position VALUES (18618, 249, -58.250900, -189.020004, -85.292267, 2.428);
++
++-- Below is not needed for current script
++-- SPELL_BREATH_SOUTH_TO_NORTH
++DELETE FROM spell_target_position WHERE id IN (18351, 18352, 18353, 18354, 18355, 18356, 18357, 18358, 18359, 18360, 18361);
++INSERT INTO spell_target_position VALUES (18351, 249, -68.834236, -215.036163, -84.018875, 6.280);
++INSERT INTO spell_target_position VALUES (18352, 249, -61.834255, -215.051910, -84.673416, 6.280);
++INSERT INTO spell_target_position VALUES (18353, 249, -53.343277, -215.071014, -85.597191, 6.280);
++INSERT INTO spell_target_position VALUES (18354, 249, -42.619305, -215.095139, -86.663605, 6.280);
++INSERT INTO spell_target_position VALUES (18355, 249, -35.899323, -215.110245, -87.196548, 6.280);
++INSERT INTO spell_target_position VALUES (18356, 249, -28.248341, -215.127457, -89.191750, 6.280);
++INSERT INTO spell_target_position VALUES (18357, 249, -20.324360, -215.145279, -88.963997, 6.280);
++INSERT INTO spell_target_position VALUES (18358, 249, -11.189384, -215.165833, -87.817093, 6.280);
++INSERT INTO spell_target_position VALUES (18359, 249, -2.047405, -215.186386, -86.279655, 6.280);
++INSERT INTO spell_target_position VALUES (18360, 249, 7.479571, -215.207809, -86.075531, 6.280);
++INSERT INTO spell_target_position VALUES (18361, 249, 20.730539, -215.237610, -85.254387, 6.280);
++-- SPELL_BREATH_NORTH_TO_SOUTH
++DELETE FROM spell_target_position WHERE id IN (17086, 17087, 17088, 17089, 17090, 17091, 17092, 17093, 17094, 17095, 17097, 22267, 22268, 21132, 21133, 21135, 21136, 21137, 21138, 21139);
++INSERT INTO spell_target_position VALUES (17086, 249, 20.730539, -215.237610, -85.254387, 3.142);
++INSERT INTO spell_target_position VALUES (17087, 249, 7.479571, -215.207809, -86.075531, 3.142);
++INSERT INTO spell_target_position VALUES (17088, 249, -2.047405, -215.186386, -86.279655, 3.142);
++INSERT INTO spell_target_position VALUES (17089, 249, -11.189384, -215.165833, -87.817093, 3.142);
++INSERT INTO spell_target_position VALUES (17090, 249, -20.324360, -215.145279, -88.963997, 3.142);
++INSERT INTO spell_target_position VALUES (17091, 249, -28.248341, -215.127457, -89.191750, 3.142);
++INSERT INTO spell_target_position VALUES (17092, 249, -35.899323, -215.110245, -87.196548, 3.142);
++INSERT INTO spell_target_position VALUES (17093, 249, -42.619305, -215.095139, -86.663605, 3.142);
++INSERT INTO spell_target_position VALUES (17094, 249, -53.343277, -215.071014, -85.597191, 3.142);
++INSERT INTO spell_target_position VALUES (17095, 249, -61.834255, -215.051910, -84.673416, 3.142);
++INSERT INTO spell_target_position VALUES (17097, 249, -68.834236, -215.036163, -84.018875, 3.142);
++INSERT INTO spell_target_position VALUES (22267, 249, -75.736046, -214.984970, -83.394188, 3.142);
++INSERT INTO spell_target_position VALUES (22268, 249, -84.087578, -214.857834, -82.640053, 3.142);
++INSERT INTO spell_target_position VALUES (21132, 249, -90.424416, -214.601974, -82.482697, 3.142);
++INSERT INTO spell_target_position VALUES (21133, 249, -96.572411, -214.353745, -82.239967, 3.142);
++INSERT INTO spell_target_position VALUES (21135, 249, -102.069931, -214.131775, -80.571190, 3.142);
++INSERT INTO spell_target_position VALUES (21136, 249, -107.385597, -213.917145, -77.447037, 3.142);
++INSERT INTO spell_target_position VALUES (21137, 249, -114.281258, -213.866486, -73.851128, 3.142);
++INSERT INTO spell_target_position VALUES (21138, 249, -123.328560, -213.607910, -71.559921, 3.142);
++INSERT INTO spell_target_position VALUES (21139, 249, -130.788300, -213.424026, -70.751007, 3.142);
+\ No newline at end of file
+diff --git a/sql/Custom_Updates/Mangos/Kalimdor/RuinsOfAhnquiraj_Mangos.sql b/sql/Custom_Updates/Mangos/Kalimdor/RuinsOfAhnquiraj_Mangos.sql
+new file mode 100644
+index 0000000..79e4d97
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Kalimdor/RuinsOfAhnquiraj_Mangos.sql
+@@ -0,0 +1,21 @@
++/* RUINS OF AHN'QIRAJ */
++-- Creature template
++UPDATE `creature_template` SET `ScriptName` = 'mob_flesh_hunter' WHERE `entry` = 15335;
++UPDATE `creature_template` SET `ScriptName` = 'mob_anubisath_guardian' WHERE `entry` = 15355;
++UPDATE `creature_template` SET `ScriptName` = 'mob_buru_egg' WHERE `entry` = 15514;
++UPDATE `creature_template` SET `ScriptName` = 'boss_buru' WHERE `entry` = 15370;
++UPDATE `creature_template` SET `ScriptName` = 'boss_moam' WHERE `entry` = 15340;
++UPDATE `creature_template` SET `ScriptName` = 'boss_ossirian' WHERE `entry` = 15339;
++UPDATE `creature_template` SET `ScriptName` = 'boss_kurinnaxx' WHERE `entry` = 15348;
++UPDATE `creature_template` SET `ScriptName` = 'boss_rajaxx' WHERE `entry` = 15341;
++UPDATE `creature_template` SET `ScriptName` = 'boss_ayamiss' WHERE `entry` = 15369;
++UPDATE `creature_template` SET `ScriptName` = 'npc_andorov' WHERE `entry` = 15471;
++-- Fixes
++Delete from `creature_ai_texts` where `entry` = -2110;
++Delete from `npc_text` where `id` = 14442;
++INSERT INTO `creature_ai_texts` (`entry`, `content_default`, `content_loc1`, `content_loc2`, `content_loc3`, `content_loc4`, `content_loc5`, `content_loc6`, `content_loc7`, `content_loc8`, `sound`, `type`, `language`, `emote`, `comment`) VALUES
++('-2110', 'Kill $N', '', '', '', '', '', '', '', '', '', '1', '', '', 'Captain Tuubid - Say Kill');
++insert into `npc_text` (`ID`, `text0_0`, `text0_1`, `lang0`, `prob0`, `em0_0`, `em0_1`, `em0_2`, `em0_3`, `em0_4`, `em0_5`, `text1_0`, `text1_1`, `lang1`, `prob1`, `em1_0`, `em1_1`, `em1_2`, `em1_3`, `em1_4`, `em1_5`, `text2_0`, `text2_1`, `lang2`, `prob2`, `em2_0`, `em2_1`, `em2_2`, `em2_3`, `em2_4`, `em2_5`, `text3_0`, `text3_1`, `lang3`, `prob3`, `em3_0`, `em3_1`, `em3_2`, `em3_3`, `em3_4`, `em3_5`, `text4_0`, `text4_1`, `lang4`, `prob4`, `em4_0`, `em4_1`, `em4_2`, `em4_3`, `em4_4`, `em4_5`, `text5_0`, `text5_1`, `lang5`, `prob5`, `em5_0`, `em5_1`, `em5_2`, `em5_3`, `em5_4`, `em5_5`, `text6_0`, `text6_1`, `lang6`, `prob6`, `em6_0`, `em6_1`, `em6_2`, `em6_3`, `em6_4`, `em6_5`, `text7_0`, `text7_1`, `lang7`, `prob7`, `em7_0`, `em7_1`, `em7_2`, `em7_3`, `em7_4`, `em7_5`) values
++('14442','<Andorov looks at you grimly.>$B$BIf it bleeds, we can kill it.','','0','1','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0','','','0','0','0','0','0','0','0','0');
++update `creature` set `id` = 15339 where `guid` = 51942;
++update `creature` set `id` = 15355 where `guid` = 51869;
+\ No newline at end of file
+diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
+index 5af1f8d..dddf025 100644
+--- a/system/ScriptLoader.cpp
++++ b/system/ScriptLoader.cpp
+@@ -226,9 +226,13 @@ extern void AddSC_boss_onyxia();                            //onyxias_lair
+ extern void AddSC_boss_amnennar_the_coldbringer();          //razorfen_downs
+ extern void AddSC_razorfen_downs();
+ extern void AddSC_boss_ayamiss();                           //ruins_of_ahnqiraj
++extern void AddSC_boss_buru();
++extern void AddSC_boss_ossirian();
+ extern void AddSC_boss_kurinnaxx();
++extern void AddSC_boss_rajaxx();
+ extern void AddSC_boss_moam();
+ extern void AddSC_ruins_of_ahnqiraj();
++extern void AddSC_instance_ruins_of_ahnqiraj();
+ extern void AddSC_boss_cthun();                             //temple_of_ahnqiraj
+ extern void AddSC_boss_fankriss();
+ extern void AddSC_boss_huhuran();
+@@ -691,6 +695,10 @@ void AddScripts()
+     AddSC_razorfen_downs();
+     AddSC_boss_ayamiss();                                   //ruins_of_ahnqiraj
+     AddSC_boss_kurinnaxx();
++    AddSC_boss_buru();
++    AddSC_boss_ossirian();
++    AddSC_boss_rajaxx();
++    AddSC_instance_ruins_of_ahnqiraj();
+     AddSC_boss_moam();
+     AddSC_ruins_of_ahnqiraj();
+     AddSC_boss_cthun();                                     //temple_of_ahnqiraj

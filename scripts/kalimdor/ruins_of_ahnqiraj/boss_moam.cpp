@@ -29,44 +29,60 @@ enum
     EMOTE_MANA_FULL          = -1509001,
     EMOTE_ENERGIZING         = -1509028,
 
-    SPELL_TRAMPLE            = 15550,
-    SPELL_DRAIN_MANA         = 25671,
-    SPELL_ARCANE_ERUPTION    = 25672,
-    SPELL_SUMMON_MANAFIEND_1 = 25681,
-    SPELL_SUMMON_MANAFIEND_2 = 25682,
-    SPELL_SUMMON_MANAFIEND_3 = 25683,
-    SPELL_ENERGIZE           = 25685,
-
-    PHASE_ATTACKING          = 0,
-    PHASE_ENERGIZING         = 1
+     SPELL_TRAMPLE           =  15550,
+     SPELL_DRAIN_MANA         = 25671,
+     SPELL_ARCANEERUPTION    =  25672,
+     SPELL_SUMMON_MANA_FIEND =  25681,                      //25682,25683 
+     SPELL_ENERGIZE          =  25685,
+ 
+    //mana fiend
+     NPC_MANA_FIEND          =  15527,
 };
 
 struct MANGOS_DLL_DECL boss_moamAI : public ScriptedAI
 {
     boss_moamAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
-    uint8 m_uiPhase;
-    
     uint32 m_uiTrample_Timer;
-    uint32 m_uiManaDrain_Timer;
-    uint32 m_uiCheckoutMana_Timer;
-    uint32 m_uiSummonManaFiends_Timer;
+    uint32 m_uiSummonManaFiend_Timer;
+    uint32 m_uiManaGain_Timer;
+    uint32 m_uiWait_Timer;
+    uint8 m_uiFiendCount;
+    uint32 m_uiDrainMana_Timer;
 
     void Reset()
     {
-        m_uiTrample_Timer           = 9000;
-        m_uiManaDrain_Timer         = 3000;
-        m_uiSummonManaFiends_Timer  = 90000;
-        m_uiCheckoutMana_Timer      = 1500;
-        m_uiPhase                   = PHASE_ATTACKING;
-        m_creature->SetPower(POWER_MANA, 0);
-        m_creature->SetMaxPower(POWER_MANA, 0);
+        m_uiTrample_Timer = 10000;
+        m_uiSummonManaFiend_Timer = 90000;
+        m_uiManaGain_Timer = 5000;
+        m_uiWait_Timer = 20000;
+        m_uiDrainMana_Timer = 3000;
+
+        m_uiFiendCount = 0;
     }
 
-    void Aggro(Unit* pWho)
+    void Aggro(Unit *who)
     {
         DoScriptText(EMOTE_AGGRO, m_creature);
-        m_creature->SetMaxPower(POWER_MANA, m_creature->GetCreatureInfo()->maxmana);
+        m_creature->SetPower(POWER_MANA,0);
+    }
+
+    void JustSummoned(Creature* pSummoned)
+    {
+        if (Unit* pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO,0))
+            pSummoned->AI()->AttackStart(pTarget);
+
+        if (pSummoned->GetEntry() == NPC_MANA_FIEND)
+             ++m_uiFiendCount;
+    }
+
+    void SummonedCreatureDespawn(Creature* pCreature) 
+    {
+         if (pCreature->GetEntry() == NPC_MANA_FIEND)
+             --m_uiFiendCount;
+
+         if (!m_uiFiendCount)
+             m_creature->RemoveAurasDueToSpell(SPELL_ENERGIZE);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -74,87 +90,56 @@ struct MANGOS_DLL_DECL boss_moamAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        switch(m_uiPhase)
+        if (m_uiManaGain_Timer < uiDiff)
         {
-            case PHASE_ATTACKING:
-                if (m_uiCheckoutMana_Timer <= uiDiff)
-                {
-                    m_uiCheckoutMana_Timer = 1500;
-                    if (m_creature->GetPower(POWER_MANA) * 100 / m_creature->GetMaxPower(POWER_MANA) > 75.0f)
-                    {
-                        DoCastSpellIfCan(m_creature, SPELL_ENERGIZE);
-                        DoScriptText(EMOTE_ENERGIZING, m_creature);
-                        m_uiPhase = PHASE_ENERGIZING;
-                        return;
-                    }
-                } 
-                else
-                    m_uiCheckoutMana_Timer -= uiDiff;
-
-                if (m_uiSummonManaFiends_Timer <= uiDiff)
-                {
-                    DoCastSpellIfCan(m_creature->getVictim(), SPELL_SUMMON_MANAFIEND_1, CAST_TRIGGERED);
-                    DoCastSpellIfCan(m_creature->getVictim(), SPELL_SUMMON_MANAFIEND_2, CAST_TRIGGERED);
-                    DoCastSpellIfCan(m_creature->getVictim(), SPELL_SUMMON_MANAFIEND_3, CAST_TRIGGERED);
-                    m_uiSummonManaFiends_Timer = 90000;
-                }
-                else
-                    m_uiSummonManaFiends_Timer -= uiDiff;
-
-                if (m_uiManaDrain_Timer <= uiDiff)
-                {
-                    m_uiManaDrain_Timer = urand(2000, 6000);
-                    // choose random target with mana
-                    std::list<Unit*> lTargets;
-                    ThreatList const& threatlist = m_creature->getThreatManager().getThreatList();
-                    if (threatlist.empty())
-                        return;
-
-                    for (ThreatList::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
-                    {
-                        Unit* pUnit = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
-                        if (pUnit && pUnit->isAlive() && pUnit->GetPower(POWER_MANA))
-                            lTargets.push_back(pUnit);
-                    }
-
-                    if (lTargets.empty())
-                        return;
-
-                    std::list<Unit*>::iterator itr = lTargets.begin();
-                    std::advance(itr, urand(0, lTargets.size()-1));
-
-                    DoCastSpellIfCan(*itr, SPELL_DRAIN_MANA);
-                } 
-                else
-                    m_uiManaDrain_Timer -= uiDiff;
-
-                if (m_uiTrample_Timer <= uiDiff)
-                {
-                    DoCastSpellIfCan(m_creature->getVictim(), SPELL_TRAMPLE);
-                    m_uiTrample_Timer = 15000;
-                } 
-                else
-                    m_uiTrample_Timer -= uiDiff;
-
-                DoMeleeAttackIfReady();
-                break;
-            case PHASE_ENERGIZING:
-                if (m_uiCheckoutMana_Timer <= uiDiff)
-                {
-                    m_uiCheckoutMana_Timer = 1500;
-                    if (m_creature->GetPower(POWER_MANA) == m_creature->GetMaxPower(POWER_MANA))
-                    {
-                        m_creature->RemoveAurasDueToSpell(SPELL_ENERGIZE);
-                        DoCastSpellIfCan(m_creature, SPELL_ARCANE_ERUPTION);
-                        DoScriptText(EMOTE_MANA_FULL, m_creature);
-                        m_uiPhase = PHASE_ATTACKING;
-                        return;
-                    }
-                } 
-                else
-                    m_uiCheckoutMana_Timer -= uiDiff;
-                break;
+            m_creature->SetPower(POWER_MANA,m_creature->GetPower(POWER_MANA)+1000);
+            m_uiManaGain_Timer = 5000;
         }
+        else
+            m_uiManaGain_Timer -= uiDiff;
+
+         //If we are 100%MANA cast Arcane Erruption
+        if (m_creature->GetPower(POWER_MANA) == m_creature->GetMaxPower(POWER_MANA) && !m_creature->IsNonMeleeSpellCasted(false))
+         {
+            m_creature->RemoveAurasDueToSpell(SPELL_ENERGIZE);
+             DoCast(m_creature->getVictim(),SPELL_ARCANEERUPTION);
+             DoScriptText(EMOTE_MANA_FULL, m_creature);
+         }
+ 
+        //m_uiSummonManaFiend_Timer
+        if (m_uiSummonManaFiend_Timer < uiDiff)
+         {
+            //DoCast(m_creature,SUMMON_MANA_FIEND); //summons only one
+            for (uint8 i = 0; i < 3; ++i)
+                m_creature->SummonCreature(NPC_MANA_FIEND,m_creature->GetPositionX()+2,m_creature->GetPositionY(),m_creature->GetPositionZ(),0,TEMPSUMMON_CORPSE_DESPAWN,0);            
+            m_uiSummonManaFiend_Timer = 90000;
+            m_creature->AttackStop();
+            DoCast(m_creature,SPELL_ENERGIZE);
+            DoScriptText(EMOTE_ENERGIZING,m_creature);
+            m_uiWait_Timer = 10000;
+         }
+        else
+            m_uiSummonManaFiend_Timer -= uiDiff;
+ 
+        //m_uiTrample_Timer
+        if (m_uiTrample_Timer < uiDiff)
+         {
+             DoCast(m_creature->getVictim(),SPELL_TRAMPLE);
+            m_uiTrample_Timer = 10000;
+        }
+        else
+            m_uiTrample_Timer -= uiDiff;
+ 
+        //m_uiDrainMana_Timer
+        if (m_uiDrainMana_Timer < uiDiff)
+        {
+             DoCast(m_creature->getVictim(),SPELL_DRAIN_MANA);
+            m_uiDrainMana_Timer = 30000;
+        }
+        else
+            m_uiDrainMana_Timer -= uiDiff;
+
+        DoMeleeAttackIfReady();
     }
 };
 
