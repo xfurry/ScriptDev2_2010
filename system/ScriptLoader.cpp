@@ -267,9 +267,11 @@ extern void AddSC_boss_jaraxxus();
 extern void AddSC_boss_anubarak_trial();
 extern void AddSC_twin_valkyr();
 extern void AddSC_instance_trial_of_the_crusader();
-extern void AddSC_boss_novos();                             //draktharon_keep
+extern void AddSC_boss_dred();                              //draktharon_keep
+extern void AddSC_boss_novos();                             
 extern void AddSC_boss_tharonja();
 extern void AddSC_boss_trollgore();
+extern void AddSC_instance_draktharon();
 extern void AddSC_boss_colossus();                          //gundrak
 extern void AddSC_boss_eck();
 extern void AddSC_boss_galdarah();
@@ -703,9 +705,11 @@ void AddScripts()
     AddSC_boss_anubarak_trial();
     AddSC_twin_valkyr();
     AddSC_instance_trial_of_the_crusader();
-    AddSC_boss_novos();                                     //draktharon_keep
+    AddSC_boss_dred();                                      //draktharon_keep
+    AddSC_boss_novos();                                      
     AddSC_boss_tharonja();
     AddSC_boss_trollgore();
+    AddSC_instance_draktharon();
     AddSC_boss_colossus();                                  //gundrak
     AddSC_boss_eck();
     AddSC_boss_galdarah();

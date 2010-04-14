@@ -1703,6 +1703,10 @@
 					Name="draktharon_keep"
 					>
 					<File
+						RelativePath="..\scripts\northrend\draktharon_keep\boss_dred.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\scripts\northrend\draktharon_keep\boss_novos.cpp"
 						>
 					</File>
@@ -1712,6 +1716,14 @@
 					</File>
 					<File
 						RelativePath="..\scripts\northrend\draktharon_keep\boss_trollgore.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\draktharon_keep\draktharon_keep.h"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\draktharon_keep\instance_draktharon_keep.cpp"
 						>
 					</File>
 				</Filter>
