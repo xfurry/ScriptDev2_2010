@@ -1,0 +1,922 @@
+diff --git a/Makefile.am b/Makefile.am
+index 4f0e469..af32471 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -102,6 +102,7 @@ scripts/eastern_kingdoms/blackrock_spire/boss_rend_blackhand.cpp \
+ scripts/eastern_kingdoms/blackrock_spire/boss_shadow_hunter_voshgajin.cpp \
+ scripts/eastern_kingdoms/blackrock_spire/boss_the_beast.cpp \
+ scripts/eastern_kingdoms/blackrock_spire/boss_warmaster_voone.cpp \
++scripts/eastern_kingdoms/blackwing_lair/blackwing_lair.h \
+ scripts/eastern_kingdoms/blackwing_lair/boss_broodlord_lashlayer.cpp \
+ scripts/eastern_kingdoms/blackwing_lair/boss_chromaggus.cpp \
+ scripts/eastern_kingdoms/blackwing_lair/boss_ebonroc.cpp \
+diff --git a/VC90/90ScriptDev2.vcproj b/VC90/90ScriptDev2.vcproj
+index 268ffe8..9112561 100644
+--- a/VC90/90ScriptDev2.vcproj
++++ b/VC90/90ScriptDev2.vcproj
+@@ -639,6 +639,10 @@
+ 					Name="blackwing_lair"
+ 					>
+ 					<File
++						RelativePath="..\scripts\eastern_kingdoms\blackwing_lair\blackwing_lair.h"
++						>
++					</File>
++					<File
+ 						RelativePath="..\scripts\eastern_kingdoms\blackwing_lair\boss_broodlord_lashlayer.cpp"
+ 						>
+ 					</File>
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/blackwing_lair.h b/scripts/eastern_kingdoms/blackwing_lair/blackwing_lair.h
+new file mode 100644
+index 0000000..9cdeea6
+--- /dev/null
++++ b/scripts/eastern_kingdoms/blackwing_lair/blackwing_lair.h
+@@ -0,0 +1,41 @@
++/* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++ * This program is free software licensed under GPL version 2
++ * Please see the included DOCS/LICENSE.TXT for more information */
++
++#ifndef DEF_BLACKWING_LAIR
++#define DEF_BLACKWING_LAIR
++
++enum
++{
++    MAX_ENCOUNTER           = 8,
++
++    TYPE_RAZORGORE          = 1,
++    TYPE_VAELASTRASZ        = 2,
++    TYPE_LASHLAYER          = 3,
++    TYPE_FIREMAW            = 4,
++    TYPE_EBONROC            = 5,
++    TYPE_FLAMEGOR           = 6,
++    TYPE_CHROMAGGUS         = 7,
++    TYPE_NEFARIAN           = 8, 
++
++    NPC_RAZORGORE           = 12435, 
++    NPC_VAELASTRASZ         = 13020, 
++    NPC_LASHLAYER           = 12017,
++    NPC_FIREMAW             = 11983,
++    NPC_EBONROC             = 14601,
++    NPC_FLAMEGOR            = 11981,
++    NPC_CHROMAGGUS          = 14020,
++    NPC_NEFARIAN            = 11583,
++    NPC_LORD_NEFARIAN       = 10162,
++
++    GO_DOOR_RAZORGORE_ENTER = 176964,
++    GO_DOOR_RAZORGORE_EXIT  = 176965,
++    GO_DOOR_NEFARIAN        = 176966,
++    GO_DOOR_FLAMEGOR        = 179115,
++    GO_DOOR_CHROMAGGUS_SIDE = 179116,
++    GO_DOOR_CHROMAGGUS_EXIT = 179117,
++    GO_DOOR_VAELASTRASZ     = 179364,
++    GO_DOOR_LASHLAYER       = 179365
++};
++
++#endif
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_broodlord_lashlayer.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_broodlord_lashlayer.cpp
+index 27635ab..41a42ef 100644
+--- a/scripts/eastern_kingdoms/blackwing_lair/boss_broodlord_lashlayer.cpp
++++ b/scripts/eastern_kingdoms/blackwing_lair/boss_broodlord_lashlayer.cpp
+@@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "blackwing_lair.h"
+ 
+ #define SAY_AGGRO               -1469000
+ #define SAY_LEASH               -1469001
+@@ -33,7 +34,13 @@ EndScriptData */
+ 
+ struct MANGOS_DLL_DECL boss_broodlordAI : public ScriptedAI
+ {
+-    boss_broodlordAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_broodlordAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
++
++    ScriptedInstance* m_pInstance;
+ 
+     uint32 Cleave_Timer;
+     uint32 BlastWave_Timer;
+@@ -46,12 +53,24 @@ struct MANGOS_DLL_DECL boss_broodlordAI : public ScriptedAI
+         BlastWave_Timer = 12000;
+         MortalStrike_Timer = 20000;
+         KnockBack_Timer = 30000;
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_LASHLAYER, NOT_STARTED);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         DoScriptText(SAY_AGGRO, m_creature);
+         m_creature->SetInCombatWithZone();
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_LASHLAYER, IN_PROGRESS);
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_LASHLAYER, DONE);
+     }
+ 
+     void UpdateAI(const uint32 diff)
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_chromaggus.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_chromaggus.cpp
+index 57fa6a1..528736a 100644
+--- a/scripts/eastern_kingdoms/blackwing_lair/boss_chromaggus.cpp
++++ b/scripts/eastern_kingdoms/blackwing_lair/boss_chromaggus.cpp
+@@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "blackwing_lair.h"
+ 
+ enum
+ {
+@@ -159,9 +160,12 @@ struct MANGOS_DLL_DECL boss_chromaggusAI : public ScriptedAI
+                 break;
+         };
+ 
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+         EnterEvadeMode();
+     }
+ 
++    ScriptedInstance* m_pInstance;
++
+     uint32 Breath1_Spell;
+     uint32 Breath2_Spell;
+     uint32 CurrentVurln_Spell;
+@@ -184,6 +188,21 @@ struct MANGOS_DLL_DECL boss_chromaggusAI : public ScriptedAI
+         Frenzy_Timer = 15000;
+ 
+         Enraged = false;
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_CHROMAGGUS, NOT_STARTED);
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_CHROMAGGUS, IN_PROGRESS);
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_CHROMAGGUS, DONE);
+     }
+ 
+     void UpdateAI(const uint32 diff)
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_ebonroc.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_ebonroc.cpp
+index 3395a7d..f25f2e6 100644
+--- a/scripts/eastern_kingdoms/blackwing_lair/boss_ebonroc.cpp
++++ b/scripts/eastern_kingdoms/blackwing_lair/boss_ebonroc.cpp
+@@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "blackwing_lair.h"
+ 
+ #define SPELL_SHADOWFLAME           22539
+ #define SPELL_WINGBUFFET            18500
+@@ -30,8 +31,13 @@ EndScriptData */
+ 
+ struct MANGOS_DLL_DECL boss_ebonrocAI : public ScriptedAI
+ {
+-    boss_ebonrocAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_ebonrocAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
+ 
++    ScriptedInstance* m_pInstance;
+     uint32 ShadowFlame_Timer;
+     uint32 WingBuffet_Timer;
+     uint32 ShadowOfEbonroc_Timer;
+@@ -43,11 +49,23 @@ struct MANGOS_DLL_DECL boss_ebonrocAI : public ScriptedAI
+         WingBuffet_Timer = 30000;
+         ShadowOfEbonroc_Timer = 45000;
+         Heal_Timer = 1000;
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_EBONROC, NOT_STARTED);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         m_creature->SetInCombatWithZone();
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_EBONROC, IN_PROGRESS);
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_EBONROC, DONE);
+     }
+ 
+     void UpdateAI(const uint32 diff)
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_firemaw.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_firemaw.cpp
+index 312265f..f30fc30 100644
+--- a/scripts/eastern_kingdoms/blackwing_lair/boss_firemaw.cpp
++++ b/scripts/eastern_kingdoms/blackwing_lair/boss_firemaw.cpp
+@@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "blackwing_lair.h"
+ 
+ #define SPELL_SHADOWFLAME       22539
+ #define SPELL_WINGBUFFET        23339
+@@ -29,8 +30,13 @@ EndScriptData */
+ 
+ struct MANGOS_DLL_DECL boss_firemawAI : public ScriptedAI
+ {
+-    boss_firemawAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_firemawAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
+ 
++    ScriptedInstance* m_pInstance;
+     uint32 ShadowFlame_Timer;
+     uint32 WingBuffet_Timer;
+     uint32 FlameBuffet_Timer;
+@@ -40,11 +46,23 @@ struct MANGOS_DLL_DECL boss_firemawAI : public ScriptedAI
+         ShadowFlame_Timer = 30000;                          //These times are probably wrong
+         WingBuffet_Timer = 24000;
+         FlameBuffet_Timer = 5000;
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_FIREMAW, NOT_STARTED);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         m_creature->SetInCombatWithZone();
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_FIREMAW, IN_PROGRESS);
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_FIREMAW, DONE);
+     }
+ 
+     void UpdateAI(const uint32 diff)
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_flamegor.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_flamegor.cpp
+index 33b5d95..310ec1a 100644
+--- a/scripts/eastern_kingdoms/blackwing_lair/boss_flamegor.cpp
++++ b/scripts/eastern_kingdoms/blackwing_lair/boss_flamegor.cpp
+@@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "blackwing_lair.h"
+ 
+ enum
+ {
+@@ -34,8 +35,13 @@ enum
+ 
+ struct MANGOS_DLL_DECL boss_flamegorAI : public ScriptedAI
+ {
+-    boss_flamegorAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_flamegorAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
+ 
++    ScriptedInstance* m_pInstance;
+     uint32 ShadowFlame_Timer;
+     uint32 WingBuffet_Timer;
+     uint32 Frenzy_Timer;
+@@ -45,11 +51,23 @@ struct MANGOS_DLL_DECL boss_flamegorAI : public ScriptedAI
+         ShadowFlame_Timer = 21000;                          //These times are probably wrong
+         WingBuffet_Timer = 35000;
+         Frenzy_Timer = 10000;
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_FLAMEGOR, NOT_STARTED);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         m_creature->SetInCombatWithZone();
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_FLAMEGOR, IN_PROGRESS);
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_FLAMEGOR, DONE);
+     }
+ 
+     void UpdateAI(const uint32 diff)
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_nefarian.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_nefarian.cpp
+index da5fb00..36ba3fc 100644
+--- a/scripts/eastern_kingdoms/blackwing_lair/boss_nefarian.cpp
++++ b/scripts/eastern_kingdoms/blackwing_lair/boss_nefarian.cpp
+@@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "blackwing_lair.h"
+ 
+ #define SAY_AGGRO               -1469007
+ #define SAY_XHEALTH             -1469008
+@@ -60,8 +61,13 @@ EndScriptData */
+ 
+ struct MANGOS_DLL_DECL boss_nefarianAI : public ScriptedAI
+ {
+-    boss_nefarianAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_nefarianAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
+ 
++    ScriptedInstance* m_pInstance;
+     uint32 ShadowFlame_Timer;
+     uint32 BellowingRoar_Timer;
+     uint32 VeilOfShadow_Timer;
+@@ -92,6 +98,9 @@ struct MANGOS_DLL_DECL boss_nefarianAI : public ScriptedAI
+     void JustDied(Unit* Killer)
+     {
+         DoScriptText(SAY_DEATH, m_creature);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_NEFARIAN, DONE);
+     }
+ 
+     void Aggro(Unit* pWho)
+@@ -106,6 +115,9 @@ struct MANGOS_DLL_DECL boss_nefarianAI : public ScriptedAI
+         DoCastSpellIfCan(pWho,SPELL_SHADOWFLAME_INITIAL);
+ 
+         m_creature->SetInCombatWithZone();
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_NEFARIAN, IN_PROGRESS);
+     }
+ 
+     void UpdateAI(const uint32 diff)
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_razorgore.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_razorgore.cpp
+index f1bd1b8..c82405f 100644
+--- a/scripts/eastern_kingdoms/blackwing_lair/boss_razorgore.cpp
++++ b/scripts/eastern_kingdoms/blackwing_lair/boss_razorgore.cpp
+@@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "blackwing_lair.h"
+ 
+ //Razorgore Phase 2 Script
+ enum
+@@ -39,8 +40,13 @@ enum
+ 
+ struct MANGOS_DLL_DECL boss_razorgoreAI : public ScriptedAI
+ {
+-    boss_razorgoreAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++    boss_razorgoreAI(Creature* pCreature) : ScriptedAI(pCreature) 
++    {
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        Reset();
++    }
+ 
++    ScriptedInstance* m_pInstance;
+     uint32 m_uiCleaveTimer;
+     uint32 m_uiWarStompTimer;
+     uint32 m_uiFireballVolleyTimer;
+@@ -53,16 +59,24 @@ struct MANGOS_DLL_DECL boss_razorgoreAI : public ScriptedAI
+         m_uiConflagrationTimer  = 12000;
+         m_uiFireballVolleyTimer = 7000;
+ 
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_RAZORGORE, NOT_STARTED);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         m_creature->SetInCombatWithZone();
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_RAZORGORE, IN_PROGRESS);
+     }
+ 
+     void JustDied(Unit* pKiller)
+     {
+         DoScriptText(SAY_DEATH, m_creature);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_RAZORGORE, DONE);
+     }
+ 
+     void UpdateAI(const uint32 uiDiff)
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_vaelastrasz.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_vaelastrasz.cpp
+index 9df1432..295679c 100644
+--- a/scripts/eastern_kingdoms/blackwing_lair/boss_vaelastrasz.cpp
++++ b/scripts/eastern_kingdoms/blackwing_lair/boss_vaelastrasz.cpp
+@@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "blackwing_lair.h"
+ 
+ #define SAY_LINE1           -1469026
+ #define SAY_LINE2           -1469027
+@@ -44,9 +45,11 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
+     {
+         pCreature->setFaction(35);
+         pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+         Reset();
+     }
+ 
++    ScriptedInstance* m_pInstance;
+     uint64 PlayerGUID;
+     uint32 SpeachTimer;
+     uint32 SpeachNum;
+@@ -72,6 +75,9 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
+         TailSwipe_Timer = 20000;
+         HasYelled = false;
+         DoingSpeach = false;
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_VAELASTRASZ, NOT_STARTED);
+     }
+ 
+     void BeginSpeach(Unit* target)
+@@ -99,6 +105,15 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
+     {
+         DoCastSpellIfCan(m_creature,SPELL_ESSENCEOFTHERED);
+         m_creature->SetInCombatWithZone();
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_VAELASTRASZ, IN_PROGRESS);
++    }
++
++    void JustDied(Unit* pKiller)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_VAELASTRASZ, DONE);
+     }
+ 
+     void UpdateAI(const uint32 diff)
+@@ -124,7 +139,7 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
+                         break;
+                     case 2:
+                         m_creature->setFaction(103);
+-                        m_creature->SetHealth(int(m_creature->GetMaxHealth()*.3));
++                        m_creature->SetMaxHealth(int(m_creature->GetMaxHealth()*.3));
+                         if (PlayerGUID && Unit::GetUnit((*m_creature),PlayerGUID))
+                         {
+                             AttackStart(Unit::GetUnit((*m_creature),PlayerGUID));
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_victor_nefarius.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_victor_nefarius.cpp
+index 0946022..ef69a5e 100644
+--- a/scripts/eastern_kingdoms/blackwing_lair/boss_victor_nefarius.cpp
++++ b/scripts/eastern_kingdoms/blackwing_lair/boss_victor_nefarius.cpp
+@@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "blackwing_lair.h"
+ 
+ #define SAY_GAMESBEGIN_1        -1469004
+ #define SAY_GAMESBEGIN_2        -1469005
+@@ -157,8 +158,10 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
+                 DrakType2 = CREATURE_RED_DRAKANOID;
+                 break;
+         }
++        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+     }
+ 
++    ScriptedInstance* m_pInstance;
+     uint32 SpawnedAdds;
+     uint32 AddSpawnTimer;
+     uint32 ShadowBoltTimer;
+@@ -202,6 +205,9 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
+         m_creature->setFaction(103);
+         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+         AttackStart(target);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_NEFARIAN, IN_PROGRESS);
+     }
+ 
+     void MoveInLineOfSight(Unit *who)
+@@ -305,7 +311,8 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
+                     m_creature->NearTeleportTo(HIDE_X, HIDE_Y, HIDE_Z, 0.0f);
+ 
+                     //Spawn nef and have him attack a random target
+-                    Creature* Nefarian = m_creature->SummonCreature(CREATURE_NEFARIAN,NEF_X,NEF_Y,NEF_Z,0,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,120000);
++                    //Creature* Nefarian = m_creature->SummonCreature(CREATURE_NEFARIAN,NEF_X,NEF_Y,NEF_Z,0,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,120000);
++                    Creature* Nefarian = m_creature->SummonCreature(CREATURE_NEFARIAN,m_creature->GetPositionX(),m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,120000);
+                     target = SelectUnit(SELECT_TARGET_RANDOM,0);
+ 
+                     if (target && Nefarian)
+diff --git a/scripts/eastern_kingdoms/blackwing_lair/instance_blackwing_lair.cpp b/scripts/eastern_kingdoms/blackwing_lair/instance_blackwing_lair.cpp
+index cdea07b..03354f3 100644
+--- a/scripts/eastern_kingdoms/blackwing_lair/instance_blackwing_lair.cpp
++++ b/scripts/eastern_kingdoms/blackwing_lair/instance_blackwing_lair.cpp
+@@ -1,18 +1,18 @@
+ /* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+- */
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
+ 
+ /* ScriptData
+ SDName: Instance_Blackwing_Lair
+@@ -22,3 +22,327 @@ SDCategory: Blackwing Lair
+ EndScriptData */
+ 
+ #include "precompiled.h"
++#include "blackwing_lair.h"
++
++
++struct MANGOS_DLL_DECL instance_blackwing_lair : public ScriptedInstance
++{
++    instance_blackwing_lair(Map* pMap) : ScriptedInstance(pMap) 
++    {
++        Initialize();
++    }
++
++    std::string strInstData;
++    uint32 m_auiEncounter[MAX_ENCOUNTER];
++
++    // npcs
++    uint64 m_uiRazorgoreGUID;
++    uint64 m_uiVaelastraszGUID;
++    uint64 m_uiLashlayerGUID;
++    uint64 m_uiFiremawGUID;
++    uint64 m_uiEbonrocGUID;
++    uint64 m_uiFlamegorGUID;
++    uint64 m_uiChromaggusGUID;
++    uint64 m_uiNefarianGUID;
++    uint64 m_uiLordVictorGUID;
++
++    // doors
++    uint64 m_uiRazorgoreEnterDoorGUID;
++    uint64 m_uiRazorgoreExitDoorGUID;
++    uint64 m_uiVaelastraszDoorGUID;
++    uint64 m_uiLashlayerDoorGUID;
++    uint64 m_uiFlamegorDoorGUID;
++    uint64 m_uiChromaggusExitDoorGUID;
++    uint64 m_uiChromaggusSideDoorGUID;
++    uint64 m_uiNefarianDoorGUID;
++
++    void Initialize()
++    {
++        memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
++
++        // npcs
++        m_uiRazorgoreGUID       = 0;
++        m_uiVaelastraszGUID     = 0;
++        m_uiLashlayerGUID       = 0;
++        m_uiFiremawGUID         = 0;
++        m_uiEbonrocGUID         = 0;
++        m_uiFlamegorGUID        = 0;
++        m_uiChromaggusGUID      = 0;
++        m_uiNefarianGUID        = 0;
++        m_uiLordVictorGUID      = 0;
++
++        // doors
++        m_uiRazorgoreEnterDoorGUID  = 0;
++        m_uiRazorgoreExitDoorGUID   = 0;
++        m_uiVaelastraszDoorGUID     = 0;
++        m_uiLashlayerDoorGUID       = 0;
++        m_uiFlamegorDoorGUID        = 0;
++        m_uiChromaggusExitDoorGUID  = 0;
++        m_uiChromaggusSideDoorGUID  = 0;
++        m_uiNefarianDoorGUID        = 0;
++    }
++
++    void OnCreatureCreate(Creature* pCreature)
++    {
++        switch(pCreature->GetEntry())
++        {
++        case NPC_RAZORGORE:     m_uiRazorgoreGUID = pCreature->GetGUID();   break;
++        case NPC_VAELASTRASZ:   m_uiVaelastraszGUID = pCreature->GetGUID(); break;
++        case NPC_LASHLAYER:     m_uiLashlayerGUID = pCreature->GetGUID();   break;
++        case NPC_FIREMAW:       m_uiFiremawGUID = pCreature->GetGUID();     break;
++        case NPC_EBONROC:       m_uiEbonrocGUID = pCreature->GetGUID();     break;
++        case NPC_FLAMEGOR:      m_uiFlamegorGUID = pCreature->GetGUID();    break;
++        case NPC_CHROMAGGUS:    m_uiChromaggusGUID = pCreature->GetGUID();  break;
++        case NPC_NEFARIAN:      m_uiNefarianGUID = pCreature->GetGUID();    break;
++        case NPC_LORD_NEFARIAN: m_uiLordVictorGUID = pCreature->GetGUID();  break;
++        }
++    }
++
++    void OnObjectCreate(GameObject* pGo)
++    {
++        switch(pGo->GetEntry())
++        {
++        case GO_DOOR_RAZORGORE_ENTER:
++            m_uiRazorgoreEnterDoorGUID = pGo->GetGUID();
++            break;
++        case GO_DOOR_RAZORGORE_EXIT:
++            m_uiRazorgoreExitDoorGUID = pGo->GetGUID();
++            pGo->SetGoState(GO_STATE_READY);
++            if (m_auiEncounter[0] == DONE)
++                pGo->SetGoState(GO_STATE_ACTIVE);
++            break;
++        case GO_DOOR_NEFARIAN:
++            m_uiNefarianDoorGUID = pGo->GetGUID();
++            break;
++        case GO_DOOR_FLAMEGOR:
++            m_uiFlamegorDoorGUID = pGo->GetGUID();
++            pGo->SetGoState(GO_STATE_READY);
++            if (m_auiEncounter[3] == DONE && m_auiEncounter[4] == DONE && m_auiEncounter[5] == DONE)
++                pGo->SetGoState(GO_STATE_ACTIVE);
++            break;
++        case GO_DOOR_CHROMAGGUS_SIDE:
++            m_uiChromaggusSideDoorGUID = pGo->GetGUID();
++            break;
++        case GO_DOOR_CHROMAGGUS_EXIT:
++            m_uiChromaggusExitDoorGUID = pGo->GetGUID();
++            if (m_auiEncounter[6] == DONE)
++                pGo->SetGoState(GO_STATE_ACTIVE);
++            break;
++        case GO_DOOR_VAELASTRASZ:
++            m_uiVaelastraszDoorGUID = pGo->GetGUID();
++            if (m_auiEncounter[1] == DONE)
++                pGo->SetGoState(GO_STATE_ACTIVE);
++            break;
++        case GO_DOOR_LASHLAYER:
++            m_uiLashlayerDoorGUID = pGo->GetGUID();
++            if (m_auiEncounter[2] == DONE)
++                pGo->SetGoState(GO_STATE_ACTIVE);
++            break;
++        }
++    }
++
++    void OpenDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
++    }
++
++    void CloseDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_READY);
++    }
++
++    bool IsEncounterInProgress() const
++    {
++        for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
++            if (m_auiEncounter[i] == IN_PROGRESS)
++                return true;
++
++        return false;
++    }
++
++    void SetData(uint32 uiType, uint32 uiData)
++    {
++        switch(uiType)
++        {
++            
++        case TYPE_RAZORGORE:
++            m_auiEncounter[0] = uiData;
++            if(uiData == IN_PROGRESS)
++                CloseDoor(m_uiRazorgoreEnterDoorGUID);
++            else
++                OpenDoor(m_uiRazorgoreEnterDoorGUID);
++            if(uiData == DONE)
++                DoUseDoorOrButton(m_uiRazorgoreExitDoorGUID);
++            if(uiData != DONE)
++                CloseDoor(m_uiRazorgoreExitDoorGUID);
++            break;
++
++        case TYPE_VAELASTRASZ:
++            m_auiEncounter[1] = uiData;
++            if(uiData == IN_PROGRESS)
++                CloseDoor(m_uiRazorgoreExitDoorGUID);
++            else
++                OpenDoor(m_uiRazorgoreExitDoorGUID);
++            if(uiData == DONE)
++                DoUseDoorOrButton(m_uiVaelastraszDoorGUID);
++            break;
++
++        case TYPE_LASHLAYER:
++            m_auiEncounter[2] = uiData;
++            if(uiData == DONE)
++                DoUseDoorOrButton(m_uiLashlayerDoorGUID);
++            break;
++
++        case TYPE_FIREMAW:
++            m_auiEncounter[3] = uiData;
++            if(uiData == DONE && m_auiEncounter[4] == DONE && m_auiEncounter[5] == DONE)
++                DoUseDoorOrButton(m_uiFlamegorDoorGUID);
++            break;
++
++        case TYPE_EBONROC:
++            m_auiEncounter[4] = uiData;
++            if(uiData == DONE && m_auiEncounter[3] == DONE && m_auiEncounter[5] == DONE)
++                DoUseDoorOrButton(m_uiFlamegorDoorGUID);
++            break;
++
++        case TYPE_FLAMEGOR:
++            m_auiEncounter[5] = uiData;
++            if(uiData == DONE && m_auiEncounter[3] == DONE && m_auiEncounter[4] == DONE)
++                DoUseDoorOrButton(m_uiFlamegorDoorGUID);
++            break;
++
++        case TYPE_CHROMAGGUS:
++            m_auiEncounter[6] = uiData;
++            if(uiData == IN_PROGRESS)
++            {
++                CloseDoor(m_uiFlamegorDoorGUID);
++                DoUseDoorOrButton(m_uiChromaggusSideDoorGUID);
++            }
++            else
++                OpenDoor(m_uiFlamegorDoorGUID);
++            if (uiData == DONE)
++                DoUseDoorOrButton(m_uiChromaggusExitDoorGUID);
++            break;
++
++        case TYPE_NEFARIAN:
++            m_auiEncounter[7] = uiData;
++            if(uiData == IN_PROGRESS)
++                CloseDoor(m_uiNefarianDoorGUID);
++            else
++                OpenDoor(m_uiNefarianDoorGUID);
++            break;
++        }
++
++        if (uiData == DONE)
++        {
++            OUT_SAVE_INST_DATA;
++
++            std::ostringstream saveStream;
++            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
++                << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " "
++                << m_auiEncounter[6] << " " << m_auiEncounter[7];
++
++            strInstData = saveStream.str();
++
++            SaveToDB();
++            OUT_SAVE_INST_DATA_COMPLETE;
++        }
++    }
++
++    const char* Save()
++    {
++        return strInstData.c_str();
++    }
++
++    void Load(const char* chrIn)
++    {
++        if (!chrIn)
++        {
++            OUT_LOAD_INST_DATA_FAIL;
++            return;
++        }
++
++        OUT_LOAD_INST_DATA(chrIn);
++
++        std::istringstream loadStream(chrIn);
++        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3]
++        >> m_auiEncounter[4] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7];
++
++        for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
++        {
++            if (m_auiEncounter[i] == IN_PROGRESS)
++                m_auiEncounter[i] = NOT_STARTED;
++        }
++
++        OUT_LOAD_INST_DATA_COMPLETE;
++    }
++
++    uint32 GetData(uint32 uiType)
++    {
++        switch(uiType)
++        {
++        case TYPE_RAZORGORE:
++            return m_auiEncounter[0];
++        case TYPE_VAELASTRASZ:
++            return m_auiEncounter[1];
++        case TYPE_LASHLAYER:
++            return m_auiEncounter[2];
++        case TYPE_FIREMAW:
++            return m_auiEncounter[3];
++        case TYPE_EBONROC:
++            return m_auiEncounter[4];
++        case TYPE_FLAMEGOR:
++            return m_auiEncounter[5];
++        case TYPE_CHROMAGGUS:
++            return m_auiEncounter[6];
++        case TYPE_NEFARIAN:
++            return m_auiEncounter[7];
++        }
++        return 0;
++    }
++
++    uint64 GetData64(uint32 uiData)
++    {
++        switch(uiData)
++        {
++        case NPC_RAZORGORE:
++            return m_uiRazorgoreGUID;
++        case NPC_VAELASTRASZ:
++            return m_uiVaelastraszGUID;
++        case NPC_LASHLAYER:
++            return m_uiLashlayerGUID;
++        case NPC_FIREMAW:
++            return m_uiFiremawGUID;
++        case NPC_EBONROC:
++            return m_uiEbonrocGUID;
++        case NPC_FLAMEGOR:
++            return m_uiFlamegorGUID;
++        case NPC_CHROMAGGUS:
++            return m_uiChromaggusGUID;
++        case NPC_NEFARIAN:
++            return m_uiNefarianGUID;
++        case NPC_LORD_NEFARIAN:
++            return m_uiLordVictorGUID;
++        }
++        return 0;
++    }
++};
++
++InstanceData* GetInstanceData_instance_blackwing_lair(Map* pMap)
++{
++    return new instance_blackwing_lair(pMap);
++}
++
++void AddSC_instance_blackwing_lair()
++{
++    Script* pNewScript;
++    pNewScript = new Script;
++    pNewScript->Name = "instance_blackwing_lair";
++    pNewScript->GetInstanceData = &GetInstanceData_instance_blackwing_lair;
++    pNewScript->RegisterSelf();
++}
++
+diff --git a/sql/Custom_Updates/Mangos/EasternKingdoms/BlackwingLair_Mangos.sql b/sql/Custom_Updates/Mangos/EasternKingdoms/BlackwingLair_Mangos.sql
+new file mode 100644
+index 0000000..2ed7a4f
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/EasternKingdoms/BlackwingLair_Mangos.sql
+@@ -0,0 +1,3 @@
++/* BLACKWING LAIR */
++UPDATE `gameobject_template` SET `faction` = 114 WHERE `entry` in (176964, 176965, 176966, 179115, 179116, 179117, 179364, 179365);
++update `instance_template` set `script` = 'instance_blackwing_lair' where `map` = 469;
+\ No newline at end of file
+diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
+index c38ab21..5af1f8d 100644
+--- a/system/ScriptLoader.cpp
++++ b/system/ScriptLoader.cpp
+@@ -66,6 +66,7 @@ extern void AddSC_boss_flamegor();
+ extern void AddSC_boss_chromaggus();
+ extern void AddSC_boss_nefarian();
+ extern void AddSC_boss_victor_nefarius();
++extern void AddSC_instance_blackwing_lair();
+ extern void AddSC_deadmines();                              //deadmines
+ extern void AddSC_instance_deadmines();
+ extern void AddSC_boss_attumen();                           //karazhan
+@@ -529,6 +530,7 @@ void AddScripts()
+     AddSC_boss_chromaggus();
+     AddSC_boss_nefarian();
+     AddSC_boss_victor_nefarius();
++    AddSC_instance_blackwing_lair();
+     AddSC_deadmines();                                      //deadmines
+     AddSC_instance_deadmines();
+     AddSC_boss_attumen();                                   //karazhan

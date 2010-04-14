@@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
 EndScriptData */
 
 #include "precompiled.h"
+#include "blackwing_lair.h"
 
 enum
 {
@@ -159,8 +160,11 @@ struct MANGOS_DLL_DECL boss_chromaggusAI : public ScriptedAI
                 break;
         };
 
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         EnterEvadeMode();
     }
+
+    ScriptedInstance* m_pInstance;
 
     uint32 Breath1_Spell;
     uint32 Breath2_Spell;
@@ -184,6 +188,21 @@ struct MANGOS_DLL_DECL boss_chromaggusAI : public ScriptedAI
         Frenzy_Timer = 15000;
 
         Enraged = false;
+
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_CHROMAGGUS, NOT_STARTED);
+    }
+
+    void Aggro(Unit* pWho)
+    {
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_CHROMAGGUS, IN_PROGRESS);
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_CHROMAGGUS, DONE);
     }
 
     void UpdateAI(const uint32 diff)
