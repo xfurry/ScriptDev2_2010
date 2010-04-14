@@ -443,6 +443,13 @@ scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_svala.cpp \
 scripts/northrend/utgarde_keep/utgarde_pinnacle/boss_ymiron.cpp \
 scripts/northrend/utgarde_keep/utgarde_pinnacle/instance_utgarde_pinnacle.cpp \
 scripts/northrend/utgarde_keep/utgarde_pinnacle/utgarde_pinnacle.h \
+scripts/northrend/violet_hold/boss_cyanigosa.cpp \
+scripts/northrend/violet_hold/boss_erekem.cpp \
+scripts/northrend/violet_hold/boss_ichoron.cpp \
+scripts/northrend/violet_hold/boss_lavanthor.cpp \
+scripts/northrend/violet_hold/boss_moragg.cpp \
+scripts/northrend/violet_hold/boss_xevozz.cpp \
+scripts/northrend/violet_hold/boss_zuramat.cpp \
 scripts/northrend/violet_hold/instance_violet_hold.cpp \
 scripts/northrend/violet_hold/violet_hold.cpp \
 scripts/northrend/violet_hold/violet_hold.h \
