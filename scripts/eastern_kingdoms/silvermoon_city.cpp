@@ -27,6 +27,15 @@ EndContentData */
 
 #include "precompiled.h"
 
+enum
+{
+    // Lor'themar Theron
+    SPELL_ARCANE_SHOCK              = 59715,
+    SPELL_CLEAVE_LORTHEMAR          = 15284,
+    SPELL_MANA_BURN                 = 33385,
+    SPELL_MASS_CHARM                = 33384,
+};
+
 /*#######
 # npc_blood_knight_stillblade
 #######*/
@@ -86,11 +95,82 @@ CreatureAI* GetAI_npc_blood_knight_stillblade(Creature* pCreature)
     return new npc_blood_knight_stillbladeAI(pCreature);
 }
 
+struct MANGOS_DLL_DECL boss_lorthemar_theronAI : public ScriptedAI
+{
+    boss_lorthemar_theronAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+
+    uint32 m_uiArcaneShockTimer;
+    uint32 m_uiCleaveTimer;
+    uint32 m_uiManaBurnTimer;
+    uint32 m_uiMassCharmTimer;
+
+    void Reset()
+    {
+        m_uiArcaneShockTimer    = 9000;
+        m_uiCleaveTimer         = 5000;
+        m_uiManaBurnTimer       = 12000;
+        m_uiMassCharmTimer      = 16000;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (m_uiArcaneShockTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_ARCANE_SHOCK);
+            m_uiArcaneShockTimer = urand(9000, 11000);
+        }
+        else
+            m_uiArcaneShockTimer -= uiDiff;
+
+        if (m_uiCleaveTimer < uiDiff)
+        {
+            DoCast(m_creature->getVictim(), SPELL_CLEAVE_LORTHEMAR);
+            m_uiCleaveTimer = urand(5000, 7000);
+        }
+        else
+            m_uiCleaveTimer -= uiDiff;
+
+        if (m_uiManaBurnTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_MANA_BURN);
+            m_uiManaBurnTimer = urand(12000, 15000);
+        }
+        else
+            m_uiManaBurnTimer -= uiDiff;
+
+        if (m_uiMassCharmTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_MASS_CHARM);
+            m_uiMassCharmTimer = urand(16000, 20000);
+        }
+        else
+            m_uiMassCharmTimer -= uiDiff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_boss_lorthemar_theron(Creature* pCreature)
+{
+    return new boss_lorthemar_theronAI(pCreature);
+}
+
 void AddSC_silvermoon_city()
 {
     Script *newscript;
     newscript = new Script;
     newscript->Name = "npc_blood_knight_stillblade";
     newscript->GetAI = &GetAI_npc_blood_knight_stillblade;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "boss_lorthemar_theron";
+    newscript->GetAI = &GetAI_boss_lorthemar_theron;
     newscript->RegisterSelf();
 }

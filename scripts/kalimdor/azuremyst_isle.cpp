@@ -49,7 +49,14 @@ enum
     SAY_HELP4           = -1000183,
 
     SPELL_IRRIDATION    = 35046,
-    SPELL_STUNNED       = 28630
+    SPELL_STUNNED       = 28630,
+
+    // Prophet Velen
+    SPELL_HOLY_BLAST                = 59700,
+    SPELL_HOLY_NOVA                 = 59701,
+    SPELL_HOLY_SMITE                = 59703,
+    SPELL_PRAYER_OF_HEALING         = 59698, //on friendly
+    SPELL_STAFF_STRIKE              = 33542,
 };
 
 struct MANGOS_DLL_DECL npc_draenei_survivorAI : public ScriptedAI
@@ -426,8 +433,120 @@ bool GossipSelect_npc_susurrus(Player* pPlayer, Creature* pCreature, uint32 uiSe
 }
 
 /*######
-##
+## boss_prophet_velen
 ######*/
+
+struct MANGOS_DLL_DECL boss_prophet_velenAI : public ScriptedAI
+{
+    boss_prophet_velenAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+
+    uint32 m_uiHolyBlastTimer;
+    uint32 m_uiHolyNovaTimer;
+    uint32 m_uiHolySmiteTimer;
+    uint32 m_uiStaffStrikeTimer;
+    uint32 m_uiPrayerOfHealingTimer;
+
+    std::list<uint64> FriendlyList;
+
+    void Reset()
+    {
+        m_uiHolyBlastTimer      = 7000;
+        m_uiHolyNovaTimer       = 12000;
+        m_uiHolySmiteTimer      = 9000;
+        m_uiStaffStrikeTimer    = 5000;
+        m_uiPrayerOfHealingTimer= 10000;
+        FriendlyList.clear();
+    }
+
+    void MoveInLineOfSight(Unit* pWho)
+    {
+        // friendly list
+        if (!m_creature->IsHostileTo(pWho) && !ListContains(FriendlyList, pWho->GetGUID()) && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 30, true))
+            FriendlyList.push_back(pWho->GetGUID());
+    }
+
+    uint64 SelectRandomAly(std::list<uint64> UnitList)
+    {
+        if (UnitList.empty())
+            return m_creature->GetGUID();
+
+        std::list<uint64>::iterator iter = UnitList.begin();
+        advance(iter, urand(0, UnitList.size()-1));
+
+        return *iter;
+    }
+
+    bool ListContains(std::list<uint64> &plist, uint64 element)
+    {
+        if (plist.empty())
+            return false;
+
+        std::list<uint64>::iterator i;
+        for (i = plist.begin(); i!=plist.end(); ++i)
+        {
+            if ((*i) == element)
+                return true;
+        }
+        return false;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (m_uiHolyBlastTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_HOLY_BLAST);
+            m_uiHolyBlastTimer = urand(7000, 11000);
+        }
+        else
+            m_uiHolyBlastTimer -= uiDiff;
+
+        if (m_uiHolyNovaTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_HOLY_NOVA);
+            m_uiHolyNovaTimer = urand(12000, 17000);
+        }
+        else
+            m_uiHolyNovaTimer -= uiDiff;
+
+        if (m_uiHolySmiteTimer < uiDiff)
+        {
+            DoCast(m_creature->getVictim(), SPELL_HOLY_SMITE);
+            m_uiHolySmiteTimer = urand(8000, 12000);
+        }
+        else
+            m_uiHolySmiteTimer -= uiDiff;
+
+        if (m_uiStaffStrikeTimer < uiDiff)
+        {
+            DoCast(m_creature->getVictim(), SPELL_STAFF_STRIKE);
+            m_uiStaffStrikeTimer = urand(5000, 8000);
+        }
+        else
+            m_uiStaffStrikeTimer -= uiDiff;
+
+        if (m_uiPrayerOfHealingTimer < uiDiff)
+        {
+            Unit *pAly = Unit::GetUnit((*m_creature),(SelectRandomAly(FriendlyList)));
+            if (pAly && pAly->isAlive() && m_creature->GetDistance(pAly) < 30)
+                DoCast(pAly, SPELL_PRAYER_OF_HEALING);
+            m_uiPrayerOfHealingTimer = urand(10000, 15000);
+        }
+        else
+            m_uiPrayerOfHealingTimer -= uiDiff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_boss_prophet_velen(Creature* pCreature)
+{
+    return new boss_prophet_velenAI(pCreature);
+}
 
 void AddSC_azuremyst_isle()
 {
@@ -460,5 +579,10 @@ void AddSC_azuremyst_isle()
     newscript->Name = "npc_susurrus";
     newscript->pGossipHello =  &GossipHello_npc_susurrus;
     newscript->pGossipSelect = &GossipSelect_npc_susurrus;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "boss_prophet_velen";
+    newscript->GetAI = &GetAI_boss_prophet_velen;
     newscript->RegisterSelf();
 }

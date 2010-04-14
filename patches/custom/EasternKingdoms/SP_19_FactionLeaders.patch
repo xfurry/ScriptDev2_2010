@@ -1,0 +1,1137 @@
+diff --git a/scripts/eastern_kingdoms/ironforge.cpp b/scripts/eastern_kingdoms/ironforge.cpp
+index 4c54ccd..8c41e37 100644
+--- a/scripts/eastern_kingdoms/ironforge.cpp
++++ b/scripts/eastern_kingdoms/ironforge.cpp
+@@ -27,6 +27,19 @@ EndContentData */
+ 
+ #include "precompiled.h"
+ 
++enum
++{
++    // King Magni Bronzebeard
++    SPELL_AVATAR                    = 19135,
++    SPELL_KNOCK_AWAY                = 20686,
++    SPELL_STORM_BOLT                = 20685,
++
++    // High Tinker Mekkatorque      
++    SPELL_BOMB                      = 9143,
++    SPELL_GOBLIN_DRAGON_GUN         = 22739,
++    SPELL_SUPER_SHRINK_RAY          = 22742,
++};
++
+ /*######
+ ## npc_royal_historian_archesonus
+ ######*/
+@@ -81,6 +94,116 @@ bool GossipSelect_npc_royal_historian_archesonus(Player* pPlayer, Creature* pCre
+     return true;
+ }
+ 
++struct MANGOS_DLL_DECL boss_king_magni_bronzebreardAI : public ScriptedAI
++{
++    boss_king_magni_bronzebreardAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint32 m_uiAvatarTimer;
++    uint32 m_uiKnockAwayTimer;
++    uint32 m_uiStormboltTimer;
++
++    void Reset()
++    {
++        m_uiAvatarTimer     = 15000;
++        m_uiKnockAwayTimer  = 8000;
++        m_uiStormboltTimer  = 10000;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiAvatarTimer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_AVATAR);
++            m_uiAvatarTimer = urand(15000, 12000);
++        }
++        else
++            m_uiAvatarTimer -= uiDiff;
++
++        if (m_uiKnockAwayTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_KNOCK_AWAY);
++            m_uiKnockAwayTimer = urand(8000, 12000);
++        }
++        else
++            m_uiKnockAwayTimer -= uiDiff;
++
++        if (m_uiStormboltTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_STORM_BOLT);
++            m_uiStormboltTimer = 10000;
++        }
++        else
++            m_uiStormboltTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_king_magni_bronzebreard(Creature* pCreature)
++{
++    return new boss_king_magni_bronzebreardAI(pCreature);
++}
++
++struct MANGOS_DLL_DECL boss_high_tinker_mekkatorqueAI : public ScriptedAI
++{
++    boss_high_tinker_mekkatorqueAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint32 m_uiBombTimer;
++    uint32 m_uiGoblinDragonGunTimer;
++    uint32 m_uiSuperShrinkRayTimer;
++
++    void Reset()
++    {
++        m_uiBombTimer               = 10000;
++        m_uiGoblinDragonGunTimer    = 15000;
++        m_uiSuperShrinkRayTimer     = 15000;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiBombTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_BOMB);
++            m_uiBombTimer = urand(8000, 15000);
++        }
++        else
++            m_uiBombTimer -= uiDiff;
++
++        if (m_uiGoblinDragonGunTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_GOBLIN_DRAGON_GUN);
++            m_uiGoblinDragonGunTimer = urand(15000, 20000);
++        }
++        else
++            m_uiGoblinDragonGunTimer -= uiDiff;
++
++        if (m_uiSuperShrinkRayTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_SUPER_SHRINK_RAY);
++            m_uiSuperShrinkRayTimer = urand(15000, 20000);
++        }
++        else
++            m_uiSuperShrinkRayTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_high_tinker_mekkatorque(Creature* pCreature)
++{
++    return new boss_high_tinker_mekkatorqueAI(pCreature);
++}
++
+ void AddSC_ironforge()
+ {
+     Script *newscript;
+@@ -90,4 +213,14 @@ void AddSC_ironforge()
+     newscript->pGossipHello =  &GossipHello_npc_royal_historian_archesonus;
+     newscript->pGossipSelect = &GossipSelect_npc_royal_historian_archesonus;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_king_magni_bronzebreard";
++    newscript->GetAI = &GetAI_boss_king_magni_bronzebreard;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_high_tinker_mekkatorque";
++    newscript->GetAI = &GetAI_boss_high_tinker_mekkatorque;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/eastern_kingdoms/silvermoon_city.cpp b/scripts/eastern_kingdoms/silvermoon_city.cpp
+index 03b2e3b..816f515 100644
+--- a/scripts/eastern_kingdoms/silvermoon_city.cpp
++++ b/scripts/eastern_kingdoms/silvermoon_city.cpp
+@@ -27,6 +27,15 @@ EndContentData */
+ 
+ #include "precompiled.h"
+ 
++enum
++{
++    // Lor'themar Theron
++    SPELL_ARCANE_SHOCK              = 59715,
++    SPELL_CLEAVE_LORTHEMAR          = 15284,
++    SPELL_MANA_BURN                 = 33385,
++    SPELL_MASS_CHARM                = 33384,
++};
++
+ /*#######
+ # npc_blood_knight_stillblade
+ #######*/
+@@ -86,6 +95,72 @@ CreatureAI* GetAI_npc_blood_knight_stillblade(Creature* pCreature)
+     return new npc_blood_knight_stillbladeAI(pCreature);
+ }
+ 
++struct MANGOS_DLL_DECL boss_lorthemar_theronAI : public ScriptedAI
++{
++    boss_lorthemar_theronAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint32 m_uiArcaneShockTimer;
++    uint32 m_uiCleaveTimer;
++    uint32 m_uiManaBurnTimer;
++    uint32 m_uiMassCharmTimer;
++
++    void Reset()
++    {
++        m_uiArcaneShockTimer    = 9000;
++        m_uiCleaveTimer         = 5000;
++        m_uiManaBurnTimer       = 12000;
++        m_uiMassCharmTimer      = 16000;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiArcaneShockTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_ARCANE_SHOCK);
++            m_uiArcaneShockTimer = urand(9000, 11000);
++        }
++        else
++            m_uiArcaneShockTimer -= uiDiff;
++
++        if (m_uiCleaveTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_CLEAVE_LORTHEMAR);
++            m_uiCleaveTimer = urand(5000, 7000);
++        }
++        else
++            m_uiCleaveTimer -= uiDiff;
++
++        if (m_uiManaBurnTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_MANA_BURN);
++            m_uiManaBurnTimer = urand(12000, 15000);
++        }
++        else
++            m_uiManaBurnTimer -= uiDiff;
++
++        if (m_uiMassCharmTimer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_MASS_CHARM);
++            m_uiMassCharmTimer = urand(16000, 20000);
++        }
++        else
++            m_uiMassCharmTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_lorthemar_theron(Creature* pCreature)
++{
++    return new boss_lorthemar_theronAI(pCreature);
++}
++
+ void AddSC_silvermoon_city()
+ {
+     Script *newscript;
+@@ -93,4 +168,9 @@ void AddSC_silvermoon_city()
+     newscript->Name = "npc_blood_knight_stillblade";
+     newscript->GetAI = &GetAI_npc_blood_knight_stillblade;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_lorthemar_theron";
++    newscript->GetAI = &GetAI_boss_lorthemar_theron;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/eastern_kingdoms/stormwind_city.cpp b/scripts/eastern_kingdoms/stormwind_city.cpp
+index ec52b5d..9aa0a2c 100644
+--- a/scripts/eastern_kingdoms/stormwind_city.cpp
++++ b/scripts/eastern_kingdoms/stormwind_city.cpp
+@@ -30,6 +30,14 @@ EndContentData */
+ 
+ #include "precompiled.h"
+ 
++enum
++{
++    // King Varian
++    SPELL_HEROIC_LEAP               = 59688,
++    SPELL_WHIRLWIND                 = 41056,
++    SPELL_WHIRLWIND_TRIG            = 41057,
++};
++
+ /*######
+ ## npc_archmage_malin
+ ######*/
+@@ -237,6 +245,56 @@ bool GossipSelect_npc_lady_katrana_prestor(Player* pPlayer, Creature* pCreature,
+     }
+     return true;
+ }
++struct MANGOS_DLL_DECL boss_king_varian_wrynnAI : public ScriptedAI
++{
++    boss_king_varian_wrynnAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint32 m_uiHeroicLeapTimer;
++    uint32 m_uiWhirlwind;
++
++    void Reset()
++    {
++        m_uiHeroicLeapTimer = 6000;
++        m_uiWhirlwind       = 15000;
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        //DoScriptText(SAY_AGGRO, m_creature);
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiWhirlwind < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND);
++            m_uiWhirlwind = urand(15000, 18000);
++        }
++        else
++            m_uiWhirlwind -= uiDiff;
++
++        if (m_uiHeroicLeapTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_HEROIC_LEAP);
++            m_uiHeroicLeapTimer = urand(6000, 9000);
++        }
++        else
++            m_uiHeroicLeapTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_king_varian_wrynn(Creature* pCreature)
++{
++    return new boss_king_varian_wrynnAI(pCreature);
++}
++
+ 
+ void AddSC_stormwind_city()
+ {
+@@ -265,4 +323,9 @@ void AddSC_stormwind_city()
+     newscript->pGossipHello = &GossipHello_npc_lady_katrana_prestor;
+     newscript->pGossipSelect = &GossipSelect_npc_lady_katrana_prestor;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_king_varian_wrynn";
++    newscript->GetAI = &GetAI_boss_king_varian_wrynn;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/eastern_kingdoms/undercity.cpp b/scripts/eastern_kingdoms/undercity.cpp
+index 06e6c07..61c461b 100644
+--- a/scripts/eastern_kingdoms/undercity.cpp
++++ b/scripts/eastern_kingdoms/undercity.cpp
+@@ -32,6 +32,14 @@ EndContentData */
+ /*######
+ ## npc_lady_sylvanas_windrunner
+ ######*/
++enum
++{
++    SPELL_BLACK_ARROW               = 59712,
++    SPELL_FADE                      = 20672,
++    SPELL_MULTI_SHOT                = 59713,
++    SPELL_SHOOT_SYLVANAS            = 59710,
++    SPELL_SUMMON_SKELETON           = 59711,
++};
+ 
+ #define SAY_LAMENT_END              -1000196
+ #define EMOTE_LAMENT_END            -1000197
+@@ -66,6 +74,12 @@ struct MANGOS_DLL_DECL npc_lady_sylvanas_windrunnerAI : public ScriptedAI
+     float myY;
+     float myZ;
+ 
++    uint32 m_uiBlackArrowTimer;
++    uint32 m_uiMultiShotTimer;
++    uint32 m_uiFadeTimer;
++    uint32 m_uiShootTimer;
++    uint32 m_uiSummonSkeletonTimer;
++
+     void Reset()
+     {
+         myX = m_creature->GetPositionX();
+@@ -75,6 +89,12 @@ struct MANGOS_DLL_DECL npc_lady_sylvanas_windrunnerAI : public ScriptedAI
+         LamentEvent_Timer = 5000;
+         LamentEvent = false;
+         targetGUID = 0;
++
++        m_uiBlackArrowTimer     = 15000;
++        m_uiMultiShotTimer      = 11000;
++        m_uiFadeTimer           = 15000;
++        m_uiShootTimer          = 5000;
++        m_uiSummonSkeletonTimer = 17000;
+     }
+ 
+     void JustSummoned(Creature *summoned)
+@@ -91,11 +111,11 @@ struct MANGOS_DLL_DECL npc_lady_sylvanas_windrunnerAI : public ScriptedAI
+         }
+     }
+ 
+-    void UpdateAI(const uint32 diff)
++    void UpdateAI(const uint32 uiDiff)
+     {
+         if (LamentEvent)
+         {
+-            if (LamentEvent_Timer < diff)
++            if (LamentEvent_Timer < uiDiff)
+             {
+                 float raX = myX;
+                 float raY = myY;
+@@ -111,12 +131,54 @@ struct MANGOS_DLL_DECL npc_lady_sylvanas_windrunnerAI : public ScriptedAI
+                     DoScriptText(EMOTE_LAMENT_END, m_creature);
+                     LamentEvent = false;
+                 }
+-            }else LamentEvent_Timer -= diff;
++            }else LamentEvent_Timer -= uiDiff;
+         }
+ 
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        if (m_uiBlackArrowTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_BLACK_ARROW);
++            m_uiBlackArrowTimer = urand(15000, 25000);
++        }
++        else
++            m_uiBlackArrowTimer -= uiDiff;
++
++        if (m_uiMultiShotTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_MULTI_SHOT);
++            m_uiMultiShotTimer = urand(11000, 14000);
++        }
++        else
++            m_uiMultiShotTimer -= uiDiff;
++
++        if (m_uiFadeTimer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_FADE);
++            m_uiFadeTimer = urand(15000, 20000);
++        }
++        else
++            m_uiFadeTimer -= uiDiff;
++
++        if (m_uiShootTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_SHOOT_SYLVANAS);
++            m_uiShootTimer = urand(6000, 9000);
++        }
++        else
++            m_uiShootTimer -= uiDiff;
++
++        if (m_uiSummonSkeletonTimer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_SUMMON_SKELETON);
++            m_uiSummonSkeletonTimer = urand(17000, 23000);
++        }
++        else
++            m_uiSummonSkeletonTimer -= uiDiff;
++
+         DoMeleeAttackIfReady();
+     }
+ };
+diff --git a/scripts/kalimdor/azuremyst_isle.cpp b/scripts/kalimdor/azuremyst_isle.cpp
+index 6c8ab94..d7fcce5 100644
+--- a/scripts/kalimdor/azuremyst_isle.cpp
++++ b/scripts/kalimdor/azuremyst_isle.cpp
+@@ -49,7 +49,14 @@ enum
+     SAY_HELP4           = -1000183,
+ 
+     SPELL_IRRIDATION    = 35046,
+-    SPELL_STUNNED       = 28630
++    SPELL_STUNNED       = 28630,
++
++    // Prophet Velen
++    SPELL_HOLY_BLAST                = 59700,
++    SPELL_HOLY_NOVA                 = 59701,
++    SPELL_HOLY_SMITE                = 59703,
++    SPELL_PRAYER_OF_HEALING         = 59698, //on friendly
++    SPELL_STAFF_STRIKE              = 33542,
+ };
+ 
+ struct MANGOS_DLL_DECL npc_draenei_survivorAI : public ScriptedAI
+@@ -426,9 +433,121 @@ bool GossipSelect_npc_susurrus(Player* pPlayer, Creature* pCreature, uint32 uiSe
+ }
+ 
+ /*######
+-##
++## boss_prophet_velen
+ ######*/
+ 
++struct MANGOS_DLL_DECL boss_prophet_velenAI : public ScriptedAI
++{
++    boss_prophet_velenAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint32 m_uiHolyBlastTimer;
++    uint32 m_uiHolyNovaTimer;
++    uint32 m_uiHolySmiteTimer;
++    uint32 m_uiStaffStrikeTimer;
++    uint32 m_uiPrayerOfHealingTimer;
++
++    std::list<uint64> FriendlyList;
++
++    void Reset()
++    {
++        m_uiHolyBlastTimer      = 7000;
++        m_uiHolyNovaTimer       = 12000;
++        m_uiHolySmiteTimer      = 9000;
++        m_uiStaffStrikeTimer    = 5000;
++        m_uiPrayerOfHealingTimer= 10000;
++        FriendlyList.clear();
++    }
++
++    void MoveInLineOfSight(Unit* pWho)
++    {
++        // friendly list
++        if (!m_creature->IsHostileTo(pWho) && !ListContains(FriendlyList, pWho->GetGUID()) && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 30, true))
++            FriendlyList.push_back(pWho->GetGUID());
++    }
++
++    uint64 SelectRandomAly(std::list<uint64> UnitList)
++    {
++        if (UnitList.empty())
++            return m_creature->GetGUID();
++
++        std::list<uint64>::iterator iter = UnitList.begin();
++        advance(iter, urand(0, UnitList.size()-1));
++
++        return *iter;
++    }
++
++    bool ListContains(std::list<uint64> &plist, uint64 element)
++    {
++        if (plist.empty())
++            return false;
++
++        std::list<uint64>::iterator i;
++        for (i = plist.begin(); i!=plist.end(); ++i)
++        {
++            if ((*i) == element)
++                return true;
++        }
++        return false;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiHolyBlastTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_HOLY_BLAST);
++            m_uiHolyBlastTimer = urand(7000, 11000);
++        }
++        else
++            m_uiHolyBlastTimer -= uiDiff;
++
++        if (m_uiHolyNovaTimer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_HOLY_NOVA);
++            m_uiHolyNovaTimer = urand(12000, 17000);
++        }
++        else
++            m_uiHolyNovaTimer -= uiDiff;
++
++        if (m_uiHolySmiteTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_HOLY_SMITE);
++            m_uiHolySmiteTimer = urand(8000, 12000);
++        }
++        else
++            m_uiHolySmiteTimer -= uiDiff;
++
++        if (m_uiStaffStrikeTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_STAFF_STRIKE);
++            m_uiStaffStrikeTimer = urand(5000, 8000);
++        }
++        else
++            m_uiStaffStrikeTimer -= uiDiff;
++
++        if (m_uiPrayerOfHealingTimer < uiDiff)
++        {
++            Unit *pAly = Unit::GetUnit((*m_creature),(SelectRandomAly(FriendlyList)));
++            if (pAly && pAly->isAlive() && m_creature->GetDistance(pAly) < 30)
++                DoCast(pAly, SPELL_PRAYER_OF_HEALING);
++            m_uiPrayerOfHealingTimer = urand(10000, 15000);
++        }
++        else
++            m_uiPrayerOfHealingTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_prophet_velen(Creature* pCreature)
++{
++    return new boss_prophet_velenAI(pCreature);
++}
++
+ void AddSC_azuremyst_isle()
+ {
+     Script *newscript;
+@@ -461,4 +580,9 @@ void AddSC_azuremyst_isle()
+     newscript->pGossipHello =  &GossipHello_npc_susurrus;
+     newscript->pGossipSelect = &GossipSelect_npc_susurrus;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_prophet_velen";
++    newscript->GetAI = &GetAI_boss_prophet_velen;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/kalimdor/dustwallow_marsh.cpp b/scripts/kalimdor/dustwallow_marsh.cpp
+index c91acfa..a49b25f 100644
+--- a/scripts/kalimdor/dustwallow_marsh.cpp
++++ b/scripts/kalimdor/dustwallow_marsh.cpp
+@@ -47,7 +47,14 @@ enum
+     SPELL_CONSUME_FLESH              = 37933,               //Risen Husk
+     SPELL_INTANGIBLE_PRESENCE        = 43127,               //Risen Spirit
+     NPC_RISEN_HUSK                   = 23555,
+-    NPC_RISEN_SPIRIT                 = 23554
++    NPC_RISEN_SPIRIT                 = 23554,
++
++    // Lady Jaina Proudmoore
++    SPELL_BLIZZARD                  = 20680,
++    SPELL_FIRE_BLAST                = 20679,
++    SPELL_FIREBALL                  = 20692,
++    SPELL_SUMMON_WATER_ELEMENT      = 20681,
++    SPELL_TELEPORT                  = 20682,
+ };
+ 
+ 
+@@ -810,8 +817,85 @@ bool GossipSelect_npc_cassa_crimsonwing(Player* pPlayer, Creature* pCreature, ui
+ }
+ 
+ /*######
+-##
++## boss_lady_jaina
+ ######*/
++struct MANGOS_DLL_DECL boss_lady_jaina_proudmooreAI : public ScriptedAI
++{
++    boss_lady_jaina_proudmooreAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint32 m_uiBlizzardTimer;
++    uint32 m_uiFireBlastTimer;
++    uint32 m_uiFireballTimer;
++    uint32 m_uiTeleportTimer;
++    uint32 m_uiWaterElementTimer;
++
++    void Reset()
++    {
++        m_uiBlizzardTimer   = 15000;
++        m_uiFireBlastTimer  = 5000;
++        m_uiFireballTimer   = 7000;
++        m_uiTeleportTimer   = 17000;
++        m_uiWaterElementTimer = 20000;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiBlizzardTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_BLIZZARD);
++            m_uiBlizzardTimer = urand(15000, 18000);
++        }
++        else
++            m_uiBlizzardTimer -= uiDiff;
++
++        if (m_uiFireBlastTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_FIRE_BLAST);
++            m_uiFireBlastTimer = urand(5000, 8000);
++        }
++        else
++            m_uiFireBlastTimer -= uiDiff;
++
++        if (m_uiFireballTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_FIREBALL);
++            m_uiFireballTimer = urand(7000, 10000);
++        }
++        else
++            m_uiFireballTimer -= uiDiff;
++
++        if (m_uiTeleportTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_TELEPORT);
++            m_uiTeleportTimer = urand(17000, 25000);
++        }
++        else
++            m_uiTeleportTimer -= uiDiff;
++
++        if (m_uiWaterElementTimer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_SUMMON_WATER_ELEMENT);
++            m_uiWaterElementTimer = urand(20000, 30000);
++        }
++        else
++            m_uiWaterElementTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_lady_jaina_proudmoore(Creature* pCreature)
++{
++    return new boss_lady_jaina_proudmooreAI(pCreature);
++}
+ 
+ void AddSC_dustwallow_marsh()
+ {
+@@ -868,4 +952,9 @@ void AddSC_dustwallow_marsh()
+     newscript->pGossipHello = &GossipHello_npc_cassa_crimsonwing;
+     newscript->pGossipSelect = &GossipSelect_npc_cassa_crimsonwing;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_lady_jaina_proudmoore";
++    newscript->GetAI = &GetAI_boss_lady_jaina_proudmoore;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/kalimdor/orgrimmar.cpp b/scripts/kalimdor/orgrimmar.cpp
+index 970e911..596fcdf 100644
+--- a/scripts/kalimdor/orgrimmar.cpp
++++ b/scripts/kalimdor/orgrimmar.cpp
+@@ -29,6 +29,16 @@ EndContentData */
+ 
+ #include "precompiled.h"
+ 
++enum
++{
++    // Voljin
++    SPELL_HEX                       = 16097,
++    SPELL_SHADOW_SHOCK              = 17289,
++    SPELL_SHADOW_WORD_PAIN          = 17146,
++    SPELL_SHOOT_VOLJIN              = 20463,
++    SPELL_VEIL_OF_SHADOW            = 17820,
++};
++
+ /*######
+ ## npc_neeru_fireblade
+ ######*/
+@@ -246,6 +256,82 @@ bool GossipSelect_npc_thrall_warchief(Player* pPlayer, Creature* pCreature, uint
+     return true;
+ }
+ 
++struct MANGOS_DLL_DECL boss_voljinAI : public ScriptedAI
++{
++    boss_voljinAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint32 m_uiHexTimer;
++    uint32 m_uiShadowShockTimer;
++    uint32 m_uiShadowWordPainTimer;
++    uint32 m_uiShootTimer;
++    uint32 m_uiVeilOfShadowTimer;
++
++    void Reset()
++    {
++        m_uiHexTimer            = 20000;
++        m_uiShadowShockTimer    = 12000;
++        m_uiShadowWordPainTimer = 8000;
++        m_uiShootTimer          = 6000;
++        m_uiVeilOfShadowTimer   = 15000;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiHexTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_HEX);
++            m_uiHexTimer = urand(15000, 20000);
++        }
++        else
++            m_uiHexTimer -= uiDiff;
++
++        if (m_uiShadowShockTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_SHADOW_SHOCK);
++            m_uiShadowShockTimer = urand(11000, 14000);
++        }
++        else
++            m_uiShadowShockTimer -= uiDiff;
++
++        if (m_uiShadowWordPainTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_SHADOW_WORD_PAIN);
++            m_uiShadowWordPainTimer = 8000;
++        }
++        else
++            m_uiShadowWordPainTimer -= uiDiff;
++
++        if (m_uiShootTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_SHOOT_VOLJIN);
++            m_uiShootTimer = urand(6000, 9000);
++        }
++        else
++            m_uiShootTimer -= uiDiff;
++
++        if (m_uiVeilOfShadowTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_VEIL_OF_SHADOW);
++            m_uiVeilOfShadowTimer = urand(15000, 17000);
++        }
++        else
++            m_uiVeilOfShadowTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_voljin(Creature* pCreature)
++{
++    return new boss_voljinAI(pCreature);
++}
++
+ void AddSC_orgrimmar()
+ {
+     Script *newscript;
+@@ -268,4 +354,9 @@ void AddSC_orgrimmar()
+     newscript->pGossipHello =  &GossipHello_npc_thrall_warchief;
+     newscript->pGossipSelect = &GossipSelect_npc_thrall_warchief;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_voljin";
++    newscript->GetAI = &GetAI_boss_voljin;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/kalimdor/teldrassil.cpp b/scripts/kalimdor/teldrassil.cpp
+index 3a8efbb..5e1649b 100644
+--- a/scripts/kalimdor/teldrassil.cpp
++++ b/scripts/kalimdor/teldrassil.cpp
+@@ -28,6 +28,22 @@ EndContentData */
+ #include "precompiled.h"
+ #include "follower_ai.h"
+ 
++enum
++{
++    // Tyrande Whisperwind
++    SPELL_CLEAVE_TYRANDE            = 20691,
++    SPELL_MOONFIRE                  = 20690,
++    SPELL_SEARING_ARROW             = 20688,
++    SPELL_STARFALL                  = 20687,
++
++    // Archdruid Fandral Staghelm
++    SPELL_ENTANGLING_ROOTS          = 20699,
++    SPELL_REJUVENATION              = 20701,
++    SPELL_SUMMON_TREANTS            = 20702,
++    SPELL_WRATH                     = 20698,
++    NPC_TREANT                      = 31802,
++};
++
+ /*####
+ # npc_mist
+ ####*/
+@@ -101,6 +117,176 @@ bool QuestAccept_npc_mist(Player* pPlayer, Creature* pCreature, const Quest* pQu
+     return true;
+ }
+ 
++struct MANGOS_DLL_DECL boss_tyrande_whisperwindAI : public ScriptedAI
++{
++    boss_tyrande_whisperwindAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint32 m_uiCleaveTimer;
++    uint32 m_uiMoonfireTimer;
++    uint32 m_uiStarfallTimer;
++    uint32 m_uiSearingArrowTimer;
++
++    void Reset()
++    {
++        m_uiCleaveTimer     = 5000;
++        m_uiMoonfireTimer   = 12000;
++        m_uiStarfallTimer   = 15000;
++        m_uiSearingArrowTimer   = 8000;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiCleaveTimer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_CLEAVE_TYRANDE);
++            m_uiCleaveTimer = urand(5000, 8000);
++        }
++        else
++            m_uiCleaveTimer -= uiDiff;
++
++        if (m_uiMoonfireTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_MOONFIRE);
++            m_uiMoonfireTimer = urand(11000, 15000);
++        }
++        else
++            m_uiMoonfireTimer -= uiDiff;
++
++        if (m_uiStarfallTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_STARFALL);
++            m_uiStarfallTimer = urand(15000, 19000);
++        }
++        else
++            m_uiStarfallTimer -= uiDiff;
++
++        if (m_uiSearingArrowTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_SEARING_ARROW);
++            m_uiSearingArrowTimer = 8000;
++        }
++        else
++            m_uiSearingArrowTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_tyrande_whisperwind(Creature* pCreature)
++{
++    return new boss_tyrande_whisperwindAI(pCreature);
++}
++
++struct MANGOS_DLL_DECL boss_fandral_staghelmAI : public ScriptedAI
++{
++    boss_fandral_staghelmAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint32 m_uiEntanglingTimer;
++    uint32 m_uiWrathTimer;
++    uint32 m_uiSummonAlyTimer;
++    uint32 m_uiRejuvinationTimer;
++
++    std::list<uint64> FriendlyList;
++
++    void Reset()
++    {
++        m_uiEntanglingTimer     = 7000;
++        m_uiWrathTimer          = 5000;
++        m_uiSummonAlyTimer      = 15000;
++        m_uiRejuvinationTimer   = 10000;
++        FriendlyList.clear();
++    }
++
++    void MoveInLineOfSight(Unit* pWho)
++    {
++        // friendly list
++        if (!m_creature->IsHostileTo(pWho) && !ListContains(FriendlyList, pWho->GetGUID()) && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 30, true))
++            FriendlyList.push_back(pWho->GetGUID());
++    }
++
++    uint64 SelectRandomAly(std::list<uint64> UnitList)
++    {
++        if (UnitList.empty())
++            return m_creature->GetGUID();
++
++        std::list<uint64>::iterator iter = UnitList.begin();
++        advance(iter, urand(0, UnitList.size()-1));
++
++        return *iter;
++    }
++
++    bool ListContains(std::list<uint64> &plist, uint64 element)
++    {
++        if (plist.empty())
++            return false;
++
++        std::list<uint64>::iterator i;
++        for (i = plist.begin(); i!=plist.end(); ++i)
++        {
++            if ((*i) == element)
++                return true;
++        }
++        return false;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiEntanglingTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_ENTANGLING_ROOTS);
++            m_uiEntanglingTimer = urand(7000, 11000);
++        }
++        else
++            m_uiEntanglingTimer -= uiDiff;
++
++        if (m_uiWrathTimer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(m_creature, SPELL_WRATH);
++            m_uiWrathTimer = urand(5000, 8000);
++        }
++        else
++            m_uiWrathTimer -= uiDiff;
++
++        if (m_uiSummonAlyTimer < uiDiff)
++        {
++            DoCast(m_creature, SPELL_SUMMON_TREANTS);
++            m_uiSummonAlyTimer = urand(25000, 30000);
++        }
++        else
++            m_uiSummonAlyTimer -= uiDiff;
++
++        if (m_uiRejuvinationTimer < uiDiff)
++        {
++            Unit *pAly = Unit::GetUnit((*m_creature),(SelectRandomAly(FriendlyList)));
++            if (pAly && pAly->isAlive() && m_creature->GetDistance(pAly) < 30)
++                DoCast(pAly, SPELL_REJUVENATION);
++            m_uiRejuvinationTimer = urand(10000, 15000);
++        }
++        else
++            m_uiRejuvinationTimer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_boss_fandral_staghelm(Creature* pCreature)
++{
++    return new boss_fandral_staghelmAI(pCreature);
++}
++
+ void AddSC_teldrassil()
+ {
+     Script *newscript;
+@@ -110,4 +296,14 @@ void AddSC_teldrassil()
+     newscript->GetAI = &GetAI_npc_mist;
+     newscript->pQuestAccept = &QuestAccept_npc_mist;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_tyrande_whisperwind";
++    newscript->GetAI = &GetAI_boss_tyrande_whisperwind;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_fandral_staghelm";
++    newscript->GetAI = &GetAI_boss_fandral_staghelm;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/kalimdor/thunder_bluff.cpp b/scripts/kalimdor/thunder_bluff.cpp
+index 14a2673..0c807f0 100644
+--- a/scripts/kalimdor/thunder_bluff.cpp
++++ b/scripts/kalimdor/thunder_bluff.cpp
+@@ -27,11 +27,15 @@ EndScriptData */
+ # npc_cairne_bloodhoof
+ ######*/
+ 
+-#define SPELL_BERSERKER_CHARGE  16636
+-#define SPELL_CLEAVE            16044
+-#define SPELL_MORTAL_STRIKE     16856
+-#define SPELL_THUNDERCLAP       23931
+-#define SPELL_UPPERCUT          22916
++enum
++{
++    SPELL_CLEAVE                    = 15284,
++    SPELL_MORTAL_STRIKE             = 16856,
++    SPELL_THUNDERCLAP               = 23931,
++    SPELL_UPPERCUT                  = 22916,
++    SPELL_WAR_STOMP                 = 59705,
++    SPELL_BERSERKER_CHARGE          = 16636,
++};
+ 
+ //TODO: verify abilities/timers
+ struct MANGOS_DLL_DECL npc_cairne_bloodhoofAI : public ScriptedAI
+@@ -43,6 +47,7 @@ struct MANGOS_DLL_DECL npc_cairne_bloodhoofAI : public ScriptedAI
+     uint32 MortalStrike_Timer;
+     uint32 Thunderclap_Timer;
+     uint32 Uppercut_Timer;
++    uint32 m_uiWarStompTimer;
+ 
+     void Reset()
+     {
+@@ -51,6 +56,7 @@ struct MANGOS_DLL_DECL npc_cairne_bloodhoofAI : public ScriptedAI
+         MortalStrike_Timer = 10000;
+         Thunderclap_Timer = 15000;
+         Uppercut_Timer = 10000;
++        m_uiWarStompTimer = 25000;
+     }
+ 
+     void UpdateAI(const uint32 diff)
+@@ -78,6 +84,12 @@ struct MANGOS_DLL_DECL npc_cairne_bloodhoofAI : public ScriptedAI
+             Thunderclap_Timer = 15000;
+         }else Thunderclap_Timer -= diff;
+ 
++        if (m_uiWarStompTimer < diff)
++        {
++            DoCastSpellIfCan(m_creature, SPELL_WAR_STOMP);
++            m_uiWarStompTimer = urand(20000, 25000);
++        }else m_uiWarStompTimer -= diff;
++
+         if (MortalStrike_Timer < diff)
+         {
+             DoCastSpellIfCan(m_creature->getVictim(),SPELL_MORTAL_STRIKE);
+diff --git a/sql/Custom_Updates/Mangos/EasternKingdoms/FactionLeaders_Mangos.sql b/sql/Custom_Updates/Mangos/EasternKingdoms/FactionLeaders_Mangos.sql
+new file mode 100644
+index 0000000..a5feae9
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/EasternKingdoms/FactionLeaders_Mangos.sql
+@@ -0,0 +1,13 @@
++/* FACTION LEADERS */
++UPDATE `creature_template` SET `ScriptName`='boss_king_varian_wrynn' WHERE `entry`=29611;
++UPDATE `creature_template` SET `ScriptName`='boss_king_magni_bronzebreard' WHERE `entry`=2784;
++UPDATE `creature_template` SET `ScriptName`='boss_high_tinker_mekkatorque' WHERE `entry`=7937;
++UPDATE `creature_template` SET `ScriptName`='boss_prophet_velen' WHERE `entry`=17468;
++UPDATE `creature_template` SET `ScriptName`='boss_tyrande_whisperwind' WHERE `entry`=7999;
++UPDATE `creature_template` SET `ScriptName`='boss_fandral_staghelm' WHERE `entry`=3516;
++UPDATE `creature_template` SET `ScriptName`='boss_lady_jaina_proudmoore' WHERE `entry`=4968;
++UPDATE `creature_template` SET `ScriptName`='boss_voljin' WHERE `entry`=10540;
++UPDATE `creature_template` SET `ScriptName`='boss_lorthemar_theron' WHERE `entry`=16802;
++UPDATE `creature_template` SET `ScriptName`='generic_creature' WHERE `entry` in (16801, 34986, 1748);
++REPLACE INTO spell_target_position VALUES
++(20682, 1, -3992.637, -4717.926, 11.006, 0.7);
+\ No newline at end of file

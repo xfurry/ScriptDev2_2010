@@ -47,7 +47,14 @@ enum
     SPELL_CONSUME_FLESH              = 37933,               //Risen Husk
     SPELL_INTANGIBLE_PRESENCE        = 43127,               //Risen Spirit
     NPC_RISEN_HUSK                   = 23555,
-    NPC_RISEN_SPIRIT                 = 23554
+    NPC_RISEN_SPIRIT                 = 23554,
+
+    // Lady Jaina Proudmoore
+    SPELL_BLIZZARD                  = 20680,
+    SPELL_FIRE_BLAST                = 20679,
+    SPELL_FIREBALL                  = 20692,
+    SPELL_SUMMON_WATER_ELEMENT      = 20681,
+    SPELL_TELEPORT                  = 20682,
 };
 
 
@@ -810,8 +817,85 @@ bool GossipSelect_npc_cassa_crimsonwing(Player* pPlayer, Creature* pCreature, ui
 }
 
 /*######
-##
+## boss_lady_jaina
 ######*/
+struct MANGOS_DLL_DECL boss_lady_jaina_proudmooreAI : public ScriptedAI
+{
+    boss_lady_jaina_proudmooreAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+
+    uint32 m_uiBlizzardTimer;
+    uint32 m_uiFireBlastTimer;
+    uint32 m_uiFireballTimer;
+    uint32 m_uiTeleportTimer;
+    uint32 m_uiWaterElementTimer;
+
+    void Reset()
+    {
+        m_uiBlizzardTimer   = 15000;
+        m_uiFireBlastTimer  = 5000;
+        m_uiFireballTimer   = 7000;
+        m_uiTeleportTimer   = 17000;
+        m_uiWaterElementTimer = 20000;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (m_uiBlizzardTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_BLIZZARD);
+            m_uiBlizzardTimer = urand(15000, 18000);
+        }
+        else
+            m_uiBlizzardTimer -= uiDiff;
+
+        if (m_uiFireBlastTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_FIRE_BLAST);
+            m_uiFireBlastTimer = urand(5000, 8000);
+        }
+        else
+            m_uiFireBlastTimer -= uiDiff;
+
+        if (m_uiFireballTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_FIREBALL);
+            m_uiFireballTimer = urand(7000, 10000);
+        }
+        else
+            m_uiFireballTimer -= uiDiff;
+
+        if (m_uiTeleportTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_TELEPORT);
+            m_uiTeleportTimer = urand(17000, 25000);
+        }
+        else
+            m_uiTeleportTimer -= uiDiff;
+
+        if (m_uiWaterElementTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_SUMMON_WATER_ELEMENT);
+            m_uiWaterElementTimer = urand(20000, 30000);
+        }
+        else
+            m_uiWaterElementTimer -= uiDiff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_boss_lady_jaina_proudmoore(Creature* pCreature)
+{
+    return new boss_lady_jaina_proudmooreAI(pCreature);
+}
 
 void AddSC_dustwallow_marsh()
 {
@@ -867,5 +951,10 @@ void AddSC_dustwallow_marsh()
     newscript->Name = "npc_cassa_crimsonwing";
     newscript->pGossipHello = &GossipHello_npc_cassa_crimsonwing;
     newscript->pGossipSelect = &GossipSelect_npc_cassa_crimsonwing;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "boss_lady_jaina_proudmoore";
+    newscript->GetAI = &GetAI_boss_lady_jaina_proudmoore;
     newscript->RegisterSelf();
 }

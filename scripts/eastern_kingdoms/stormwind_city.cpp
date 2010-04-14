@@ -30,6 +30,14 @@ EndContentData */
 
 #include "precompiled.h"
 
+enum
+{
+    // King Varian
+    SPELL_HEROIC_LEAP               = 59688,
+    SPELL_WHIRLWIND                 = 41056,
+    SPELL_WHIRLWIND_TRIG            = 41057,
+};
+
 /*######
 ## npc_archmage_malin
 ######*/
@@ -237,6 +245,56 @@ bool GossipSelect_npc_lady_katrana_prestor(Player* pPlayer, Creature* pCreature,
     }
     return true;
 }
+struct MANGOS_DLL_DECL boss_king_varian_wrynnAI : public ScriptedAI
+{
+    boss_king_varian_wrynnAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+
+    uint32 m_uiHeroicLeapTimer;
+    uint32 m_uiWhirlwind;
+
+    void Reset()
+    {
+        m_uiHeroicLeapTimer = 6000;
+        m_uiWhirlwind       = 15000;
+    }
+
+    void Aggro(Unit* pWho)
+    {
+        //DoScriptText(SAY_AGGRO, m_creature);
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (m_uiWhirlwind < uiDiff)
+        {
+            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND);
+            m_uiWhirlwind = urand(15000, 18000);
+        }
+        else
+            m_uiWhirlwind -= uiDiff;
+
+        if (m_uiHeroicLeapTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_HEROIC_LEAP);
+            m_uiHeroicLeapTimer = urand(6000, 9000);
+        }
+        else
+            m_uiHeroicLeapTimer -= uiDiff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_boss_king_varian_wrynn(Creature* pCreature)
+{
+    return new boss_king_varian_wrynnAI(pCreature);
+}
+
 
 void AddSC_stormwind_city()
 {
@@ -264,5 +322,10 @@ void AddSC_stormwind_city()
     newscript->Name = "npc_lady_katrana_prestor";
     newscript->pGossipHello = &GossipHello_npc_lady_katrana_prestor;
     newscript->pGossipSelect = &GossipSelect_npc_lady_katrana_prestor;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "boss_king_varian_wrynn";
+    newscript->GetAI = &GetAI_boss_king_varian_wrynn;
     newscript->RegisterSelf();
 }

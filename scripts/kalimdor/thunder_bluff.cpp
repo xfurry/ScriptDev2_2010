@@ -27,11 +27,15 @@ EndScriptData */
 # npc_cairne_bloodhoof
 ######*/
 
-#define SPELL_BERSERKER_CHARGE  16636
-#define SPELL_CLEAVE            16044
-#define SPELL_MORTAL_STRIKE     16856
-#define SPELL_THUNDERCLAP       23931
-#define SPELL_UPPERCUT          22916
+enum
+{
+    SPELL_CLEAVE                    = 15284,
+    SPELL_MORTAL_STRIKE             = 16856,
+    SPELL_THUNDERCLAP               = 23931,
+    SPELL_UPPERCUT                  = 22916,
+    SPELL_WAR_STOMP                 = 59705,
+    SPELL_BERSERKER_CHARGE          = 16636,
+};
 
 //TODO: verify abilities/timers
 struct MANGOS_DLL_DECL npc_cairne_bloodhoofAI : public ScriptedAI
@@ -43,6 +47,7 @@ struct MANGOS_DLL_DECL npc_cairne_bloodhoofAI : public ScriptedAI
     uint32 MortalStrike_Timer;
     uint32 Thunderclap_Timer;
     uint32 Uppercut_Timer;
+    uint32 m_uiWarStompTimer;
 
     void Reset()
     {
@@ -51,6 +56,7 @@ struct MANGOS_DLL_DECL npc_cairne_bloodhoofAI : public ScriptedAI
         MortalStrike_Timer = 10000;
         Thunderclap_Timer = 15000;
         Uppercut_Timer = 10000;
+        m_uiWarStompTimer = 25000;
     }
 
     void UpdateAI(const uint32 diff)
@@ -77,6 +83,12 @@ struct MANGOS_DLL_DECL npc_cairne_bloodhoofAI : public ScriptedAI
             DoCastSpellIfCan(m_creature->getVictim(),SPELL_THUNDERCLAP);
             Thunderclap_Timer = 15000;
         }else Thunderclap_Timer -= diff;
+
+        if (m_uiWarStompTimer < diff)
+        {
+            DoCastSpellIfCan(m_creature, SPELL_WAR_STOMP);
+            m_uiWarStompTimer = urand(20000, 25000);
+        }else m_uiWarStompTimer -= diff;
 
         if (MortalStrike_Timer < diff)
         {
