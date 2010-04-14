@@ -43,6 +43,14 @@ struct MANGOS_DLL_DECL instance_the_eye : public ScriptedInstance
     uint64 m_uiTelonicusGUID;
     uint64 m_uiKaelthasGUID;
     uint64 m_uiAstromancerGUID;
+    uint64 m_uiAlarGUID;
+
+    uint64 m_uiAlarDoorLeftGUID;
+    uint64 m_uiAlarDoorRightGUID;
+    uint64 m_uiAstroDoorLeftGUID;
+    uint64 m_uiAstroDoorRightGUID;
+    uint64 m_uiVoidDoorLeftGUID;
+    uint64 m_uiVoidDoorRightGUID;
 
     uint32 m_uiKaelthasEventPhase;
 
@@ -58,6 +66,13 @@ struct MANGOS_DLL_DECL instance_the_eye : public ScriptedInstance
         m_uiAstromancerGUID = 0;
 
         m_uiKaelthasEventPhase = 0;
+
+        m_uiAlarDoorLeftGUID    = 0;
+        m_uiAlarDoorRightGUID   = 0;
+        m_uiAstroDoorLeftGUID   = 0;
+        m_uiAstroDoorRightGUID  = 0;
+        m_uiVoidDoorLeftGUID    = 0;
+        m_uiVoidDoorRightGUID   = 0;
     }
 
     bool IsEncounterInProgress() const
@@ -78,6 +93,64 @@ struct MANGOS_DLL_DECL instance_the_eye : public ScriptedInstance
             case 20060: m_uiSanguinarGUID = pCreature->GetGUID(); break;
             case 19622: m_uiKaelthasGUID = pCreature->GetGUID(); break;
             case 18805: m_uiAstromancerGUID = pCreature->GetGUID(); break;
+            case 19514: m_uiAlarGUID = pCreature->GetGUID(); break;
+        }
+    }
+
+    void OpenDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
+    }
+
+    void CloseDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_READY);
+    }
+
+    void OnObjectCreate(GameObject* pGo)
+    {
+        switch(pGo->GetEntry())
+        {
+            case GO_DOOR_KAEL_INNER_LEFT:
+                m_uiAstroDoorLeftGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_READY);
+                if(m_auiEncounter[3] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_DOOR_KAEL_INNER_RIGHT:
+                m_uiAstroDoorRightGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_READY);
+                if(m_auiEncounter[3] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_DOOR_KAEL_OUTER_RIGHT:
+                m_uiVoidDoorRightGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_READY);
+                if(m_auiEncounter[2] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_DOOR_KAEL_OUTER_LEFT:
+                m_uiVoidDoorLeftGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_READY);
+                if(m_auiEncounter[2] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_DOOR_ENTER_RIGHT:
+                m_uiAlarDoorRightGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_READY);
+                if(m_auiEncounter[0] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_DOOR_ENTER_LEFT:
+                m_uiAlarDoorLeftGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_READY);
+                if(m_auiEncounter[0] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
         }
     }
 
@@ -87,17 +160,34 @@ struct MANGOS_DLL_DECL instance_the_eye : public ScriptedInstance
         {
             case TYPE_ALAR:
                 m_auiEncounter[0] = uiData;
+                // Open outer doors
+                if(uiData == DONE)
+                {
+                    DoUseDoorOrButton(m_uiAlarDoorRightGUID);
+                    DoUseDoorOrButton(m_uiAlarDoorLeftGUID);
+                }
                 break;
             case TYPE_SOLARIAN:
                 m_auiEncounter[1] = uiData;
                 break;
             case TYPE_VOIDREAVER:
                 m_auiEncounter[2] = uiData;
+                // Open Kael outer doors
+                if(uiData == DONE)
+                {
+                    DoUseDoorOrButton(m_uiVoidDoorRightGUID);
+                    DoUseDoorOrButton(m_uiVoidDoorLeftGUID);
+                }
                 break;
             case TYPE_ASTROMANCER:
                 m_auiEncounter[3] = uiData;
+                // Open Kael inner doors
+                if(uiData == DONE)
+                {
+                    DoUseDoorOrButton(m_uiAstroDoorLeftGUID);
+                    DoUseDoorOrButton(m_uiAstroDoorRightGUID);
+                }
                 break;
-
             case TYPE_KAELTHAS_PHASE:
                 m_uiKaelthasEventPhase = uiData;
                 break;
@@ -140,6 +230,8 @@ struct MANGOS_DLL_DECL instance_the_eye : public ScriptedInstance
                 return m_uiKaelthasGUID;
             case DATA_ASTROMANCER:
                 return m_uiAstromancerGUID;
+            case DATA_ALAR:
+                return m_uiAlarGUID;
         }
 
         return 0;

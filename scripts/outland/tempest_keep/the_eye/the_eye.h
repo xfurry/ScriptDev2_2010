@@ -21,7 +21,15 @@ enum
     DATA_CAPERNIAN              = 10,
     DATA_SANGUINAR              = 11,
     DATA_TELONICUS              = 12,
-    DATA_THALADRED              = 13
+    DATA_THALADRED              = 13,
+    DATA_ALAR                   = 14,
+
+    GO_DOOR_KAEL_INNER_LEFT     = 184324,
+    GO_DOOR_KAEL_INNER_RIGHT    = 184325,
+    GO_DOOR_KAEL_OUTER_RIGHT    = 184326,
+    GO_DOOR_ENTER_RIGHT         = 184327,
+    GO_DOOR_KAEL_OUTER_LEFT     = 184328,
+    GO_DOOR_ENTER_LEFT          = 184329
 };
 
 #endif
