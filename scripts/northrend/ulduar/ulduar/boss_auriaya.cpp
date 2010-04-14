@@ -166,7 +166,7 @@ struct MANGOS_DLL_DECL mob_sanctum_sentryAI : public ScriptedAI
         Jump_Timer = 0;
         Check_Timer = 500;
 
-        m_bCrazyCatLady = true;
+        //m_bCrazyCatLady = true;
     }
 
     void Aggro(Unit* pWho)
