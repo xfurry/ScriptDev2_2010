@@ -371,9 +371,8 @@ struct MANGOS_DLL_DECL boss_jedogaAI : public ScriptedAI
 
         if (!m_bIsRegularMode)
         {
-            /* FIX SCRIPT FIRST
             if(m_pInstance && m_pInstance->GetData(TYPE_VOLUNTEER) != DONE)
-                m_pInstance->DoCompleteAchievement(ACHIEV_VOLUNTEER_WORK);*/
+                m_pInstance->DoCompleteAchievement(ACHIEV_VOLUNTEER_WORK);
         }
     }
 
@@ -622,6 +621,11 @@ CreatureAI* GetAI_boss_jedoga(Creature* pCreature)
     return new boss_jedogaAI(pCreature);
 }
 
+CreatureAI* GetAI_npc_twilight_volunteer(Creature* pCreature)
+{
+    return new npc_twilight_volunteerAI(pCreature);
+}
+
 void AddSC_boss_jedoga()
 {
     Script *newscript;
@@ -629,5 +633,10 @@ void AddSC_boss_jedoga()
     newscript = new Script;
     newscript->Name = "boss_jedoga";
     newscript->GetAI = &GetAI_boss_jedoga;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_twilight_volunteer";
+    newscript->GetAI = &GetAI_npc_twilight_volunteer;
     newscript->RegisterSelf();
 }
