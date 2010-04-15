@@ -2,7 +2,7 @@
 UPDATE creature_template SET npcflag=1, AIName="",ScriptName="npc_spirit_azuregos" WHERE entry=15481;
 
 ##TextIDs
-INSERT INTO scriptdev2.script_texts (entry, emote, content_default, comment) VALUES
+INSERT INTO script_texts (entry, emote, content_default, comment) VALUES
 (-1630010, 0, "I said GOOD DAY!", "SAY_SpiritAzu_GoodBye");
 
 INSERT INTO npc_text (ID, prob0, em0_1, text0_0) VALUES
