@@ -1,0 +1,1033 @@
+diff --git a/scripts/kalimdor/moonglade.cpp b/scripts/kalimdor/moonglade.cpp
+index d6e0ad0..dc4239e 100644
+--- a/scripts/kalimdor/moonglade.cpp
++++ b/scripts/kalimdor/moonglade.cpp
+@@ -17,7 +17,7 @@
+ /* ScriptData
+ SDName: Moonglade
+ SD%Complete: 100
+-SDComment: Quest support: 30, 272, 5929, 5930, 10965. Special Flight Paths for Druid class.
++SDComment: Quest support: 30, 272, 5929, 5930, 8736, 10965. Special Flight Paths for Druid class.
+ SDCategory: Moonglade
+ EndScriptData */
+ 
+@@ -26,6 +26,7 @@ npc_bunthen_plainswind
+ npc_clintar_dw_spirit
+ npc_great_bear_spirit
+ npc_silva_filnaveth
++npc_keeper_remulos
+ EndContentData */
+ 
+ #include "precompiled.h"
+@@ -33,6 +34,357 @@ EndContentData */
+ #include "ObjectMgr.h"
+ 
+ /*######
++## npc_keeper_remulos
++######*/
++
++enum
++{
++    SPELL_CONJURE_RIFT          =   25813,
++    SPELL_HEALING_TOUCH         =   23381,
++    SPELL_REGROWTH              =   20665,
++    SPELL_REJUVENATION          =   20664,
++    SPELL_STARFIRE              =   21668,
++    SPELL_THROW_NIGHTMARE       =   25004,
++    NPC_ERANIKUS_TYRANT         =   15491,
++    NPC_TYRANDE_WHISPERWIND     =   15633,
++    NPC_NIGHTMARE_PHANTASM      =   15629,
++    NPC_ERANIKUS_REDEEMED       =   15628,
++    NPC_ELUNE_PRIESTESS         =   15634,
++    QUEST_NIGHTMARE_MANIFESTS   =   8736,
++
++    SAY_REMULOS_1                =   -1493001,
++    SAY_REMULOS_2                =   -1493002,
++    SAY_REMULOS_3                =   -1493003,
++    SAY_REMULOS_4                =   -1493004,
++    SAY_REMULOS_5                =   -1493005,
++    SAY_REMULOS_6                =   -1493014,
++    SAY_REMULOS_7                =   -1493015,
++    SAY_REMULOS_8                =   -1493017,
++    SAY_REMULOS_9                =   -1493036,
++
++    YELL_REMULOS_1               =   -1493008,
++    YELL_REMULOS_2               =   -1493011,
++
++    YELL_ERANIKUS_1             =   -1493007,
++    YELL_ERANIKUS_2             =   -1493010,
++    YELL_ERANIKUS_3             =   -1493012,
++    YELL_ERANIKUS_4             =   -1493016,
++    YELL_ERANIKUS_5             =   -1493018,
++    YELL_ERANIKUS_6             =   -1493019,
++    YELL_ERANIKUS_7             =   -1493020,
++    YELL_ERANIKUS_8             =   -1493026,
++    YELL_ERANIKUS_9             =   -1493027,
++    YELL_ERANIKUS_10            =   -1493028,
++
++    EMOTE_ERANIKUS_1            =   -1493006,
++    EMOTE_ERANIKUS_2            =   -1493009,
++    EMOTE_ERANIKUS_3            =   -1493013,
++    EMOTE_ERANIKUS_4            =   -1493029,
++
++    YELL_TYRANDE1               =   -1493021,
++    YELL_TYRANDE2               =   -1493023,
++    YELL_TYRANDE3               =   -1493024,
++    YELL_TYRANDE4               =   -1493031,
++    SAY_TYRANDE1                =   -1493022,
++    SAY_TYRANDE2                =   -1493025,
++    EMOTE_TYRANDE               =   -1493030,
++
++    SAY_REDEEMED1               =   -1493032,
++    SAY_REDEEMED2               =   -1493033,
++    SAY_REDEEMED3               =   -1493034,
++    SAY_REDEEMED4               =   -1493035 
++};
++struct SpawnLocations
++{
++    float x,y,z;
++};
++
++static SpawnLocations Adds[]=
++{
++    {7831,-2597,489},
++    {7803,-2575,488},
++    {7825,-2538,489},
++    {7890,-2556,486},
++    {7897,-2582,487}
++};
++
++struct MANGOS_DLL_DECL npc_keeper_remulosAI : public npc_escortAI
++{
++    npc_keeper_remulosAI(Creature* pCreature) : npc_escortAI(pCreature) { Reset(); }
++
++    bool m_bIsInFight;
++
++    uint32 m_uiHeal_Timer;
++    uint32 m_uiStarfire_Timer;
++    uint32 m_uiWait_Timer;
++    uint32 m_uiEvent_Timer;
++    
++    uint64 m_uiEranikusGUID;
++    uint64 m_uiRedeemedGUID;
++    uint64 m_uiTyrandeGUID;
++    
++    uint8 m_uiSummonCount;
++    uint8 m_uiEvent_Count;
++
++    void Reset()
++    {
++        if (!HasEscortState(STATE_ESCORT_ESCORTING))
++        {
++            m_bIsInFight = false;
++            m_uiSummonCount = 0;
++            m_uiEvent_Count = 0;
++            m_uiEvent_Timer = 15000;
++            m_uiHeal_Timer = 10000;
++            m_uiStarfire_Timer = 25000;
++            m_uiWait_Timer = 45000;
++        }
++    }
++
++    void JustSummoned(Creature* pSummoned)
++    {
++        switch(pSummoned->GetEntry())
++        {
++        case NPC_ERANIKUS_TYRANT: m_uiEranikusGUID = pSummoned->GetGUID();break;
++        case NPC_ERANIKUS_REDEEMED: m_uiRedeemedGUID = pSummoned->GetGUID();break;
++        case NPC_TYRANDE_WHISPERWIND: m_uiTyrandeGUID = pSummoned->GetGUID();break;
++        case NPC_NIGHTMARE_PHANTASM:
++            if (Player* pPlayer = GetPlayerForEscort())
++            {
++                pSummoned->setFaction(14);
++                pSummoned->AI()->AttackStart(pPlayer);
++                pSummoned->AddThreat(m_creature, 0.0f);
++                ++m_uiSummonCount;
++            }
++            break;
++        }
++    }
++
++    void SummonedCreatureDespawn(Creature *pDespawned)
++    {
++        if (pDespawned->GetEntry() != NPC_NIGHTMARE_PHANTASM)
++            return;
++
++        --m_uiSummonCount;
++        if (m_uiEvent_Count == 2 && m_uiSummonCount < 1)
++            if (Creature *pEranikus = (Creature*)Unit::GetUnit(*m_creature,m_uiEranikusGUID))
++                if (Player* pPlayer = GetPlayerForEscort())
++                {
++                    pEranikus->AI()->AttackStart(pPlayer);
++                    pEranikus->SetInCombatWithZone();
++                    DoScriptText(YELL_ERANIKUS_6,pEranikus);
++                }
++    }
++
++    void JustDied(Unit *pKiller)
++    {
++        if (Player* pPlayer = GetPlayerForEscort())
++            pPlayer->FailQuest(QUEST_NIGHTMARE_MANIFESTS);
++    }
++
++    void WaypointReached(uint32 uiPointId)
++    {
++        Player* pPlayer = GetPlayerForEscort();
++
++        if (!pPlayer)
++            return;
++
++        switch(uiPointId)
++        {
++        case 1:DoScriptText(SAY_REMULOS_2,m_creature,pPlayer); break;
++        case 10:DoScriptText(SAY_REMULOS_3,m_creature,pPlayer); break;
++        case 11:DoScriptText(SAY_REMULOS_4,m_creature,pPlayer); break;
++        case 12:DoScriptText(SAY_REMULOS_5,m_creature,pPlayer); break;
++        case 13:DoCast(m_creature,SPELL_CONJURE_RIFT);break;
++        case 14:
++            if (Creature *pEranikus = m_creature->SummonCreature(NPC_ERANIKUS_TYRANT,7873,-2661,460,0.75,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000))
++            {
++                DoScriptText(EMOTE_ERANIKUS_1,pEranikus);
++                DoScriptText(YELL_ERANIKUS_1,pEranikus);
++            }
++            break;
++        case 15:DoScriptText(YELL_REMULOS_1,m_creature,pPlayer); break;
++        case 16:
++            if (Unit *pEranikus = Unit::GetUnit(*m_creature,m_uiEranikusGUID))
++            {
++                DoScriptText(EMOTE_ERANIKUS_2,pEranikus);
++                DoScriptText(YELL_ERANIKUS_2,pEranikus);
++            }
++            break;
++        case 17:DoScriptText(YELL_REMULOS_2,m_creature,pPlayer); break;
++        case 18:
++            if (Unit *pEranikus = Unit::GetUnit(*m_creature,m_uiEranikusGUID))
++            {
++                DoScriptText(YELL_ERANIKUS_3,pEranikus);
++                DoScriptText(EMOTE_ERANIKUS_3,pEranikus);
++                pEranikus->GetMotionMaster()->MovePoint(0,7833,-2614,515);
++            }
++            break;
++        case 19:DoScriptText(SAY_REMULOS_6,m_creature,pPlayer); break;
++        case 20:DoScriptText(SAY_REMULOS_7,m_creature,pPlayer); break;
++        case 23:
++            DoScriptText(SAY_REMULOS_8,m_creature,pPlayer);
++            if(Unit *pEranikus = Unit::GetUnit(*m_creature,m_uiEranikusGUID))
++                DoScriptText(YELL_ERANIKUS_4,pEranikus);
++            for (uint8 i = 0; i < 5; ++i)
++                m_creature->SummonCreature(NPC_NIGHTMARE_PHANTASM,Adds[i].x,Adds[i].y,Adds[i].z,0,TEMPSUMMON_CORPSE_DESPAWN,0);
++            m_bIsInFight = true;
++            SetEscortPaused(true);
++            break;
++        case 24:
++            m_creature->Respawn();
++            break;
++        }
++    }
++
++    void UpdateEscortAI(const uint32 uiDiff)
++    {
++        Unit *pEranikus = Unit::GetUnit(*m_creature,m_uiEranikusGUID);
++        Unit *pRedeemed = Unit::GetUnit(*m_creature,m_uiRedeemedGUID);
++        if (pEranikus||pRedeemed)
++        {
++            if (m_bIsInFight)
++            {
++                if (m_uiEvent_Timer < uiDiff)
++                {
++                    if (pEranikus && pEranikus->GetHealth()*100 / pEranikus->GetMaxHealth() >= 20)
++                    {
++                        if (m_uiEvent_Count == 0)
++                        {
++                            for (uint8 i = 0; i < 5; ++i)
++                                m_creature->SummonCreature(NPC_NIGHTMARE_PHANTASM,Adds[i].x,Adds[i].y,Adds[i].z,0,TEMPSUMMON_CORPSE_DESPAWN,0);
++                            m_uiEvent_Timer = 15000;
++                            ++m_uiEvent_Count;
++                        }
++                        else if (m_uiEvent_Count == 1)
++                        {
++                            DoScriptText(YELL_ERANIKUS_5,pEranikus);
++                            for (uint8 i = 0; i < 5; ++i)
++                                m_creature->SummonCreature(NPC_NIGHTMARE_PHANTASM,Adds[i].x,Adds[i].y,Adds[i].z,0,TEMPSUMMON_CORPSE_DESPAWN,0);
++                            m_uiEvent_Timer = 5000;
++                            ++m_uiEvent_Count;
++                        }
++                    }
++                    else
++                    {
++                        if (Unit *pTyrande = Unit::GetUnit(*m_creature,m_uiTyrandeGUID))
++                        {
++                            switch(m_uiEvent_Count)
++                            {
++                            case 2:DoScriptText(YELL_TYRANDE1,pTyrande);m_uiEvent_Timer = 25000;break;
++                            case 3:DoScriptText(SAY_TYRANDE1,pTyrande);m_uiEvent_Timer = 5000;break;
++                            case 4:DoScriptText(YELL_TYRANDE2,pTyrande);m_uiEvent_Timer = 5000;break;
++                            case 5:DoScriptText(YELL_TYRANDE3,pTyrande);m_uiEvent_Timer = 5000;break;
++                            case 6:DoScriptText(SAY_TYRANDE2,pTyrande);m_uiEvent_Timer = 5000;break;
++                            case 7:DoScriptText(YELL_ERANIKUS_8,pEranikus);m_uiEvent_Timer = 5000;break;
++                            case 8:DoScriptText(YELL_ERANIKUS_9,pEranikus);m_uiEvent_Timer = 5000;break;
++                            case 9:DoScriptText(YELL_ERANIKUS_10,pEranikus);m_uiEvent_Timer = 5000;break;
++                            case 10:
++                                DoScriptText(EMOTE_ERANIKUS_4,pEranikus);
++                                DoScriptText(EMOTE_TYRANDE,pTyrande);
++                                pTyrande->SetStandState(UNIT_STAND_STATE_KNEEL);
++                                m_uiEvent_Timer = 5000;
++                                break;
++                            case 11:
++                                DoScriptText(YELL_TYRANDE4,pTyrande);
++                                m_creature->SummonCreature(NPC_ERANIKUS_REDEEMED,pEranikus->GetPositionX(),pEranikus->GetPositionY(),pEranikus->GetPositionZ(),0,TEMPSUMMON_TIMED_DESPAWN,30000);
++                                ((Creature*)pEranikus)->ForcedDespawn();
++                                m_uiEvent_Timer = 5000;
++                                break;
++                            case 12:
++                                if(Unit *pRedeemed = Unit::GetUnit(*m_creature,m_uiRedeemedGUID))
++                                    DoScriptText(SAY_REDEEMED1,pRedeemed);
++                                m_uiEvent_Timer = 15000;
++                                break;
++                            case 13:
++                                if(Unit *pRedeemed = Unit::GetUnit(*m_creature,m_uiRedeemedGUID))
++                                    DoScriptText(SAY_REDEEMED2,pRedeemed);
++                                m_uiEvent_Timer = 15000;
++                                break;
++                            case 14:
++                                if(Unit *pRedeemed = Unit::GetUnit(*m_creature,m_uiRedeemedGUID))
++                                    DoScriptText(SAY_REDEEMED3,pRedeemed);
++                                break;
++                                m_uiEvent_Timer = 5000;
++                            case 15:
++                                if(Unit *pRedeemed = Unit::GetUnit(*m_creature,m_uiRedeemedGUID))
++                                    DoScriptText(SAY_REDEEMED4,pRedeemed);
++                                break;
++                                m_uiEvent_Timer = 5000;
++                            case 16:
++                                DoScriptText(SAY_REMULOS_9,m_creature);
++                                SetEscortPaused(false);
++                                if (Player* pPlayer = GetPlayerForEscort())
++                                    pPlayer->CompleteQuest(QUEST_NIGHTMARE_MANIFESTS);
++                                break;
++                            }
++                        }
++                        else
++                        {
++                            m_creature->SummonCreature(NPC_TYRANDE_WHISPERWIND,7926.0f,-2571.0f,489.64f,3.14f,TEMPSUMMON_TIMED_DESPAWN,90000);
++                            for (uint8 j = 0; j < 6;++j)
++                                m_creature->SummonCreature(NPC_ELUNE_PRIESTESS,7926.0f + urand(-5,5),-2571.0f + urand(-5,5),489.64f,3.14f,TEMPSUMMON_TIMED_DESPAWN,48000);
++                            DoScriptText(YELL_ERANIKUS_7,pEranikus);
++                        }
++                        ++m_uiEvent_Count;
++                    } 
++                }
++                else
++                    m_uiEvent_Timer -= uiDiff;
++            }
++        }
++
++         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if (m_uiHeal_Timer < uiDiff)
++        {
++            if (Unit *pTarget = DoSelectLowestHpFriendly(DEFAULT_VISIBILITY_DISTANCE))
++            {
++                switch(rand()%3)
++                {
++                case 0:DoCast(pTarget,SPELL_HEALING_TOUCH);break;
++                case 1:DoCast(pTarget,SPELL_REJUVENATION);break;
++                case 2:DoCast(pTarget,SPELL_REGROWTH);break;
++                }
++            }
++            m_uiHeal_Timer = 10000;
++        }
++        else
++            m_uiHeal_Timer -= uiDiff;
++
++        if (m_uiStarfire_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(),SPELL_STARFIRE);
++            m_uiStarfire_Timer = 20000;
++        }
++        else
++            m_uiStarfire_Timer -= uiDiff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_npc_keeper_remulos(Creature* pCreature)
++{
++    return new npc_keeper_remulosAI(pCreature);
++}
++
++bool QuestAccept_npc_keeper_remulos(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
++{
++    if (pQuest->GetQuestId() == QUEST_NIGHTMARE_MANIFESTS)
++    {
++        pCreature->SetHealth(1523420);
++        if (npc_keeper_remulosAI* pEscortAI = dynamic_cast<npc_keeper_remulosAI*>(pCreature->AI()))
++        {
++            pEscortAI->Start(false, false, pPlayer->GetGUID(), pQuest);
++            pEscortAI->SetRun();
++            DoScriptText(SAY_REMULOS_1,pCreature,pPlayer);
++        }
++    }
++    return true;
++}
++
++/*######
+ ## npc_bunthen_plainswind
+ ######*/
+ 
+@@ -359,4 +711,10 @@ void AddSC_moonglade()
+     newscript->pGossipHello =  &GossipHello_npc_silva_filnaveth;
+     newscript->pGossipSelect = &GossipSelect_npc_silva_filnaveth;
+     newscript->RegisterSelf();
++
++     newscript = new Script;
++    newscript->Name = "npc_keeper_remulos";
++    newscript->GetAI = &GetAI_npc_keeper_remulos;
++    newscript->pQuestAccept = &QuestAccept_npc_keeper_remulos;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/world/boss_emeriss.cpp b/scripts/world/boss_emeriss.cpp
+index 76a6cbb..04b7129 100644
+--- a/scripts/world/boss_emeriss.cpp
++++ b/scripts/world/boss_emeriss.cpp
+@@ -28,10 +28,13 @@ enum
+     SAY_AGGRO               = -1000401,
+     SAY_CASTCORRUPTION      = -1000402,
+ 
+-    SPELL_SLEEP             = 24777,
++    SPELL_SLEEP             = 24778,                        //24777 is bugged with loop
+     SPELL_NOXIOUSBREATH     = 24818,
+     SPELL_TAILSWEEP         = 15847,
+     //SPELL_MARKOFNATURE    = 25040,                        // Not working
++    SPELL_SUMMON_PLAYER     = 24776,
++
++    //Emeriss' specific spells
+     SPELL_VOLATILEINFECTION = 24928,
+     SPELL_CORRUPTIONOFEARTH = 24910
+ };
+@@ -62,6 +65,20 @@ struct MANGOS_DLL_DECL boss_emerissAI : public ScriptedAI
+         DoScriptText(SAY_AGGRO, m_creature);
+     }
+ 
++    void DamageTaken(Unit *pDoneBy,uint32 &uiDamage)
++    {
++        if (m_uiCorruptionsCasted >= 4)
++            return;
++
++        if (m_creature->GetHealth()*100/m_creature->GetMaxHealth() <= (100+urand(-5,5)-(25*m_uiCorruptionsCasted)))
++        {
++            ++m_uiCorruptionsCasted;
++            DoScriptText(SAY_CASTCORRUPTION, m_creature);
++            DoCast(m_creature->getVictim(), SPELL_CORRUPTIONOFEARTH);
++        }
++    }
++
++
+     void UpdateAI(const uint32 uiDiff)
+     {
+         //Return since we have no target
+@@ -109,20 +126,13 @@ struct MANGOS_DLL_DECL boss_emerissAI : public ScriptedAI
+         //VolatileInfection_Timer
+         if (m_uiVolatileInfection_Timer < uiDiff)
+         {
+-            DoCastSpellIfCan(m_creature->getVictim(), SPELL_VOLATILEINFECTION);
++            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                DoCast(pTarget, SPELL_VOLATILEINFECTION);
+             m_uiVolatileInfection_Timer = urand(7000, 12000);
+         }
+         else
+             m_uiVolatileInfection_Timer -= uiDiff;
+ 
+-        //CorruptionofEarth at 75%, 50% and 25%
+-        if (m_creature->GetHealthPercent() < float(100 - 25*m_uiCorruptionsCasted))
+-        {
+-            ++m_uiCorruptionsCasted;                        // prevent casting twice on same hp
+-            DoScriptText(SAY_CASTCORRUPTION, m_creature);
+-            DoCastSpellIfCan(m_creature->getVictim(), SPELL_CORRUPTIONOFEARTH);
+-        }
+-
+         DoMeleeAttackIfReady();
+     }
+ };
+diff --git a/scripts/world/boss_lethon.cpp b/scripts/world/boss_lethon.cpp
+index a524dc8..13045dd 100644
+--- a/scripts/world/boss_lethon.cpp
++++ b/scripts/world/boss_lethon.cpp
+@@ -16,9 +16,203 @@
+ 
+ /* ScriptData
+ SDName: Lethon
+-SD%Complete: 0
+-SDComment: Place Holder
++SD%Complete: 60%
++SDComment: Shades and mark not working
+ SDCategory: Bosses
+ EndScriptData */
+ 
+ #include "precompiled.h"
++
++enum
++{
++    SAY_AGGRO               = -1000420,
++    SAY_SUMMONSHADE         = -1000421,
++
++    //Nightmare Dragons' shared spells
++    SPELL_SLEEP             = 24778,
++    SPELL_NOXIOUSBREATH     = 24818,
++    SPELL_TAILSWEEP         = 15847,
++    SPELL_SUMMON_PLAYER     = 24776,
++    //SPELL_MARKOFNATURE    = 25040,                        // Not working
++    
++    //Specific Lethon's spells
++    SPELL_DRAW_SPIRIT       = 24811,
++    SPELL_SHADOWVOLLEY      = 24834, 
++
++    NPC_SPIRIT_SHADE        = 15261,
++
++    //Spells of Shades of Lethon
++    SPELL_DARK_OFFERING     = 24804,
++    SPELL_SHADE_VISUAL      = 24809
++};
++
++struct MANGOS_DLL_DECL boss_lethonAI : public ScriptedAI
++{
++    boss_lethonAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    uint32 m_uiSleep_Timer;
++    uint32 m_uiNoxiousBreath_Timer;
++    uint32 m_uiTailSweep_Timer;
++    //uint32 m_uiMarkOfNature_Timer;
++    uint32 m_uiDrawSpirit_Timer;
++    uint32 m_uiShadowBoltVolley_Timer;
++
++    uint8 m_uiWave_Count;
++
++    void Reset()
++    {
++        m_uiSleep_Timer = 15000 + rand()%5000;
++        m_uiNoxiousBreath_Timer = 8000;
++        m_uiTailSweep_Timer = 4000;
++        //m_uiMarkOfNature_Timer = 45000;
++        m_uiDrawSpirit_Timer = 12000;
++        m_uiShadowBoltVolley_Timer = 30000;
++
++        m_uiWave_Count = 1;
++    }
++
++    void Aggro(Unit* pWho)
++    {
++        DoScriptText(SAY_AGGRO, m_creature);
++    }
++
++    void DamageTaken(Unit *pDoneBy,uint32 &uiDamage)
++    {
++        if (m_creature->GetHealth()*100/m_creature->GetMaxHealth() <= (100+urand(-5,5)-(25*m_uiWave_Count)))
++        {
++            if (m_uiWave_Count >= 4)
++                return;
++
++            ++m_uiWave_Count;
++            DoCast(m_creature->getVictim(),SPELL_DRAW_SPIRIT);
++
++            std::list<HostileReference*> t_list = m_creature->getThreatManager().getThreatList();
++            
++            if (t_list.empty())
++                return;
++
++            DoScriptText(SAY_SUMMONSHADE, m_creature);
++            std::vector<Unit*> target_list;
++            for (std::list<HostileReference*>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++                if (Unit *pTarget = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid()))
++                    m_creature->SummonCreature(NPC_SPIRIT_SHADE,pTarget->GetPositionX(),pTarget->GetPositionY(),pTarget->GetPositionZ(),0,TEMPSUMMON_CORPSE_DESPAWN,0);
++        }
++    }
++
++    void JustSummoned(Creature* pSummoned)
++    {
++        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++            pSummoned->AI()->AttackStart(m_creature);
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        //Sleep_Timer
++        if (m_uiSleep_Timer < uiDiff)
++        {
++            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                DoCast(pTarget, SPELL_SLEEP);
++
++            m_uiSleep_Timer = 8000 + rand()%7000;
++        }
++        else
++            m_uiSleep_Timer -= uiDiff;
++
++        //NoxiousBreath_Timer
++        if (m_uiNoxiousBreath_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_NOXIOUSBREATH);
++            m_uiNoxiousBreath_Timer = 14000 + rand()%6000;
++        }
++        else
++            m_uiNoxiousBreath_Timer -= uiDiff;
++
++        //Tailsweep every 2 seconds
++        if (m_uiTailSweep_Timer < uiDiff)
++        {
++            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (m_creature->HasInArc(3.1415f, pTarget))
++                {
++                    DoCast(pTarget, SPELL_TAILSWEEP);
++                    m_uiTailSweep_Timer = 2000;
++                }
++        }
++        else
++            m_uiTailSweep_Timer -= uiDiff;
++
++        if (Unit *pEscaper = GetPlayerAtMinimumRange(DEFAULT_VISIBILITY_DISTANCE - 10.0f))
++            DoCast(pEscaper,SPELL_SUMMON_PLAYER);
++
++        //MarkOfNature_Timer
++        //if (m_uiMarkOfNature_Timer < uiDiff)
++        //{
++        //    DoCast(m_creature->getVictim(), SPELL_MARKOFNATURE);
++        //    m_uiMarkOfNature_Timer = 45000;
++        //}
++        //else
++            //m_uiMarkOfNature_Timer -= uiDiff;
++
++        //m_uiShadowBoltVolley_Timer
++        if (m_uiShadowBoltVolley_Timer < uiDiff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_SHADOWVOLLEY);
++            m_uiShadowBoltVolley_Timer = 20000 + rand()%10000;
++        }
++        else            m_uiShadowBoltVolley_Timer -= uiDiff;
++        DoMeleeAttackIfReady();
++   }
++};
++
++// Shades of Taerar Script
++struct MANGOS_DLL_DECL mob_spirit_shadeAI : public ScriptedAI
++{
++   mob_spirit_shadeAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
++
++    bool m_bBuffed;
++
++    void Reset()
++    {
++        m_bBuffed = false;
++    }
++
++    void UpdateAI(const uint32 uiDiff)
++    {
++        if (!m_bBuffed)
++            DoCast(m_creature,SPELL_SHADE_VISUAL);
++
++        if (m_creature->IsWithinDistInMap(m_creature,ATTACK_DISTANCE))
++        {
++            DoCast(m_creature,SPELL_DARK_OFFERING);
++            m_creature->ForcedDespawn();
++        }
++    }
++};
++
++CreatureAI* GetAI_boss_lethon(Creature* pCreature)
++{
++    return new boss_lethonAI(pCreature);
++}
++
++CreatureAI* GetAI_mob_spirit_shade(Creature* pCreature)
++{
++    return new mob_spirit_shadeAI(pCreature);
++}
++
++void AddSC_boss_lethon()
++{
++    Script *newscript;
++
++    newscript = new Script;
++    newscript->Name = "boss_lethon";
++    newscript->GetAI = &GetAI_boss_lethon;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "mob_spirit_shade";
++    newscript->GetAI = &GetAI_mob_spirit_shade;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/world/boss_taerar.cpp b/scripts/world/boss_taerar.cpp
+index 9ae0758..5dda977 100644
+--- a/scripts/world/boss_taerar.cpp
++++ b/scripts/world/boss_taerar.cpp
+@@ -17,7 +17,7 @@
+ /* ScriptData
+ SDName: Taerar
+ SD%Complete: 70
+-SDComment: Mark of Nature & Teleport NYI. Fix the way to be banished.
++SDComment: Mark of Nature & Teleport NYI.
+ SDCategory: Bosses
+ EndScriptData */
+ 
+@@ -29,10 +29,13 @@ enum
+     SAY_SUMMONSHADE         = -1000400,
+ 
+     //Spells of Taerar
+-    SPELL_SLEEP             = 24777,
++    SPELL_SLEEP             = 24778,
+     SPELL_NOXIOUSBREATH     = 24818,
+     SPELL_TAILSWEEP         = 15847,
++    SPELL_SUMMON_PLAYER     = 24776,
+     // SPELL_MARKOFNATURE   = 25040,                        // Not working
++
++    //Taerar's specific spells
+     SPELL_ARCANEBLAST       = 24857,
+     SPELL_BELLOWINGROAR     = 22686,
+ 
+@@ -40,6 +43,8 @@ enum
+     SPELL_SUMMONSHADE_2     = 24842,
+     SPELL_SUMMONSHADE_3     = 24843,
+ 
++    NPC_SHADE               = 15302,
++
+     //Spells of Shades of Taerar
+     SPELL_POSIONCLOUD       = 24840,
+     SPELL_POSIONBREATH      = 20667
+@@ -60,8 +65,8 @@ struct MANGOS_DLL_DECL boss_taerarAI : public ScriptedAI
+     //uint32 m_uiMarkOfNature_Timer;
+     uint32 m_uiArcaneBlast_Timer;
+     uint32 m_uiBellowingRoar_Timer;
+-    uint32 m_uiShades_Timer;
+-    uint32 m_uiShadesSummoned;
++    uint8 m_uiAdds_Summoned;
++    uint8 m_uiWave_Count;
+ 
+     bool m_bShades;
+ 
+@@ -73,8 +78,8 @@ struct MANGOS_DLL_DECL boss_taerarAI : public ScriptedAI
+         //m_uiMarkOfNature_Timer = 45000;
+         m_uiArcaneBlast_Timer = 12000;
+         m_uiBellowingRoar_Timer = 30000;
+-        m_uiShades_Timer = 60000;                               //The time that Taerar is banished
+-        m_uiShadesSummoned = 0;
++        m_uiAdds_Summoned = 0;
++        m_uiWave_Count = 1;
+ 
+         m_bShades = false;
+     }
+@@ -84,30 +89,55 @@ struct MANGOS_DLL_DECL boss_taerarAI : public ScriptedAI
+         DoScriptText(SAY_AGGRO, m_creature);
+     }
+ 
++    void DamageTaken(Unit *pDoneBy,uint32 &uiDamage)
++    {
++        if (m_uiWave_Count >= 4)
++            return;
++
++        if (m_creature->GetHealth()*100/m_creature->GetMaxHealth() <= (100+urand(-5,5)-(25*m_uiWave_Count)))
++        {
++            ++m_uiWave_Count;
++
++            //Inturrupt any spell casting
++            m_creature->InterruptNonMeleeSpells(false);
++
++            //horrible workaround, need to fix
++            m_creature->setFaction(35);
++            m_creature->GetMotionMaster()->MoveIdle();
++            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++
++            DoScriptText(SAY_SUMMONSHADE, m_creature);
++            for(uint8 i = 0; i < 3; ++i)
++                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                    m_creature->SummonCreature(NPC_SHADE,pTarget->GetPositionX(),pTarget->GetPositionY(),pTarget->GetPositionZ(),0,TEMPSUMMON_CORPSE_DESPAWN,0);                                      
++            m_bShades = true;
++        }
++    }
++
+     void JustSummoned(Creature* pSummoned)
+     {
+         if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+             pSummoned->AI()->AttackStart(pTarget);
++
++        ++m_uiAdds_Summoned;
+     }
+ 
+-    void UpdateAI(const uint32 uiDiff)
++    void SummonedCreatureDespawn(Creature *pDespawned)
+     {
+-        if (m_bShades && m_uiShades_Timer < uiDiff)
+-        {
+-            //Become unbanished again
+-            m_creature->setFaction(14);
+-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+-            m_bShades = false;
+-        }
+-        else if (m_bShades)
+-        {
+-            m_uiShades_Timer -= uiDiff;
+-            //Do nothing while banished
+-            return;
+-        }
++        --m_uiAdds_Summoned;
++        if (m_uiAdds_Summoned == 0)
++         {
++             m_creature->setFaction(14);
++             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++             m_bShades = false;
++         }
++    }
+ 
++    void UpdateAI(const uint32 uiDiff)
++    {
+         //Return since we have no target
+-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++        if (m_bShades || !m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
+         //Sleep_Timer
+@@ -133,12 +163,19 @@ struct MANGOS_DLL_DECL boss_taerarAI : public ScriptedAI
+         //Tailsweep every 2 seconds
+         if (m_uiTailSweep_Timer < uiDiff)
+         {
+-            DoCastSpellIfCan(m_creature, SPELL_TAILSWEEP);
+-            m_uiTailSweep_Timer = 2000;
++            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (m_creature->HasInArc(3.1415f, pTarget))
++                {
++                    DoCast(pTarget, SPELL_TAILSWEEP);
++                    m_uiTailSweep_Timer = 2000;
++                }
+         }
+         else
+             m_uiTailSweep_Timer -= uiDiff;
+ 
++        if (Unit *pEscaper = GetPlayerAtMinimumRange(DEFAULT_VISIBILITY_DISTANCE - 10.0f))
++            DoCast(pEscaper,SPELL_SUMMON_PLAYER);
++
+         //MarkOfNature_Timer
+         //if (m_uiMarkOfNature_Timer < uiDiff)
+         //{
+@@ -166,31 +203,6 @@ struct MANGOS_DLL_DECL boss_taerarAI : public ScriptedAI
+         else
+             m_uiBellowingRoar_Timer -= uiDiff;
+ 
+-        //Summon 3 Shades at 75%, 50% and 25% (if bShades is true we already left in line 117, no need to check here again)
+-        if (!m_bShades && m_creature->GetHealthPercent() < float(100 - 25*m_uiShadesSummoned))
+-        {
+-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+-            {
+-                //Inturrupt any spell casting
+-                m_creature->InterruptNonMeleeSpells(false);
+-
+-                //horrible workaround, need to fix
+-                m_creature->setFaction(35);
+-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+-
+-                DoScriptText(SAY_SUMMONSHADE, m_creature);
+-
+-                int iSize = sizeof(m_auiSpellSummonShade) / sizeof(uint32);
+-
+-                for(int i = 0; i < iSize; ++i)
+-                    m_creature->CastSpell(pTarget, m_auiSpellSummonShade[i], true);
+-
+-                ++m_uiShadesSummoned;                       // prevent casting twice at same health
+-                m_bShades = true;
+-            }
+-            m_uiShades_Timer = 60000;
+-        }
+-
+         DoMeleeAttackIfReady();
+     }
+ };
+diff --git a/scripts/world/boss_ysondre.cpp b/scripts/world/boss_ysondre.cpp
+index 82a361c..94655f3 100644
+--- a/scripts/world/boss_ysondre.cpp
++++ b/scripts/world/boss_ysondre.cpp
+@@ -28,15 +28,16 @@ enum
+     SAY_AGGRO               = -1000360,
+     SAY_SUMMONDRUIDS        = -1000361,
+ 
+-    SPELL_SLEEP             = 24777,
++    SPELL_SLEEP             = 24778,
+     SPELL_NOXIOUSBREATH     = 24818,
+     SPELL_TAILSWEEP         = 15847,
++    SPELL_SUMMON_PLAYER     = 24776,
+     //SPELL_MARKOFNATURE   = 25040,                         // Not working
++
++    //Specific Ysondre
+     SPELL_LIGHTNINGWAVE     = 24819,
+     SPELL_SUMMONDRUIDS      = 24795,
+ 
+-    SPELL_SUMMON_PLAYER     = 24776,
+-
+     //druid spells
+     SPELL_MOONFIRE          = 21669
+ };
+@@ -51,7 +52,7 @@ struct MANGOS_DLL_DECL boss_ysondreAI : public ScriptedAI
+     uint32 m_uiTailSweep_Timer;
+     //uint32 m_uiMarkOfNature_Timer;
+     uint32 m_uiLightningWave_Timer;
+-    uint32 m_uiSummonDruidModifier;
++    uint8 m_uiSummonDruidModifier; 
+ 
+     void Reset()
+     {
+@@ -60,7 +61,7 @@ struct MANGOS_DLL_DECL boss_ysondreAI : public ScriptedAI
+         m_uiTailSweep_Timer = 4000;
+         //m_uiMarkOfNature_Timer = 45000;
+         m_uiLightningWave_Timer = 12000;
+-        m_uiSummonDruidModifier = 0;
++        m_uiSummonDruidModifier = 0;  
+     }
+ 
+     void Aggro(Unit* pWho)
+@@ -74,6 +75,22 @@ struct MANGOS_DLL_DECL boss_ysondreAI : public ScriptedAI
+             pSummoned->AI()->AttackStart(pTarget);
+     }
+ 
++    void DamageTaken(Unit *pDoneBy,uint32 &uiDamage)
++    {
++        if (m_uiSummonDruidModifier >= 4)
++            return;
++
++        if (m_creature->GetHealth()*100/m_creature->GetMaxHealth() <= (100+urand(-5,5)-(25*m_uiSummonDruidModifier)))
++        {
++             DoScriptText(SAY_SUMMONDRUIDS, m_creature);
++
++            for(uint8 i = 0; i < 10; ++i)
++                DoCast(m_creature, SPELL_SUMMONDRUIDS, true);
++
++            ++m_uiSummonDruidModifier;
++        }
++    }
++
+     void UpdateAI(const uint32 uiDiff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+@@ -129,17 +146,6 @@ struct MANGOS_DLL_DECL boss_ysondreAI : public ScriptedAI
+         else
+             m_uiLightningWave_Timer -= uiDiff;
+ 
+-        //Summon Druids
+-        if (m_creature->GetHealthPercent() <= float(100 - 25*m_uiSummonDruidModifier))
+-        {
+-            DoScriptText(SAY_SUMMONDRUIDS, m_creature);
+-
+-            for(int i = 0; i < 10; ++i)
+-                DoCastSpellIfCan(m_creature, SPELL_SUMMONDRUIDS, CAST_TRIGGERED);
+-
+-            ++m_uiSummonDruidModifier;
+-        }
+-
+         DoMeleeAttackIfReady();
+     }
+ };
+diff --git a/sql/Custom_Updates/Mangos/Kalimdor/EmeraldNightmare_Mangos.sql b/sql/Custom_Updates/Mangos/Kalimdor/EmeraldNightmare_Mangos.sql
+new file mode 100644
+index 0000000..d92d2f1
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/Kalimdor/EmeraldNightmare_Mangos.sql
+@@ -0,0 +1,4 @@
++/* NIGHTMARE */
++UPDATE creature_template SET ScriptName="npc_keeper_remulos" WHERE entry=11832;
++UPDATE creature_template SET ScriptName="boss_lethon" WHERE entry=14888;
++UPDATE creature_template SET ScriptName="mob_spirit_shade" WHERE entry=15261;
+\ No newline at end of file
+diff --git a/sql/Custom_Updates/ScriptDev2/Kalimdor/EmeraldNightmare_Script.sql b/sql/Custom_Updates/ScriptDev2/Kalimdor/EmeraldNightmare_Script.sql
+new file mode 100644
+index 0000000..4fd68d6
+--- /dev/null
++++ b/sql/Custom_Updates/ScriptDev2/Kalimdor/EmeraldNightmare_Script.sql
+@@ -0,0 +1,66 @@
++Delete from script_texts where entry between -1493036 and -1493001;
++
++INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content_loc2`, `content_loc3`, `content_loc4`, `content_loc5`, `content_loc6`, `content_loc7`, `content_loc8`, `sound`, `type`, `language`, `emote`, `comment`) VALUES
++('-1493001', 'We will locate the origin of the Nightmare through the fragments you collected, $N. From there, we will pull Eranikus through a rift in the Dream. Steel yourself, $C. We are inviting the embodiment of the Nightmare into our world.', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REMULOS_1'),
++('-1493002', 'To Nighthaven! Keep your army close, champion. ', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REMULOS_2'),
++('-1493003', 'The rift will be opened there, above the Lake Elun\'ara. Prepare yourself, $N. Eranikus entry into our world will be wrought with chaos and strife.', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REMULOS_3'),
++('-1493004', 'He will stop at nothing to get to Malfurion\'s physical manifistation. That must not happen... We must keep the beast occupied long enough for Tyrande to arrive.', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REMULOS_4'),
++('-1493005', 'Defend Nightaven, hero...', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REMULOS_5'),
++('-1493006', '%s has entered our world', '', '', '', '', '', '', '', '', '', '3', '', '', 'EMOTE_ERANIKUS_1'),
++('-1493007', 'Pitful predictable mortals... You know not what you have done! The master\'s will fulfilled. The Moonglade shall be destroyed and Malfurion along with it!', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_ERANIKUS_1'),
++('-1493008', 'Fiend! Face the might of Cenarius!', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_REMULOS_1'),
++('-1493009', '%s lets loose a sinister laugh.', '', '', '', '', '', '', '', '', '', '2', '', '', 'EMOTE_ERANIKUS_2'),
++('-1493010', 'You are certanly not your father, insect. Should it interest me, I would crush you with but a swipe of my claws. Turn Shan\'do Stormrage over to me and your pitiful life will be spared along with the lives of your people.', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_ERANIKUS_2'),
++('-1493011', 'Who is the predictable one, beast? Surely you did not think that we would summon you on top of Malfurion? Your redemption comes, Eranikus. You will be cleansed of this madness - this corruption.', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_REMULOS_2'),
++('-1493012', 'My redemption? You are bold, little one. My redemption comes by the will of my god.', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_ERANIKUS_3'),
++('-1493013', '%s roars furiously.', '', '', '', '', '', '', '', '', '', '2', '', '', 'EMOTE_ERANIKUS_3'),
++('-1493014', 'Hurry, $N! We must find protective cover!', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REMULOS_6'),
++('-1493015', 'Please, champion, protect our people.', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REMULOS_7'),
++('-1493016', 'Rise, servants of the Nightmare! Rise and destroy this world! Let there be no survivors...', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_ERANIKUS_4'),
++('-1493017', 'We will battle these fiends, together! Nighthaven\'s Defenders are also among us. They will fight to the death if asked. Now, quickly, we must drive these aberations back to the Nightmare. Destroy them all!', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REMULOS_8'),
++('-1493018', 'Where is your savior? How long can you hold out against my attacks?', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_ERANIKUS_5'),
++('-1493019', 'Defeated my minions? Then face me, mortals!', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_ERANIKUS_6'),
++('-1493020', 'Remulos, look how easy they fall before me? You can stop this, fool. Turn the druid over to me and it will all be over...', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_ERANIKUS_7'),
++('-1493021', 'Elune, hear my prayers. Grant us serenity! Watch over our fallen...', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_TYRANDE_1'),
++('-1493022', 'Tend to the injuries of the wounded, sisters!', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_TYRANDE_1'),
++('-1493023', 'Seek absolution, Eranikus. All will be forgiven...', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_TYRANDE_2'),
++('-1493024', 'You will be forgiven, Eranikus. Elune will always love you. Break free of the bonds that command you!', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_TYRANDE_3'),
++('-1493025', 'The grasp of the Old Gods is unmoving. He is consumed by their dark thoughts... I... I... I cannot... cannot channel much longer... Elune aide me.', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_TYRANDE_2'),
++('-1493026', 'IT BURNS! THE PAIN.. SEARING...', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_ERANIKUS_8'),
++('-1493027', 'WHY? Why did this happen to... to me? Where were you Tyrande? Where were you when I fell from the grace of Elune?', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_ERANIKUS_9'),
++('-1493028', 'I... I feel... I feel the touch of Elune upon my being once more... She smiles upon me... Yes... I...', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_ERANIKUS_10'),
++('-1493029', '%s is wholly consumed by the Light of Elune. Tranquility sets in over the Moonglade', '', '', '', '', '', '', '', '', '', '2', '', '', 'EMOTE_ERANIKUS_4'),
++('-1493030', '%s falls to one knee.', '', '', '', '', '', '', '', '', '', '2', '', '', 'EMOTE_TYRANDE'),
++('-1493031', 'Praise be to Elune... Eranikus is redeemed.', '', '', '', '', '', '', '', '', '', '1', '', '', 'YELL_TYRANDE_3'),
++('-1493032', 'For so long, I was lost... The Nightmare\'s corruption had consumed me... And now, you... all of you.. you have saved me. Released me from its grasp.', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REDEEMED_1'),
++('-1493033', 'But... Malfurion, Cenarius, Ysera... They still fight. They need me. I must return to the Dream at once.', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REDEEMED_2'),
++('-1493034', 'My lady, I am unworthy of your prayer. Truly, you are an angel of light. Please, assist me in returning to the barrow den so that I may return to the Dream. I like Malfurion, also have a love awaiting me... I must return to her... to protect her...', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REDEEMED_3'),
++('-1493035', 'And heroes... I hold that which you seek. May it once more see the evil dissolved. Remulos, see to it that our champion receives the shard of the Green Flight.', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REDEEMED_4'),
++('-1493036', 'It will be done, Eranikus. Be well, ancient one.', '', '', '', '', '', '', '', '', '', '0', '', '', 'SAY_REMULOS_9');
++
++DELETE FROM script_waypoint WHERE `entry` = 11832;
++INSERT INTO script_waypoint VALUES 
++('11832','1','7829.785645', '-2244.836670', '463.853333', '0', 'SAY_REMULOS1'),
++('11832','2','7819.010742', '-2304.344238', '455.956726', '0', 'SAY_REMULOS2'),
++('11832','3','7931.099121', '-2314.350830', '473.054047', '0', ''),
++('11832','4','7952.017578', '-2351.135010', '485.234924', '0', ''),
++('11832','5','7975.178223', '-2551.602051', '490.079926', '0', ''),
++('11832','6','7948.046875', '-2570.828613', '489.750732', '0', ''),
++('11832','7','7947.161133', '-2583.396729', '490.066284', '0', ''),
++('11832','8','7951.086426', '-2596.215088', '489.831268', '0', ''),
++('11832','9','7944.543457', '-2627.174805', '492.216400', '0', ''),
++('11832','10','7940.818848', '-2629.115234', '492.445129', '5000', 'SAY_REMULOS3'),
++('11832','11','7940.818848', '-2629.115234', '492.445129', '5000', 'SAY_REMULOS4'),
++('11832','12','7940.818848', '-2629.115234', '492.445129', '5000', 'SAY_REMULOS5'),
++('11832','13','7940.818848', '-2629.115234', '492.445129', '5000', 'CONJURE_RIFT'),
++('11832','14','7940.818848', '-2629.115234', '492.445129', '5000', 'ERANIKUS_APPEAR,EMOTE, YELL_ERANIKUS_1'),
++('11832','15','7940.818848', '-2629.115234', '492.445129', '5000', 'YELL_REMULOS1'),
++('11832','16','7940.818848', '-2629.115234', '492.445129', '5000', 'EMOTE_ERANIKUS2, YELL_ERANIKUS2'),
++('11832','17','7940.818848', '-2629.115234', '492.445129', '5000', 'YELL_REMULOS2'),
++('11832','18','7940.818848', '-2629.115234', '492.445129', '5000', 'ERANIKUS_EMOTE3, YELL3 MOVE'),
++('11832','19','7940.818848', '-2629.115234', '492.445129', '5000', 'SAY_REMULOS6'),
++('11832','20','7940.818848', '-2629.115234', '492.445129', '1000', 'SAY_REMULOS7'),
++('11832','21','7952.318848', '-2594.118408', '490.070374', '0', ''),
++('11832','22','7913.988770', '-2567.002686', '488.330566', '0', ''),
++('11832','23','7845.459473', '-2570.232666', '489.285339', '10000', 'SAY_REMULOS8 ERANIKUS MINIONS ATTACK AND YELL'),
++('11832','24','7845.459473', '-2570.232666', '489.285339', '0', 'PAUSE');
+diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
+index 5771be4..7595726 100644
+--- a/system/ScriptLoader.cpp
++++ b/system/ScriptLoader.cpp
+@@ -23,6 +23,7 @@ extern void AddSC_example_misc();
+ //world
+ extern void AddSC_areatrigger_scripts();
+ extern void AddSC_boss_emeriss();
++extern void AddSC_boss_lethon();
+ extern void AddSC_boss_taerar();
+ extern void AddSC_boss_ysondre();
+ extern void AddSC_generic_creature();
+@@ -492,6 +493,7 @@ void AddScripts()
+     //world
+     AddSC_areatrigger_scripts();
+     AddSC_boss_emeriss();
++    AddSC_boss_lethon();
+     AddSC_boss_taerar();
+     AddSC_boss_ysondre();
+     AddSC_generic_creature();
