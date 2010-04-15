@@ -64,10 +64,43 @@ enum
     SPELL_PERIODIC_CHECK        = 39888,
     SPELL_SURRENDER             = 39889,                    //should be triggered by periodic check, if player comes in certain distance with quest incomplete
 
-    SPELL_GIVE_MOONSTONE        = 39886
+    SPELL_GIVE_MOONSTONE        = 39886,
+
+    SAY_AZU_GOODBYE             = -1630010,
+    GOSSIP_MENU_AZU1            = 1630011,
+    GOSSIP_MENU_AZU2            = 1630012,
+    GOSSIP_MENU_AZU3            = 1630013,
+    GOSSIP_MENU_AZU4            = 1630014,
+    GOSSIP_MENU_AZU5            = 1630015,
+    GOSSIP_MENU_AZU6            = 1630016,
+    GOSSIP_MENU_AZU7            = 1630017,
+    GOSSIP_MENU_AZU8            = 1630018,
+    GOSSIP_MENU_AZU9            = 1630019,
+    GOSSIP_MENU_AZU10           = 1630020,
+    GOSSIP_MENU_AZU11           = 1630021,
+    GOSSIP_MENU_AZU12           = 1630022,
+    GOSSIP_MENU_AZU13           = 1630023,
+
+    ITEM_AZU_LEDGER             = 20949,
+    QUEST_AZU_PREV              = 8555,
+    QUEST_AZU_GIVEN             = 8575
 };
 
 #define GOSSIP_ITEM_MOONSTONE   "Hand over the Southfury moonstone and I'll let you go."
+
+#define GOSSIP_ITEM_AZU1        "How did you know? I mean, yes ... Yes I am looking for that shard. Do you have it?"
+#define GOSSIP_ITEM_AZU2        "Alright. Where?"
+#define GOSSIP_ITEM_AZU3        "By Bronzebeard's ... um, beard! What are you talking about?"
+#define GOSSIP_ITEM_AZU4        "Fish? You gave a piece of what could be hte key to saving all life on Kalimdor to a fish?"
+#define GOSSIP_ITEM_AZU5        "A minnow? The oceans are filled with minnows! There could be a hundred million minnows out there!"
+#define GOSSIP_ITEM_AZU6        "..."
+#define GOSSIP_ITEM_AZU7        "You put the piece on a minnow and placed the minnow somewhere in the waters of the sea between here and the Eastern Kingdoms? And this minnow has special powers?"
+#define GOSSIP_ITEM_AZU8        "You're insane."
+#define GOSSIP_ITEM_AZU9        "I'm all ears."
+#define GOSSIP_ITEM_AZU10        "Come again."
+#define GOSSIP_ITEM_AZU11        "OK, let me get this straight. You put the scepter shard entrusted to your Flight by Anachronos on a minnow of your own making and now you expect me to build an ... an arcanite buoy or something ... to potentially incur the wrath of an Elemental Lord? Did I miss anything? Perhaps I am to do this without any clothes on, during a solar eclipse, on a leap year?"
+#define GOSSIP_ITEM_AZU12        "FINE! And how, dare I ask, am I supposed to acquire an arcanite buoy?"
+#define GOSSIP_ITEM_AZU13        "But ..."
 
 struct MANGOS_DLL_DECL npc_rizzle_sprysprocketAI : public npc_escortAI
 {
@@ -356,6 +389,96 @@ bool GossipSelect_npc_loramus_thalipedes(Player* pPlayer, Creature* pCreature, u
     return true;
 }
 
+/*######
+## npc_spirit_azuregos
+######*/
+bool GossipHello_npc_spirit_azuregos(Player *pPlayer, Creature *pCreature)
+{
+    if (pPlayer->GetQuestRewardStatus(QUEST_AZU_PREV) && //The Dialog can be only done if one has Pre, und not finished, nor rewarded the following
+        !pPlayer->GetQuestRewardStatus(QUEST_AZU_GIVEN) &&
+        !pPlayer->HasItemCount(ITEM_AZU_LEDGER,1) &&
+        pPlayer->GetQuestStatus(QUEST_AZU_GIVEN) != QUEST_STATUS_COMPLETE)
+    {
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_AZU1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        pPlayer->PlayerTalkClass->SendGossipMenu(GOSSIP_MENU_AZU1, pCreature->GetGUID());
+    }
+    else
+        pPlayer->PlayerTalkClass->SendGossipMenu(pCreature->GetEntry(), pCreature->GetGUID());
+    return true;
+}
+bool GossipSelect_npc_spirit_azuregos(Player *pPlayer, Creature *pCreature, uint32 sender, uint32 action )
+{
+    switch (action)
+    {
+        case GOSSIP_ACTION_INFO_DEF:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+            pPlayer->PlayerTalkClass->SendGossipMenu(GOSSIP_MENU_AZU2, pCreature->GetGUID());
+            break;
+        case GOSSIP_ACTION_INFO_DEF + 1:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+            pPlayer->PlayerTalkClass->SendGossipMenu(GOSSIP_MENU_AZU3, pCreature->GetGUID());
+            break;
+    case GOSSIP_ACTION_INFO_DEF + 2:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU4, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
+            pPlayer->PlayerTalkClass->SendGossipMenu(GOSSIP_MENU_AZU4, pCreature->GetGUID());
+            break;        
+    case GOSSIP_ACTION_INFO_DEF + 3:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU5, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 4);
+            pPlayer->PlayerTalkClass->SendGossipMenu(GOSSIP_MENU_AZU5, pCreature->GetGUID());
+            break;
+    case GOSSIP_ACTION_INFO_DEF + 4:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU6, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 5);
+            pPlayer->PlayerTalkClass->SendGossipMenu(GOSSIP_MENU_AZU6, pCreature->GetGUID());
+            break;
+    case GOSSIP_ACTION_INFO_DEF + 5:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU7, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 6);
+            pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_AZU7, pCreature->GetGUID());
+            break;
+    case GOSSIP_ACTION_INFO_DEF + 6:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU8, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 7);
+            pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_AZU8, pCreature->GetGUID());
+            break;
+    case GOSSIP_ACTION_INFO_DEF + 7:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU9, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 8);
+            pPlayer->PlayerTalkClass->SendGossipMenu(GOSSIP_MENU_AZU9, pCreature->GetGUID());
+            break;
+    case GOSSIP_ACTION_INFO_DEF + 8:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU10, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 9);
+           pPlayer->PlayerTalkClass->SendGossipMenu(GOSSIP_MENU_AZU10, pCreature->GetGUID());
+            break;
+    case GOSSIP_ACTION_INFO_DEF + 9:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU11, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 10);
+            pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_AZU11, pCreature->GetGUID());
+            break;
+    case GOSSIP_ACTION_INFO_DEF + 10:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU12, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 11);
+            pPlayer->PlayerTalkClass->SendGossipMenu(GOSSIP_MENU_AZU12, pCreature->GetGUID());
+            break;
+    case GOSSIP_ACTION_INFO_DEF + 11:
+            pPlayer->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM_AZU13, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 12);
+            pPlayer->PlayerTalkClass->SendGossipMenu(GOSSIP_MENU_AZU13, pCreature->GetGUID());
+            
+            if (!pPlayer->HasItemCount(ITEM_AZU_LEDGER,1))
+            {
+                ItemPosCountVec dest;
+                uint8 msg = pPlayer->CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, ITEM_AZU_LEDGER, 1, false);
+                if( msg == EQUIP_ERR_OK )
+                {
+                    pPlayer->StoreNewItem(dest, ITEM_AZU_LEDGER, true);
+                }
+                else
+                    pPlayer->SendEquipError(msg, NULL, NULL);
+            }
+            break;
+    case GOSSIP_ACTION_INFO_DEF + 12:
+            //say goodbye
+            DoScriptText(SAY_AZU_GOODBYE, pCreature);
+            pPlayer->CLOSE_GOSSIP_MENU();
+            break;
+    }
+    return true;
+}
+
 void AddSC_azshara()
 {
     Script *newscript;
@@ -386,5 +509,11 @@ void AddSC_azshara()
     newscript->Name = "npc_loramus_thalipedes";
     newscript->pGossipHello =  &GossipHello_npc_loramus_thalipedes;
     newscript->pGossipSelect = &GossipSelect_npc_loramus_thalipedes;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_spirit_azuregos";
+    newscript->pGossipHello  = &GossipHello_npc_spirit_azuregos;
+    newscript->pGossipSelect = &GossipSelect_npc_spirit_azuregos;
     newscript->RegisterSelf();
 }
