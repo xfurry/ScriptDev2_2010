@@ -24,59 +24,87 @@ EndScriptData */
 #include "precompiled.h"
 #include "zulgurub.h"
 
-#define SPELL_MANABURN         26046
-#define SPELL_SLEEP            24664
+enum
+{
+    NPC_NIGHTMARE_ILLUSION  =   15163,
+/*
+    // find out the model ids of the possible outward appearences of the illusions
+    
+    MODEL_FELGUARD          =   
+    MODEL_ABOMINATION       =   
+    MODEL_LASHER            =   
+    MODEL_DEVILSAUR         =   
+*/
+    SPELL_MANABURN          =   26046,
+    SPELL_SLEEP             =   24664
+};
 
 struct MANGOS_DLL_DECL boss_hazzarahAI : public ScriptedAI
 {
     boss_hazzarahAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
-    uint32 ManaBurn_Timer;
-    uint32 Sleep_Timer;
-    uint32 Illusions_Timer;
-    Creature* Illusion;
+    uint32 m_uiManaBurn_Timer;
+    uint32 m_uiSleep_Timer;
+    uint32 m_uiIllusions_Timer;
 
     void Reset()
     {
-        ManaBurn_Timer = urand(4000, 10000);
-        Sleep_Timer = urand(10000, 18000);
-        Illusions_Timer = urand(10000, 18000);
+        m_uiManaBurn_Timer = 4000 + rand()%6000;
+        m_uiSleep_Timer = 10000 + rand()%8000;
+        m_uiIllusions_Timer = 10000 + rand()%8000;
     }
 
-    void UpdateAI(const uint32 diff)
+    void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        //ManaBurn_Timer
-        if (ManaBurn_Timer < diff)
-        {
-            DoCastSpellIfCan(m_creature->getVictim(),SPELL_MANABURN);
-            ManaBurn_Timer = urand(8000, 16000);
-        }else ManaBurn_Timer -= diff;
-
-        //Sleep_Timer
-        if (Sleep_Timer < diff)
-        {
-            DoCastSpellIfCan(m_creature->getVictim(),SPELL_SLEEP);
-            Sleep_Timer = urand(12000, 20000);
-        }else Sleep_Timer -= diff;
-
-        //Illusions_Timer
-        if (Illusions_Timer < diff)
-        {
-            //We will summon 3 illusions that will spawn on a random gamer and attack this gamer
-            //We will just use one model for the beginning
-            Unit* target = NULL;
-            for(int i = 0; i < 3; ++i)
-            {
-                target = SelectUnit(SELECT_TARGET_RANDOM,0);
-                Illusion = m_creature->SummonCreature(15163,target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(),0,TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN,30000);
-                ((CreatureAI*)Illusion->AI())->AttackStart(target);
+        if (m_uiManaBurn_Timer < uiDiff)
+         {
+             DoCast(m_creature->getVictim(),SPELL_MANABURN);
+            m_uiManaBurn_Timer = 8000 + rand()%8000;
+        }
+        else
+            m_uiManaBurn_Timer -= uiDiff;
+ 
+        if (m_uiSleep_Timer < uiDiff)
+         {
+             DoCast(m_creature->getVictim(),SPELL_SLEEP);
+            m_uiSleep_Timer = 12000 + rand()%8000;
+        }
+        else
+            m_uiSleep_Timer -= uiDiff;
+ 
+        if (m_uiIllusions_Timer < uiDiff)
+         {
+            //We will summon 3 illusions that will spawn on a random target and attack this target
+             //We will just use one model for the beginning
+            Creature* pIllusion = NULL;
+            Unit* pTarget = NULL;
+            for(uint8 i = 0; i < 3; ++i)
+             {
+                pTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
+                pIllusion = m_creature->SummonCreature(NPC_NIGHTMARE_ILLUSION, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
+                if (pIllusion)
+                {
+                    /*
+                    // uncomment this, when we have found out the model ids
+                    switch(rand()%4)
+                    {
+                        case 0: pIllusion->SetDisplayId(MODEL_FELGUARD); break;
+                        case 1: pIllusion->SetDisplayId(MODEL_ABOMINATION); break;
+                        case 2: pIllusion->SetDisplayId(MODEL_LASHER); break;
+                        case 3: pIllusion->SetDisplayId(MODEL_DEVILSAUR);
+                    }
+                    */
+                    if (pTarget)
+                        pIllusion->AI()->AttackStart(pTarget);
+                }
             }
-
-            Illusions_Timer = urand(15000, 25000);
-        }else Illusions_Timer -= diff;
+            m_uiIllusions_Timer = 15000 + rand()%10000;
+        }
+        else
+            m_uiIllusions_Timer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }

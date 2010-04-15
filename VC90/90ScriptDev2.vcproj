@@ -1203,6 +1203,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\scripts\eastern_kingdoms\zulgurub\zulgurub.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\scripts\eastern_kingdoms\zulgurub\zulgurub.h"
 						>
 					</File>

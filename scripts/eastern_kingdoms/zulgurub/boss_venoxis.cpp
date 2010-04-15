@@ -90,6 +90,21 @@ struct MANGOS_DLL_DECL boss_venoxisAI : public ScriptedAI
 
         m_bPhaseTwo = false;
         m_bInBerserk = false;
+
+        std::list<Creature*> lCobras;
+        GetCreatureListWithEntryInGrid(lCobras,m_creature,NPC_RAZZASHI_COBRA,100.0f);
+        if (lCobras.empty())
+            debug_log("SD2 ERROR : In Zul'Gurub no Cobras with the entry %i were found",NPC_RAZZASHI_COBRA);
+        else
+        {
+            for(std::list<Creature*>::iterator iter = lCobras.begin(); iter != lCobras.end(); ++iter)
+                if ((*iter) && (*iter)->isDead())
+                {
+                    (*iter)->setDeathState(ALIVE);
+                    (*iter)->SetHealth((*iter)->GetMaxHealth());
+                    (*iter)->AI()->EnterEvadeMode();
+                }
+        }
     }
 
     void JustReachedHome()

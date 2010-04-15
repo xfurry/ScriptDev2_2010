@@ -43,11 +43,16 @@ enum
     SAY_FEAST_PANTHER           = -1309012,
     SAY_DEATH                   = -1309013,
 
-    SPELL_SHADOWWORDPAIN        = 23952,
-    SPELL_GOUGE                 = 24698,
+    SPELL_SHADOWWORDPAIN        = 24212,
+    SPELL_GOUGE                 = 12540,
     SPELL_MARK                  = 24210,
-    SPELL_CLEAVE                = 26350,                    //Perhaps not right. Not a red aura...
+    SPELL_RAVAGE                = 24213, 
     SPELL_PANTHER_TRANSFORM     = 24190,
+    SPELL_WHIRLWIND             = 24236,	
+    SPELL_TRANSFORM_BACK        = 24085,
+    SPELL_BACKSTAB              = 15582,
+    SPELL_TRASH                 = 3391,
+
 
     MODEL_ID_NORMAL             = 15218,
     MODEL_ID_PANTHER            = 15215,
@@ -69,12 +74,16 @@ struct MANGOS_DLL_DECL boss_arlokkAI : public ScriptedAI
     uint32 m_uiShadowWordPain_Timer;
     uint32 m_uiGouge_Timer;
     uint32 m_uiMark_Timer;
-    uint32 m_uiCleave_Timer;
+    uint32 m_uiRavage_Timer;
     uint32 m_uiVanish_Timer;
     uint32 m_uiVisible_Timer;
 
     uint32 m_uiSummon_Timer;
-    uint32 m_uiSummonCount;
+    uint32 m_uiTransform_Timer;
+    uint32 m_uiWhirlwind_Timer;	
+    uint32 m_uiTransformBack_Timer;
+    uint32 m_uiBackstab_Timer;
+    uint32 m_uiTrash_Timer;
 
     uint64 m_uiMarkedGUID;
 
@@ -83,15 +92,18 @@ struct MANGOS_DLL_DECL boss_arlokkAI : public ScriptedAI
 
     void Reset()
     {
-        m_uiShadowWordPain_Timer = 8000;
+        m_uiShadowWordPain_Timer = 5000;
         m_uiGouge_Timer = 14000;
-        m_uiMark_Timer = 35000;
-        m_uiCleave_Timer = 4000;
-        m_uiVanish_Timer = 60000;
+        m_uiMark_Timer = 20000;
+        m_uiRavage_Timer = 15000;
         m_uiVisible_Timer = 6000;
 
-        m_uiSummon_Timer = 5000;
-        m_uiSummonCount = 0;
+        m_uiTransform_Timer = 30000;
+        m_uiWhirlwind_Timer = 5000;		
+        m_uiBackstab_Timer = 2000;
+        m_uiTrash_Timer = 10000;
+ 
+        m_uiSummon_Timer = 6000;
 
         m_bIsPhaseTwo = false;
         m_bIsVanished = false;
@@ -142,8 +154,8 @@ struct MANGOS_DLL_DECL boss_arlokkAI : public ScriptedAI
         if (Unit* pUnit = Unit::GetUnit(*m_creature, m_uiMarkedGUID))
             if (pUnit->isAlive())
                 pSummoned->AI()->AttackStart(pUnit);
-
-        ++m_uiSummonCount;
+        else
+            pSummoned->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM,0));
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -151,15 +163,38 @@ struct MANGOS_DLL_DECL boss_arlokkAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (!m_bIsPhaseTwo)
+        if (m_uiSummon_Timer < uiDiff)
+         {
+            DoSummonPhanters();
+            m_uiSummon_Timer = 6000;
+        }
+        else
+            m_uiSummon_Timer -= uiDiff;
+
+        //Phase One
+        if (!m_bIsPhaseTwo && !m_bIsVanished)
         {
+            //ShadowWordPain_Timer
             if (m_uiShadowWordPain_Timer < uiDiff)
             {
                 DoCastSpellIfCan(m_creature->getVictim(),SPELL_SHADOWWORDPAIN);
-                m_uiShadowWordPain_Timer = 15000;
+                m_uiShadowWordPain_Timer = 15000 + rand()%5000;
             }
             else
                 m_uiShadowWordPain_Timer -= uiDiff;
+
+            //Gouge_Timer
+            if (m_uiGouge_Timer < uiDiff)
+            {
+                DoCast(m_creature->getVictim(), SPELL_GOUGE);
+
+                if (m_creature->getThreatManager().getThreat(m_creature->getVictim()))
+                    m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(),-80);
+
+                m_uiGouge_Timer = 17000+rand()%10000;
+            }
+            else
+                m_uiGouge_Timer -= uiDiff;
 
             if (m_uiMark_Timer < uiDiff)
             {
@@ -169,6 +204,7 @@ struct MANGOS_DLL_DECL boss_arlokkAI : public ScriptedAI
                     {
                         DoCastSpellIfCan(pMark, SPELL_MARK);
                         m_uiMarkedGUID = pMark->GetGUID();
+                        DoScriptText(SAY_FEAST_PANTHER, m_creature, pMark);
                     }
                     else
                     {
@@ -179,64 +215,96 @@ struct MANGOS_DLL_DECL boss_arlokkAI : public ScriptedAI
                     }
                 }
 
-                m_uiMark_Timer = 15000;
+                m_uiMark_Timer = 90000;
             }
             else
                 m_uiMark_Timer -= uiDiff;
-        }
-        else
-        {
-            //Cleave_Timer
-            if (m_uiCleave_Timer < uiDiff)
+
+            if (m_uiTransform_Timer < uiDiff)
             {
-                DoCastSpellIfCan(m_creature->getVictim(), SPELL_CLEAVE);
-                m_uiCleave_Timer = 16000;
+                //The Panther Model                 
+                m_creature->CastStop();                
+                DoCast(m_creature,SPELL_PANTHER_TRANSFORM);                
+
+                const CreatureInfo *cinfo = m_creature->GetCreatureInfo();
+                m_creature->SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, (cinfo->mindmg +((cinfo->mindmg/100) * 35)));
+                m_creature->SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, (cinfo->maxdmg +((cinfo->maxdmg/100) * 35)));
+                m_creature->UpdateDamagePhysical(BASE_ATTACK);
+
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    AttackStart(pTarget);
+                m_uiVanish_Timer = 3000;
+                m_bIsPhaseTwo = true;
+                m_uiTransformBack_Timer = 85000;
             }
             else
-                m_uiCleave_Timer -= uiDiff;
-
-            //Gouge_Timer
-            if (m_uiGouge_Timer < uiDiff)
+                m_uiTransform_Timer -= uiDiff;
+        }
+        //Phase Two
+        if (m_bIsPhaseTwo)
+		{
+            //Ravage_Timer
+            if (m_uiRavage_Timer < uiDiff)
+             {
+                DoCast(m_creature->getVictim(), SPELL_RAVAGE);
+                m_uiRavage_Timer = 15000 + rand()%15000;
+             }
+             else
+                m_uiRavage_Timer -= uiDiff;
+			
+            //m_uiWhirlwind_Timer
+            if (m_uiWhirlwind_Timer < uiDiff)
+             {
+                DoCast(m_creature->getVictim(),SPELL_WHIRLWIND);
+                m_uiWhirlwind_Timer = 10000 + rand()%20000;
+             }
+             else
+                m_uiWhirlwind_Timer -= uiDiff;
+ 
+            if (m_uiBackstab_Timer < uiDiff)
+             {
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    DoCast(pTarget, SPELL_BACKSTAB);
+                m_uiBackstab_Timer = 20000 + rand()%20000;
+             }
+             else
+                m_uiBackstab_Timer -= uiDiff;				
+ 
+            if (m_uiVanish_Timer < uiDiff)
             {
-                DoCastSpellIfCan(m_creature->getVictim(), SPELL_GOUGE);
-
-                if (m_creature->getThreatManager().getThreat(m_creature->getVictim()))
-                    m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(),-80);
-
-                m_uiGouge_Timer = urand(17000, 27000);
+                //Invisble Model
+                m_creature->SetDisplayId(MODEL_ID_BLANK);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+ 
+                m_creature->AttackStop();
+                DoResetThreat();
+ 
+                m_bIsVanished = true;
+                m_bIsPhaseTwo = false;
+				
+                m_uiVisible_Timer = 52000;
             }
             else
-                m_uiGouge_Timer -= uiDiff;
-        }
-
-        if (m_uiSummonCount <= 30)
-        {
-            if (m_uiSummon_Timer < uiDiff)
+                m_uiVanish_Timer -= uiDiff;
+ 
+            if (m_uiTransformBack_Timer < uiDiff)	
             {
-                DoSummonPhanters();
-                m_uiSummon_Timer = 5000;
+                m_creature->CastStop();
+                DoCast(m_creature,SPELL_TRANSFORM_BACK);                				
+				
+                m_creature->SetDisplayId(MODEL_ID_NORMAL);
+                const CreatureInfo *cinfo = m_creature->GetCreatureInfo();
+                m_creature->SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, (cinfo->mindmg +((cinfo->mindmg/100) * 1)));
+                m_creature->SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, (cinfo->maxdmg +((cinfo->maxdmg/100) * 1)));
+                m_creature->UpdateDamagePhysical(BASE_ATTACK);
+                m_bIsPhaseTwo = false;
+                m_uiTransform_Timer = 30000;
             }
             else
-                m_uiSummon_Timer -= uiDiff;
-        }
-
-        if (m_uiVanish_Timer < uiDiff)
-        {
-            //Invisble Model
-            m_creature->SetDisplayId(MODEL_ID_BLANK);
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-
-            m_creature->AttackStop();
-            DoResetThreat();
-
-            m_bIsVanished = true;
-
-            m_uiVanish_Timer = 45000;
-            m_uiVisible_Timer = 6000;
-        }
-        else
-            m_uiVanish_Timer -= uiDiff;
-
+                m_uiTransformBack_Timer -= uiDiff;
+         }
+		
+        //Phase Three
         if (m_bIsVanished)
         {
             if (m_uiVisible_Timer < uiDiff)
@@ -244,6 +312,7 @@ struct MANGOS_DLL_DECL boss_arlokkAI : public ScriptedAI
                 //The Panther Model
                 m_creature->SetDisplayId(MODEL_ID_PANTHER);
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, 2.00f);
 
                 const CreatureInfo *cinfo = m_creature->GetCreatureInfo();
                 m_creature->SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, (cinfo->mindmg +((cinfo->mindmg/100) * 35)));
@@ -255,12 +324,24 @@ struct MANGOS_DLL_DECL boss_arlokkAI : public ScriptedAI
 
                 m_bIsPhaseTwo = true;
                 m_bIsVanished = false;
+                m_uiVanish_Timer = 68000;
+                m_uiTransformBack_Timer = 30000;
             }
             else
                 m_uiVisible_Timer -= uiDiff;
         }
         else
-            DoMeleeAttackIfReady();
+        {
+            if (m_uiTrash_Timer < uiDiff)
+            {
+                DoCast(m_creature->getVictim(), SPELL_TRASH);
+                m_uiTrash_Timer = 10000 + rand()%10000;
+            }
+            else
+                m_uiTrash_Timer -= uiDiff;
+						
+             DoMeleeAttackIfReady();
+        }
     }
 };
 
