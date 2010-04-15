@@ -388,7 +388,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         }
         else if (achievProgress == 3)
         {
-            AchievementEntry const *AchievTwilightZone = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_TWILIGHT_ZONE : ACHIEV_TWILIGHT_ZONE);
+            AchievementEntry const *AchievTwilightZone = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_TWILIGHT_ZONE : ACHIEV_TWILIGHT_ZONE_H);
             Map* pMap = m_creature->GetMap();
 
             if (pMap && pMap->IsDungeon() && AchievTwilightZone)
