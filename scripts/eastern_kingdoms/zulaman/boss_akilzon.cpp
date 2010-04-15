@@ -23,6 +23,7 @@ EndScriptData */
 
 #include "precompiled.h"
 #include "zulaman.h"
+#include "Weather.h"
 
 enum
 {
@@ -51,10 +52,10 @@ enum
     NPC_SOARING_EAGLE       = 24858,
     MAX_EAGLE_COUNT         = 6,
 
-    //SE_LOC_X_MAX            = 400,
-    //SE_LOC_X_MIN            = 335,
-    //SE_LOC_Y_MAX            = 1435,
-    //SE_LOC_Y_MIN            = 1370
+    SE_LOC_X_MAX            = 400,
+    SE_LOC_X_MIN            = 335,
+    SE_LOC_Y_MAX            = 1435,
+    SE_LOC_Y_MIN            = 1370
 };
 
 struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
@@ -75,6 +76,13 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
     uint32 m_uiBerserkTimer;
     bool m_bIsBerserk;
 
+    uint64 TargetGUID;
+    uint64 CycloneGUID;
+    uint64 CloudGUID;
+    uint32 StormCount;
+    uint32 StormSequenceTimer;
+    bool isRaining;
+
     void Reset()
     {
         m_uiStaticDisruptTimer = urand(7000, 14000);
@@ -84,12 +92,24 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
         m_uiSummonEagleTimer = 65000;
         m_uiBerserkTimer = MINUTE*8*IN_MILLISECONDS;
         m_bIsBerserk = false;
+
+        TargetGUID = 0;
+        CloudGUID = 0;
+        CycloneGUID = 0;
+
+        StormCount = 0;
+        StormSequenceTimer = 0;
+
+        isRaining = false;
+
+        SetWeather(WEATHER_STATE_FINE, 0.0f); 
     }
 
     void Aggro(Unit* pWho)
     {
         DoScriptText(SAY_AGGRO, m_creature);
         m_creature->SetInCombatWithZone();
+        SetWeather(WEATHER_STATE_THUNDERS, 0.0f);
     }
 
     void KilledUnit(Unit* pVictim)
@@ -100,6 +120,7 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         DoScriptText(SAY_DEATH, m_creature);
+        SetWeather(WEATHER_STATE_FINE, 0.0f);
 
         if (!m_pInstance)
             return;
@@ -111,6 +132,17 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
     {
         if (pSummoned->GetEntry() == NPC_SOARING_EAGLE)
             pSummoned->SetInCombatWithZone();
+    }
+
+    void SetWeather(uint32 weather, float grade)
+    {
+        Map *map = m_creature->GetMap();
+        if (!map->IsDungeon()) return;
+
+        WorldPacket data(SMSG_WEATHER, (4+4+4));
+        data << uint32(weather) << (float)grade << uint8(0);
+
+        ((InstanceMap*)map)->SendToPlayers(&data);
     }
 
     void DoSummonEagles()

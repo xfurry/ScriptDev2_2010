@@ -53,6 +53,18 @@ enum InstanceZA
     DATA_GO_MALACRASS_GATE  = 22,
     DATA_GO_ENTRANCE        = 23,
 
+    GO_TANZARS_TRUNK        = 186648,       // bear
+    GO_ASHLIS_BAG           = 186672,       // linx
+    GO_KRAZS_PACKAGE        = 186667,       // dragonhawk
+    GO_HARKORS_SATCHEL      = 187021,       // eagle
+
+    GO_DOOR_HEXLORD         = 186305,       // hexlord entrance
+    GO_DOOR_WIND            = 186858,       // eagle encounter door
+    GO_DOOR_FIRE            = 186859,       // zuljin encounter door
+    GO_DOOR_LINX_ENTER      = 186304,       // halazi enter -> not used wrong location in db
+    GO_DOOR_LINX_EXIT       = 186303,       // halazi exit
+    GO_MASSIVE_GATE         = 186728,       // instance entrance
+
     NPC_EGG                 = 23817,
     NPC_SPIRIT_LYNX         = 24143
 };

@@ -1,0 +1,1102 @@
+diff --git a/scripts/eastern_kingdoms/zulaman/boss_akilzon.cpp b/scripts/eastern_kingdoms/zulaman/boss_akilzon.cpp
+index db798e2..c531d90 100644
+--- a/scripts/eastern_kingdoms/zulaman/boss_akilzon.cpp
++++ b/scripts/eastern_kingdoms/zulaman/boss_akilzon.cpp
+@@ -23,6 +23,7 @@ EndScriptData */
+ 
+ #include "precompiled.h"
+ #include "zulaman.h"
++#include "Weather.h"
+ 
+ enum
+ {
+@@ -51,10 +52,10 @@ enum
+     NPC_SOARING_EAGLE       = 24858,
+     MAX_EAGLE_COUNT         = 6,
+ 
+-    //SE_LOC_X_MAX            = 400,
+-    //SE_LOC_X_MIN            = 335,
+-    //SE_LOC_Y_MAX            = 1435,
+-    //SE_LOC_Y_MIN            = 1370
++    SE_LOC_X_MAX            = 400,
++    SE_LOC_X_MIN            = 335,
++    SE_LOC_Y_MAX            = 1435,
++    SE_LOC_Y_MIN            = 1370
+ };
+ 
+ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
+@@ -75,6 +76,13 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
+     uint32 m_uiBerserkTimer;
+     bool m_bIsBerserk;
+ 
++    uint64 TargetGUID;
++    uint64 CycloneGUID;
++    uint64 CloudGUID;
++    uint32 StormCount;
++    uint32 StormSequenceTimer;
++    bool isRaining;
++
+     void Reset()
+     {
+         m_uiStaticDisruptTimer = urand(7000, 14000);
+@@ -84,12 +92,24 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
+         m_uiSummonEagleTimer = 65000;
+         m_uiBerserkTimer = MINUTE*8*IN_MILLISECONDS;
+         m_bIsBerserk = false;
++
++        TargetGUID = 0;
++        CloudGUID = 0;
++        CycloneGUID = 0;
++
++        StormCount = 0;
++        StormSequenceTimer = 0;
++
++        isRaining = false;
++
++        SetWeather(WEATHER_STATE_FINE, 0.0f); 
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         DoScriptText(SAY_AGGRO, m_creature);
+         m_creature->SetInCombatWithZone();
++        SetWeather(WEATHER_STATE_THUNDERS, 0.0f);
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -100,6 +120,7 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
+     void JustDied(Unit* pKiller)
+     {
+         DoScriptText(SAY_DEATH, m_creature);
++        SetWeather(WEATHER_STATE_FINE, 0.0f);
+ 
+         if (!m_pInstance)
+             return;
+@@ -113,6 +134,17 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
+             pSummoned->SetInCombatWithZone();
+     }
+ 
++    void SetWeather(uint32 weather, float grade)
++    {
++        Map *map = m_creature->GetMap();
++        if (!map->IsDungeon()) return;
++
++        WorldPacket data(SMSG_WEATHER, (4+4+4));
++        data << uint32(weather) << (float)grade << uint8(0);
++
++        ((InstanceMap*)map)->SendToPlayers(&data);
++    }
++
+     void DoSummonEagles()
+     {
+         for(uint32 i = 0; i < MAX_EAGLE_COUNT; ++i)
+diff --git a/scripts/eastern_kingdoms/zulaman/boss_malacrass.cpp b/scripts/eastern_kingdoms/zulaman/boss_malacrass.cpp
+index 4d8ee80..704e56e 100644
+--- a/scripts/eastern_kingdoms/zulaman/boss_malacrass.cpp
++++ b/scripts/eastern_kingdoms/zulaman/boss_malacrass.cpp
+@@ -97,6 +97,8 @@ enum
+     SPELL_WR_WHIRLWIND          = 43442,
+     SPELL_WR_SPELL_REFLECT      = 43443,
+ 
++    MOB_TEMP_TRIGGER            = 23920,
++
+     //misc
+     //WEAPON_ID                   = 33494,                    //weapon equip id, must be set by database.
+     MAX_ACTIVE_ADDS             = 4
+@@ -123,6 +125,67 @@ SpawnGroup m_auiSpawnEntry[] =
+     {24246, 24247},                                         //Darkheart / Koragg
+ };
+ 
++enum AbilityTarget
++{
++    ABILITY_TARGET_SELF = 0,
++    ABILITY_TARGET_VICTIM = 1,
++    ABILITY_TARGET_ENEMY = 2,
++    ABILITY_TARGET_HEAL = 3,
++    ABILITY_TARGET_BUFF = 4,
++    ABILITY_TARGET_SPECIAL = 5
++};
++
++struct PlayerAbilityStruct
++{
++    uint32 spell;
++    AbilityTarget target;
++    uint32 cooldown;
++};
++
++static PlayerAbilityStruct PlayerAbility[][3] =
++{
++    // 1 warrior
++    {{SPELL_WR_SPELL_REFLECT, ABILITY_TARGET_SELF, 10000},
++    {SPELL_WR_WHIRLWIND, ABILITY_TARGET_SELF, 10000},
++    {SPELL_WR_MORTAL_STRIKE, ABILITY_TARGET_VICTIM, 6000}},
++    // 2 paladin
++    {{SPELL_PA_CONSECRATION, ABILITY_TARGET_SELF, 10000},
++    {SPELL_PA_HOLY_LIGHT, ABILITY_TARGET_HEAL, 10000},
++    {SPELL_PA_AVENGING_WRATH, ABILITY_TARGET_SELF, 10000}},
++    // 3 hunter
++    {{SPELL_HU_EXPLOSIVE_TRAP, ABILITY_TARGET_SELF, 10000},
++    {SPELL_HU_FREEZING_TRAP, ABILITY_TARGET_SELF, 10000},
++    {SPELL_HU_SNAKE_TRAP, ABILITY_TARGET_SELF, 10000}},
++    // 4 rogue
++    {{SPELL_RO_WOUND_POISON, ABILITY_TARGET_VICTIM, 3000},
++    {SPELL_RO_SLICE_DICE, ABILITY_TARGET_SELF, 10000},
++    {SPELL_RO_BLIND, ABILITY_TARGET_ENEMY, 10000}},
++    // 5 priest
++    {{SPELL_PR_PAIN_SUPP, ABILITY_TARGET_HEAL, 10000},
++    {SPELL_PR_HEAL, ABILITY_TARGET_HEAL, 10000},
++    {SPELL_PR_PSYCHIC_SCREAM, ABILITY_TARGET_SELF, 10000}},
++    // 5* shadow priest
++    {{SPELL_PR_MIND_CONTROL, ABILITY_TARGET_ENEMY, 15000},
++    {SPELL_PR_MIND_BLAST, ABILITY_TARGET_ENEMY, 5000},
++    {SPELL_PR_SW_DEATH, ABILITY_TARGET_ENEMY, 10000}},
++    // 7 shaman
++    {{SPELL_SH_FIRE_NOVA, ABILITY_TARGET_SELF, 10000},
++    {SPELL_SH_HEALING_WAVE, ABILITY_TARGET_HEAL, 10000},
++    {SPELL_SH_CHAIN_LIGHT, ABILITY_TARGET_ENEMY, 8000}},
++    // 8 mage
++    {{SPELL_MG_FIREBALL, ABILITY_TARGET_ENEMY, 5000},
++    {SPELL_MG_FROSTBOLT, ABILITY_TARGET_ENEMY, 5000},
++    {SPELL_MG_ICE_LANCE, ABILITY_TARGET_SPECIAL, 2000}},
++    // 9 warlock
++    {{SPELL_WL_CURSE_OF_DOOM, ABILITY_TARGET_ENEMY, 10000},
++    {SPELL_WL_RAIN_OF_FIRE, ABILITY_TARGET_ENEMY, 10000},
++    {SPELL_WL_UNSTABLE_AFFL, ABILITY_TARGET_ENEMY, 10000}},
++    // 11 druid
++    {{SPELL_DR_LIFEBLOOM, ABILITY_TARGET_HEAL, 10000},
++    {SPELL_DR_THORNS, ABILITY_TARGET_SELF, 10000},
++    {SPELL_DR_MOONFIRE, ABILITY_TARGET_ENEMY, 8000}}
++};
++
+ struct MANGOS_DLL_DECL boss_malacrassAI : public ScriptedAI
+ {
+     boss_malacrassAI(Creature* pCreature) : ScriptedAI(pCreature)
+@@ -135,6 +198,17 @@ struct MANGOS_DLL_DECL boss_malacrassAI : public ScriptedAI
+ 
+     ScriptedInstance* m_pInstance;
+ 
++    uint32 SpiritBolts_Timer;
++    uint32 DrainPower_Timer;
++    uint32 SiphonSoul_Timer;
++    uint32 PlayerAbility_Timer;
++    uint32 CheckAddState_Timer;
++
++    uint32 PlayerClass;
++    uint64 PlayerGUID;
++
++    Unit* SoulDrainTarget;
++
+     std::list<uint32> m_lAddsEntryList;
+     uint64 m_auiAddGUIDs[MAX_ACTIVE_ADDS];
+ 
+@@ -142,6 +216,12 @@ struct MANGOS_DLL_DECL boss_malacrassAI : public ScriptedAI
+     {
+         InitializeAdds();
+ 
++        SpiritBolts_Timer = 20000;
++        DrainPower_Timer = 60000;
++        SiphonSoul_Timer = 100000;
++        PlayerAbility_Timer = 99999;
++        CheckAddState_Timer = 5000;
++
+         if (!m_pInstance)
+             return;
+ 
+@@ -265,8 +345,93 @@ struct MANGOS_DLL_DECL boss_malacrassAI : public ScriptedAI
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        if(DrainPower_Timer < uiDiff)
++        {
++            m_creature->CastSpell(m_creature, SPELL_DRAIN_POWER, true);
++            DoScriptText(SAY_DRAIN_POWER, m_creature);
++            DrainPower_Timer = 40000 + rand()%15000;    // must cast in 60 sec, or buff/debuff will disappear
++        }else DrainPower_Timer -= uiDiff;
++
++        if(SpiritBolts_Timer < uiDiff)
++        {
++            if(DrainPower_Timer < 12000)    // channel 10 sec
++                SpiritBolts_Timer = 13000;  // cast drain power first
++            else
++            {
++                m_creature->CastSpell(m_creature, SPELL_SPIRIT_BOLTS, false);
++                DoScriptText(SAY_SPIRIT_BOLTS, m_creature);
++                SpiritBolts_Timer = 40000;
++                SiphonSoul_Timer = 10000;  // ready to drain
++                PlayerAbility_Timer = 99999;
++            }
++        }else SpiritBolts_Timer -= uiDiff;
++
++        if(SiphonSoul_Timer < uiDiff)
++        {
++            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0);
++            Unit *trigger = DoSpawnCreature(MOB_TEMP_TRIGGER, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
++            if(!target || !trigger) EnterEvadeMode();
++            else
++            {
++                trigger->SetUInt32Value(UNIT_FIELD_DISPLAYID, 11686);
++                trigger->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                trigger->CastSpell(target, SPELL_SIPHON_SOUL, true);
++                trigger->GetMotionMaster()->MoveChase(m_creature);
++
++                //m_creature->CastSpell(target, SPELL_SIPHON_SOUL, true);
++                //m_creature->SetUInt64Value(UNIT_FIELD_CHANNEL_OBJECT, target->GetGUID());
++                //m_creature->SetUInt32Value(UNIT_CHANNEL_SPELL, SPELL_SIPHON_SOUL);
++
++                PlayerGUID = target->GetGUID();
++                PlayerAbility_Timer = 8000 + rand()%2000;
++                PlayerClass = target->getClass() - 1;
++                if(PlayerClass == 10) PlayerClass = 9; // druid
++                if(PlayerClass == 4 && target->HasSpell(15473)) PlayerClass = 5; // shadow priest
++                SiphonSoul_Timer = 99999;   // buff lasts 30 sec
++            }
++        }else SiphonSoul_Timer -= uiDiff;
++
++        if(PlayerAbility_Timer < uiDiff)
++        {
++            //Unit* target = Unit::GetUnit(*m_creature, PlayerGUID);
++            //if(target && target->isAlive())
++            {
++                UseAbility();
++                PlayerAbility_Timer = 8000 + rand()%2000;
++            }
++        }else PlayerAbility_Timer -= uiDiff;
++
+         DoMeleeAttackIfReady();
+     }
++
++    void UseAbility()
++    {
++        uint32 random = rand()%3;
++        Unit *target = NULL;
++        switch(PlayerAbility[PlayerClass][random].target)
++        {
++        case ABILITY_TARGET_SELF:
++            target = m_creature;
++            break;
++        case ABILITY_TARGET_VICTIM:
++            target = m_creature->getVictim();
++            break;
++        case ABILITY_TARGET_ENEMY:
++        default:
++            target = SelectUnit(SELECT_TARGET_RANDOM, 0);
++            break;
++        case ABILITY_TARGET_HEAL:
++            target = DoSelectLowestHpFriendly(50, 0);
++            break;
++        case ABILITY_TARGET_BUFF:
++            {
++                std::list<Creature*> templist = DoFindFriendlyMissingBuff(50, PlayerAbility[PlayerClass][random].spell);
++                if(!templist.empty()) target = *(templist.begin());
++            }
++            break;
++        }
++        m_creature->CastSpell(target, PlayerAbility[PlayerClass][random].spell, false);
++    }
+ };
+ 
+ CreatureAI* GetAI_boss_malacrass(Creature* pCreature)
+diff --git a/scripts/eastern_kingdoms/zulaman/boss_zuljin.cpp b/scripts/eastern_kingdoms/zulaman/boss_zuljin.cpp
+index 9f88582..f3cd07b 100644
+--- a/scripts/eastern_kingdoms/zulaman/boss_zuljin.cpp
++++ b/scripts/eastern_kingdoms/zulaman/boss_zuljin.cpp
+@@ -1,18 +1,18 @@
+ /* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+- */
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++*/
+ 
+ /* ScriptData
+ SDName: Boss_Zuljin
+@@ -29,7 +29,7 @@ enum
+     SAY_INTRO                       = -1568056,
+     SAY_AGGRO                       = -1568057,
+     SAY_BEAR_TRANSFORM              = -1568058,
+-    SAY_EAGLE_TRANSFORM             = -1568058,
++    SAY_EAGLE_TRANSFORM             = -1568059,
+     SAY_LYNX_TRANSFORM              = -1568060,
+     SAY_DRAGONHAWK_TRANSFORM        = -1568061,
+     SAY_FIRE_BREATH                 = -1568062,
+@@ -95,23 +95,147 @@ const float CENTER_X = 120.148811f;
+ const float CENTER_Y = 703.713684f;
+ const float CENTER_Z = 45.111477f;
+ 
++struct SpiritInfoStruct
++{
++    uint32 entry;
++    float x, y, z, orient;
++};
++
++static SpiritInfoStruct SpiritInfo[] =
++{
++    {23878, 147.87f, 706.51f, 45.11f, 3.04f},
++    {23880, 88.95f, 705.49f, 45.11f, 6.11f},
++    {23877, 137.23f, 725.98f, 45.11f, 3.71f},
++    {23879, 104.29f, 726.43f, 45.11f, 5.43f}
++};
++
++struct TransformStruct
++{
++    uint32 sound;
++    uint32 spell, unaura;
++};
++
++static TransformStruct Transform[] =
++{
++    {SAY_BEAR_TRANSFORM, SPELL_SHAPE_OF_THE_BEAR, SPELL_WHIRLWIND},
++    {SAY_EAGLE_TRANSFORM, SPELL_SHAPE_OF_THE_EAGLE, SPELL_SHAPE_OF_THE_BEAR},
++    {SAY_LYNX_TRANSFORM, SPELL_SHAPE_OF_THE_LYNX, SPELL_SHAPE_OF_THE_EAGLE},
++    {SAY_DRAGONHAWK_TRANSFORM, SPELL_SHAPE_OF_THE_DRAGONHAWK, SPELL_SHAPE_OF_THE_LYNX}
++};
++
+ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
+ {
+     boss_zuljinAI(Creature* pCreature) : ScriptedAI(pCreature)
+     {
+         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        // wait for core patch be accepted
++        SpellEntry *TempSpell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_CLAW_RAGE_DAMAGE);
++        if(TempSpell)
++        {
++            //if(TempSpell->DmgClass != SPELL_DAMAGE_CLASS_MELEE)
++            //    TempSpell->DmgClass = SPELL_DAMAGE_CLASS_MELEE;
++            if(TempSpell->EffectApplyAuraName[2] != SPELL_AURA_MOD_STUN)
++                TempSpell->EffectApplyAuraName[2] = SPELL_AURA_MOD_STUN;
++        }
+         Reset();
+     }
+ 
+     ScriptedInstance* m_pInstance;
+ 
++    uint64 SpiritGUID[4];
++    uint64 ClawTargetGUID;
++    uint64 TankGUID;
++
++    uint32 Phase;
++    uint32 health_20;
++
++    uint32 Intro_Timer;
++    uint32 Berserk_Timer;
++
++    uint32 Whirlwind_Timer;
++    uint32 Grievous_Throw_Timer;
++
++    uint32 Creeping_Paralysis_Timer;
++    uint32 Overpower_Timer;
++
++    uint32 Claw_Rage_Timer;
++    uint32 Lynx_Rush_Timer;
++    uint32 Claw_Counter;
++    uint32 Claw_Loop_Timer;
++
++    uint32 Flame_Whirl_Timer;
++    uint32 Flame_Breath_Timer;
++    uint32 Pillar_Of_Fire_Timer;
++
++    bool m_bHasTaunted;
++    bool m_bHasTransformed;
++    uint32 m_uiTransformTimer;
++
++    bool m_bPhase1;     // troll
++    bool m_bPhase2;     // bear
++    bool m_bPhase3;     // eagle
++    bool m_bPhase4;     // linx
++    bool m_bPhase5;     // dragonhawk
++
++    std::list<uint64> m_lSummonsGUIDList;
++
+     void Reset()
+     {
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_ZULJIN, NOT_STARTED);
++
++        Phase = 0;
++
++        health_20 = m_creature->GetMaxHealth()*0.2;
++
++        Intro_Timer = 37000;
++        Berserk_Timer = 600000;
++
++        Whirlwind_Timer = 7000;
++        Grievous_Throw_Timer = 8000;
++
++        Creeping_Paralysis_Timer = 7000;
++        Overpower_Timer = 0;
++
++        Claw_Rage_Timer = 5000;
++        Lynx_Rush_Timer = 14000;
++        Claw_Loop_Timer = 0;
++        Claw_Counter = 0;
++
++        Flame_Whirl_Timer = 5000;
++        Flame_Breath_Timer = 6000;
++        Pillar_Of_Fire_Timer = 7000;
++
++        ClawTargetGUID = 0;
++        TankGUID = 0;        
++
++        m_lSummonsGUIDList.clear();
++
++        m_bHasTaunted = false;
++
++        m_uiTransformTimer = 3000;
++        m_bHasTransformed = false;
++
++        m_bPhase1   = true;     // troll
++        m_bPhase2   = false;     // bear
++        m_bPhase3   = false;     // eagle
++        m_bPhase4   = false;     // linx
++        m_bPhase5   = false;     // dragonhawk
++
++        //m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 47174);
++        //m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_INFO, 218172674);
++        m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE);
+     }
+ 
+     void Aggro(Unit* pWho)
+     {
+         DoScriptText(SAY_AGGRO, m_creature);
++
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_ZULJIN, IN_PROGRESS);
++
++        SpawnAdds();
++        EnterPhase(0);
+     }
+ 
+     void KilledUnit(Unit* pVictim)
+@@ -127,17 +251,387 @@ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
+             return;
+ 
+         m_pInstance->SetData(TYPE_ZULJIN, DONE);
++
++        DespawnSummons();
++
++        if(Unit *Temp = Unit::GetUnit(*m_creature, SpiritGUID[3]))
++            Temp->SetUInt32Value(UNIT_FIELD_BYTES_1,UNIT_STAND_STATE_DEAD);
++    }
++
++    void MoveInLineOfSight(Unit* pWho)
++    {
++        if (!m_bHasTaunted && m_creature->IsWithinDistInMap(pWho, 60.0f))
++        {
++            DoScriptText(SAY_INTRO, m_creature);
++            m_bHasTaunted = true;
++        }
++
++        ScriptedAI::MoveInLineOfSight(pWho);
++    }
++
++    void DoCastOverpower()
++    {
++        if( !m_creature->IsNonMeleeSpellCasted(false))
++        {
++            if(m_creature->isAttackReady() && m_creature->IsWithinDistInMap(m_creature->getVictim(), ATTACK_DISTANCE))
++            {
++                if(Phase == 1 && !Overpower_Timer)
++                {
++                    uint32 health = m_creature->getVictim()->GetHealth();
++                    m_creature->AttackerStateUpdate(m_creature->getVictim());
++                    if(m_creature->getVictim() && health == m_creature->getVictim()->GetHealth())
++                    {
++                        m_creature->CastSpell(m_creature->getVictim(), SPELL_OVERPOWER, false);
++                        Overpower_Timer = 5000;
++                    }
++                }else m_creature->AttackerStateUpdate(m_creature->getVictim());
++                m_creature->resetAttackTimer();
++            }
++        }
++    }
++
++    void SpawnAdds()
++    {
++        Creature *pCreature = NULL;
++        for(uint8 i = 0; i < 4; i++)
++        {
++            pCreature = m_creature->SummonCreature(SpiritInfo[i].entry, SpiritInfo[i].x, SpiritInfo[i].y, SpiritInfo[i].z, SpiritInfo[i].orient, TEMPSUMMON_DEAD_DESPAWN, 0);
++            if(pCreature)
++            {
++                pCreature->CastSpell(pCreature, SPELL_SPIRIT_AURA, true);
++                pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                SpiritGUID[i] = pCreature->GetGUID();
++            }
++        }
++    }
++
++    void DespawnSummons()
++    {
++        if (!m_lSummonsGUIDList.empty())
++        {
++            for(std::list<uint64>::iterator itr = m_lSummonsGUIDList.begin(); itr != m_lSummonsGUIDList.end(); ++itr)
++                if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
++                    pTemp->ForcedDespawn();
++        }
++    }
++
++    void EnterPhase(uint32 NextPhase)
++    {
++        switch(NextPhase)
++        {
++        case 0:
++            break;
++        case 1:
++        case 2:
++        case 3:
++        case 4:
++            //m_creature->Relocate(CENTER_X, CENTER_Y, CENTER_Z,0);
++            m_creature->GetMotionMaster()->MovePoint(0, CENTER_X, CENTER_Y, CENTER_Z);
++            //m_creature->SendMonsterMove(CENTER_X, CENTER_Y, CENTER_Z, SPLINETYPE_NORMAL,SPLINEFLAG_WALKMODE,100);
++            DoResetThreat();
++            //m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 0);
++            m_creature->RemoveAurasDueToSpell(Transform[Phase].unaura);
++            DoCast(m_creature, Transform[Phase].spell);
++            DoScriptText(Transform[Phase].sound, m_creature);
++            if(Phase > 0)
++            {
++                if(Unit *Temp = Unit::GetUnit(*m_creature, SpiritGUID[Phase - 1]))
++                    Temp->SetUInt32Value(UNIT_FIELD_BYTES_1, UNIT_STAND_STATE_DEAD);
++            }
++            if(Unit *Temp = Unit::GetUnit(*m_creature, SpiritGUID[NextPhase - 1]))
++                Temp->CastSpell(m_creature, SPELL_SIPHON_SOUL, false); // should m cast on temp
++            if(NextPhase == 2)
++            {
++                m_creature->GetMotionMaster()->Clear();
++                m_creature->CastSpell(m_creature, SPELL_ENERGY_STORM, true); // enemy aura
++                for(uint8 i = 0; i < 4; i++)
++                {
++                    Creature* Vortex = DoSpawnCreature(CREATURE_FEATHER_VORTEX, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
++                    if(Vortex)
++                    {
++                        Vortex->CastSpell(Vortex, SPELL_CYCLONE_PASSIVE, true);
++                        Vortex->CastSpell(Vortex, SPELL_CYCLONE_VISUAL, true);
++                        Vortex->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                        Vortex->SetSpeedRate(MOVE_RUN, 1.0f);
++                        Vortex->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
++                        Vortex->SetInCombatWithZone();
++                        m_lSummonsGUIDList.push_back(Vortex->GetGUID());
++                    }
++                }
++            }
++            else
++                m_creature->AI()->AttackStart(m_creature->getVictim());
++            if(NextPhase == 3)
++            {
++                m_creature->RemoveAurasDueToSpell(SPELL_ENERGY_STORM);
++                DespawnSummons();
++                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++            }
++            m_bHasTransformed = true;
++            m_uiTransformTimer = 3000;
++            break;
++        default:
++            break;
++        }
++        Phase = NextPhase;
+     }
+ 
+     void UpdateAI(const uint32 diff)
+     {
+-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++        if(!TankGUID)
++        {
++            if(!m_creature->SelectHostileTarget() && !m_creature->getVictim())
++                return;
++
++            //if(m_creature->GetHealth() < health_20 * (4 - Phase))
++               //EnterPhase(Phase + 1);
++
++            // bear
++            if(m_creature->GetHealthPercent() <= 80.0f && m_bPhase1)
++            {
++                m_bPhase1 = false;
++                m_bPhase2 = true;
++                EnterPhase(Phase + 1);
++            }
++            // eagle
++            if(m_creature->GetHealthPercent() <= 60.0f && m_bPhase2)
++            {
++                m_bPhase2 = false;
++                m_bPhase3 = true;
++                EnterPhase(Phase + 1);
++            }
++            // linx
++            if(m_creature->GetHealthPercent() <= 40.0f && m_bPhase3)
++            {
++                m_bPhase3 = false;
++                m_bPhase4 = true;
++                EnterPhase(Phase + 1);
++            }
++            // dragonhawk
++            if(m_creature->GetHealthPercent() <= 20.0f && m_bPhase4)
++            {
++                m_bPhase4 = false;
++                m_bPhase5 = true;
++                EnterPhase(Phase + 1);
++            }
++        }
++
++        if(Berserk_Timer < diff)
++        {
++            m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
++            DoScriptText(SAY_BERSERK, m_creature);
++            Berserk_Timer = 60000;
++        }else Berserk_Timer -= diff;
++
++        if(m_uiTransformTimer < diff && m_bHasTransformed && Phase != 2)
++        {
++            m_creature->GetMotionMaster()->Clear();
++            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++            DoStartMovement(m_creature->getVictim());
++            m_bHasTransformed = false;
++            m_uiTransformTimer = 3000;
++        }else m_uiTransformTimer -= diff;
++
++        switch (Phase)
++        {
++        case 0:
++            if(Whirlwind_Timer < diff)
++            {
++                DoCast(m_creature, SPELL_WHIRLWIND);
++                Whirlwind_Timer = 15000 + rand()%5000;
++            }else Whirlwind_Timer -= diff;
++
++            if(Grievous_Throw_Timer < diff)
++            {
++                if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                    m_creature->CastSpell(target, SPELL_GRIEVOUS_THROW, false);
++                Grievous_Throw_Timer = 10000;
++            }else Grievous_Throw_Timer -= diff;
++            break;
++
++        case 1:
++            if(Creeping_Paralysis_Timer < diff)
++            {
++                DoCast(m_creature, SPELL_CREEPING_PARALYSIS);
++                Creeping_Paralysis_Timer = 20000;
++            }else Creeping_Paralysis_Timer -= diff;
++
++            if(Overpower_Timer < diff)
++            {
++                DoCastOverpower();
++                Overpower_Timer = 0;
++            }else Overpower_Timer -= diff;
++            break;
++
++        case 2:
+             return;
+ 
+-        DoMeleeAttackIfReady();
++        case 3:
++            if(Claw_Rage_Timer <= diff)
++            {
++                if(!TankGUID)
++                {
++                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                    {
++                        TankGUID = m_creature->getVictim()->GetGUID();
++                        m_creature->SetSpeedRate(MOVE_RUN, 5.0f);
++                        AttackStart(target); // change victim
++                        Claw_Rage_Timer = 0;
++                        Claw_Loop_Timer = 500;
++                        Claw_Counter = 0;
++                    }
++                }
++                else if(!Claw_Rage_Timer) // do not do this when Lynx_Rush
++                {
++                    if(Claw_Loop_Timer < diff)
++                    {
++                        Unit* target = m_creature->getVictim();
++                        if(!target || !target->isTargetableForAttack()) target = Unit::GetUnit(*m_creature, TankGUID);
++                        if(!target || !target->isTargetableForAttack()) target = SelectUnit(SELECT_TARGET_RANDOM, 0);
++                        if(target)
++                        {
++                            AttackStart(target);
++                            if(m_creature->IsWithinDistInMap(target, ATTACK_DISTANCE))
++                            {
++                                m_creature->CastSpell(target, SPELL_CLAW_RAGE_DAMAGE, true);
++                                Claw_Counter++;
++                                if(Claw_Counter == 12)
++                                {
++                                    Claw_Rage_Timer = 15000 + rand()%5000;
++                                    m_creature->SetSpeedRate(MOVE_RUN, 1.2f);
++                                    AttackStart(Unit::GetUnit(*m_creature, TankGUID));
++                                    TankGUID = 0;
++                                    return;
++                                }
++                                else
++                                    Claw_Loop_Timer = 500;
++                            }
++                        }
++                        else 
++                            EnterEvadeMode(); // if(target)
++                    }
++                    else 
++                        Claw_Loop_Timer -= diff;
++                } //if(TankGUID)
++            }
++            else 
++                Claw_Rage_Timer -= diff;
++
++            if(Lynx_Rush_Timer <= diff)
++            {
++                if(!TankGUID)
++                {
++                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                    {
++                        TankGUID = m_creature->getVictim()->GetGUID();
++                        m_creature->SetSpeedRate(MOVE_RUN, 5.0f);
++                        AttackStart(target); // change victim
++                        Lynx_Rush_Timer = 0;
++                        Claw_Counter = 0;
++                    }
++                }
++                else if(!Lynx_Rush_Timer)
++                {
++                    Unit* target = m_creature->getVictim();
++                    if(!target || !target->isTargetableForAttack())
++                    {
++                        target = SelectUnit(SELECT_TARGET_RANDOM, 0);
++                        AttackStart(target);
++                    }
++                    if(target)
++                    {
++                        if(m_creature->IsWithinDistInMap(target, ATTACK_DISTANCE))
++                        {
++                            m_creature->CastSpell(target, SPELL_LYNX_RUSH_DAMAGE, true);
++                            Claw_Counter++;
++                            if(Claw_Counter == 9)
++                            {
++                                Lynx_Rush_Timer = 15000 + rand()%5000;
++                                m_creature->SetSpeedRate(MOVE_RUN, 1.2f);
++                                AttackStart(Unit::GetUnit(*m_creature, TankGUID));
++                                TankGUID = 0;
++                            }
++                            else
++                                AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
++                        }
++                    }
++                    else 
++                        EnterEvadeMode(); // if(target)
++                } //if(TankGUID)
++            }
++            else 
++                Lynx_Rush_Timer -= diff;
++
++            break;
++        case 4:
++            if(Flame_Whirl_Timer < diff)
++            {
++                DoCast(m_creature, SPELL_FLAME_WHIRL);
++                Flame_Whirl_Timer = 12000;
++            }Flame_Whirl_Timer -= diff;
++
++            if(Pillar_Of_Fire_Timer < diff)
++            {
++                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                {
++                    float x, y, z;
++                    target->GetPosition(x, y, z);
++                    Creature* Pillar = m_creature->SummonCreature(CREATURE_COLUMN_OF_FIRE, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
++                    if(Pillar)
++                    {
++                        Pillar->CastSpell(Pillar, SPELL_PILLAR_TRIGGER, true);
++                        Pillar->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                    }
++                }
++                Pillar_Of_Fire_Timer = 10000;
++            }else Pillar_Of_Fire_Timer -= diff;
++
++            if(Flame_Breath_Timer < diff)
++            {
++                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                    m_creature->CastSpell(m_creature, SPELL_FLAME_BREATH, false);
++                Flame_Breath_Timer = 10000;
++            }else Flame_Breath_Timer -= diff;
++            break;
++
++        default:
++            break;
++        }
++
++        if(!TankGUID)
++            DoMeleeAttackIfReady();
++    }
++
++};
++
++struct MANGOS_DLL_DECL feather_vortexAI : public ScriptedAI
++{
++    feather_vortexAI(Creature *c) : ScriptedAI(c) {}
++
++    void Reset() {}
++
++    void Aggro(Unit* target) {}
++
++    void SpellHit(Unit *caster, const SpellEntry *spell)
++    {
++        if(spell->Id == SPELL_ZAP_INFORM)
++            m_creature->CastSpell(caster, SPELL_ZAP_DAMAGE, true);           
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        //if the vortex reach the target, it change his target to another player
++        if( m_creature->IsWithinDistInMap(m_creature->getVictim(), ATTACK_DISTANCE))
++            AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+     }
+ };
+ 
++CreatureAI* GetAI_feather_vortexAI(Creature *_Creature)
++{
++    return new feather_vortexAI (_Creature);
++}
++
+ CreatureAI* GetAI_boss_zuljin(Creature* pCreature)
+ {
+     return new boss_zuljinAI(pCreature);
+@@ -150,4 +644,9 @@ void AddSC_boss_zuljin()
+     newscript->Name = "boss_zuljin";
+     newscript->GetAI = &GetAI_boss_zuljin;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name="mob_zuljin_vortex";
++    newscript->GetAI = GetAI_feather_vortexAI;
++    newscript->RegisterSelf();
+ }
+diff --git a/scripts/eastern_kingdoms/zulaman/instance_zulaman.cpp b/scripts/eastern_kingdoms/zulaman/instance_zulaman.cpp
+index f7bbf03..904c51e 100644
+--- a/scripts/eastern_kingdoms/zulaman/instance_zulaman.cpp
++++ b/scripts/eastern_kingdoms/zulaman/instance_zulaman.cpp
+@@ -49,6 +49,15 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
+     uint64 m_uiStrangeGongGUID;
+     uint64 m_uiMassiveGateGUID;
+     uint64 m_uiMalacrassEntranceGUID;
++    uint64 m_uiHalazziExitGUID;
++    uint64 m_uiHalazziEnterGUID;
++    uint64 m_uiFireDoorGUID;
++    uint64 m_uiWindDoorGUID;
++
++    uint64 m_uiHarkorChestGUID;
++    uint64 m_uiTanzarChestGUID;
++    uint64 m_uiKrasChestGUID;
++    uint64 m_uiAshliChestGUID;
+ 
+     std::list<uint64> m_lEggsGUIDList;
+     uint32 m_uiEggsRemainingCount_Left;
+@@ -76,6 +85,15 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
+         m_uiStrangeGongGUID = 0;
+         m_uiMassiveGateGUID = 0;
+         m_uiMalacrassEntranceGUID = 0;
++        m_uiHalazziExitGUID     = 0;
++        m_uiHalazziEnterGUID    = 0;
++        m_uiFireDoorGUID        = 0;
++        m_uiWindDoorGUID        = 0;
++
++        m_uiHarkorChestGUID     = 0;
++        m_uiTanzarChestGUID     = 0;
++        m_uiKrasChestGUID       = 0;
++        m_uiAshliChestGUID      = 0;
+ 
+         m_lEggsGUIDList.clear();
+         m_uiEggsRemainingCount_Left = 20;
+@@ -108,17 +126,67 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
+             case 187359:
+                 m_uiStrangeGongGUID = pGo->GetGUID();
+                 break;
+-            case 186728:
++            case GO_MASSIVE_GATE:
+                 m_uiMassiveGateGUID = pGo->GetGUID();
+                 if (m_auiEncounter[0] == IN_PROGRESS || m_auiEncounter[0] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 186305:
++            case GO_DOOR_HEXLORD:
+                 m_uiMalacrassEntranceGUID = pGo->GetGUID();
++                pGo->SetGoState(GO_STATE_READY);
++                if(m_auiEncounter[6] == DONE)
++                    pGo->SetGoState(GO_STATE_ACTIVE);
++                break;
++            case GO_DOOR_LINX_ENTER: 
++                m_uiHalazziEnterGUID = pGo->GetGUID();
++                break;
++            case GO_DOOR_LINX_EXIT:
++                m_uiHalazziExitGUID = pGo->GetGUID();
++                pGo->SetGoState(GO_STATE_READY);
++                if(m_auiEncounter[4] == DONE)
++                    pGo->SetGoState(GO_STATE_ACTIVE);
++                break;
++            case GO_DOOR_WIND:
++                m_uiWindDoorGUID = pGo->GetGUID();
++                break;
++            case GO_DOOR_FIRE:
++                m_uiFireDoorGUID = pGo->GetGUID();
++                break;
++            case GO_TANZARS_TRUNK: 
++                m_uiTanzarChestGUID = pGo->GetGUID();
++                break;
++            case GO_HARKORS_SATCHEL:
++                m_uiHarkorChestGUID = pGo->GetGUID();
++                break;
++            case GO_KRAZS_PACKAGE:
++                m_uiKrasChestGUID = pGo->GetGUID();
++                break;
++            case GO_ASHLIS_BAG:
++                m_uiAshliChestGUID = pGo->GetGUID();
+                 break;
+         }
+     }
+ 
++    void CheckHexlordDoor()
++    {
++        if(m_auiEncounter[1] == DONE && m_auiEncounter[2] == DONE && m_auiEncounter[3] == DONE && m_auiEncounter[4] == DONE)
++            DoUseDoorOrButton(m_uiMalacrassEntranceGUID);
++    }
++
++    void OpenDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
++    }
++
++    void CloseDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_READY);
++    }
++
+     void SetData(uint32 uiType, uint32 uiData)
+     {
+         debug_log("SD2: Instance Zulaman: SetData received for type %u with data %u",uiType,uiData);
+@@ -148,7 +216,15 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
+                         m_uiEventMinuteStep += MINUTE/6;    //add 10 minutes
+                         DoUpdateWorldState(WORLD_STATE_COUNTER,m_uiEventMinuteStep);
+                     }
++                    CheckHexlordDoor();
++                    OpenDoor(m_uiWindDoorGUID);
++                    if(m_auiEncounter[0] != FAIL)
++                        DoRespawnGameObject(m_uiHarkorChestGUID, 30*MINUTE);
+                 }
++                if(uiData == NOT_STARTED)
++                    OpenDoor(m_uiWindDoorGUID);
++                if(uiData == IN_PROGRESS)
++                    CloseDoor(m_uiWindDoorGUID);
+                 m_auiEncounter[1] = uiData;
+                 break;
+             case TYPE_NALORAKK:
+@@ -159,6 +235,9 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
+                         m_uiEventMinuteStep += MINUTE/4;    //add 15 minutes
+                         DoUpdateWorldState(WORLD_STATE_COUNTER,m_uiEventMinuteStep);
+                     }
++                    CheckHexlordDoor();
++                    if(m_auiEncounter[0] != FAIL)
++                        DoRespawnGameObject(m_uiTanzarChestGUID, 30*MINUTE);
+                 }
+                 m_auiEncounter[2] = uiData;
+                 break;
+@@ -181,18 +260,38 @@ struct MANGOS_DLL_DECL instance_zulaman : public ScriptedInstance
+                     }
+                 }
+                 if (uiData == DONE)
++                {
+                     m_lEggsGUIDList.clear();
++                    CheckHexlordDoor();
++                    if(m_auiEncounter[0] != FAIL)
++                        DoRespawnGameObject(m_uiKrasChestGUID, 30*MINUTE);
++                }
+ 
+                 m_auiEncounter[3] = uiData;
+                 break;
+             case TYPE_HALAZZI:
++                if(uiData == DONE)
++                {
++                    DoUseDoorOrButton(m_uiHalazziExitGUID);
++                    CheckHexlordDoor();
++                    if(m_auiEncounter[0] != FAIL)
++                        DoRespawnGameObject(m_uiAshliChestGUID, 30*MINUTE);
++                }
+                 m_auiEncounter[4] = uiData;
+                 break;
+             case TYPE_ZULJIN:
+                 m_auiEncounter[5] = uiData;
++                if(uiData == NOT_STARTED || uiData == DONE)
++                    OpenDoor(m_uiFireDoorGUID);
++                if(uiData == IN_PROGRESS)
++                    CloseDoor(m_uiFireDoorGUID);
+                 break;
+             case TYPE_MALACRASS:
+                 m_auiEncounter[6] = uiData;
++                if(uiData == IN_PROGRESS)
++                    CloseDoor(m_uiHalazziEnterGUID);        // this must be changed
++                if(uiData == DONE)
++                    OpenDoor(m_uiHalazziEnterGUID);        // this must be changed 
+                 break;
+ 
+             case DATA_J_EGGS_RIGHT:
+diff --git a/scripts/eastern_kingdoms/zulaman/zulaman.h b/scripts/eastern_kingdoms/zulaman/zulaman.h
+index cc85875..940c2c7 100644
+--- a/scripts/eastern_kingdoms/zulaman/zulaman.h
++++ b/scripts/eastern_kingdoms/zulaman/zulaman.h
+@@ -53,6 +53,18 @@ enum InstanceZA
+     DATA_GO_MALACRASS_GATE  = 22,
+     DATA_GO_ENTRANCE        = 23,
+ 
++    GO_TANZARS_TRUNK        = 186648,       // bear
++    GO_ASHLIS_BAG           = 186672,       // linx
++    GO_KRAZS_PACKAGE        = 186667,       // dragonhawk
++    GO_HARKORS_SATCHEL      = 187021,       // eagle
++
++    GO_DOOR_HEXLORD         = 186305,       // hexlord entrance
++    GO_DOOR_WIND            = 186858,       // eagle encounter door
++    GO_DOOR_FIRE            = 186859,       // zuljin encounter door
++    GO_DOOR_LINX_ENTER      = 186304,       // halazi enter -> not used wrong location in db
++    GO_DOOR_LINX_EXIT       = 186303,       // halazi exit
++    GO_MASSIVE_GATE         = 186728,       // instance entrance
++
+     NPC_EGG                 = 23817,
+     NPC_SPIRIT_LYNX         = 24143
+ };
+diff --git a/sql/Custom_Updates/Mangos/EasternKingdoms/ZulAman_Mangos.sql b/sql/Custom_Updates/Mangos/EasternKingdoms/ZulAman_Mangos.sql
+new file mode 100644
+index 0000000..1cebbc1
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/EasternKingdoms/ZulAman_Mangos.sql
+@@ -0,0 +1,10 @@
++/* ZUL'AMAN */
++UPDATE `gameobject_template` SET `faction` = 114 WHERE `entry` in (186728, 186304, 186303, 186305, 186858, 186859);
++-- original flags = 2
++update gameobject_template set faction = 0, flags = 0, data15 = 1 where entry in (186648, 187021, 186667, 186672);
++Update `gameobject` set `spawntimesecs` = -604800 where `id` in (186648, 187021, 186667, 186672);
++update gameobject set position_y = 1411.92 where id = 187021;
++update gameobject set position_x = -78.0 where id = 186667;
++update gameobject set position_x = 377.89 where id = 186672;
++update gameobject set position_x = -142.91, position_y = 1332.07, position_z = 48.17 where id = 186648;
++UPDATE `creature_template` SET `ScriptName` = 'mob_zuljin_vortex' WHERE `entry` = 24136;

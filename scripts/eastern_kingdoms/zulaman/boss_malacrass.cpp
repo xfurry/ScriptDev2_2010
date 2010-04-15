@@ -97,6 +97,8 @@ enum
     SPELL_WR_WHIRLWIND          = 43442,
     SPELL_WR_SPELL_REFLECT      = 43443,
 
+    MOB_TEMP_TRIGGER            = 23920,
+
     //misc
     //WEAPON_ID                   = 33494,                    //weapon equip id, must be set by database.
     MAX_ACTIVE_ADDS             = 4
@@ -123,6 +125,67 @@ SpawnGroup m_auiSpawnEntry[] =
     {24246, 24247},                                         //Darkheart / Koragg
 };
 
+enum AbilityTarget
+{
+    ABILITY_TARGET_SELF = 0,
+    ABILITY_TARGET_VICTIM = 1,
+    ABILITY_TARGET_ENEMY = 2,
+    ABILITY_TARGET_HEAL = 3,
+    ABILITY_TARGET_BUFF = 4,
+    ABILITY_TARGET_SPECIAL = 5
+};
+
+struct PlayerAbilityStruct
+{
+    uint32 spell;
+    AbilityTarget target;
+    uint32 cooldown;
+};
+
+static PlayerAbilityStruct PlayerAbility[][3] =
+{
+    // 1 warrior
+    {{SPELL_WR_SPELL_REFLECT, ABILITY_TARGET_SELF, 10000},
+    {SPELL_WR_WHIRLWIND, ABILITY_TARGET_SELF, 10000},
+    {SPELL_WR_MORTAL_STRIKE, ABILITY_TARGET_VICTIM, 6000}},
+    // 2 paladin
+    {{SPELL_PA_CONSECRATION, ABILITY_TARGET_SELF, 10000},
+    {SPELL_PA_HOLY_LIGHT, ABILITY_TARGET_HEAL, 10000},
+    {SPELL_PA_AVENGING_WRATH, ABILITY_TARGET_SELF, 10000}},
+    // 3 hunter
+    {{SPELL_HU_EXPLOSIVE_TRAP, ABILITY_TARGET_SELF, 10000},
+    {SPELL_HU_FREEZING_TRAP, ABILITY_TARGET_SELF, 10000},
+    {SPELL_HU_SNAKE_TRAP, ABILITY_TARGET_SELF, 10000}},
+    // 4 rogue
+    {{SPELL_RO_WOUND_POISON, ABILITY_TARGET_VICTIM, 3000},
+    {SPELL_RO_SLICE_DICE, ABILITY_TARGET_SELF, 10000},
+    {SPELL_RO_BLIND, ABILITY_TARGET_ENEMY, 10000}},
+    // 5 priest
+    {{SPELL_PR_PAIN_SUPP, ABILITY_TARGET_HEAL, 10000},
+    {SPELL_PR_HEAL, ABILITY_TARGET_HEAL, 10000},
+    {SPELL_PR_PSYCHIC_SCREAM, ABILITY_TARGET_SELF, 10000}},
+    // 5* shadow priest
+    {{SPELL_PR_MIND_CONTROL, ABILITY_TARGET_ENEMY, 15000},
+    {SPELL_PR_MIND_BLAST, ABILITY_TARGET_ENEMY, 5000},
+    {SPELL_PR_SW_DEATH, ABILITY_TARGET_ENEMY, 10000}},
+    // 7 shaman
+    {{SPELL_SH_FIRE_NOVA, ABILITY_TARGET_SELF, 10000},
+    {SPELL_SH_HEALING_WAVE, ABILITY_TARGET_HEAL, 10000},
+    {SPELL_SH_CHAIN_LIGHT, ABILITY_TARGET_ENEMY, 8000}},
+    // 8 mage
+    {{SPELL_MG_FIREBALL, ABILITY_TARGET_ENEMY, 5000},
+    {SPELL_MG_FROSTBOLT, ABILITY_TARGET_ENEMY, 5000},
+    {SPELL_MG_ICE_LANCE, ABILITY_TARGET_SPECIAL, 2000}},
+    // 9 warlock
+    {{SPELL_WL_CURSE_OF_DOOM, ABILITY_TARGET_ENEMY, 10000},
+    {SPELL_WL_RAIN_OF_FIRE, ABILITY_TARGET_ENEMY, 10000},
+    {SPELL_WL_UNSTABLE_AFFL, ABILITY_TARGET_ENEMY, 10000}},
+    // 11 druid
+    {{SPELL_DR_LIFEBLOOM, ABILITY_TARGET_HEAL, 10000},
+    {SPELL_DR_THORNS, ABILITY_TARGET_SELF, 10000},
+    {SPELL_DR_MOONFIRE, ABILITY_TARGET_ENEMY, 8000}}
+};
+
 struct MANGOS_DLL_DECL boss_malacrassAI : public ScriptedAI
 {
     boss_malacrassAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -135,12 +198,29 @@ struct MANGOS_DLL_DECL boss_malacrassAI : public ScriptedAI
 
     ScriptedInstance* m_pInstance;
 
+    uint32 SpiritBolts_Timer;
+    uint32 DrainPower_Timer;
+    uint32 SiphonSoul_Timer;
+    uint32 PlayerAbility_Timer;
+    uint32 CheckAddState_Timer;
+
+    uint32 PlayerClass;
+    uint64 PlayerGUID;
+
+    Unit* SoulDrainTarget;
+
     std::list<uint32> m_lAddsEntryList;
     uint64 m_auiAddGUIDs[MAX_ACTIVE_ADDS];
 
     void Reset()
     {
         InitializeAdds();
+
+        SpiritBolts_Timer = 20000;
+        DrainPower_Timer = 60000;
+        SiphonSoul_Timer = 100000;
+        PlayerAbility_Timer = 99999;
+        CheckAddState_Timer = 5000;
 
         if (!m_pInstance)
             return;
@@ -265,7 +345,92 @@ struct MANGOS_DLL_DECL boss_malacrassAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
+        if(DrainPower_Timer < uiDiff)
+        {
+            m_creature->CastSpell(m_creature, SPELL_DRAIN_POWER, true);
+            DoScriptText(SAY_DRAIN_POWER, m_creature);
+            DrainPower_Timer = 40000 + rand()%15000;    // must cast in 60 sec, or buff/debuff will disappear
+        }else DrainPower_Timer -= uiDiff;
+
+        if(SpiritBolts_Timer < uiDiff)
+        {
+            if(DrainPower_Timer < 12000)    // channel 10 sec
+                SpiritBolts_Timer = 13000;  // cast drain power first
+            else
+            {
+                m_creature->CastSpell(m_creature, SPELL_SPIRIT_BOLTS, false);
+                DoScriptText(SAY_SPIRIT_BOLTS, m_creature);
+                SpiritBolts_Timer = 40000;
+                SiphonSoul_Timer = 10000;  // ready to drain
+                PlayerAbility_Timer = 99999;
+            }
+        }else SpiritBolts_Timer -= uiDiff;
+
+        if(SiphonSoul_Timer < uiDiff)
+        {
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+            Unit *trigger = DoSpawnCreature(MOB_TEMP_TRIGGER, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
+            if(!target || !trigger) EnterEvadeMode();
+            else
+            {
+                trigger->SetUInt32Value(UNIT_FIELD_DISPLAYID, 11686);
+                trigger->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                trigger->CastSpell(target, SPELL_SIPHON_SOUL, true);
+                trigger->GetMotionMaster()->MoveChase(m_creature);
+
+                //m_creature->CastSpell(target, SPELL_SIPHON_SOUL, true);
+                //m_creature->SetUInt64Value(UNIT_FIELD_CHANNEL_OBJECT, target->GetGUID());
+                //m_creature->SetUInt32Value(UNIT_CHANNEL_SPELL, SPELL_SIPHON_SOUL);
+
+                PlayerGUID = target->GetGUID();
+                PlayerAbility_Timer = 8000 + rand()%2000;
+                PlayerClass = target->getClass() - 1;
+                if(PlayerClass == 10) PlayerClass = 9; // druid
+                if(PlayerClass == 4 && target->HasSpell(15473)) PlayerClass = 5; // shadow priest
+                SiphonSoul_Timer = 99999;   // buff lasts 30 sec
+            }
+        }else SiphonSoul_Timer -= uiDiff;
+
+        if(PlayerAbility_Timer < uiDiff)
+        {
+            //Unit* target = Unit::GetUnit(*m_creature, PlayerGUID);
+            //if(target && target->isAlive())
+            {
+                UseAbility();
+                PlayerAbility_Timer = 8000 + rand()%2000;
+            }
+        }else PlayerAbility_Timer -= uiDiff;
+
         DoMeleeAttackIfReady();
+    }
+
+    void UseAbility()
+    {
+        uint32 random = rand()%3;
+        Unit *target = NULL;
+        switch(PlayerAbility[PlayerClass][random].target)
+        {
+        case ABILITY_TARGET_SELF:
+            target = m_creature;
+            break;
+        case ABILITY_TARGET_VICTIM:
+            target = m_creature->getVictim();
+            break;
+        case ABILITY_TARGET_ENEMY:
+        default:
+            target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+            break;
+        case ABILITY_TARGET_HEAL:
+            target = DoSelectLowestHpFriendly(50, 0);
+            break;
+        case ABILITY_TARGET_BUFF:
+            {
+                std::list<Creature*> templist = DoFindFriendlyMissingBuff(50, PlayerAbility[PlayerClass][random].spell);
+                if(!templist.empty()) target = *(templist.begin());
+            }
+            break;
+        }
+        m_creature->CastSpell(target, PlayerAbility[PlayerClass][random].spell, false);
     }
 };
 
