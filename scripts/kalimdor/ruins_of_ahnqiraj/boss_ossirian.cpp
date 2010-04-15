@@ -22,7 +22,6 @@ SDCategory: Ruins of Ahn'Qiraj
 EndScriptData */
 
 #include "precompiled.h"
-#include "world.h"
 #include "Weather.h"
 
 enum

@@ -271,10 +271,10 @@ struct MANGOS_DLL_DECL boss_rajaxxAI : public ScriptedAI
         m_uiWave_Timer = 1000;
 
         //for despawning current army
-        uint32 CreatureDespawnEntries[]=
-        {{NPC_SWARMGUARD_NEEDLER},{NPC_QIRAJI_WARRIOR},{NPC_CAPTAIN_QEEZ},{NPC_CAPTAIN_TUUBID},{NPC_CAPTAIN_DRENN},{NPC_CAPTAIN_XURREM},{NPC_MAJOR_YEGGETH},{NPC_MAJOR_PAKKON},{NPC_COLONEL_ZERRAN},{NPC_KALDOREI_ELITE},{NPC_GENERAL_ANDOROV}};
+        //uint32 CreatureDespawnEntries[]=
+        //{{NPC_SWARMGUARD_NEEDLER},{NPC_QIRAJI_WARRIOR},{NPC_CAPTAIN_QEEZ},{NPC_CAPTAIN_TUUBID},{NPC_CAPTAIN_DRENN},{NPC_CAPTAIN_XURREM},{NPC_MAJOR_YEGGETH},{NPC_MAJOR_PAKKON},{NPC_COLONEL_ZERRAN},{NPC_KALDOREI_ELITE},{NPC_GENERAL_ANDOROV}};
 
-        for (uint8 i=0; i < 11; ++i)
+        /*for (uint8 i=0; i < 11; ++i)
         {
             std::list<Creature*> m_lCreatures;
             GetCreatureListWithEntryInGrid(m_lCreatures,m_creature,CreatureDespawnEntries[i],MAX_VISIBILITY_DISTANCE);
@@ -282,7 +282,7 @@ struct MANGOS_DLL_DECL boss_rajaxxAI : public ScriptedAI
                 for(std::list<Creature*>::iterator iter = m_lCreatures.begin(); iter != m_lCreatures.end(); ++iter)
                     if ((*iter) && (*iter)->isAlive())
                         (*iter)->setDeathState(JUST_DIED);
-        }
+        }*/
 
         // Summon them again
         Creature* pAndorov = m_creature->SummonCreature(NPC_GENERAL_ANDOROV,NPCs[4].x,NPCs[4].y,NPCs[4].z,NPCs[4].an,TEMPSUMMON_CORPSE_DESPAWN,0);
