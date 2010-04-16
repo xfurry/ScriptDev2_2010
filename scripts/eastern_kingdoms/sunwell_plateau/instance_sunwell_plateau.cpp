@@ -5,7 +5,7 @@
 /* ScriptData
 SDName: Instance_Sunwell_Plateau
 SD%Complete: 70%
-SDComment:
+SDComment:z
 SDCategory: Sunwell_Plateau
 EndScriptData */
 
@@ -27,6 +27,8 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
 
     uint32 m_auiEncounter[MAX_ENCOUNTER];
     std::string strInstData;
+
+    uint32 m_auiDeciverEncounter;
 
     // Creatures
     uint64 m_uiKalecgos_DragonGUID;
@@ -61,6 +63,8 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+
+        m_auiDeciverEncounter           = 0;
 
         // Creatures
         m_uiKalecgos_DragonGUID         = 0;
@@ -105,18 +109,18 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
     {
         switch(pCreature->GetEntry())
         {
-            case 24850: m_uiKalecgos_DragonGUID     = pCreature->GetGUID(); break;
-            case 24891: m_uiKalecgos_HumanGUID      = pCreature->GetGUID(); break;
-            case 24892: m_uiSathrovarrGUID          = pCreature->GetGUID(); break;
-            case 24882: m_uiBrutallusGUID           = pCreature->GetGUID(); break;
-            case 25038: m_uiFelmystGUID             = pCreature->GetGUID(); break;
-            case 25166: m_uiAlythessGUID            = pCreature->GetGUID(); break;
-            case 25165: m_uiSacrolashGUID           = pCreature->GetGUID(); break;
-            case 25741: m_uiMuruGUID                = pCreature->GetGUID(); break;
-            case 25315: m_uiKilJaedenGUID           = pCreature->GetGUID(); break;
-            case 25608: m_uiKilJaedenControllerGUID = pCreature->GetGUID(); break;
-            case 26046: m_uiAnveenaGUID             = pCreature->GetGUID(); break;
-            case 25319: m_uiKalecgosGUID            = pCreature->GetGUID(); break;
+            case NPC_KALECGNOS_DRAGON:      m_uiKalecgos_DragonGUID     = pCreature->GetGUID(); break;
+            case NPC_KALECGNOS_HUMAN:       m_uiKalecgos_HumanGUID      = pCreature->GetGUID(); break;
+            case NPC_SATHROVARR:            m_uiSathrovarrGUID          = pCreature->GetGUID(); break;
+            case NPC_BRUTALLUS:             m_uiBrutallusGUID           = pCreature->GetGUID(); break;
+            case NPC_FELMYST:               m_uiFelmystGUID             = pCreature->GetGUID(); break;
+            case NPC_ALYTHESS:              m_uiAlythessGUID            = pCreature->GetGUID(); break;
+            case NPC_SACROLASH:             m_uiSacrolashGUID           = pCreature->GetGUID(); break;
+            case NPC_MURU:                  m_uiMuruGUID                = pCreature->GetGUID(); break;
+            case NPC_KILJAEDEN:             m_uiKilJaedenGUID           = pCreature->GetGUID(); break;
+            case NPC_KILJAEDEN_CONTROLLER:  m_uiKilJaedenControllerGUID = pCreature->GetGUID(); break;
+            case NPC_ANVEENA:               m_uiAnveenaGUID             = pCreature->GetGUID(); break;
+            case NPC_KALECGNOS:             m_uiKalecgosGUID            = pCreature->GetGUID(); break;
         }
     }
 
@@ -124,7 +128,7 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
     {
         switch(pGo->GetEntry())
         {
-            case 188421:
+            case G0_FORCE_FIELD:
                 m_uiForceFieldGUID = pGo->GetGUID();
                 break;
             case 188523:
@@ -136,35 +140,52 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
             case 188119:
                 m_uiIceBarrierGUID = pGo->GetGUID();
                 break;
-            case 188075:
+            case GO_FIRE_BARRIER:
                 m_uiDoorFireBarrierGUID = pGo->GetGUID();
-                if (m_auiEncounter[0] == DONE && m_auiEncounter[1] == DONE && m_auiEncounter[2] == DONE)
+                if (/*m_auiEncounter[0] == DONE && m_auiEncounter[1] == DONE &&*/ m_auiEncounter[2] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 187766:
+            case GO_FIRST_GATE:
                 m_uiDoorTheFirstGateGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 187764:
+            case GO_SECOND_GATE:
                 m_uiDoorTheSecondGateGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_READY);
                 if (m_auiEncounter[3] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 187990:
+            case GO_GATE_7:
                 m_uiDoorRaid_Gate_07GUID = pGo->GetGUID();
-                if (m_auiEncounter[3] == DONE)
-                    pGo->SetGoState(GO_STATE_ACTIVE);
+                pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 188118:
+            case GO_MURU_GATE:
                 m_uiDoorRaid_Gate_08GUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_READY);
                 if (m_auiEncounter[4] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
-            case 187765:
+            case GO_THIRD_GATE:
                 m_uiDoorTheThirdGateGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_READY);
                 if (m_auiEncounter[4] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
         }
+    }
+
+    void OpenDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
+    }
+
+    void CloseDoor(uint64 guid)
+    {
+        if(!guid) return;
+        GameObject* pGo = instance->GetGameObject(guid);
+        if(pGo) pGo->SetGoState(GO_STATE_READY);
     }
 
     uint32 GetData(uint32 uiType)
@@ -177,6 +198,7 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
             case TYPE_EREDAR_TWINS: return m_auiEncounter[3];
             case TYPE_MURU:         return m_auiEncounter[4];
             case TYPE_KILJAEDEN:    return m_auiEncounter[5];
+            case TYPE_DECIVER:      return m_auiDeciverEncounter;
         }
 
         return 0;
@@ -218,9 +240,6 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
                 m_auiEncounter[0] = uiData;
                 break;
             case TYPE_BRUTALLUS:
-                if (uiData == SPECIAL)
-                    DoUseDoorOrButton(m_uiIceBarrierGUID,MINUTE);
-
                 m_auiEncounter[1] = uiData;
                 break;
             case TYPE_FELMYST:
@@ -233,16 +252,30 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
                 if (uiData == DONE)
                 {
                     DoUseDoorOrButton(m_uiDoorTheSecondGateGUID);
-                    DoUseDoorOrButton(m_uiDoorRaid_Gate_07GUID);
+                    //DoUseDoorOrButton(m_uiDoorRaid_Gate_07GUID);
                 }
                 break;
             case TYPE_MURU:
                 m_auiEncounter[4] = uiData;
                 if (uiData == DONE)
+                {
                     DoUseDoorOrButton(m_uiDoorRaid_Gate_08GUID);
+                    DoUseDoorOrButton(m_uiDoorTheThirdGateGUID);
+                }
+                if(uiData == IN_PROGRESS)
+                    CloseDoor(m_uiDoorRaid_Gate_07GUID);
+                else
+                    OpenDoor(m_uiDoorRaid_Gate_07GUID);
                 break;
-            case TYPE_KILJAEDEN: m_auiEncounter[5] = uiData; break;
-            case DATA_SET_SPECTRAL_CHECK:  m_uiSpectralRealmTimer = uiData; break;
+            case TYPE_KILJAEDEN: 
+                m_auiEncounter[5] = uiData; 
+                break;
+            case DATA_SET_SPECTRAL_CHECK:  
+                m_uiSpectralRealmTimer = uiData; 
+                break;
+            case TYPE_DECIVER:
+                m_auiDeciverEncounter = uiData;
+                break;
         }
 
         if (uiData == DONE)

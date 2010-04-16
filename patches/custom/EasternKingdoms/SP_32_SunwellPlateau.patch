@@ -1,0 +1,4322 @@
+diff --git a/Makefile.am b/Makefile.am
+index 610ed1b..181372d 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -197,6 +197,10 @@ scripts/eastern_kingdoms/sunken_temple/instance_sunken_temple.cpp \
+ scripts/eastern_kingdoms/sunken_temple/sunken_temple.h \
+ scripts/eastern_kingdoms/sunken_temple/sunken_temple.cpp \
+ scripts/eastern_kingdoms/sunwell_plateau/boss_brutallus.cpp \
++scripts/eastern_kingdoms/sunwell_plateau/boss_eredar_twins.cpp \
++scripts/eastern_kingdoms/sunwell_plateau/boss_felmyst.cpp \
++scripts/eastern_kingdoms/sunwell_plateau/boss_kiljaeden.cpp \
++scripts/eastern_kingdoms/sunwell_plateau/boss_muru_entropius.cpp \
+ scripts/eastern_kingdoms/sunwell_plateau/boss_kalecgos.cpp \
+ scripts/eastern_kingdoms/sunwell_plateau/instance_sunwell_plateau.cpp \
+ scripts/eastern_kingdoms/sunwell_plateau/sunwell_plateau.h \
+diff --git a/VC90/90ScriptDev2.vcproj b/VC90/90ScriptDev2.vcproj
+index 3946c62..f11bc1b 100644
+--- a/VC90/90ScriptDev2.vcproj
++++ b/VC90/90ScriptDev2.vcproj
+@@ -1071,10 +1071,26 @@
+ 						>
+ 					</File>
+ 					<File
++						RelativePath="..\scripts\eastern_kingdoms\sunwell_plateau\boss_eredar_twins.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\eastern_kingdoms\sunwell_plateau\boss_felmyst.cpp"
++						>
++					</File>
++					<File
+ 						RelativePath="..\scripts\eastern_kingdoms\sunwell_plateau\boss_kalecgos.cpp"
+ 						>
+ 					</File>
+ 					<File
++						RelativePath="..\scripts\eastern_kingdoms\sunwell_plateau\boss_kiljaeden.cpp"
++						>
++					</File>
++					<File
++						RelativePath="..\scripts\eastern_kingdoms\sunwell_plateau\boss_muru_entropius.cpp"
++						>
++					</File>
++					<File
+ 						RelativePath="..\scripts\eastern_kingdoms\sunwell_plateau\instance_sunwell_plateau.cpp"
+ 						>
+ 					</File>
+diff --git a/scripts/eastern_kingdoms/sunwell_plateau/boss_brutallus.cpp b/scripts/eastern_kingdoms/sunwell_plateau/boss_brutallus.cpp
+index bb48167..de403c2 100644
+--- a/scripts/eastern_kingdoms/sunwell_plateau/boss_brutallus.cpp
++++ b/scripts/eastern_kingdoms/sunwell_plateau/boss_brutallus.cpp
+@@ -16,8 +16,8 @@
+ 
+ /* ScriptData
+ SDName: Boss_Brutallus
+-SD%Complete: 50
+-SDComment: Intro not made. Script for Madrigosa to be added here.
++SD%Complete: 
++SDComment: 
+ SDCategory: Sunwell Plateau
+ EndScriptData */
+ 
+@@ -52,7 +52,13 @@ enum Brutallus
+     SPELL_BURN                      = 45141,
+     SPELL_BURN_AURA_EFFECT          = 46394,
+     SPELL_STOMP                     = 45185,
+-    SPELL_BERSERK                   = 26662
++    SPELL_BERSERK                   = 26662,
++
++    //Madrigosa
++    SPELL_ICE_BARRIER               = 45203,
++    SPELL_FROZEN_PRISON             = 47854,
++
++    CREATURE_MADRIGOSA              = 25160,
+ };
+ 
+ struct MANGOS_DLL_DECL boss_brutallusAI : public ScriptedAI
+@@ -70,6 +76,13 @@ struct MANGOS_DLL_DECL boss_brutallusAI : public ScriptedAI
+     uint32 m_uiStompTimer;
+     uint32 m_uiBerserkTimer;
+     uint32 m_uiLoveTimer;
++    uint32 m_uiBurnCheckTimer;
++    uint32 m_uiIntroCount;
++    uint32 m_uiIntroTimer;
++    bool m_bIsIntroNow;
++    bool m_bHasTaunted;
++
++    uint64 m_uiMadrigosaGuid;
+ 
+     void Reset()
+     {
+@@ -79,9 +92,17 @@ struct MANGOS_DLL_DECL boss_brutallusAI : public ScriptedAI
+         m_uiBerserkTimer = 360000;
+         m_uiLoveTimer = urand(10000, 17000);
+ 
+-        //TODO: correct me when pre-event implemented
++        m_uiIntroTimer = 5000;
++        m_bIsIntroNow = false;
++        m_uiIntroCount = 0;
++
++        m_uiMadrigosaGuid = 0;
++        m_bHasTaunted = false;
++
+         if (m_pInstance)
+             m_pInstance->SetData(TYPE_BRUTALLUS, NOT_STARTED);
++
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+     }
+ 
+     void Aggro(Unit* pWho)
+@@ -92,6 +113,21 @@ struct MANGOS_DLL_DECL boss_brutallusAI : public ScriptedAI
+             m_pInstance->SetData(TYPE_BRUTALLUS, IN_PROGRESS);
+     }
+ 
++    void MoveInLineOfSight(Unit* pWho)
++    {
++        if (!m_bHasTaunted && m_creature->IsWithinDistInMap(pWho, 60.0f))
++        {
++            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++            if(Creature* Madrigosa = m_creature->SummonCreature(CREATURE_MADRIGOSA, 1465.831f, 647.065f, m_creature->GetPositionZ(), 4.729f, TEMPSUMMON_TIMED_DESPAWN, 42000))
++                m_uiMadrigosaGuid = Madrigosa->GetGUID();
++            m_bHasTaunted = true;
++            m_bIsIntroNow = true;
++            m_uiIntroTimer = 5000;
++        }
++
++        ScriptedAI::MoveInLineOfSight(pWho);
++    }
++
+     void KilledUnit(Unit* pVictim)
+     {
+         switch(urand(0, 2))
+@@ -118,6 +154,71 @@ struct MANGOS_DLL_DECL boss_brutallusAI : public ScriptedAI
+ 
+     void UpdateAI(const uint32 uiDiff)
+     {
++        if(m_uiIntroTimer < uiDiff)
++        {
++            if(m_bIsIntroNow)
++            {
++                m_creature->StopMoving();
++                m_creature->GetMotionMaster()->Clear();
++                m_creature->GetMotionMaster()->MoveIdle();
++
++                switch(m_uiIntroCount)
++                {
++                    case 0:
++                        if(Creature* pMadrigosa = m_pInstance->instance->GetCreature(m_uiMadrigosaGuid))
++                        {
++                            DoScriptText(YELL_MADR_ICE_BARRIER, pMadrigosa);
++                            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, pMadrigosa->GetGUID());
++                        }
++                        m_uiIntroTimer = 6000; break;
++                    case 1:
++                        if(Creature* pMadrigosa = m_pInstance->instance->GetCreature(m_uiMadrigosaGuid))
++                            DoScriptText(YELL_MADR_INTRO, pMadrigosa);
++                        m_uiIntroTimer = 5000; break;
++                    case 2:
++                        DoScriptText(YELL_INTRO, m_creature);
++                        m_uiIntroTimer = 6000; break;
++                    case 3:
++                        if(Creature* pMadrigosa = m_pInstance->instance->GetCreature(m_uiMadrigosaGuid))
++                        {
++                            DoScriptText(YELL_MADR_ICE_BLOCK, pMadrigosa);
++                            //pMadrigosa->CastSpell(m_creature, SPELL_ICE_BARRIER, false);
++                        }
++                        m_uiIntroTimer = 4000; break;
++                    case 4:
++                        DoScriptText(YELL_INTRO_BREAK_ICE, m_creature);
++                        //m_creature->RemoveAurasDueToSpell(SPELL_ICE_BARRIER);
++                        m_uiIntroTimer = 5000; break;
++                    case 5:
++                        if(Creature* pMadrigosa = m_pInstance->instance->GetCreature(m_uiMadrigosaGuid))
++                            DoScriptText(YELL_MADR_TRAP, pMadrigosa);
++                        m_uiIntroTimer = 5000; break;
++                    case 6:
++                        DoScriptText(YELL_INTRO_CHARGE, m_creature);
++                        //if(Creature* pMadrigosa = m_pInstance->instance->GetCreature(m_uiMadrigosaGuid))
++                            //DoCast(pMadrigosa, SPELL_FROZEN_PRISON);
++                        m_uiIntroTimer = 5000; break;
++                    case 7:
++                        if(Creature* pMadrigosa = m_pInstance->instance->GetCreature(m_uiMadrigosaGuid))
++                            DoScriptText(YELL_MADR_DEATH, pMadrigosa);
++                        m_uiIntroTimer = 5000; break;
++                    case 8:
++                        DoScriptText(YELL_INTRO_KILL_MADRIGOSA, m_creature);
++                        m_uiIntroTimer = 6000; break;
++                    case 9:
++                        DoScriptText(YELL_INTRO_TAUNT, m_creature);
++                        m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++                        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                        m_uiBerserkTimer = 360000;
++                        m_bIsIntroNow = false; break;
++                }
++                ++m_uiIntroCount;
++            }
++        }else m_uiIntroTimer -= uiDiff;
++
++        if(m_bIsIntroNow)
++            return;
++
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
+@@ -134,6 +235,26 @@ struct MANGOS_DLL_DECL boss_brutallusAI : public ScriptedAI
+         else
+             m_uiLoveTimer -= uiDiff;
+ 
++        if (m_uiBurnCheckTimer < uiDiff)
++        {
++            std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
++            for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++            {
++                Unit *BurnedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
++                if (BurnedPlayer && BurnedPlayer->GetTypeId() == TYPEID_PLAYER && BurnedPlayer->HasAura(SPELL_BURN_AURA_EFFECT))
++                {
++                    std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
++                    for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++                    {
++                        Unit *TargetedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());  
++                        if (TargetedPlayer && TargetedPlayer->GetTypeId() == TYPEID_PLAYER && TargetedPlayer->IsWithinDistInMap(BurnedPlayer, 6) && !TargetedPlayer->HasAura(SPELL_BURN_AURA_EFFECT))
++                            TargetedPlayer->CastSpell(TargetedPlayer,SPELL_BURN_AURA_EFFECT,true);
++                    }
++                }
++            }          
++            m_uiBurnCheckTimer = 1000;        
++        }else m_uiBurnCheckTimer -= uiDiff;
++
+         if (m_uiSlashTimer < uiDiff)
+         {
+             DoCastSpellIfCan(m_creature->getVictim(),SPELL_METEOR_SLASH);
+diff --git a/scripts/eastern_kingdoms/sunwell_plateau/boss_eredar_twins.cpp b/scripts/eastern_kingdoms/sunwell_plateau/boss_eredar_twins.cpp
+new file mode 100644
+index 0000000..2fe9e06
+--- /dev/null
++++ b/scripts/eastern_kingdoms/sunwell_plateau/boss_eredar_twins.cpp
+@@ -0,0 +1,540 @@
++/* Copyright (C) 2006 - 2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++/* ScriptData
++SDName: Boss_Alythess
++SD%Complete: 90%
++SDComment: 
++SDAuthor: Aramilpl && ScrappyDoo (c) Andeeria
++EndScriptData */
++
++#include "precompiled.h"
++#include "sunwell_plateau.h"
++
++enum yells
++{
++    // texts
++    // Lady Sacrolash
++    SAY_INTRO                                = -1580044,
++    SAY_SACROLASH_SHADOW_NOVA                = -1580045, //only if Alythess is not dead
++    SAY_SACROLASH_SISTER_ALYTHESS_DEAD       = -1580046,
++    SAY_SACROLASH_SAC_KILL_1                 = -1580047,
++    SAY_SACROLASH_SAC_KILL_2                 = -1580048,
++    SAY_SAC_DEAD                             = -1580049,
++    SAY_SACROLASH_ENRAGE                     = -1580050,
++
++    //Grand Warlock Alythess
++    SAY_ALYTHESS_CANFLAGRATION               = -1580051, //only if Sacrolash is not dead
++    SAY_ALYTHESS_SISTER_SACROLASH_DEAD       = -1580052,
++    SAY_ALYTHESS_ALY_KILL_1                  = -1580053,
++    SAY_ALYTHESS_ALY_KILL_2                  = -1580054,
++    SAY_ALYTHESS_ALY_DEAD                    = -1580055,
++    SAY_ALYTHESS_BERSERK                     = -1580056,
++};
++
++enum Spells
++{
++    //Lady Sacrolash
++    SPELL_DARK_TOUCHED      =   45347,
++    SPELL_SHADOW_BLADES     =   45248, //10 secs
++    SPELL_DARK_STRIKE       =   45271,
++    SPELL_SHADOW_NOVA       =   45329, //30-35 secs
++    SPELL_CONFOUNDING_BLOW  =   45256, //25 secs
++
++    //Shadow Image spells
++    SPELL_SHADOWFURY        =   45270,
++    SPELL_IMAGE_VISUAL      =   45263,
++
++    //Misc spells
++    SPELL_TWINS_ENRAGE      =   46587, //27680
++    SPELL_EMPOWER           =   45366,
++    SPELL_DARK_FLAME        =   45345,
++    AURA_CONF               =   44867, // :D
++
++    //Grand Warlock Alythess spells
++    SPELL_PYROGENICS        =   45230, //15secs
++    SPELL_FLAME_TOUCHED     =   45348,
++    SPELL_CONFLAGRATION     =   45342, //30-35 secs
++    SPELL_CONFLAGRATION_DEV =   46768, //dmg
++    SPELL_BLAZE             =   45235, //on main target every 3 secs
++    SPELL_FLAME_SEAR        =   46771,
++
++    //
++    SPELL_BANISH            = 44836,
++};
++
++enum Creatures
++{
++    GRAND_WARLOCK_ALYTHESS  =   25166,
++    MOB_SHADOW_IMAGE        =   25214,
++    LADY_SACROLASH          =   25165
++};
++
++
++/*######
++## mob_alythess
++######*/
++struct MANGOS_DLL_DECL boss_alythessAI : public ScriptedAI
++{
++    boss_alythessAI(Creature *c) : ScriptedAI(c)
++    {
++        pInstance = ((ScriptedInstance*)c->GetInstanceData());
++        Reset();
++    }
++
++	ScriptedInstance* pInstance;  
++
++	uint32 m_uiPyrogenicsTimer;
++	uint32 m_uiFlameTouchedTimer;
++	uint32 m_uiConflagrationTimer;
++    uint32 m_uiConfCount;
++    uint32 m_uiConfTimer;
++	uint32 m_uiBlazeTimer;
++	uint32 m_uiFlameSearTimer;
++	uint32 m_uiEnrageTimer;
++    uint64 m_uiConfTargetGUID;
++	bool m_bIsEnraged;
++    bool m_bIsBanished;
++
++    void Reset()
++	{	
++        m_bIsBanished = false;
++		m_uiPyrogenicsTimer = 100; 
++		m_uiFlameTouchedTimer = 30000; 
++		m_uiConflagrationTimer = 25000 + rand()%15000;
++		m_uiBlazeTimer = 1000; 
++		m_uiFlameSearTimer = 15000; 
++		m_uiEnrageTimer = 360000; 
++        m_uiConfTimer = 300000;
++        m_uiConfCount = 10;
++        m_uiConfTargetGUID = 0;
++
++        if (pInstance)
++        {
++            pInstance->SetData(TYPE_EREDAR_TWINS, NOT_STARTED);
++            pInstance->SetData(TYPE_ALYSTHESS, NOT_STARTED);
++            pInstance->SetData(TYPE_SACROLASH, NOT_STARTED);
++        }
++
++        // Respawn Second Twin
++        if(pInstance)
++        {
++            if(Creature* Sacrolash = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_SACROLASH))))
++                if(!Sacrolash->isAlive())
++                    Sacrolash->Respawn();
++        }
++		m_bIsEnraged = false;
++	}
++
++    void DamageDeal(Unit* pDoneTo, uint32& uiDamage) 
++    {
++        if(pDoneTo->HasAura(SPELL_DARK_TOUCHED,EFFECT_INDEX_0))
++            pDoneTo->RemoveAurasDueToSpell(SPELL_DARK_TOUCHED,0);
++    }
++
++	void Aggro(Unit *who)
++	{
++        if(pInstance)
++            pInstance->SetData(TYPE_EREDAR_TWINS, IN_PROGRESS);
++        m_creature->SetInCombatWithZone();
++		DoScriptText(SAY_INTRO, m_creature);
++	}
++	
++	void KilledUnit(Unit* victim)
++	{
++       switch(rand()%2)
++       {
++        	case 0: DoScriptText(SAY_ALYTHESS_ALY_KILL_1, m_creature); break;
++        	case 1: DoScriptText(SAY_ALYTHESS_ALY_KILL_2, m_creature); break;
++        }
++	}
++
++	void JustDied(Unit* Killer)
++	{
++		DoScriptText(SAY_ALYTHESS_ALY_DEAD, m_creature);
++
++        if (pInstance)
++        {
++            pInstance->SetData(TYPE_ALYSTHESS, DONE);
++
++            if(Creature* Sacrolash = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_SACROLASH))))
++            {
++                if(!Sacrolash->isAlive())
++                    pInstance->SetData(TYPE_EREDAR_TWINS, DONE);
++                else
++                {
++                    m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
++                    //DoScriptText(SAY_SACROLASH_SISTER_ALYTHESS_DEAD, Sacrolash);
++                }
++            }
++        }
++	}
++
++	void UpdateAI(const uint32 diff)
++    {    
++		// return since we have no target
++        if(!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++           return;
++
++        if(m_uiConfCount == 10)
++        {
++            if(Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiConfTargetGUID))
++                pPlayer->RemoveAurasDueToSpell(AURA_CONF,0);
++            ++m_uiConfCount;
++        }
++
++        if(m_uiConfCount < 10)
++        {
++            if(m_uiConfTimer < diff)
++            {
++                if(Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiConfTargetGUID))
++                {
++                    DoScriptText(SAY_ALYTHESS_CANFLAGRATION, m_creature);
++                    pPlayer->CastSpell(pPlayer, SPELL_CONFLAGRATION_DEV, true);
++
++                    std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
++                    for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++                    {
++                        Unit *BurnedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
++                        if (BurnedPlayer && BurnedPlayer->GetTypeId() == TYPEID_PLAYER && BurnedPlayer->IsWithinDistInMap(pPlayer, 8))
++                        {
++                            BurnedPlayer->CastSpell(BurnedPlayer, SPELL_CONFLAGRATION_DEV, true);
++                        }
++                    }    
++                }
++                ++m_uiConfCount;
++                m_uiConfTimer = 1000;        
++            }else m_uiConfTimer -= diff;
++        }
++
++		// does alysthes stand and cast spells, after someone is out of range she follows victim
++		if(Unit *who = m_creature->getVictim())
++        {
++		    if(who && who->IsInRange(m_creature, 0.0f, 15.0f, false))
++			    m_creature->StopMoving();
++            else 
++			    m_creature->CanFreeMove();
++        }
++
++        // enrage
++        if(m_uiEnrageTimer < diff && !m_bIsEnraged)
++        {
++            DoScriptText(SAY_ALYTHESS_BERSERK, m_creature);
++            DoCast(m_creature, SPELL_TWINS_ENRAGE);
++            m_bIsEnraged = true;
++        }else m_uiEnrageTimer -= diff;
++		
++		// 100%
++        if(m_uiPyrogenicsTimer < diff)
++        {
++            DoCast(m_creature, SPELL_PYROGENICS);
++            m_uiPyrogenicsTimer = 35000;
++        }else m_uiPyrogenicsTimer -= diff;
++		
++		// 100%
++		if(m_uiFlameTouchedTimer < diff)
++        {
++			if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                victim->CastSpell(victim, SPELL_FLAME_TOUCHED, true);
++            m_uiFlameTouchedTimer = 30000;
++        }else m_uiFlameTouchedTimer -= diff;
++		
++		// in progress
++        if(m_uiConflagrationTimer < diff)
++        {
++            m_uiConfTargetGUID = 0;
++			if (Unit *victim = SelectUnit(SELECT_TARGET_RANDOM, 0))
++            {
++                m_uiConfTargetGUID = victim->GetGUID();
++                victim->CastSpell(victim, AURA_CONF, true);
++                victim->CastSpell(victim, SPELL_CONFLAGRATION_DEV, true);
++            }
++            m_uiConfTimer = 1000;
++            m_uiConfCount = 0;
++            m_uiConflagrationTimer = 20000 + rand()%1000;
++        }else m_uiConflagrationTimer -= diff;
++		
++		// 50% nie zostawia sumona pod soba
++        if(m_uiBlazeTimer < diff)
++        {
++			if(Unit *victim = m_creature->getVictim())
++				DoCast(victim, SPELL_BLAZE);
++            m_uiBlazeTimer = urand(5000,10000);
++        }else m_uiBlazeTimer -= diff;
++		
++		// 100%
++        if(m_uiFlameSearTimer < diff)
++        {
++            uint8 i = urand(3,5);
++            for(uint8 k=0; k<i; ++k)
++			    if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM, 0))
++				    m_creature->CastSpell(victim, SPELL_FLAME_SEAR, true);	
++            m_uiFlameSearTimer = 30000;
++        }else m_uiFlameSearTimer -= diff;
++		
++        DoMeleeAttackIfReady();
++    }
++};
++
++/*######
++## boss_sacrolash
++######*/
++struct MANGOS_DLL_DECL boss_sacrolashAI : public ScriptedAI
++{
++    boss_sacrolashAI(Creature *c) : ScriptedAI(c)
++    {
++        pInstance = ((ScriptedInstance*)c->GetInstanceData());
++        Reset();
++    }
++			
++	ScriptedInstance* pInstance;
++	
++	uint32 m_uiEnrageTimer;
++	uint32 m_uiDarkTouchedTimer;
++	uint32 m_uiShadowNovaTimer;
++	uint32 m_uiConfoundingBlowTimer;
++	uint32 m_uiShadowBladesTimer;
++	uint32 m_uiSummonShadowImage;
++	uint64 m_uiTargetGUID[3];
++	bool m_bIsEnraged;
++    bool m_bIsBanished;
++
++	void Reset()
++	{	
++        m_bIsBanished = false;
++		m_uiEnrageTimer = 360000; 
++		m_uiDarkTouchedTimer = 30000;
++		m_uiShadowNovaTimer = 15000;
++		m_uiConfoundingBlowTimer = 3000;
++		m_uiShadowBladesTimer = 10000;
++		m_uiSummonShadowImage = 30000;
++		m_bIsEnraged = false;
++
++        if (pInstance)
++        {
++            pInstance->SetData(TYPE_EREDAR_TWINS, NOT_STARTED);
++            pInstance->SetData(TYPE_ALYSTHESS, NOT_STARTED);
++            pInstance->SetData(TYPE_SACROLASH, NOT_STARTED);
++        }
++
++        if(pInstance)
++        {
++            if(Creature* Alythess = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ALYTHESS))))
++                if(!Alythess->isAlive())
++                    Alythess->Respawn();
++        }
++	}
++
++    void DamageDeal(Unit* pDoneTo, uint32& uiDamage) 
++    {
++        if(pDoneTo->HasAura(SPELL_FLAME_TOUCHED,EFFECT_INDEX_0))
++            pDoneTo->RemoveAurasDueToSpell(SPELL_FLAME_TOUCHED,0);
++    }
++
++	void Aggro(Unit *who)
++	{
++        if(pInstance)
++            pInstance->SetData(TYPE_EREDAR_TWINS, IN_PROGRESS);
++        m_creature->SetInCombatWithZone();
++	}
++
++	void KilledUnit(Unit* victim)
++	{    
++	   switch(rand()%2)
++       {
++        	case 0: DoScriptText(SAY_SACROLASH_SAC_KILL_1, m_creature); break;
++        	case 1: DoScriptText(SAY_SACROLASH_SAC_KILL_2, m_creature); break;
++       }
++	}
++
++	void JustDied(Unit* Killer)
++	{
++		DoScriptText(SAY_SAC_DEAD, m_creature);
++
++        if (pInstance)
++        {
++            pInstance->SetData(TYPE_SACROLASH, DONE);
++
++            if(Creature* Alythess = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ALYTHESS))))
++            {
++                if(!Alythess->isAlive())
++                    pInstance->SetData(TYPE_EREDAR_TWINS, DONE);
++                else
++                {
++                    m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
++                    //DoScriptText(SAY_ALYTHESS_SISTER_SACROLASH_DEAD, Alythess);
++                }
++            }
++        }
++	}
++
++    void UpdateAI(const uint32 diff)
++    {
++        // return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++		// enrage
++		if(m_uiEnrageTimer < diff && !m_bIsEnraged)
++        {
++            DoScriptText(SAY_SACROLASH_ENRAGE, m_creature);
++            DoCast(m_creature, SPELL_TWINS_ENRAGE);
++            m_bIsEnraged = true;
++        }else m_uiEnrageTimer -= diff;
++		
++		// 100%
++        if(m_uiDarkTouchedTimer < diff)
++        {
++			if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM, 0))
++				victim->CastSpell(victim, SPELL_DARK_TOUCHED,true);
++            m_uiDarkTouchedTimer = urand(10000,13000);
++        }else m_uiDarkTouchedTimer -= diff;
++
++		// 100%
++        if(m_uiShadowBladesTimer < diff)
++        {
++		    if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM, 0))
++            {
++                m_creature->CastSpell(victim, SPELL_DARK_STRIKE, false);
++                m_creature->CastSpell(victim, SPELL_SHADOW_BLADES, true);
++            }
++            m_uiShadowBladesTimer = urand(10000,13000);
++        }else m_uiShadowBladesTimer -= diff;
++		
++		// 100%
++        if(m_uiShadowNovaTimer < diff)
++        {
++            DoScriptText(SAY_SACROLASH_SHADOW_NOVA, m_creature);
++            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                DoCast(target, SPELL_SHADOW_NOVA);
++            m_uiShadowNovaTimer = urand(30000,40000);
++        }else m_uiShadowNovaTimer -= diff;
++		
++		// 100%
++        if(m_uiConfoundingBlowTimer < diff)
++        {
++			if(Unit *victim = m_creature->getVictim())
++				DoCast(victim, SPELL_CONFOUNDING_BLOW);
++            m_uiConfoundingBlowTimer = urand(25000,30000);
++        }else m_uiConfoundingBlowTimer -= diff;
++		
++		// 100%
++		if (m_uiSummonShadowImage < diff)
++        {
++            for(uint8 i=0; i<3; ++i)
++            {
++			    if(Creature *image = m_creature->SummonCreature(MOB_SHADOW_IMAGE, m_creature->GetPositionX()+urand(4,10), m_creature->GetPositionY()+urand(4,10), m_creature->GetPositionZ(), 0.0,TEMPSUMMON_TIMED_DESPAWN, 10000))
++			    {
++                    image->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                    image->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                    image->setFaction(14); 
++
++                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        image->AI()->AttackStart(target);
++			    }
++            }
++            m_uiSummonShadowImage = urand(30000,40000);
++        } else m_uiSummonShadowImage -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++/*######
++## mob_shadow_image
++######*/
++struct MANGOS_DLL_DECL npc_shadow_imageAI : public ScriptedAI
++{
++    npc_shadow_imageAI(Creature *c) : ScriptedAI(c)
++    {
++        Reset();
++    }
++
++	ScriptedInstance* pInstance; 
++	
++	uint32 m_uiDarkStrikeTimer;
++	uint32 m_uiShadowfuryTimer;
++	
++	void Aggro(Unit* target) 
++    {
++		m_creature->SetInCombatWithZone();
++	}
++	
++    void Reset()
++	{	
++        DoCast(m_creature,SPELL_IMAGE_VISUAL,true);
++
++		m_uiDarkStrikeTimer = 1000;
++		m_uiShadowfuryTimer = 7000;
++	}
++	
++	void UpdateAI(const uint32 diff)
++    {       	
++	    if(m_uiDarkStrikeTimer < diff)
++        {
++			if(Unit *victim = m_creature->getVictim())
++            {
++				m_creature->CastSpell(victim, SPELL_DARK_STRIKE, false);
++                victim->CastSpell(victim, SPELL_DARK_TOUCHED, true);
++            }
++            m_uiDarkStrikeTimer = 2000;
++        }else m_uiDarkStrikeTimer -= diff;
++		
++		if(m_uiShadowfuryTimer < diff)
++        {
++            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                m_creature->CastSpell(target, SPELL_SHADOWFURY, false);
++			m_uiShadowfuryTimer = 8000;	
++        }else m_uiShadowfuryTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++CreatureAI* GetAI_npc_shadow_image(Creature *_Creature)
++{
++    return new npc_shadow_imageAI (_Creature);
++}
++
++CreatureAI* GetAI_boss_alythess(Creature *_Creature)
++{
++    return new boss_alythessAI (_Creature);
++}
++
++CreatureAI* GetAI_boss_sacrolash(Creature *_Creature)
++{
++    return new boss_sacrolashAI (_Creature);
++}
++
++void AddSC_boss_eredar_twins()
++{
++    Script *newscript;
++	
++	newscript = new Script;
++    newscript->Name = "npc_shadow_image";
++    newscript->GetAI = &GetAI_npc_shadow_image;
++    newscript->RegisterSelf();
++	
++    newscript = new Script;
++    newscript->Name = "boss_alythess";
++    newscript->GetAI = &GetAI_boss_alythess;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "boss_sacrolash";
++    newscript->GetAI = &GetAI_boss_sacrolash;
++    newscript->RegisterSelf();
++}
+diff --git a/scripts/eastern_kingdoms/sunwell_plateau/boss_felmyst.cpp b/scripts/eastern_kingdoms/sunwell_plateau/boss_felmyst.cpp
+new file mode 100644
+index 0000000..86c0de1
+--- /dev/null
++++ b/scripts/eastern_kingdoms/sunwell_plateau/boss_felmyst.cpp
+@@ -0,0 +1,605 @@
++/* Copyright (C) 2006 - 2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++*/
++ 
++/* ScriptData
++SDName: Boss_Felmyst
++SD%Complete: 75%
++SDComment: PlayAble
++SDCategory: Sunwell Plateau
++SDAuthot: Scrappy Doo
++EndScriptData */
++ 
++/* ToDo
++Land Phase          = 100%
++Fly Phase           = 50%
++DeatchCloud Spell   = 50%
++*/
++
++#include "precompiled.h"
++#include "sunwell_plateau.h"
++ 
++enum Sounds
++{
++    YELL_REBIRTH        = -1580036,
++    YELL_SLAY1          = -1580037,
++    YELL_SLAY2          = -1580038,
++    YELL_DEATH          = -1580042,
++    YELL_TAKEOFF        = -1580040,
++    YELL_BREATH         = -1580039,
++    YELL_BERSERK        = -1580041,
++    YELL_KALECGOS       = -1580043,
++
++    NPC_KALECGOS        = 25319,
++};
++
++enum Spells
++{
++    //Aura
++    SPELL_SUNWELLRADIANCE_AURA  = 45769,
++    SPELL_NOXIOUSFUMES_AURA     = 47002,
++ 
++    //Land Phase
++    SPELL_CLEAVE                = 19983, 
++    SPELL_CORROSION             = 45866,
++    SPELL_GASNOVA               = 45855,
++    SPELL_ENCAPSULATE_CHANNEL   = 45661,
++    SPELL_ENCAPSULATE_AOE       = 45662,
++   
++    //Flight Phase
++    SPELL_VAPOR_DAMAGE          = 46931, // vapor damage, 4000
++    SPELL_TRAIL_TRIGGER         = 45399, // trail to self, trigger 454
++   
++    //Other
++    SPELL_ENRAGE                = 26662,
++    SPELL_BERSERK               = 45078,
++
++    //Fog of Mind Control
++    SPELL_FOG_TRIGGER           = 45582, // Visual Effect
++    SPELL_FOG_CHARM             = 45717, // Damage, Speed Increased
++    SPELL_KILL                  = 5,
++
++    //Image Of Players Spells
++    SPELL_PRIEST                = 47077, // 100%
++    SPELL_PALADIN               = 37369, // 100%
++    SPELL_PALADIN2              = 37369, // 100%
++    SPELL_WARLOCK               = 46190, // 100%
++    SPELL_WARLOCK2              = 47076, // 100%
++    SPELL_MAGE                  = 47074, // 100%
++    SPELL_ROGUE                 = 45897, // 100%
++    SPELL_WARRIOR               = 17207, // 100%
++    SPELL_DRUID                 = 47072, // 100%
++    SPELL_SHAMAN                = 47071, // 100%
++    SPELL_HUNTER                = 48098, // 100%
++};
++ 
++enum Creatures
++{
++    MOB_FELMYST         = 25038,
++    MOB_DEAD            = 25268, //undead podczas fly fazy
++ 
++    MOB_MADRIGOSA       = 25160,
++    MOB_FELMYST_VISUAL  = 25041,
++    MOB_FLIGHT_LEFT     = 25357,
++    MOB_FLIGHT_RIGHT    = 25358,
++ 
++    MOB_VAPOR           = 25265,
++    MOB_VAPOR_TRAIL     = 25267,
++
++    MOB_DEATH_CLOUD     = 25703,
++
++    CREATURE_IMAGE      = 25708,
++};
++ 
++/*######
++## boss_felmyst
++######*/
++struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
++{
++    boss_felmystAI(Creature *pCreature) : ScriptedAI(pCreature)
++    {
++        pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
++        pCreature->SetVisibility(VISIBILITY_OFF);
++        pCreature->setFaction(35);
++        Reset();
++    }
++
++    ScriptedInstance* pInstance;
++ 
++    //Ground Phase
++    uint64 m_uiEncapsulateGUID;
++    uint32 m_uiEnrageTimer;
++    uint32 m_uiFlyPhaseTimer;
++    uint32 m_uiNoxiousFumesTimer;
++    uint32 m_uiCorrosionTimer;
++    uint32 m_uiCleaveTimer;
++    uint32 m_uiEncapsulateTimer;
++    uint32 m_uiGasNovaTimer;
++    uint32 m_uiEncapsulateAOETimer;
++    uint8  m_uiEncapsulateCount;
++    uint8  m_uiMaxBreathCount;
++
++    float m_fPosX;
++    float m_fPosY;
++    float m_fPosZ;
++
++    bool m_bIsCastedNoxiousFumes;
++    bool m_bIsFlyPhase;
++ 
++    //FlyPhase Timers
++    uint64 m_uiVictimGUID;
++    uint32 m_uiDemonicVaporTimer;
++    uint32 m_uiFogOfCorruptionTimer;
++    uint32 m_uiLandPhaseTimer;
++    uint32 m_uiDemonicVaporInitTimer;
++    uint8  m_uiBreathCount;
++    uint8  m_uiFogCount;
++
++    uint32 m_uiEncounterCheckTimer;
++    uint32 m_bHasChecked;
++ 
++    bool m_bIsFogOfCorruption;
++ 
++    void Reset()
++    {
++        //Ground Phase
++        m_uiEncapsulateGUID     = 0;
++        m_uiEnrageTimer         = 600000;
++        m_uiFlyPhaseTimer       = 60000;
++        m_uiNoxiousFumesTimer   = 1000;
++        m_uiCorrosionTimer      = 72000;
++        m_uiCleaveTimer         = 28000;
++        m_uiEncapsulateTimer    = 10000;
++        m_uiGasNovaTimer        = 30000;
++        m_uiEncapsulateCount    = 6;
++
++        m_bIsCastedNoxiousFumes = false;
++        m_bIsFlyPhase           = false;
++
++        //FlyPhase Timers
++        m_uiVictimGUID            = 0;
++        m_uiFogOfCorruptionTimer  = 5000;
++        m_uiDemonicVaporInitTimer = 120000;
++        m_uiBreathCount         = 10;
++        m_uiFogCount            = 4;
++        m_uiMaxBreathCount      = 2;
++
++        m_fPosX                 = 0;
++        m_fPosY                 = 0;
++        m_fPosZ                 = 0;
++
++        m_bIsFogOfCorruption    = false;
++
++        m_uiEncounterCheckTimer = 5000;
++        m_bHasChecked           = false;
++
++        if(pInstance)
++            pInstance->SetData(TYPE_FELMYST, NOT_STARTED);
++
++        if(!m_creature->HasAura(SPELL_SUNWELLRADIANCE_AURA))
++            DoCast(m_creature, SPELL_SUNWELLRADIANCE_AURA);
++
++        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
++        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
++    }
++ 
++    void Aggro(Unit *who)
++    {
++        m_creature->SetInCombatWithZone();
++ 
++        if (pInstance)
++            pInstance->SetData(TYPE_FELMYST, IN_PROGRESS);
++    }
++ 
++    void KilledUnit(Unit* victim)
++    {
++        switch(rand()%2)
++        {
++            case 0: DoScriptText(YELL_SLAY1, m_creature); break;
++            case 1: DoScriptText(YELL_SLAY2, m_creature); break;
++        }
++        switch(rand()%2)
++        {
++            case 0: DoPlaySoundToSet(m_creature, 12480); break;
++            case 1: DoPlaySoundToSet(m_creature, 12481); break;
++        }
++    }
++ 
++    void JustDied(Unit* Killer)
++    {
++        DoScriptText(YELL_DEATH, m_creature);
++
++        if(Creature* pKalecgos = m_creature->SummonCreature(NPC_KALECGNOS, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ() + 10, m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 10000))
++            DoScriptText(YELL_KALECGOS, pKalecgos);
++
++        if(pInstance)
++            pInstance->SetData(TYPE_FELMYST, DONE);
++    }
++ 
++    void UpdateAI(const uint32 diff)
++    {
++        // make boss visible after brutallus is defeated
++        if(pInstance && pInstance->GetData(TYPE_BRUTALLUS) == DONE && pInstance->GetData(TYPE_FELMYST) == NOT_STARTED)
++        {
++            if(m_uiEncounterCheckTimer < diff && !m_bHasChecked)
++            {
++                m_creature->SetVisibility(VISIBILITY_ON);
++                DoScriptText(YELL_REBIRTH, m_creature);
++                m_creature->setFaction(14);
++                m_bHasChecked = true;
++            }m_uiEncounterCheckTimer -= diff;
++        }
++ 
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++ 
++        if(m_uiEncapsulateCount < 5)
++        {
++            if(m_uiEncapsulateAOETimer < diff)
++            {
++                if(Unit* target = Unit::GetUnit(*m_creature, m_uiEncapsulateGUID))
++                {
++                    target->CastSpell(target, SPELL_ENCAPSULATE_AOE, true);
++                    ++m_uiEncapsulateCount;
++                }
++                m_uiEncapsulateAOETimer = 1000;
++
++            }else m_uiEncapsulateAOETimer -= diff;
++            return;
++        }
++
++        if(m_uiEnrageTimer < diff)
++        {
++            DoScriptText(YELL_BERSERK, m_creature);
++            DoCast(m_creature, SPELL_ENRAGE, true);
++            m_uiEnrageTimer = 30000;
++        }m_uiEnrageTimer -= diff;
++ 
++        if(!m_bIsFlyPhase)
++        {
++            if(m_uiFlyPhaseTimer < diff)
++            {
++                //Stop Moving
++                m_creature->StopMoving();
++                m_creature->GetMotionMaster()->Clear();
++                m_creature->GetMotionMaster()->MoveIdle();
++                //Go Fly
++                m_creature->GetMap()->CreatureRelocation(m_creature, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ()+20, m_creature->GetOrientation());
++                m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
++                m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
++                DoScriptText(YELL_TAKEOFF, m_creature);
++                //FlyPhase Timers Start
++                m_uiDemonicVaporInitTimer   = 5000;
++                m_uiFogOfCorruptionTimer    = 30000;
++                m_uiLandPhaseTimer          = 120000;
++                m_uiMaxBreathCount      = 0;
++                m_uiFogCount            = 0;
++                m_bIsFogOfCorruption    = true;
++                m_bIsFlyPhase           = true;
++
++                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                {
++                    m_fPosX = target->GetPositionX();
++                    m_fPosY = target->GetPositionY();
++                    m_fPosZ = target->GetPositionZ();
++                }
++                return;
++            }else m_uiFlyPhaseTimer -= diff;
++ 
++            //100%
++            if(m_uiCorrosionTimer < diff)
++            {
++                if(m_creature->getVictim())
++                    DoCast(m_creature->getVictim(), SPELL_CORROSION);
++                m_uiCorrosionTimer = 72000;
++            }else m_uiCorrosionTimer -= diff;
++ 
++            //100%
++            if(m_uiNoxiousFumesTimer < diff && !m_bIsCastedNoxiousFumes)
++            {
++                DoPlaySoundToSet(m_creature, 12478);
++
++                DoCast(m_creature, SPELL_NOXIOUSFUMES_AURA);
++                m_bIsCastedNoxiousFumes = true;
++            }else m_uiNoxiousFumesTimer -= diff;
++ 
++            //100%
++            if(m_uiGasNovaTimer < diff)
++            {
++                DoCast(m_creature, SPELL_GASNOVA);
++                m_uiGasNovaTimer = 35000;
++            }else m_uiGasNovaTimer -= diff;
++ 
++            //100%
++            if(m_uiEncapsulateTimer < diff)
++            {
++                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                {
++                    m_uiEncapsulateGUID = target->GetGUID();
++                    DoCast(target, SPELL_ENCAPSULATE_CHANNEL);
++                }
++                m_uiEncapsulateTimer = 40000;
++                m_uiEncapsulateAOETimer = 1000;
++                m_uiEncapsulateCount = 0;
++            }else m_uiEncapsulateTimer -= diff;
++ 
++            //100%
++            if(m_uiCleaveTimer < diff)
++            {
++                if(m_creature->getVictim())
++                    DoCast(m_creature->getVictim(), SPELL_CLEAVE);
++                m_uiCleaveTimer = 28000;
++            }else m_uiCleaveTimer -= diff;
++ 
++            DoMeleeAttackIfReady();
++        }
++        else
++        {
++            if(m_uiMaxBreathCount > 1)
++                if(m_uiLandPhaseTimer < diff)
++                {
++                    m_creature->GetMap()->CreatureRelocation(m_creature, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ()-20, m_creature->GetOrientation());
++                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++                    m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
++                    m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
++                    m_uiFlyPhaseTimer       = 60000;
++                    m_bIsFlyPhase           = false;
++                    DoScriptText(YELL_BREATH, m_creature);
++                }else m_uiLandPhaseTimer -= diff;
++
++            if(m_uiDemonicVaporInitTimer < diff)
++            {
++                if(m_uiMaxBreathCount < 2)
++                {
++                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                    {
++                        m_uiVictimGUID = target->GetGUID();
++                        DoCast(target, SPELL_VAPOR_DAMAGE, true);
++                        for(uint8 i=0; i<2; ++i) // i<10
++                        {
++                            Creature *Undead = m_creature->SummonCreature(MOB_DEAD, target->GetPositionX()+urand(1,20), target->GetPositionY()+urand(1,20), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
++                            if(Undead)
++                                Undead->AI()->AttackStart(target);
++                        }
++                    }
++                    ++m_uiMaxBreathCount;
++                    m_uiBreathCount = 0;
++                    m_uiDemonicVaporTimer = 1000;
++                    m_uiDemonicVaporInitTimer = 15000;
++                }
++            }else m_uiDemonicVaporInitTimer -= diff;
++
++            if(m_uiDemonicVaporTimer < diff)
++            {
++                if(m_uiBreathCount < 5)
++                {
++                    if(Unit* Victim = Unit::GetUnit(*m_creature, m_uiVictimGUID))
++                        m_creature->SummonCreature(MOB_VAPOR, Victim->GetPositionX(), Victim->GetPositionY(), Victim->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 20000);
++                    m_uiDemonicVaporTimer = 2000;
++                    ++m_uiBreathCount;
++                }
++            }else m_uiDemonicVaporTimer -= diff;
++            
++            if(m_bIsFogOfCorruption)
++            {
++                if(m_uiFogOfCorruptionTimer < diff)
++                {
++                    switch(m_uiFogCount)
++                    {
++                        case 0: m_creature->SummonCreature(MOB_DEATH_CLOUD, m_fPosX+15+urand(1,4), m_fPosY+15, m_fPosZ, 0, TEMPSUMMON_TIMED_DESPAWN, 15000); break;
++                        case 1: m_creature->SummonCreature(MOB_DEATH_CLOUD, m_fPosX-15+urand(1,4), m_fPosY-15, m_fPosZ, 0, TEMPSUMMON_TIMED_DESPAWN, 15000); break;
++                        case 2: m_creature->SummonCreature(MOB_DEATH_CLOUD, m_fPosX+30+urand(1,4), m_fPosY+30, m_fPosZ, 0, TEMPSUMMON_TIMED_DESPAWN, 15000); break;
++                        case 3: m_creature->SummonCreature(MOB_DEATH_CLOUD, m_fPosX-30+urand(1,4), m_fPosY-30, m_fPosZ, 0, TEMPSUMMON_TIMED_DESPAWN, 15000); m_bIsFogOfCorruption = false; m_uiLandPhaseTimer = 10000; break;
++                    }
++                    ++m_uiFogCount;
++                    m_uiFogOfCorruptionTimer = 2000;
++                }else m_uiFogOfCorruptionTimer -= diff;
++            }
++        }
++    }
++};
++ 
++/*######
++## mob_deathcloud
++######*/
++struct MANGOS_DLL_DECL mob_deathcloudAI : public Scripted_NoMovementAI
++{
++    mob_deathcloudAI(Creature *c) : Scripted_NoMovementAI(c)
++    {
++        m_pInstance = (ScriptedInstance*)c->GetInstanceData();
++        Reset();
++    }
++ 
++    ScriptedInstance* m_pInstance;
++ 
++    uint64 m_uiImageGUID[25][2];
++    uint32 m_uiCheckTimer;
++    uint32 m_uiImageCount;
++    uint32 m_uiImageCastTimer;
++ 
++    void Reset()
++    {
++        m_creature->setFaction(14);
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++        m_creature->SetVisibility(VISIBILITY_ON);
++ 
++        m_uiCheckTimer      = 1000;
++        m_uiImageCount      = 0;
++        m_uiImageCastTimer  = 8000;
++ 
++        DoCast(m_creature,SPELL_FOG_TRIGGER, true);
++ 
++        for(uint8 i=0; i<25; ++i)
++        {
++            m_uiImageGUID[i][0] = 0;
++            m_uiImageGUID[i][1] = 0;
++        }
++    }
++
++    void Aggro(Unit* who)
++    {
++        m_creature->SetInCombatWithZone();
++    }
++
++    void SummonImageOf(Unit* victim)
++    {
++        uint32 m_uiSpell;
++        switch(victim->getClass())
++        {
++            case CLASS_PRIEST:  m_uiSpell = SPELL_PRIEST; break;
++            case CLASS_PALADIN: m_uiSpell = SPELL_PALADIN; break;
++            case CLASS_WARLOCK: m_uiSpell = SPELL_WARLOCK; break;
++            case CLASS_MAGE:    m_uiSpell = SPELL_MAGE; break;
++            case CLASS_ROGUE:   m_uiSpell = SPELL_ROGUE; break;
++            case CLASS_WARRIOR: m_uiSpell = SPELL_WARRIOR; break;
++            case CLASS_DRUID:   m_uiSpell = SPELL_DRUID; break;
++            case CLASS_SHAMAN:  m_uiSpell = SPELL_SHAMAN; break;
++            case CLASS_HUNTER:  m_uiSpell = SPELL_HUNTER; break;
++        }
++        Creature* cImage = m_creature->SummonCreature(CREATURE_IMAGE, victim->GetPositionX(), victim->GetPositionY(), victim->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
++        if(cImage)
++        {
++            cImage->setFaction(14);
++            cImage->AI()->AttackStart(cImage->getVictim());
++            cImage->SetDisplayId(victim->GetDisplayId());
++            m_uiImageGUID[m_uiImageCount][0] = cImage->GetGUID();
++            m_uiImageGUID[m_uiImageCount][1] = m_uiSpell;
++            ++m_uiImageCount;
++        }
++        m_creature->CastSpell(victim, SPELL_KILL, false);
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        //Image Attacks Timer
++        if(m_uiImageCastTimer < diff)
++        {
++            for(uint8 i=0; i<m_uiImageCount; ++i)
++			{
++                if(Unit* cImage = Unit::GetUnit((*m_creature), m_uiImageGUID[i][0]))
++				{
++					if(!cImage->isDead())
++					{
++						if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++							cImage->CastSpell(target, m_uiImageGUID[i][1], true);
++					}
++				}
++			}
++            m_uiImageCastTimer = 8000;
++        }else m_uiImageCastTimer -= diff;
++
++        if(m_uiCheckTimer < diff)
++        {
++            //For Now we need to kill player and replace him by image (sinister from kiljaeden)
++            std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
++            for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++            {
++                if(Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid()))
++                    if(target && target->GetTypeId() == TYPEID_PLAYER && target->IsWithinDistInMap(m_creature, 15))
++                    {
++                        //Kill Player
++                        SummonImageOf(target);
++                    }
++            }
++            m_uiCheckTimer = 3000;
++        }else m_uiCheckTimer -= diff;  
++    }
++};
++ 
++/*######
++## mob_felmyst_vapor
++######*/
++struct MANGOS_DLL_DECL mob_felmyst_vaporAI : public Scripted_NoMovementAI
++{
++    mob_felmyst_vaporAI(Creature *c) : Scripted_NoMovementAI(c)
++    {
++        m_pInstance = (ScriptedInstance*)c->GetInstanceData();
++        Reset();
++    }
++ 
++    ScriptedInstance* m_pInstance;
++    uint32 m_uiCheckTimer;
++ 
++    void Reset()
++    {
++        m_creature->setFaction(14);
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++        m_creature->SetVisibility(VISIBILITY_ON);
++ 
++        m_uiCheckTimer = 1000;
++ 
++        DoCast(m_creature,SPELL_TRAIL_TRIGGER, true);
++    }
++ 
++    void Aggro(Unit* who)
++    {
++        m_creature->SetInCombatWithZone();           
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        //Summon Sceletons if Someone is near m_creature.
++        if (m_uiCheckTimer < diff)
++        {
++            std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
++            for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++            {
++                if(Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid()))
++                    if(target && target->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(target, 3))
++                    {
++                        Creature *Undead = m_creature->SummonCreature(MOB_DEAD, m_creature->GetPositionX()+urand(1,6), target->GetPositionY()+urand(1,6), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
++                        if(Undead)
++                            Undead->AI()->AttackStart(target);
++                    }
++            }
++            m_uiCheckTimer = 3000;
++        }m_uiCheckTimer -= diff;
++    }
++};
++ 
++CreatureAI* GetAI_mob_deathcloud(Creature* _Creature)
++{
++    return new mob_deathcloudAI(_Creature);
++}
++ 
++CreatureAI* GetAI_mob_felmyst_vapor(Creature* _Creature)
++{
++    return new mob_felmyst_vaporAI(_Creature);
++}
++ 
++CreatureAI* GetAI_boss_felmyst(Creature *_Creature)
++{
++    return new boss_felmystAI(_Creature);
++}
++ 
++void AddSC_boss_felmyst()
++{
++    Script *newscript;
++ 
++    newscript = new Script;
++    newscript->Name = "boss_felmyst";
++    newscript->GetAI = &GetAI_boss_felmyst;
++    newscript->RegisterSelf();
++ 
++    newscript = new Script;
++    newscript->Name="mob_felmyst_vapor";
++    newscript->GetAI = &GetAI_mob_felmyst_vapor;
++    newscript->RegisterSelf();
++ 
++    newscript = new Script;
++    newscript->Name = "mob_deathcloud";
++    newscript->GetAI = &GetAI_mob_deathcloud;
++    newscript->RegisterSelf();
++}
+\ No newline at end of file
+diff --git a/scripts/eastern_kingdoms/sunwell_plateau/boss_kalecgos.cpp b/scripts/eastern_kingdoms/sunwell_plateau/boss_kalecgos.cpp
+index 300f710..2015c21 100644
+--- a/scripts/eastern_kingdoms/sunwell_plateau/boss_kalecgos.cpp
++++ b/scripts/eastern_kingdoms/sunwell_plateau/boss_kalecgos.cpp
+@@ -66,10 +66,17 @@ enum KalecgosEncounter
+     SPELL_CURSE_OF_BOUNDLESS_AGONY  = 45032,
+     SPELL_SHADOW_BOLT_VOLLEY        = 45031,
+ 
++    GO_SPECTRAL_RIFT                = 187055,
++
+     //Misc
+     SPELL_BANISH                    = 44836
+ };
+ 
++
++#define    DRAGON_REALM_Z                  53.079f
++#define    DEMON_REALM_Z                   -74.558f
++#define    GO_FAILED                       "You are unable to use this currently."
++
+ uint32 WildMagic[]= { 44978, 45001, 45002, 45004, 45006, 45010 };
+ 
+ const float KALECGOS_ARENA[3] = { 1704.34f, 928.17f, 53.08f };
+@@ -81,13 +88,6 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+     boss_kalecgosAI(Creature* pCreature) : ScriptedAI(pCreature)
+     {
+         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+-
+-        /*if (pCreature->getFaction() != 14)
+-        {
+-            error_db_log("SD2: creature entry %u has faction %u but spellId %u requires different.", pCreature->GetEntry(), pCreature->getFaction(), SPELL_SPECTRAL_REALM_FORCE_FACTION);
+-            pCreature->setFaction(14);
+-        }*/
+-
+         Reset();
+     }
+ 
+@@ -95,6 +95,7 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+ 
+     uint32 m_uiArcaneBuffetTimer;
+     uint32 m_uiFrostBreathTimer;
++    uint32 m_uiTailLashTimer;
+     uint32 m_uiWildMagicTimer;
+     uint32 m_uiSpectralBlastTimer;
+     uint32 m_uiExitTimer;
+@@ -104,13 +105,15 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+     bool m_bChecked;
+     bool m_bEnraged;
+     bool m_bHasSpectralTarget;
++    bool m_bMustExit;
+ 
+     void Reset()
+     {
+         m_uiArcaneBuffetTimer       = 8000;
+         m_uiFrostBreathTimer        = 24000;
+         m_uiWildMagicTimer          = 18000;
+-        m_uiSpectralBlastTimer      = 30000;
++        m_uiSpectralBlastTimer      = urand(20000, 25000);
++        m_uiTailLashTimer           = urand(25000, 40000);
+ 
+         m_uiExitTimer = 0;
+ 
+@@ -119,6 +122,13 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+         m_bChecked     = false;
+         m_bEnraged     = false;
+         m_bHasSpectralTarget = false;
++        m_bMustExit     = false;
++
++        if (m_creature->HasAura(SPELL_CRAZED_RAGE))
++            m_creature->RemoveAurasDueToSpell(SPELL_CRAZED_RAGE);
++
++        if (m_creature->HasAura(SPELL_BANISH))
++            m_creature->RemoveAurasDueToSpell(SPELL_BANISH);        
+     }
+ 
+     void JustReachedHome()
+@@ -129,7 +139,23 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+             if (Creature* pSath = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_SATHROVARR)))
+             {
+                 if (pSath->isAlive() && pSath->getVictim())
++                {
+                     pSath->AI()->EnterEvadeMode();
++                    pSath->DeleteThreatList();
++                    pSath->AttackStop();
++                }
++            }
++
++            if(Creature* pKalecgnosHuman = ((Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_KALECGOS_HUMAN))))
++            {
++                if(!pKalecgnosHuman->isAlive())
++                    pKalecgnosHuman->Respawn();
++                else
++                {
++                    pKalecgnosHuman->AI()->EnterEvadeMode();
++                    pKalecgnosHuman->DeleteThreatList();
++                    pKalecgnosHuman->AttackStop();
++                }
+             }
+ 
+             m_pInstance->SetData(TYPE_KALECGOS, NOT_STARTED);
+@@ -226,6 +252,7 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+ 
+         m_creature->GetMotionMaster()->MoveIdle();
+         m_creature->setFaction(35);
++        m_bMustExit = true;
+         DoScriptText(SAY_GOOD_PLRWIN, m_creature);
+         m_uiExitTimer = 1000;
+     }
+@@ -245,8 +272,24 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+         }
+     }
+ 
+-    void UpdateAI(const uint32 diff)
++    void UpdateAI(const uint32 uiDiff)
+     {
++        if (m_bMustExit)
++        {
++            if (m_uiExitTimer <= uiDiff)
++            {
++                debug_log("SD2: KALEC: Exiting the arena");
++
++                float x, y, z;
++                m_creature->GetRandomPoint(m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 30, x, y, z);
++
++                z = 70.0f;
++
++                m_creature->GetMotionMaster()->MovePoint(1, x, y, z);
++                m_uiExitTimer = 0;
++            }else m_uiExitTimer -= uiDiff;
++        }
++
+         if (!m_creature->getVictim() || !m_creature->SelectHostileTarget() || m_bBanished)
+             return;
+ 
+@@ -276,23 +319,7 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+                 BeginOutro();
+         }
+ 
+-        if (m_uiExitTimer)
+-        {
+-            if (m_uiExitTimer <= diff)
+-            {
+-                debug_log("SD2: KALEC: Exiting the arena");
+-
+-                float x, y, z;
+-                m_creature->GetRandomPoint(m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 30, x, y, z);
+-
+-                z = 70.0f;
+-
+-                m_creature->GetMotionMaster()->MovePoint(1, x, y, z);
+-                m_uiExitTimer = 0;
+-            }else m_uiExitTimer -= diff;
+-        }
+-
+-        if (m_uiArcaneBuffetTimer < diff)
++        if (m_uiArcaneBuffetTimer < uiDiff)
+         {
+             if (DoCastSpellIfCan(m_creature->getVictim(), SPELL_ARCANE_BUFFET) == CAST_OK)
+             {
+@@ -303,9 +330,9 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+             }
+         }
+         else
+-            m_uiArcaneBuffetTimer -= diff;
++            m_uiArcaneBuffetTimer -= uiDiff;
+ 
+-        if (m_uiFrostBreathTimer < diff)
++        if (m_uiFrostBreathTimer < uiDiff)
+         {
+             if (DoCastSpellIfCan(m_creature->getVictim(), SPELL_FROST_BREATH) == CAST_OK)
+             {
+@@ -316,9 +343,19 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+             }
+         }
+         else
+-            m_uiFrostBreathTimer -= diff;
++            m_uiFrostBreathTimer -= uiDiff;
++
++        if (m_uiTailLashTimer < uiDiff)
++        {
++            if (m_creature->getVictim())
++                DoCast(m_creature->getVictim(), SPELL_TAIL_LASH);
++
++            m_uiTailLashTimer = urand(25000, 40000);
++        }
++        else 
++            m_uiTailLashTimer -= uiDiff;
+ 
+-        if (m_uiWildMagicTimer < diff)
++        if (m_uiWildMagicTimer < uiDiff)
+         {
+             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                 DoCastSpellIfCan(target, WildMagic[rand()%6]);
+@@ -326,16 +363,57 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
+             m_uiWildMagicTimer = 19000;
+         }
+         else
+-            m_uiWildMagicTimer -= diff;
++            m_uiWildMagicTimer -= uiDiff;
+ 
+-        if (m_uiSpectralBlastTimer < diff)
++        if (m_uiSpectralBlastTimer < uiDiff)
+         {
+-            m_bHasSpectralTarget = false;
++            /*m_bHasSpectralTarget = false;
+             m_creature->CastSpell(m_creature, SPELL_SPECTRAL_BLAST_DUMMY, false);
+-            m_uiSpectralBlastTimer = 30000;
++            m_uiSpectralBlastTimer = 30000;*/
++            
++            ThreatList const& m_threatlist = m_creature->getThreatManager().getThreatList();
++            if (m_threatlist.empty())
++            {
++                m_uiSpectralBlastTimer = 1000;
++                return;
++            }
++
++            std::list<Unit*> targetList;
++            for(ThreatList::const_iterator itr = m_threatlist.begin(); itr!= m_threatlist.end(); ++itr)
++                if((*itr)->getTarget() && (*itr)->getTarget()->GetTypeId() == TYPEID_PLAYER && (*itr)->getTarget()->GetGUID() && !(*itr)->getTarget()->HasAura(SPELL_SPECTRAL_EXHAUSTION) && (*itr)->getTarget()->IsInRange(m_creature, 0.0f, 50.0f, true))
++                    targetList.push_back((*itr)->getTarget());
++            if(targetList.empty())
++            {
++                m_uiSpectralBlastTimer = 1000;
++                return;
++            }
++        
++            std::list<Unit*>::iterator i = targetList.begin();
++            advance(i, urand(0, targetList.size()-1));
++            if((*i))
++            {
++                if(m_pInstance && m_pInstance->GetData(TYPE_KALECGOS) == SPECIAL)
++                {
++                    m_uiSpectralBlastTimer = urand(20000, 25000);
++                }
++                else
++                {
++                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
++                        if ( pTarget == (*i))
++                            return; 
++
++                    m_creature->AddThreat((*i), -100000.0f);
++                    (*i)->InterruptNonMeleeSpells(true);
++                    (*i)->CastSpell((*i), SPELL_SPECTRAL_BLAST,true);
++                    (*i)->CastSpell((*i), SPELL_SPECTRAL_REALM,true);
++                    //(*i)->CastSpell((*i), SPELL_TELEPORT_TO_SPECTRAL_REALM,true);
++                    ((Player*)(*i))->TeleportTo((*i)->GetMapId(), (*i)->GetPositionX(), (*i)->GetPositionY(), DEMON_REALM_Z, (*i)->GetOrientation());
++                }
++                m_uiSpectralBlastTimer = urand(20000, 25000);    
++            }else m_uiSpectralBlastTimer = 1000;
+         }
+         else
+-            m_uiSpectralBlastTimer -= diff;
++            m_uiSpectralBlastTimer -= uiDiff;
+ 
+         if (!m_bBanished)
+             DoMeleeAttackIfReady();
+@@ -347,28 +425,44 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
+     boss_sathrovarrAI(Creature* pCreature) : ScriptedAI(pCreature)
+     {
+         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
++        m_uiKalecGUID = 0;
+         Reset();
+     }
+ 
+     ScriptedInstance* m_pInstance;
+ 
++    uint64 m_uiKalecGUID;
++    uint64 m_uiSpectralGUID;
++
+     uint32 CorruptingStrikeTimer;
+     uint32 CurseOfBoundlessAgonyTimer;
+     uint32 ShadowBoltVolleyTimer;
++    uint32 m_uiCheckTimer;
+     bool m_bBanished;
+     bool m_bEnraged;
+ 
+     void Reset()
+     {
+-        // FIXME: Timers
+-        CorruptingStrikeTimer = 5000;
++        CorruptingStrikeTimer = 13000;
+         CurseOfBoundlessAgonyTimer = 15000;
+-        ShadowBoltVolleyTimer = 10000;
++        ShadowBoltVolleyTimer = 7000 + urand(0, 2000);
++        m_uiCheckTimer = 2000;
++
++        m_uiKalecGUID = 0;
++        m_uiSpectralGUID =0;
++
++        TeleportAllPlayersBack();
+ 
+         m_bBanished = false;
+         m_bEnraged  = false;
+ 
+         m_creature->CastSpell(m_creature, SPELL_SPECTRAL_INVIS, true);
++
++        if (m_creature->HasAura(SPELL_CRAZED_RAGE))
++            m_creature->RemoveAurasDueToSpell(SPELL_CRAZED_RAGE);
++
++        if (m_creature->HasAura(SPELL_BANISH))
++            m_creature->RemoveAurasDueToSpell(SPELL_BANISH);
+     }
+ 
+     void Aggro(Unit* who)
+@@ -382,6 +476,7 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
+         {
+             m_creature->AddThreat(pKalec, 10000000.0f);
+             pKalec->AddThreat(m_creature, 10000000.0f);
++            m_uiKalecGUID = pKalec->GetGUID();
+         }
+     }
+ 
+@@ -399,6 +494,7 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
+                 return;
+ 
+             m_pInstance->SetData(DATA_SET_SPECTRAL_CHECK, 5000);
++            TeleportAllPlayersBack();
+ 
+             if (Creature* pKalecgos = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_KALECGOS_DRAGON)))
+             {
+@@ -413,7 +509,44 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
+         DoScriptText(urand(0, 1) ? SAY_SATH_SLAY1 : SAY_SATH_SLAY2, m_creature);
+     }
+ 
+-    void UpdateAI(const uint32 diff)
++    /*void MoveInLineOfSight(Unit* pWho)
++    {
++        // reset event if not any
++        if (pWho->GetTypeId() != TYPEID_PLAYER || !pWho->isAlive())
++        {
++            Reset();
++            m_creature->AttackStop();
++            m_creature->CastStop();
++            m_creature->DeleteThreatList();
++            if (Creature* pKalecgosHuman = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_KALECGOS_HUMAN)))
++            {
++                pKalecgosHuman->AttackStop();
++                pKalecgosHuman->CastStop();
++                pKalecgosHuman->DeleteThreatList();
++                pKalecgosHuman->AI()->EnterEvadeMode();
++            }
++        }
++    }*/
++
++    void TeleportAllPlayersBack()
++    {
++        std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
++        if (t_list.empty())
++            return;
++
++        for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++        {
++            Unit* pTarget = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
++            if (pTarget && pTarget->GetTypeId() == TYPEID_PLAYER)
++            {
++                pTarget->InterruptNonMeleeSpells(true);
++                pTarget->CastSpell(pTarget,SPELL_SPECTRAL_EXHAUSTION, true);
++                ((Player*)pTarget)->TeleportTo(pTarget->GetMapId(), pTarget->GetPositionX(), pTarget->GetPositionY(), DRAGON_REALM_Z, pTarget->GetOrientation());
++            }
++        }
++    }
++
++    void UpdateAI(const uint32 uiDiff)
+     {
+         if (!m_creature->getVictim() || !m_creature->SelectHostileTarget() || m_bBanished)
+             return;
+@@ -430,31 +563,91 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
+             m_bEnraged = true;
+         }
+ 
+-        if (CorruptingStrikeTimer < diff)
++        //If high Aggro teleported to normal realm attack Kalec or  next target
++        Unit* pWho = m_creature->getVictim();
++        if(pWho && !pWho->IsInRange(m_creature, 0.0f, 50.0f, true))
++        {
++            m_creature->AddThreat(pWho, -100000.0f);
++            if(Unit* pKalec = Unit::GetUnit(*m_creature, m_uiKalecGUID))
++            {
++                m_creature->AI()->AttackStart(pKalec);
++                m_creature->AddThreat(pKalec, 100000.0f);
++            }
++            else if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1))
++            {
++                m_creature->AddThreat(pTarget, 100000.0f);
++                m_creature->AI()->AttackStart(pTarget);
++            }
++        } 
++
++        if (Unit* pKalec = Unit::GetUnit(*m_creature, m_uiKalecGUID))
++            if (!pKalec->isAlive())
++            {
++                TeleportAllPlayersBack();
++                if ((boss_sathrovarrAI*)m_creature->AI())
++                {
++                    ((boss_sathrovarrAI*)m_creature->AI())->Reset();
++                    m_creature->AI()->EnterEvadeMode();
++                    m_creature->GetMotionMaster()->MoveTargetedHome(); 
++                }
++                if (Creature* pKalecgos = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_KALECGOS_DRAGON)))
++                    ((boss_kalecgosAI*)pKalecgos->AI())->EnterEvadeMode();
++            }
++
++        if (CorruptingStrikeTimer < uiDiff)
+         {
+             if (!urand(0, 1))
+                 DoScriptText(SAY_SATH_SPELL2, m_creature);
+ 
+             DoCastSpellIfCan(m_creature->getVictim(), SPELL_CORRUPTING_STRIKE);
+             CorruptingStrikeTimer = 13000;
+-        }else CorruptingStrikeTimer -= diff;
++        }else CorruptingStrikeTimer -= uiDiff;
+ 
+-        if (CurseOfBoundlessAgonyTimer < diff)
++        if (CurseOfBoundlessAgonyTimer < uiDiff)
+         {
+             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                 DoCastSpellIfCan(pTarget, SPELL_CURSE_OF_BOUNDLESS_AGONY);
+ 
+             CurseOfBoundlessAgonyTimer = 35000;
+-        }else CurseOfBoundlessAgonyTimer -= diff;
++        }else CurseOfBoundlessAgonyTimer -= uiDiff;
+ 
+-        if (ShadowBoltVolleyTimer < diff)
++        if (ShadowBoltVolleyTimer < uiDiff)
+         {
+             if (!urand(0, 1))
+                 DoScriptText(SAY_SATH_SPELL1, m_creature);
+ 
+             DoCastSpellIfCan(m_creature->getVictim(), SPELL_SHADOW_BOLT_VOLLEY);
+             ShadowBoltVolleyTimer = 15000;
+-        }else ShadowBoltVolleyTimer -= diff;
++        }else ShadowBoltVolleyTimer -= uiDiff;
++
++        //Remove Arcane Bufet in spectral Realm and Teleport Players back to normal if Exhaution ends.
++        if (m_uiCheckTimer < uiDiff)
++        {
++            std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
++            if (t_list.empty())
++                return;
++
++            for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++            {
++                Unit* pTarget = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
++                if (pTarget && pTarget->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pTarget, 40))              
++                {
++                    if (pTarget->HasAura(SPELL_ARCANE_BUFFET))
++                        pTarget->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET);
++
++                    if (!pTarget->HasAura(SPELL_SPECTRAL_REALM))
++                    {
++                        //remove target from threat  list
++                        m_creature->AddThreat(pTarget, -100000.0f);
++                        pTarget->InterruptNonMeleeSpells(true);
++                        pTarget->CastSpell(pTarget,SPELL_SPECTRAL_EXHAUSTION, true);
++                        //pTarget->CastSpell(pTarget,SPELL_TELEPORT_NORMAL_REALM, true);
++                        ((Player*)pTarget)->TeleportTo(pTarget->GetMapId(), pTarget->GetPositionX(), pTarget->GetPositionY(), DRAGON_REALM_Z, pTarget->GetOrientation());
++                    }
++                }
++            }
++            m_uiCheckTimer = 3000;
++        }m_uiCheckTimer -= uiDiff;
+ 
+         DoMeleeAttackIfReady();
+     }
+@@ -476,6 +669,8 @@ struct MANGOS_DLL_DECL boss_kalecgos_humanoidAI : public ScriptedAI
+     bool HasYelled10Percent;
+     bool HasYelled20Percent;
+ 
++    std::list<uint64> FriendlyList;
++
+     void Reset()
+     {
+         //TODO: Times!
+@@ -485,6 +680,8 @@ struct MANGOS_DLL_DECL boss_kalecgos_humanoidAI : public ScriptedAI
+         HasYelled10Percent = false;
+         HasYelled20Percent = false;
+ 
++        FriendlyList.clear();
++
+         m_creature->CastSpell(m_creature, SPELL_SPECTRAL_INVIS, true);
+     }
+ 
+@@ -495,7 +692,43 @@ struct MANGOS_DLL_DECL boss_kalecgos_humanoidAI : public ScriptedAI
+ 
+     void JustDied(Unit* killer)
+     {
+-        // Whatever happens when Kalec (Half-elf) dies
++        if(m_pInstance)
++            m_pInstance->SetData(TYPE_KALECGOS, FAIL);
++
++        if (Creature* pKalecgos = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_KALECGOS_DRAGON)))
++            ((boss_kalecgosAI*)pKalecgos->AI())->EnterEvadeMode();
++    }
++
++    void MoveInLineOfSight(Unit* pWho)
++    {
++        // friendly list
++        if (!m_creature->IsHostileTo(pWho) && !ListContains(FriendlyList, pWho->GetGUID()) && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 30, true))
++            FriendlyList.push_back(pWho->GetGUID());
++    }
++
++    uint64 SelectRandomAly(std::list<uint64> UnitList)
++    {
++        if (UnitList.empty())
++            return m_creature->GetGUID();
++
++        std::list<uint64>::iterator iter = UnitList.begin();
++        advance(iter, urand(0, UnitList.size()-1));
++
++        return *iter;
++    }
++
++    bool ListContains(std::list<uint64> &plist, uint64 element)
++    {
++        if (plist.empty())
++            return false;
++
++        std::list<uint64>::iterator i;
++        for (i = plist.begin(); i!=plist.end(); ++i)
++        {
++            if ((*i) == element)
++                return true;
++        }
++        return false;
+     }
+ 
+     void UpdateAI(const uint32 diff)
+@@ -505,13 +738,10 @@ struct MANGOS_DLL_DECL boss_kalecgos_humanoidAI : public ScriptedAI
+ 
+         if (RevitalizeTimer < diff)
+         {
+-            if (m_pInstance)
+-            {
+-                /*Unit* pUnit = Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_RANDOM_SPECTRAL_PLAYER));
+-                if (pUnit)
+-                    DoCastSpellIfCan(pUnit, SPELL_REVITALIZE);*/
+-                RevitalizeTimer = 30000;
+-            }
++            Unit *pAly = Unit::GetUnit((*m_creature),(SelectRandomAly(FriendlyList)));
++            if (pAly && pAly->isAlive() && m_creature->GetDistance(pAly) < 50)
++                DoCastSpellIfCan(pAly, SPELL_REVITALIZE);
++            RevitalizeTimer = 30000;
+         }else RevitalizeTimer -= diff;
+ 
+         if (HeroicStrikeTimer < diff)
+@@ -543,11 +773,19 @@ bool GOHello_go_spectral_rift(Player* pPlayer, GameObject* pGo)
+     {
+         if (pPlayer->HasAura(SPELL_SPECTRAL_EXHAUSTION, EFFECT_INDEX_0))
+             return true;
++        else
++        {
++            pPlayer->InterruptNonMeleeSpells(true);
++            pPlayer->CastSpell(pPlayer, SPELL_SPECTRAL_REALM,true);
++            //pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_TO_SPECTRAL_REALM, true);
++            pPlayer->TeleportTo(pPlayer->GetMapId(), pPlayer->GetPositionX(), pPlayer->GetPositionY(), DEMON_REALM_Z, pPlayer->GetOrientation());
++            pInstance->SetData64(DATA_PLAYER_SPECTRAL_REALM, pPlayer->GetGUID());
++        }
+ 
+         // Make them able to see Sathrovarr (he's invisible for some reason). Also, when this buff wears off, they get teleported back to Normal Realm (this is handled by Instance Script)
+-        pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_TO_SPECTRAL_REALM, true);
+-        pPlayer->CastSpell(pPlayer, SPELL_SPECTRAL_REALM_FORCE_FACTION, true);
+-        pPlayer->CastSpell(pPlayer, SPELL_SPECTRAL_REALM, true);
++        //pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_TO_SPECTRAL_REALM, true);
++        //pPlayer->CastSpell(pPlayer, SPELL_SPECTRAL_REALM_FORCE_FACTION, true);
++        //pPlayer->CastSpell(pPlayer, SPELL_SPECTRAL_REALM, true);
+ 
+         // Add player to pSath's threat list
+         /*if (Creature* pSath = pInstance->instance->GetCreature(pInstance->GetData64(DATA_KALECGOS_DRAGON)))
+@@ -571,8 +809,6 @@ bool GOHello_go_spectral_rift(Player* pPlayer, GameObject* pGo)
+                 }
+             }
+         }*/
+-
+-        pInstance->SetData64(DATA_PLAYER_SPECTRAL_REALM, pPlayer->GetGUID());
+     }
+ 
+     return true;
+diff --git a/scripts/eastern_kingdoms/sunwell_plateau/boss_kiljaeden.cpp b/scripts/eastern_kingdoms/sunwell_plateau/boss_kiljaeden.cpp
+new file mode 100644
+index 0000000..a5b294c
+--- /dev/null
++++ b/scripts/eastern_kingdoms/sunwell_plateau/boss_kiljaeden.cpp
+@@ -0,0 +1,1427 @@
++/* Copyright 2006,2007 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++*/
++ 
++/* ScriptData
++SDName: boss_kiljaden
++SD%Complete: 90%
++SDComment: 
++SDAuthor: ScrappyDoo
++SDTestTeam: Legion Of War (c) Andeeria
++EndScriptData */
++ 
++/*
++Phase1 100%
++Phase2 100%
++Phase3 100%
++Phase4 100%
++Phase5 100%
++
++DragonOrbs Event            = in progress
++Kalecgos Event              = Implemented
++Kalecgos And Anvena Event   = Implemented
++Outro Event                 = Implemented
++Shield Orb Event            = Implemented
++Shadow Spikes               = Implemented
++*/
++
++#include "precompiled.h"
++#include "sunwell_plateau.h"
++ 
++enum Speeches
++{
++    /*** Speech and sounds***/
++    // These are used throughout Sunwell and Magisters(?). Players can hear this while running through the instances.
++    SAY_KJ_OFFCOMBAT1                       = -1580056,
++    SAY_KJ_OFFCOMBAT2                       = -1580057,
++    SAY_KJ_OFFCOMBAT3                       = -1580058,
++    SAY_KJ_OFFCOMBAT4                       = -1580059,
++    SAY_KJ_OFFCOMBAT5                       = -1580060,
++
++    // Encounter speech and sounds
++    SAY_KJ_EMERGE                           = -1580061,
++    SAY_KJ_SLAY1                            = -1580062,
++    SAY_KJ_SLAY2                            = -1580063,
++    SAY_KJ_REFLECTION1                      = -1580064,
++    SAY_KJ_REFLECTION2                      = -1580065,
++    SAY_KJ_DARKNESS1                        = -1580066,
++    SAY_KJ_DARKNESS2                        = -1580067,
++    SAY_KJ_DARKNESS3                        = -1580068,
++    SAY_KJ_CANNOT_WIN                       = -1580070,
++    SAY_KJ_DENINE                           = -1580069,
++    SAY_KJ_LOST_POWER                       = -1580071,
++
++    /*** Kalecgos - Anveena speech at the beginning of Phase 5; Anveena's sacrifice ***/
++    SAY_KALECGOS_INTRO                      = -1580072,
++    SAY_KALECGOS_AWAKEN                     = -1580073,
++    SAY_ANVEENA_IMPRISONED                  = -1580074,
++    SAY_KALECGOS_LETGO                      = -1580075,
++    SAY_ANVEENA_LOST                        = -1580076,
++    SAY_KALECGOS_FOCUS                      = -1580077,
++    SAY_ANVEENA_KALEC                       = -1580078,
++    SAY_KALECGOS_FATE                       = -1580079,
++    SAY_ANVEENA_GOODBYE                     = -1580080,
++    SAY_KALECGOS_GOODBYE                    = -1580081,
++    SAY_KALECGOS_ENCOURAGE                  = -1580082,
++    SAY_KALECGOS_ORB1                       = -1580083,
++    SAY_KALECGOS_ORB2                       = -1580084,
++    SAY_KALECGOS_ORB3                       = -1580085,
++    SAY_KALECGOS_ORB4                       = -1580086,
++
++    // Encounter speech and sounds
++    EMOTE_KJ_DARKNESS   = 0,
++
++    /*** Outro Sounds***/
++    SAY_VELEN_01            = -1580087,
++    SAY_VELEN_02            = -1580088,
++    SAY_VELEN_03            = -1580089,
++    SAY_VELEN_04            = -1580090,
++    SAY_VELEN_05            = -1580091,
++    SAY_VELEN_06            = -1580092,
++    SAY_VELEN_07            = -1580093,
++    SAY_VELEN_08            = -1580094,
++    SAY_VELEN_09            = -1580095,
++    SAY_LIADRIN_01          = -1580096,
++    SAY_LIADRIN_02          = -1580097,
++    SAY_LIADRIN_03          = -1580098,
++};
++
++enum spells
++{
++    //Kilajden Spells
++    AURA_SUNWELL_RADIANCE       = 45769, // NOT WORKING
++    SPELL_REBIRTH               = 44200, // Emerge from the Sunwell Epick :D
++
++    SPELL_SOULFLY               = 45442, // 100%
++    SPELL_DARKNESS_OF_SOULS     = 46605, // 100% Visual Effect
++    SPELL_DARKNESS_EXPLOSION    = 45657, // 100% Damage
++    SPELL_DESTROY_DRAKES        = 46707, // ?
++    SPELL_FIREBLOOM             = 45641, // NOT WORKING
++    SPELL_FIREBLOOM_EFF         = 45642, // 100% Damage
++    SPELL_FLAMEDARTS            = 45737, // 100%
++    SPELL_LEGION_LIGHTING       = 45664, // 100%
++
++    SPELL_SHADOWSPIKE           = 46680, // NOT WORKING -> WorkArround 99%
++    SPELL_SHADOWSPIKE_EXP       = 45885, // 100% damage -> target self cast long range
++    SPELL_SHADOWSPIKE_DEV       = 60851, // aoe 6k dmg
++    SPELL_SHADOWSPIKE_VIS       = 33125, // visual effect
++
++    SPELL_ARMAGEDDON_EXPLOSION  = 45909, // 100% Damage
++    SPELL_ARMAGEDDON_EFFECT     = 24207, // 100% Visual
++
++    SPELL_SINISTER_REFLECTION   = 45892, // NOT WORKING -> WorkArround 99%
++    SPELL_SACRIFICE_OF_ANVEENA  = 46474, // 100%
++
++    SPELL_KNOCKBACK             = 0,     // ?
++
++    //Hand of the Deceiver Spells
++    SPELL_FELLFIRE_PORTAL       = 46875, // NOT WORKING -> WorkArround 99%
++    SPELL_SHADOWBOLT_VOLLEY     = 45770, // 100%
++    SPELL_SHADOWINFUSION        = 45772, // 100%
++    SPELL_IMPFUSION             = 45779, // 100%
++    SPELL_SHADOW_CHANNELING     = 46757, // Channeling animation out of combat
++    SPELL_ENERGY_DRAIN          = 60309, // visual on anveena
++
++    // Anveena
++    SPELL_ANVEENAS_PRISON       = 46367,
++    SPELL_ANVEENA_EXPLODE       = 46410,
++
++    //Orb Spells
++    SPELL_ORB_BOLT_DEV          = 45680, // NOT WORKING
++    SPELL_ORB_BOLT              = 53086, // 100%
++
++    //Reflections Spells
++    SPELL_PRIEST                = 47077, // 100%
++    SPELL_PALADIN               = 37369, // 100%
++    SPELL_PALADIN2              = 37369, // 100%
++    SPELL_WARLOCK               = 46190, // 100%
++    SPELL_WARLOCK2              = 47076, // 100%
++    SPELL_MAGE                  = 47074, // 100%
++    SPELL_ROGUE                 = 45897, // 100%
++    SPELL_WARRIOR               = 17207, // 100%
++    SPELL_DRUID                 = 47072, // 100%
++    SPELL_SHAMAN                = 47071, // 100%
++    SPELL_HUNTER                = 48098, // 100%
++
++    //Orbs of DragonFligth
++    SPELL_REVITALIZE            = 45027, // 100%
++    SPELL_SHIELD_OF_BLUE        = 45848, // 100%
++    AURA_BLUESHIELD             = 44867, // :D
++    SPELL_HASTE                 = 45856, // NOT WORKING
++
++    //Other Spells (used by players, etc)
++    SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT  = 45839, // Possess the blue dragon from the orb to help the raid.
++};
++
++enum creature_ids
++{
++    ID_ANVEENA      = 26046, // Embodiment of the Sunwell
++    ID_KALECGOS     = 25319, // Helps the raid throughout the fight
++    ID_VELEN        = 26246, // Outro
++    ID_LIADRIN      = 26247, // outro
++
++    IF_KILJAEDEN_CONTROLLER = 25608,
++	ID_KILJADEN		= 25315,
++    ID_DECIVER      = 25588,
++    ID_SHIELDORB    = 25502,
++    ID_SINISTER     = 25708, // Sinister Reflection
++    ID_ARMAGEDON    = 25735,
++    ID_IMP          = 25598,
++    ID_PORTAL       = 25603, //Imp Portal
++    ID_DRAGON       = 25653,
++    ID_SHADOWSPIKE  = 30598,
++
++    ID_THE_CORE_OF_ENTROPIUS  = 26262, // Used in the ending cinematic?
++};
++ 
++float OrbSpawn [4][2] =
++{
++    {1853.300f,588.653f},
++    {1698.900f,627.870f},
++    {1781.502f,659.254f},
++    {1853.300f,588.653f},
++};
++
++float DragonSpawnCoord[4][2] =
++{
++    (1668.711f, 643.723f),
++    (1745.68f, 621.823f),
++    (1704.14f, 583.591f),
++    (1653.12f, 635.41f),
++};
++
++float DeceiverPos[3][2] =
++{
++    (1707.285f, 612.927f),
++    (1684.278f, 614.128f),
++    (1682.442f, 638.069f),
++};
++
++#define GAMEOBJECT_ORB_OF_THE_BLUE_DRAGONFLIGHT 188415
++
++#define GOSSIP_ITEM_1 "cast on me Shield of the Blue Dragon Flight ! Quikly !"
++#define GOSSIP_ITEM_2 "cast on me Dragon Breath: Revitalize !"
++#define GOSSIP_ITEM_3 "cast on me Dragon Breath: Haste !"
++#define GOSSIP_ITEM_4 "cast on me Blink !"
++#define GOSSIP_ITEM_5 "Fight with our Enemy !"
++
++/* --- Kiljaden --- */
++struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
++{
++    boss_kiljadenAI(Creature *c) : Scripted_NoMovementAI(c)
++    {
++        pInstance = ((ScriptedInstance*)c->GetInstanceData());
++        Reset();
++    }
++ 
++    ScriptedInstance* pInstance;
++    
++    uint64 m_uiKalecgosGUID;
++    uint64 m_uiAnveenaGUID;
++
++    //BlueShield WorkArround
++    uint32 m_uiCancelShieldTimer;
++
++    uint64 m_uiDragonGUID[4];
++
++    uint32 m_uiOrbTimer;
++    bool m_bBoolOrb;
++
++    uint32 m_uiKalecgosTimer;
++    bool m_bIsKalecgosSpawned;
++
++    //SpeachTimers
++    uint32 m_uiKJOrdersTimer;
++
++    //Anvena and Kalecgos Timer
++    uint32 m_uiKalecgosAnvenaCount;
++    bool m_bIsAnvena;
++    uint32 m_uiKalecgosAnvenaTimer;
++
++    //FireBloom Targets Table
++    uint64 m_uiFireBloomTarget[5];
++
++    //Phase2
++    uint32 m_uiSoulFlyTimer;
++    uint32 m_uiLegionLightingTimer;
++    uint32 m_uiFireBloomCheck;
++    uint32 m_uiFireBloomTimer;
++    uint32 m_uiFireBloomCount;
++    uint32 m_uiShieldOrbTimer;
++
++    //Phase3
++    bool m_bPhase3;
++    uint32 m_uiShadowSpikeTimer;
++    uint32 m_uiFlameDartTimer;
++    uint32 m_uiDarknessOfSoulsTimer;
++    uint32 m_uiDarknessExplosionTimer;
++    uint32 m_uiShadowSpikeEndsTimer;
++    uint32 m_uiSpikesCount;
++    bool m_bShadowSpikeEnds;
++
++    //Phase4
++    bool m_bPhase4;
++    bool m_bDarknessOfSoulsCasting;
++    uint32 m_uiAramageddonTimer;
++    
++    //Phase5
++    bool m_bPhase5;
++
++    //Sinister Reflections
++    uint64 m_uiSinisterGUID[12][2];
++    uint32 m_uiSinnisterCastTimer;
++ 
++    void Reset()
++    {
++        //BlueShield WorkArround
++        m_uiCancelShieldTimer = 300000;
++
++        //creatures
++        m_uiKalecgosGUID = 0;
++        m_uiAnveenaGUID = 0;
++
++        //SpeachTimers
++        m_uiKJOrdersTimer = 10000;
++
++        m_bIsAnvena = false;
++
++        //Kalecgos Event
++        m_uiKalecgosTimer = 25000;
++        m_bIsKalecgosSpawned = false;
++
++        m_bBoolOrb = true;
++
++        //Phase2
++        m_uiSoulFlyTimer        = 1000;
++        m_uiLegionLightingTimer = 15000;
++        m_uiFireBloomCheck      = 2000;
++        m_uiFireBloomTimer      = 30000;
++        m_uiFireBloomCount      = 10;
++        m_uiShieldOrbTimer      = 25000;
++
++        //Phase3
++        m_bShadowSpikeEnds     = false;
++        m_uiSpikesCount         = 9;
++
++        m_bDarknessOfSoulsCasting  = false;
++        m_uiDarknessExplosionTimer = 120000;
++
++        m_bPhase3 = false;
++        m_bPhase4 = false;
++        m_bPhase5 = false;
++
++        m_creature->SetVisibility(VISIBILITY_OFF);
++        m_creature->setFaction(35);
++
++        if(!m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
++            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++
++        if(!m_creature->HasAura(AURA_SUNWELL_RADIANCE, EFFECT_INDEX_0))
++            m_creature->CastSpell(m_creature, AURA_SUNWELL_RADIANCE, true);
++
++        if(m_creature->HasAura(SPELL_SACRIFICE_OF_ANVEENA, EFFECT_INDEX_0))
++            m_creature->RemoveAurasDueToSpell(SPELL_SACRIFICE_OF_ANVEENA,0);
++
++        for(uint8 i=0; i<4; ++i)
++            m_uiDragonGUID[i] = 0;
++
++        if(pInstance)
++        {
++            pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
++            pInstance->SetData(TYPE_KILJAEDEN, NOT_STARTED);
++        }
++    }
++    
++    void Aggro(Unit *who) 
++    {
++        m_creature->SetInCombatWithZone();
++        
++        if(Creature* pAnveena = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ANVEENA))))
++            pAnveena->SetVisibility(VISIBILITY_OFF);
++    }
++
++    void JustReachedHome()
++    {
++        if(Creature* pKalecgnos = pInstance->instance->GetCreature(m_uiKalecgosGUID))
++            pKalecgnos->ForcedDespawn();
++    }
++
++    void KilledUnit(Unit *Victim) 
++    {
++        switch (rand()%2)
++        {  
++            case 0: DoScriptText(SAY_KJ_SLAY1, m_creature); break;
++            case 1: DoScriptText(SAY_KJ_SLAY2, m_creature); break;
++        }
++    }
++
++    void Sinister(Player* victim,uint8 i,uint8 k)
++    {
++        uint32 spell;
++        switch(victim->getClass())
++        {
++            case CLASS_PRIEST:  spell = SPELL_PRIEST; break;
++            case CLASS_PALADIN: spell = SPELL_PALADIN; break;
++            case CLASS_WARLOCK: spell = SPELL_WARLOCK; break;
++            case CLASS_MAGE:    spell = SPELL_MAGE; break;
++            case CLASS_ROGUE:   spell = SPELL_ROGUE; break;
++            case CLASS_WARRIOR: spell = SPELL_WARRIOR; break;
++            case CLASS_DRUID:   spell = SPELL_DRUID; break;
++            case CLASS_SHAMAN:  spell = SPELL_SHAMAN; break;
++            case CLASS_HUNTER:  spell = SPELL_HUNTER; break;
++        }
++
++        for(i=i; i<k; ++i)
++        {
++            Creature* Sinister = m_creature->SummonCreature(ID_SINISTER, victim->GetPositionX()+rand()%3, victim->GetPositionY()+rand()%3, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
++            if(Sinister)
++            {
++                Sinister->setFaction(14);
++                Sinister->SetDisplayId(victim->GetDisplayId());
++                Sinister->AI()->AttackStart(Sinister->getVictim());
++                m_uiSinisterGUID[i][0] = Sinister->GetGUID();
++                m_uiSinisterGUID[i][1] = spell;
++            }
++        }
++    }
++
++    void JustDied(Unit* Killer) 
++    {
++        if(pInstance)
++            pInstance->SetData(TYPE_KILJAEDEN, DONE);
++    }
++
++    void DamageDeal(Unit* pDoneTo, uint32& uiDamage) 
++    {
++        if(pDoneTo->HasAura(AURA_BLUESHIELD,EFFECT_INDEX_0))
++            uiDamage = uiDamage * 0.05;
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        //Sounds OOC, Kiljaeden Orders
++        if(!m_creature->getVictim())
++        {
++            if(m_uiKJOrdersTimer < diff)
++            {
++		        switch (rand()%5)
++		        {
++			        case 0: DoScriptText(SAY_KJ_OFFCOMBAT1, m_creature); break;
++			        case 1: DoScriptText(SAY_KJ_OFFCOMBAT2, m_creature); break;
++			        case 2: DoScriptText(SAY_KJ_OFFCOMBAT3, m_creature); break;
++                    case 3: DoScriptText(SAY_KJ_OFFCOMBAT4, m_creature); break;
++                    case 4: DoScriptText(SAY_KJ_OFFCOMBAT5, m_creature); break;
++		        }
++                m_uiKJOrdersTimer = 30000;
++            }else m_uiKJOrdersTimer -= diff;
++        }
++
++        //Rebirth After Phase1
++        if(pInstance && pInstance->GetData(TYPE_DECIVER) == SPECIAL)
++        {
++            m_creature->setFaction(14);
++            m_creature->CastSpell(m_creature, SPELL_REBIRTH, true);
++            DoScriptText(SAY_KJ_EMERGE, m_creature);
++            m_creature->SetVisibility(VISIBILITY_ON);
++            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++            pInstance->SetData(TYPE_KILJAEDEN, IN_PROGRESS);
++            pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
++        }
++
++        if(!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++               return;
++
++        //FireBloom Damage WorkArround
++        if (m_uiFireBloomCheck < diff)
++        {
++            if(m_uiFireBloomCount < 10)
++                for(uint8 i=0; i<5; ++i)
++                {
++                    if(Unit* FireTarget = Unit::GetUnit(*m_creature, m_uiFireBloomTarget[i]))
++                        FireTarget->CastSpell(FireTarget, SPELL_FIREBLOOM_EFF, true);
++                }
++            ++m_uiFireBloomCount;
++            m_uiFireBloomCheck = 2000;
++        }else m_uiFireBloomCheck -= diff;
++
++        // After Each Phase Dragons Are Spawned
++        if((m_uiOrbTimer < diff) && !m_bBoolOrb)
++        {
++            if(Creature* pKalec = pInstance->instance->GetCreature(m_uiKalecgosGUID))
++            {
++                switch (rand()%4)
++                {
++                case 0: DoScriptText(SAY_KALECGOS_ORB1,pKalec); break;
++                case 1: DoScriptText(SAY_KALECGOS_ORB2,pKalec); break;
++                case 2: DoScriptText(SAY_KALECGOS_ORB3,pKalec); break;
++                case 3: DoScriptText(SAY_KALECGOS_ORB4,pKalec); break;
++                }
++            }
++            uint8 m_uiMaxDragons = 1;
++            if(m_bPhase5)
++                m_uiMaxDragons = 4;
++            for(uint8 i=0; i<m_uiMaxDragons; ++i)
++            {
++                Creature* Dragon = m_creature->SummonCreature(ID_DRAGON, m_creature->GetPositionX()+urand(20,35), m_creature->GetPositionY()+urand(20,35), m_creature->GetPositionZ()+1, 0, TEMPSUMMON_CORPSE_DESPAWN, 20000);
++                m_uiDragonGUID[i] = Dragon->GetGUID();
++            }
++            m_bBoolOrb = true;
++        }else m_uiOrbTimer -= diff;
++
++        for(uint8 i=0; i<4; ++i)
++        {
++            if(Unit* Dragon = Unit::GetUnit((*m_creature), m_uiDragonGUID[i]))
++                if(Dragon && Dragon->HasAura(SPELL_SHIELD_OF_BLUE))
++                {
++                    m_uiCancelShieldTimer = 5000;
++                    std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
++                    for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++                    {
++                        Unit *TargetedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());  
++                        if (TargetedPlayer && TargetedPlayer->GetTypeId() == TYPEID_PLAYER && TargetedPlayer->IsWithinDistInMap(Dragon, 10) && !TargetedPlayer->HasAura(AURA_BLUESHIELD))
++                            TargetedPlayer->CastSpell(TargetedPlayer,AURA_BLUESHIELD,true);
++                    }
++                }
++        }
++
++        if(m_uiCancelShieldTimer < diff)
++        {
++            std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
++            for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
++            {
++                Unit *ShieldedPlayer1 = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
++                if (ShieldedPlayer1 && ShieldedPlayer1->GetTypeId() == TYPEID_PLAYER && ShieldedPlayer1->HasAura(AURA_BLUESHIELD))
++                {
++                    ShieldedPlayer1->RemoveAurasDueToSpell(AURA_BLUESHIELD);
++                } 
++            }
++            m_uiCancelShieldTimer = 300000;
++        }else m_uiCancelShieldTimer -= diff;
++
++        //Kalecgos and Anvena Event
++        if((m_uiKalecgosAnvenaTimer < diff) && m_bIsAnvena)
++        {
++            if(Creature* pAnveena = pInstance->instance->GetCreature(m_uiAnveenaGUID))
++                if(Creature* pKalec = pInstance->instance->GetCreature(m_uiKalecgosGUID))
++                {
++                    switch(m_uiKalecgosAnvenaCount)
++                    {
++                    case 0:
++                        DoScriptText(SAY_KALECGOS_AWAKEN, pKalec); m_uiKalecgosAnvenaTimer = 5000; break;
++                    case 1:
++                        DoScriptText(SAY_ANVEENA_IMPRISONED, pAnveena); m_uiKalecgosAnvenaTimer = 3000; break;
++                    case 2:
++                        DoScriptText(SAY_KALECGOS_LETGO, pKalec); m_uiKalecgosAnvenaTimer = 6000; break;
++                    case 5:
++                        DoScriptText(SAY_ANVEENA_LOST,pAnveena); m_uiKalecgosAnvenaTimer = 4000; break;
++                    case 4:
++                        DoScriptText(SAY_KALECGOS_FOCUS,pKalec); m_uiKalecgosAnvenaTimer = 8000; break;
++                    case 3:
++                        DoScriptText(SAY_ANVEENA_KALEC,pAnveena); m_uiKalecgosAnvenaTimer = 5000; break;
++                    case 6:
++                        DoScriptText(SAY_KALECGOS_FATE,pKalec); m_uiKalecgosAnvenaTimer = 5000; break;
++                    case 7:
++                        DoScriptText(SAY_ANVEENA_GOODBYE, pAnveena); 
++                        //pAnveena->CastSpell(pAnveena, SPELL_ANVEENA_EXPLODE, false);
++                        m_creature->CastSpell(m_creature, SPELL_SACRIFICE_OF_ANVEENA, false);
++                        if(Unit* Anveena = Unit::GetUnit((*m_creature), m_uiAnveenaGUID))
++                            if(Anveena && Anveena->isAlive())
++                                Anveena->SetVisibility(VISIBILITY_OFF);
++                        m_uiKalecgosAnvenaTimer = 5000;
++                        break;
++                    case 9:
++                        DoScriptText(SAY_KALECGOS_GOODBYE,pKalec);
++                        pAnveena->CastStop();
++                        m_bIsAnvena = false; 
++                        break;
++                    case 8:
++                        DoScriptText(SAY_KALECGOS_ENCOURAGE, pKalec); m_uiKalecgosAnvenaTimer = 14000; break;         
++                    }
++                }
++                ++m_uiKalecgosAnvenaCount;
++        }m_uiKalecgosAnvenaTimer -= diff;
++
++        //Kalecgos Event
++        if((m_uiKalecgosTimer < diff) && !m_bIsKalecgosSpawned)
++        {
++            if(!GetClosestCreatureWithEntry(m_creature, ID_KALECGOS, 80.0f))
++            {
++                if(Creature* cKalecgos = m_creature->SummonCreature(ID_KALECGOS, m_creature->GetPositionX()-25, m_creature->GetPositionY()-25, m_creature->GetPositionZ() + 5, 0.686f, TEMPSUMMON_TIMED_DESPAWN, 600000))
++                {
++                    DoScriptText(SAY_KALECGOS_INTRO, cKalecgos);
++                    m_uiKalecgosGUID = cKalecgos->GetGUID();
++                    cKalecgos->setFaction(35);
++                    cKalecgos->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                    //Kalecgos need to start shhooting arcane bolt into Kiljaeden
++                    //Dragon->AI()->AttackStart(m_creature);
++                }
++            }
++            m_bIsKalecgosSpawned = true;
++        }m_uiKalecgosTimer -= diff;
++
++        //Shield Orb At Start each phases
++        if(m_uiShieldOrbTimer < diff && !m_bPhase5)
++        {
++            uint8 l=1;
++            if(m_bPhase3)
++                l=2;
++            if(m_bPhase4)
++                l=3;
++            for(uint8 k=0; k<l; ++k)
++            {
++                Creature* ShieldOrb = m_creature->SummonCreature(ID_SHIELDORB, m_creature->GetPositionX()+urand(1,15), m_creature->GetPositionY()+urand(1,15), m_creature->GetPositionZ()+10, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
++                if(ShieldOrb)
++                    ShieldOrb->AI()->AttackStart(m_creature->getVictim()); 
++            }
++            
++            m_uiShieldOrbTimer = 50000; 
++        }else m_uiShieldOrbTimer -= diff;
++
++        //Sinister Reflects Attack
++        if(m_uiSinnisterCastTimer < diff)
++        {
++            uint8 m_uiSinisterCount = 0;
++            if(m_bPhase3)
++                m_uiSinisterCount = 4;
++            if(m_bPhase4)
++                m_uiSinisterCount = 8;
++            if(m_bPhase5)
++                m_uiSinisterCount = 12;
++            for(uint8 i=0; i<m_uiSinisterCount; ++i)
++			{
++                if(Unit* Sinister = Unit::GetUnit((*m_creature), m_uiSinisterGUID[i][0]))
++				{
++					if(!Sinister->isDead())
++					{
++						if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++							Sinister->CastSpell(target, m_uiSinisterGUID[i][1], true);
++					}
++				}
++			}
++            m_uiSinnisterCastTimer = 8000;
++        }else m_uiSinnisterCastTimer -= diff;
++
++        //Phase4
++        if((m_uiAramageddonTimer < diff) && m_bPhase4)
++        {
++            uint8 h=3;
++            if(m_bPhase5)
++                h=5;
++            if(!m_bPhase5 && m_bDarknessOfSoulsCasting)
++                h=0;
++            
++            for(uint8 i=0; i<h; ++i)
++            {
++                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    Creature* Armagedon = m_creature->SummonCreature(ID_ARMAGEDON, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
++            }
++            m_uiAramageddonTimer = 14000;
++        }else m_uiAramageddonTimer -= diff;
++
++        if((m_uiShadowSpikeEndsTimer < diff) && m_bShadowSpikeEnds && m_bPhase3)
++        {
++            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            {
++                if(Creature* cShadowSpike = m_creature->SummonCreature(ID_SHADOWSPIKE, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 6000))
++                {
++                    cShadowSpike->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                    cShadowSpike->setFaction(14);
++                }
++
++                //target->CastSpell(target, SPELL_SHADOWSPIKE_EXP, false);
++            }
++            ++m_uiSpikesCount;
++            if(m_uiSpikesCount > 9)
++                m_bShadowSpikeEnds = false;
++            m_uiShadowSpikeEndsTimer = 3000;
++        }else m_uiShadowSpikeEndsTimer -= diff;
++
++        if(m_bShadowSpikeEnds)
++            return;
++
++        if(m_uiDarknessExplosionTimer < diff && m_bDarknessOfSoulsCasting)
++        {
++            //m_creature->CastSpell(m_creature->getVictim(), SPELL_DARKNESS_EXPLOSION, true);
++            m_bDarknessOfSoulsCasting = false;
++            m_uiDarknessExplosionTimer = 600000;
++            m_uiDarknessOfSoulsTimer = 45000;
++            m_uiFireBloomTimer = 25000;
++            if(m_bPhase5)
++                m_uiDarknessOfSoulsTimer = 25000;
++        }else m_uiDarknessExplosionTimer -= diff;
++
++        if(m_bDarknessOfSoulsCasting)
++            return;
++
++        if(m_uiDarknessOfSoulsTimer < diff && m_bPhase3)
++        {
++            switch (rand()%3)
++		        {
++			        case 0: DoScriptText(SAY_KJ_DARKNESS1, m_creature); break;
++			        case 1: DoScriptText(SAY_KJ_DARKNESS2, m_creature); break;
++			        case 2: DoScriptText(SAY_KJ_DARKNESS3, m_creature); break;
++		        }
++            m_creature->CastSpell(m_creature, SPELL_DARKNESS_OF_SOULS, false);
++            m_bDarknessOfSoulsCasting = true;
++            m_uiDarknessExplosionTimer = 8500;
++        }else m_uiDarknessOfSoulsTimer -= diff;
++
++        //Phases
++        if(((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) <= 85) && !m_bPhase3)
++        {      
++            DoScriptText(SAY_KJ_DENINE, m_creature);
++            if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM,0)) 
++                if (victim && (victim->GetTypeId() == TYPEID_PLAYER))
++                    Sinister(((Player*)victim),0,4);
++
++            //Start Timerow  Dochodzacych w 3 Fazie
++            m_uiSinnisterCastTimer     = 10000;
++            m_uiShadowSpikeTimer       = 30000;
++            m_uiFlameDartTimer         = 40000;
++            m_uiDarknessOfSoulsTimer   = 45000;
++            m_bShadowSpikeEnds         = false;
++            m_bDarknessOfSoulsCasting  = false;
++            m_bPhase3 = true;
++            //DragonsTimer
++            m_uiOrbTimer = 35000;
++            m_bBoolOrb = false;
++        }
++
++        if(((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) <= 55) && !m_bPhase4)
++        {
++            DoScriptText(SAY_KJ_CANNOT_WIN, m_creature);
++            if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM,0)) 
++                if (victim && (victim->GetTypeId() == TYPEID_PLAYER))
++                    Sinister(((Player*)victim),4,8);
++
++            //Start Timerow  Dochodzacych w 4 Fazie
++            m_uiAramageddonTimer       = 2000;  //100% ok
++            m_bPhase4 = true;
++            m_uiDarknessOfSoulsTimer   = 45000;
++            //DragonsTimer
++            m_uiOrbTimer = 35000;
++            m_bBoolOrb = false;
++        }
++
++        if(((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) <= 25) && !m_bPhase5)
++        {
++            DoScriptText(SAY_KJ_LOST_POWER, m_creature);
++            if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM,0)) 
++                if (victim && (victim->GetTypeId() == TYPEID_PLAYER))
++                    Sinister(((Player*)victim),8,12);
++            //Start Timerow  Dochodzacych w 5 Fazie
++            m_uiShadowSpikeTimer = 1000;
++            m_uiDarknessOfSoulsTimer   = 45000;
++            m_bPhase5 = true;
++            //DragonsTimer
++            m_uiOrbTimer = 35000;
++            m_bBoolOrb = false;
++            //Kalecgos and Anvena Event
++            m_uiKalecgosAnvenaTimer = 20000;
++            m_bIsAnvena = true;
++            m_uiKalecgosAnvenaCount = 0;
++
++            if(Creature* cAnveena = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ANVEENA))))
++            //if(Creature* cAnveena = m_creature->SummonCreature(ID_ANVEENA, m_creature->GetPositionX()+urand(20,30), m_creature->GetPositionY()+urand(20,30), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 120000))
++            {
++                m_uiAnveenaGUID = cAnveena->GetGUID();
++                cAnveena->SetSplineFlags(SPLINEFLAG_FLYING);
++                cAnveena->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                cAnveena->setFaction(35);
++                cAnveena->SetVisibility(VISIBILITY_ON);
++                cAnveena->GetMap()->CreatureRelocation(cAnveena, cAnveena->GetPositionX(), cAnveena->GetPositionY(), cAnveena->GetPositionZ()+20, cAnveena->GetOrientation());
++            }
++        }
++
++        //Phase3
++        if(m_bPhase3)
++        {
++            if(m_uiShadowSpikeTimer < diff)
++            {
++                DoCast(m_creature->getVictim(), SPELL_SHADOWSPIKE);
++
++                m_bShadowSpikeEnds         = true;
++                m_uiShadowSpikeEndsTimer    = 500;
++                m_uiSpikesCount             = 0;
++                m_uiShadowSpikeTimer        = 90000;
++            }else m_uiShadowSpikeTimer -= diff;
++
++            if(m_uiFlameDartTimer < diff)
++            {
++                DoCast(m_creature->getVictim(), SPELL_FLAMEDARTS);
++                m_uiFlameDartTimer = 33000;
++            }else m_uiFlameDartTimer -= diff;
++        }
++
++        //Phase2
++        if(m_uiLegionLightingTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_LEGION_LIGHTING);
++            m_uiLegionLightingTimer = 11000;
++        }else m_uiLegionLightingTimer -= diff;
++
++        if(m_uiFireBloomTimer < diff)
++        {
++            for(uint8 i=0; i<5; ++i)
++            {
++                Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0);
++                m_uiFireBloomTarget[i] = target->GetGUID();
++                m_uiFireBloomCount = 0;
++                //DoCast(target, SPELL_FIREBLOOM, true);
++            }
++            m_uiFireBloomTimer = 25000;
++        }else m_uiFireBloomTimer -= diff;
++
++        if(m_uiSoulFlyTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_SOULFLY);
++            m_uiSoulFlyTimer = 7000;
++        }else m_uiSoulFlyTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++struct MANGOS_DLL_DECL mob_deceiverAI : public ScriptedAI
++{
++    mob_deceiverAI(Creature *c) : ScriptedAI(c)
++    {
++        pInstance = ((ScriptedInstance*)c->GetInstanceData());
++        Reset();
++    }
++ 
++    ScriptedInstance* pInstance;
++
++    uint32 m_uiBoltTimer;
++    uint32 m_uiPortalTimer;
++    uint32 m_uiImpTimer;
++    uint8 m_uiImpCount;
++    float m_fxx;
++    float m_fyy;
++ 
++    void Reset()
++    {
++        m_uiPortalTimer = 25000;
++        m_uiBoltTimer = 10000;
++        m_uiImpTimer = 60000;
++        m_uiImpCount = 0;
++        m_fxx = 0;
++        m_fyy = 0;
++
++        if(pInstance)
++            pInstance->SetData(TYPE_DECIVER, NOT_STARTED);
++
++        if(Creature* pAnveena = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ANVEENA))))
++            DoCast(pAnveena, SPELL_ENERGY_DRAIN);
++    }
++    
++    void Aggro(Unit *who) 
++    {
++		if (pInstance)
++            pInstance->SetData(TYPE_KILJAEDEN, IN_PROGRESS);
++
++        if(!m_creature->getVictim())
++			m_creature->AI()->AttackStart(who);
++
++        if(Creature* pAnveena = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ANVEENA))))
++            pAnveena->RemoveAurasDueToSpell(SPELL_ANVEENAS_PRISON);
++
++        m_creature->CastStop();
++    }
++
++    void JustDied(Unit* Killer) 
++    {
++        if(pInstance && pInstance->GetData(TYPE_DECIVER) == NOT_STARTED)
++            pInstance->SetData(TYPE_DECIVER, IN_PROGRESS);
++        else 
++            if(pInstance && pInstance->GetData(TYPE_DECIVER) == IN_PROGRESS)
++                pInstance->SetData(TYPE_DECIVER, DONE);
++            else
++                if(pInstance && pInstance->GetData(TYPE_DECIVER) == DONE)
++                    pInstance->SetData(TYPE_DECIVER, SPECIAL);
++    }
++
++    void KilledUnit(Unit *Victim) {}
++     
++    void UpdateAI(const uint32 diff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++            return;
++
++        if(m_uiBoltTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), SPELL_SHADOWBOLT_VOLLEY);
++            m_uiBoltTimer = 10000;
++        }else m_uiBoltTimer -= diff;
++
++        if((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) <= 20)
++            if(!m_creature->HasAura(SPELL_SHADOWINFUSION,EFFECT_INDEX_0))
++                m_creature->CastSpell(m_creature, SPELL_SHADOWINFUSION, true);
++
++        if(m_uiPortalTimer < diff)
++        {
++            m_fxx = m_creature->GetPositionX();
++            m_fyy = m_creature->GetPositionY();
++
++            Creature* Portal = m_creature->SummonCreature(ID_PORTAL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 20500);
++            m_uiPortalTimer = 30000;
++            m_uiImpTimer = 500;
++            m_uiImpCount = 0;
++        }else m_uiPortalTimer -= diff;
++
++        if(m_uiImpTimer < diff)
++        {
++            if(m_uiImpCount < 4)
++            {
++                Creature* Imp = m_creature->SummonCreature(ID_IMP, m_fxx, m_fyy, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
++                if(Imp)
++                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        Imp->AI()->AttackStart(target);  
++            }
++            m_uiImpTimer = 5000;
++            ++m_uiImpCount;
++        }else m_uiImpTimer -= diff;
++
++        DoMeleeAttackIfReady();
++    }
++};
++
++//Shield Orb AI
++struct MANGOS_DLL_DECL mob_orbAI : public Scripted_NoMovementAI
++{
++    mob_orbAI(Creature *c) : Scripted_NoMovementAI(c)
++    {
++        Reset();
++    }
++ 
++    uint32 m_uiSpellTimer;
++ 
++    void Reset()
++    {
++        m_uiSpellTimer = 1000;
++        m_creature->setFaction(14);
++        m_creature->SetVisibility(VISIBILITY_ON);
++        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++    }
++
++    void DamageDeal(Unit* pDoneTo, uint32& uiDamage) 
++    {
++        if(pDoneTo->HasAura(AURA_BLUESHIELD,EFFECT_INDEX_0))
++            uiDamage = uiDamage * 0.05;
++
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                return;
++
++        if(m_uiSpellTimer < diff)
++        {
++            for(uint8 i=0; i<3; ++i)
++            {
++                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    m_creature->CastSpell(target, SPELL_ORB_BOLT, true);
++            }
++            m_uiSpellTimer = 1000;
++        }else m_uiSpellTimer -= diff;
++    }
++};
++
++//Armageddon AI
++struct MANGOS_DLL_DECL mob_armagedonAI : public Scripted_NoMovementAI
++{
++    mob_armagedonAI(Creature *c) : Scripted_NoMovementAI(c)
++    {
++        Reset();
++    }
++ 
++    uint32 m_uiExplosionTimer;
++    uint32 m_uiEffectTimer;
++    bool m_bIsExplosion;
++ 
++    void Reset()
++    {
++        m_creature->SetDisplayId(25206);
++
++        m_uiExplosionTimer = 8000;
++        m_uiEffectTimer = 100;
++        m_bIsExplosion = false;
++
++        m_creature->setFaction(14);
++        m_creature->SetVisibility(VISIBILITY_ON);
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++    }
++
++    void DamageDeal(Unit* pDoneTo, uint32& uiDamage) 
++    {
++        if(pDoneTo->HasAura(AURA_BLUESHIELD,EFFECT_INDEX_0))
++            uiDamage = uiDamage * 0.05;
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if(m_bIsExplosion)
++            return;
++
++        if((m_uiExplosionTimer < diff) && !m_bIsExplosion)
++        {
++            m_creature->CastSpell(m_creature, SPELL_ARMAGEDDON_EXPLOSION, true);
++            m_bIsExplosion = true;
++        }else m_uiExplosionTimer -= diff;
++
++        if(m_uiEffectTimer < diff && !m_bIsExplosion)
++        {
++            m_creature->CastSpell(m_creature,SPELL_ARMAGEDDON_EFFECT,false);
++            m_uiEffectTimer = 1000;
++        }else m_uiEffectTimer -= diff;
++    }
++};
++
++// ShadowSpike AI
++struct MANGOS_DLL_DECL mob_shadowspikeAI : public Scripted_NoMovementAI
++{
++    mob_shadowspikeAI(Creature *c) : Scripted_NoMovementAI(c)
++    {
++        Reset();
++    }
++ 
++    uint32 m_uiExplosionTimer;
++    bool m_bIsExplosion;
++    uint32 m_uiEffectTimer;
++ 
++    void Reset()
++    {
++        m_creature->SetDisplayId(25206);
++
++        m_uiExplosionTimer = 5000;
++        m_bIsExplosion = false;
++        m_uiEffectTimer = 500;
++
++        m_creature->setFaction(14);
++        m_creature->SetVisibility(VISIBILITY_ON);
++        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++    }
++
++    void DamageDeal(Unit* pDoneTo, uint32& uiDamage) 
++    {
++        if(pDoneTo->HasAura(AURA_BLUESHIELD,EFFECT_INDEX_0))
++            uiDamage = uiDamage * 0.05;
++
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        if(m_bIsExplosion)
++            return;
++
++        if((m_uiExplosionTimer < diff) && !m_bIsExplosion)
++        {
++            m_creature->CastSpell(m_creature, SPELL_SHADOWSPIKE_DEV, true);
++            m_bIsExplosion = true;
++        }else m_uiExplosionTimer -= diff;
++
++        if(m_uiEffectTimer < diff && !m_bIsExplosion)
++        {
++            m_creature->CastSpell(m_creature,SPELL_SHADOWSPIKE_VIS,false);
++            m_uiEffectTimer = 1000;
++        }else m_uiEffectTimer -= diff;
++    }
++};
++
++// Imp AI
++struct MANGOS_DLL_DECL mob_killimpAI : public ScriptedAI
++{
++    mob_killimpAI(Creature *c) : ScriptedAI(c) 
++    {
++	    Reset(); 
++    }
++
++    bool m_bIsReached;
++    uint32 m_uiVisibilityTimer ;
++
++    void Reset() 
++    {
++        m_bIsReached = false;
++    }
++
++    void JustDied(Unit* Killer) 
++    {
++        if(!m_bIsReached)
++        {
++            m_creature->CastSpell(m_creature->getVictim(), SPELL_IMPFUSION, true);
++            m_bIsReached = true;
++        }
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                return;
++
++        if( m_creature->isAttackReady() && !m_creature->IsNonMeleeSpellCasted(false))
++        {
++            if(m_bIsReached)
++                if(m_uiVisibilityTimer < diff)
++                {
++                    m_creature->SetVisibility(VISIBILITY_OFF);
++                    m_uiVisibilityTimer = 60000;
++                }else m_uiVisibilityTimer -= diff;
++
++            //If we are within range melee the target
++            if(!m_bIsReached)
++                if(m_creature->IsWithinDistInMap(m_creature->getVictim(), 3.0f))
++                {
++                    m_creature->CastSpell(m_creature->getVictim(), SPELL_IMPFUSION, true);
++                    m_uiVisibilityTimer = 2000;
++                    m_bIsReached = true;
++                }
++        }
++    }
++};          
++
++// Kiljaeden Controller Event AI
++struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
++{
++    mob_kiljaeden_controllerAI(Creature *c) : Scripted_NoMovementAI(c) 
++    {
++	    pInstance = ((ScriptedInstance*)c->GetInstanceData());
++        SetCombatMovement(false);
++	    Reset(); 
++    }
++    ScriptedInstance* pInstance; 
++
++    uint32 m_uiProphetsTimer;
++    uint32 m_uiProphetsCount;
++    bool m_bIsOutroEnd;
++    bool m_bIsProhetSpawned;
++    bool m_bIsOnce;
++
++    uint64 m_uiVelenGUID;
++    uint64 m_uiLiadrinGUID;
++
++    std::list<Creature*> lDecievers;
++
++    void Reset() 
++    { 
++        m_bIsProhetSpawned = true;
++        m_bIsOutroEnd = true;
++        m_creature->setFaction(14);
++        m_uiProphetsCount = 10;
++        m_bIsOnce = true;
++
++        m_uiVelenGUID       = 0;
++        m_uiLiadrinGUID    = 0;
++
++        if(pInstance)
++        {
++            pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
++
++            if(pInstance->GetData(TYPE_KILJAEDEN) != DONE)
++            {
++                if(Creature* pAnveena = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ANVEENA))))
++                {
++                    pAnveena->CastSpell(pAnveena, SPELL_ANVEENAS_PRISON, false);
++                    pAnveena->SetVisibility(VISIBILITY_ON);
++                    pAnveena->GetMap()->CreatureRelocation(pAnveena, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation());
++                }
++
++                if(Creature* pKiljaeden = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_KILJAEDEN))))
++                {
++                    pKiljaeden->AI()->EnterEvadeMode();
++                    pKiljaeden->SetHealth(pKiljaeden->GetMaxHealth());
++                }
++
++                GetCreatureListWithEntryInGrid(lDecievers, m_creature, ID_DECIVER, DEFAULT_VISIBILITY_INSTANCE);
++                if (!lDecievers.empty())
++                {
++                    for(std::list<Creature*>::iterator iter = lDecievers.begin(); iter != lDecievers.end(); ++iter)
++                    {
++                        if ((*iter) && !(*iter)->isAlive())
++                            (*iter)->Respawn();
++                    }
++                }
++            }
++        }
++    }
++
++    void Aggro(Unit *who)
++    { 
++        m_creature->SetInCombatWithZone();
++
++        /*for(uint8 i=0; i<3; ++i)
++        {
++            Creature* Deveiver = m_creature->SummonCreature(ID_DECIVER, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 10000);
++                if(Deveiver)
++                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        Deveiver->AI()->AttackStart(target);
++        }*/
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        /*if(pInstance && pInstance->GetData(TYPE_KILJAEDEN) == NOT_STARTED)
++        {
++            Creature* pDeciever = GetClosestCreatureWithEntry(m_creature, ID_DECIVER, 80.0f);
++
++            if(!pDeciever || !pDeciever->isAlive())
++            {
++                if(Creature* pKiljaeden = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_KILJAEDEN))))
++                    pKiljaeden->setFaction(14);
++            }
++        }*/
++
++        if(pInstance && pInstance->GetData(TYPE_KILJAEDEN) == DONE && m_bIsOnce)
++        {
++            m_bIsProhetSpawned = false;
++            m_uiProphetsCount = 0;
++            m_bIsOutroEnd = false;
++            m_uiProphetsTimer = 20000;
++            m_bIsOnce = false;
++            // make out of combat
++            //m_creature->setFaction(35);
++            m_creature->AttackStop();
++            m_creature->DeleteThreatList();
++        }
++
++        if(!m_bIsProhetSpawned)
++        {   
++            if(!GetClosestCreatureWithEntry(m_creature, ID_VELEN, 80.0f))
++            {
++                Creature* Velen = m_creature->SummonCreature(ID_VELEN, m_creature->GetPositionX()+20, m_creature->GetPositionY()+20, m_creature->GetPositionZ(), 3.874f, TEMPSUMMON_TIMED_DESPAWN, 360000);
++                Velen->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                Velen->setFaction(35);
++                m_uiVelenGUID = Velen->GetGUID();
++            }
++            else
++            {
++                 if(Creature* Velen = GetClosestCreatureWithEntry(m_creature, ID_VELEN, 80.0f))
++                     m_uiVelenGUID = Velen->GetGUID();
++            }
++            if(!GetClosestCreatureWithEntry(m_creature, ID_LIADRIN, 80.0f))
++            {
++                Creature* Liadrin = m_creature->SummonCreature(ID_LIADRIN, m_creature->GetPositionX()+20, m_creature->GetPositionY()+17, m_creature->GetPositionZ(), 3.874f, TEMPSUMMON_TIMED_DESPAWN, 360000);
++                Liadrin->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++                Liadrin->setFaction(35);
++                m_uiLiadrinGUID = Liadrin->GetGUID();
++            }
++            else
++            {
++                if(Creature* Liadrin = GetClosestCreatureWithEntry(m_creature, ID_LIADRIN, 80.0f))
++                    m_uiLiadrinGUID = Liadrin->GetGUID();
++            }
++            m_bIsProhetSpawned = true;
++        }
++
++        if((m_uiProphetsTimer < diff) && !m_bIsOutroEnd)
++        {
++            switch(m_uiProphetsCount)
++            {
++                case 0:
++                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
++                        DoScriptText(SAY_VELEN_01, pVelen); 
++                    m_uiProphetsTimer = 25000; 
++                    break; //1
++                case 1:
++                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
++                        DoScriptText(SAY_VELEN_02, pVelen); 
++                    m_uiProphetsTimer = 15000; 
++                    break; //2
++                case 2:
++                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
++                        DoScriptText(SAY_VELEN_03, pVelen); 
++                    m_uiProphetsTimer = 10000; 
++                    break;  //2
++                case 3:
++                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
++                        DoScriptText(SAY_VELEN_04, pVelen); 
++                    m_uiProphetsTimer = 26000; 
++                    break; //3
++                case 9:
++                    if(Creature* pLiadrin = pInstance->instance->GetCreature(m_uiLiadrinGUID))
++                        DoScriptText(SAY_LIADRIN_01, pLiadrin); 
++                    m_uiProphetsTimer = 20000; 
++                    break; //9
++                case 5:
++                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
++                        DoScriptText(SAY_VELEN_05, pVelen); 
++                    m_uiProphetsTimer = 16000;
++                    break; //5
++                case 6:
++                    if(Creature* pLiadrin = pInstance->instance->GetCreature(m_uiLiadrinGUID))
++                        DoScriptText(SAY_LIADRIN_02,pLiadrin); 
++                    m_uiProphetsTimer = 3000; 
++                    break; //6
++                case 7:
++                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
++                        DoScriptText(SAY_VELEN_06,pVelen); 
++                    m_uiProphetsTimer = 17000; 
++                    break; //7
++                case 8:
++                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
++                        DoScriptText(SAY_VELEN_07, pVelen); 
++                    m_uiProphetsTimer = 16000; 
++                    break; //8
++                case 4:
++                    if(Creature* pLiadrin = pInstance->instance->GetCreature(m_uiLiadrinGUID))
++                        DoScriptText(SAY_LIADRIN_03, pLiadrin); 
++                    m_uiProphetsTimer = 11000; 
++                    break; //4
++                case 10:
++                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
++                        DoScriptText(SAY_VELEN_08, pVelen); 
++                    m_uiProphetsTimer = 7000; 
++                    break; //10
++                case 11:
++                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
++                        DoScriptText(SAY_VELEN_09, pVelen); 
++                    break; //11
++                m_bIsOutroEnd = true; 
++                m_creature->setFaction(35);           
++            }
++            ++m_uiProphetsCount;
++        }m_uiProphetsTimer -= diff;
++
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                return;
++    }
++};
++
++//Dragon Gossip Menu
++//This function is called when the player opens the gossip menubool
++bool GossipHello_dragon(Player* pPlayer, Creature* pCreature)
++{
++    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
++    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
++    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
++    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_4, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+4);
++    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_5, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+5);
++    pPlayer->PlayerTalkClass->SendGossipMenu(907, pCreature->GetGUID());
++    return true;
++}
++
++bool GossipSelect_dragon(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
++{
++    if (uiSender == GOSSIP_SENDER_MAIN)
++    {
++        switch (uiAction)
++        {
++            case GOSSIP_ACTION_INFO_DEF+1:
++                pCreature->CastSpell(pPlayer, SPELL_SHIELD_OF_BLUE, false);
++                pPlayer->CLOSE_GOSSIP_MENU();
++                return true;
++            case GOSSIP_ACTION_INFO_DEF+2:
++                pPlayer->CastSpell(pPlayer, SPELL_REVITALIZE, true);
++                pPlayer->CLOSE_GOSSIP_MENU();
++                return true;
++            case GOSSIP_ACTION_INFO_DEF+3:
++                pPlayer->CastSpell(pPlayer, SPELL_HASTE, true);
++                pPlayer->CLOSE_GOSSIP_MENU();
++                return true;
++            case GOSSIP_ACTION_INFO_DEF+4:
++                pPlayer->TeleportTo(pPlayer->GetMapId(), pPlayer->GetPositionX()+10, pPlayer->GetPositionY()+10, pPlayer->GetPositionZ(), pPlayer->GetOrientation());
++                pPlayer->CLOSE_GOSSIP_MENU();
++                return true;
++            case GOSSIP_ACTION_INFO_DEF+5:
++                pPlayer->CLOSE_GOSSIP_MENU();
++        }
++    }
++    return true;
++}
++
++CreatureAI* GetAI_mob_killimp(Creature *_Creature)
++{
++    return new mob_killimpAI(_Creature);
++}
++
++CreatureAI* GetAI_mob_shadowspike(Creature *_Creature)
++{
++    return new mob_shadowspikeAI(_Creature);
++}
++
++CreatureAI* GetAI_mob_deceiver(Creature *_Creature)
++{
++    return new mob_deceiverAI(_Creature);
++}
++
++CreatureAI* GetAI_mob_armagedon(Creature *_Creature)
++{
++    return new mob_armagedonAI(_Creature);
++}
++
++CreatureAI* GetAI_boss_kiljaden(Creature *_Creature)
++{
++    return new boss_kiljadenAI(_Creature);
++}
++
++CreatureAI* GetAI_mob_orb(Creature *_Creature)
++{
++    return new mob_orbAI(_Creature);
++}
++
++CreatureAI* GetAI_mob_kiljaeden_controller(Creature *_Creature)
++{
++    return new mob_kiljaeden_controllerAI(_Creature);
++}
++
++void AddSC_boss_kiljaden()
++{
++    Script *newscript;
++
++    newscript = new Script;
++    newscript->Name="mob_kiljaeden_controller";
++    newscript->GetAI = &GetAI_mob_kiljaeden_controller;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name="boss_kiljaeden";
++    newscript->GetAI = &GetAI_boss_kiljaden;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name="mob_shadowspike";
++    newscript->GetAI = &GetAI_mob_shadowspike;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name="mob_killimp";
++    newscript->GetAI = &GetAI_mob_killimp;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name="mob_orb";
++    newscript->GetAI = &GetAI_mob_orb;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name="mob_armagedon";
++    newscript->GetAI = &GetAI_mob_armagedon;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name="mob_deceiver";
++    newscript->GetAI = &GetAI_mob_deceiver;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "blue_dragon";
++    newscript->pGossipHello = &GossipHello_dragon;
++    newscript->pGossipSelect = &GossipSelect_dragon;
++    newscript->RegisterSelf();
++}
+\ No newline at end of file
+diff --git a/scripts/eastern_kingdoms/sunwell_plateau/boss_muru_entropius.cpp b/scripts/eastern_kingdoms/sunwell_plateau/boss_muru_entropius.cpp
+new file mode 100644
+index 0000000..6390404
+--- /dev/null
++++ b/scripts/eastern_kingdoms/sunwell_plateau/boss_muru_entropius.cpp
+@@ -0,0 +1,502 @@
++/* Copyright  2006,2007 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++* This program is free software; you can redistribute it and/or modify
++* it under the terms of the GNU General Public License as published by
++* the Free Software Foundation; either version 2 of the License, or
++* (at your option) any later version.
++*
++* This program is distributed in the hope that it will be useful,
++* but WITHOUT ANY WARRANTY; without even the implied warranty of
++* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++* GNU General Public License for more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program; if not, write to the Free Software
++* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++*/
++ 
++/* ScriptData
++SDName: boss_muru_entropius
++SD%Complete: 99
++SDComment:
++SDAuthor: ScrappyDoo (c) Andeeria
++EndScriptData */
++
++#include "precompiled.h"
++#include "sunwell_plateau.h"
++ 
++enum spells // Boss spells
++{
++    ENRAGE                      = 26662,
++    SPELL_NEGATIVE              = 46285,
++    SPELL_NEGATIVEENERGY        = 46008,
++    SPELL_NEGATIVEENERGY_CHAIN  = 46289,
++
++    AURA_SINGULARITY            = 46228,
++    AURA_SUNWELL_RADIANCE       = 45769,
++
++    DARKNESS                    = 45996, // dokladnie sprawdzic
++    ENTROPIUS_EFFECT            = 46223, // lipny ale zawsze cos
++
++    //Dark Fiend
++    DARK_FIEND_AURA             = 45934, // latajaca czaszka :D
++    DARK_FIEND_DEBUFF           = 45944,
++    SPELL_DISPELL               = 32375,
++    SPELL_PURGE                 = 8012,
++
++    SPELL_ARCANEFORM            = 48019, // Chaotic Rift visual
++
++    VOID_AURA                   = 46087,
++    VOID_BLAST                  = 46161,
++};
++
++enum summons
++{
++    ID_SWB                      = 25799, // ok
++    ID_SWM                      = 25798, // ok niema bufa
++    ID_DARK_FIEND               = 25744, // ok
++    ID_VOID_SENTINEL            = 25772, // ok
++    ID_SINGULARITY              = 25855, // visual effect i nie bic mele zmeiniac target?
++    ID_SPAWN                    = 25824, // ok
++};
++
++//Boss sounds
++#define SOUND_CHANGE_PHASE 12560
++ 
++// Sumoned trash coordinates
++float Trash[6][2] =
++{
++        {1853.300f,588.653f},
++        {1781.502f,659.254f},
++        {1853.300f,588.653f},
++        {1853.300f,588.653f},     
++        {1781.502f,659.254f},
++        {1781.502f,659.254f},
++};
++
++float ShadowPortalSpawn[5][3] =
++{
++        {1797.644f,613.744f,0.56290f},
++        {1822.956f,646.437f,4.40262f},
++        {1794.275f,626.539f,6.23522f},
++        {1809.726f,646.494f,5.01348f},     
++        {1798.854f,638.952f,5.62435f}
++};
++ 
++/*######
++## boll_muru
++######*/
++struct MANGOS_DLL_DECL boss_muruAI : public ScriptedAI
++{
++    boss_muruAI(Creature *c) : ScriptedAI(c) 
++    {
++	    m_pInstance = ((ScriptedInstance*)c->GetInstanceData());
++	    Reset(); 
++    }
++
++    ScriptedInstance* m_pInstance; 
++    bool Phase1;
++
++    float m_fDarkPosX;
++    float m_fDarkPosY;
++
++    uint32 TargetsCount;
++    uint32 TargetsCountTimer;
++    uint32 SingularityTimer;
++    uint32 NegativeEnergyTimer;
++    uint32 SummonTrashTimer;
++    uint32 SummonVoidTimer;
++    uint32 DarknessTimer;
++    uint32 EnrageTimer;
++    uint32 DarkFiendTimer;
++
++    bool Darkness;
++    
++    void Reset()
++    {
++        m_fDarkPosX = 0;
++        m_fDarkPosY = 0;
++
++        m_creature->SetDisplayId(23404);
++
++        NegativeEnergyTimer = 1000;
++        SummonTrashTimer = 10000;
++        SummonVoidTimer = 30000;
++        DarknessTimer = 45000;
++        EnrageTimer = 600000;
++        Phase1 = true;
++        Darkness = false;
++
++        m_creature->SetVisibility(VISIBILITY_ON);
++   
++        if(m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
++            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
++
++        if(!m_creature->HasAura(AURA_SUNWELL_RADIANCE, EFFECT_INDEX_0))
++            m_creature->CastSpell(m_creature, AURA_SUNWELL_RADIANCE, true);
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_MURU, NOT_STARTED);
++    }
++    
++    void Aggro(Unit *who) 
++    {
++        m_creature->StopMoving();
++        m_creature->GetMotionMaster()->Clear();
++        m_creature->GetMotionMaster()->MoveIdle();
++
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_MURU, IN_PROGRESS);
++    }  
++
++    void KilledUnit(Unit *Victim) {}
++
++    void JustDied(Unit* pKiller)
++    {
++        if (m_pInstance)
++            m_pInstance->SetData(TYPE_MURU, DONE);
++    }
++    
++    void UpdateAI(const uint32 diff)
++    {       
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                return;
++        
++        if(EnrageTimer < diff)
++        {
++            m_creature->CastSpell(m_creature, ENRAGE, true);
++            EnrageTimer = 60000;
++        }else EnrageTimer -= diff;
++        
++        if(Phase1)
++        {
++            m_creature->StopMoving();
++            m_creature->GetMotionMaster()->Clear();
++            m_creature->GetMotionMaster()->MoveIdle();
++
++            if((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) <= 42)
++            {
++                m_creature->SetDisplayId(23428);
++                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
++                DoPlaySoundToSet(m_creature, SOUND_CHANGE_PHASE);
++                DoCast(m_creature, ENTROPIUS_EFFECT, true);
++
++                TargetsCount = 1;
++                TargetsCountTimer = 10000;
++                SingularityTimer = 50000;
++                Phase1 = false;
++            }
++            if(NegativeEnergyTimer < diff)
++            {
++                for(uint8 i=0; i<2; ++i)
++                {
++                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                        m_creature->CastSpell(target, SPELL_NEGATIVE, false);
++                }
++                NegativeEnergyTimer = 1000;
++            }else NegativeEnergyTimer -= diff;
++
++            //Spawns Shadow portals and then one Void Sentinel
++            if(SummonVoidTimer < diff)
++            {
++                //Shadow Portals not implemented yet :X
++                uint8 x = rand()%5;
++                Creature* VoidSentinel = m_creature->SummonCreature(ID_VOID_SENTINEL, ShadowPortalSpawn[x][0], ShadowPortalSpawn[x][1], m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
++                if(VoidSentinel) 
++                    VoidSentinel->AI()->AttackStart(m_creature->getVictim());
++                
++                SummonVoidTimer = 30000;
++            }else SummonVoidTimer -= diff;
++            
++            //Summon 6 humanoids every 1min (1mage & 2berserkers)
++            if(SummonTrashTimer < diff)
++            {
++                    for(uint8 i = 0; i < 6; i++)
++                    {
++                        uint32 ID;
++
++                        if((i == 1) | (i == 2))
++                            ID = ID_SWB;
++                        else
++                            ID = ID_SWM;
++
++                        Creature* sTrash = m_creature->SummonCreature(ID, Trash[i][0], Trash[i][1], m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
++                        
++                        if(Unit* sTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                            if(sTrash)
++                                sTrash->AI()->AttackStart(sTarget);
++                    }
++                    SummonTrashTimer = 60000;
++            }else SummonTrashTimer -= diff;
++        }
++        else // else Entropius phase
++        {
++            // +1 target every 10 seconds
++            if(TargetsCountTimer < diff)
++            {
++                ++TargetsCount;
++                TargetsCountTimer = 10000;
++            }else TargetsCountTimer -= diff;
++
++            //Utrudnienie -> chain negative energy nie dziala wiec sa 3 beamy full dmg
++            if(NegativeEnergyTimer < diff)
++            {
++                for(uint8 i=0; i<TargetsCount; ++i)
++                {
++                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                        m_creature->CastSpell(target, SPELL_NEGATIVE, false);
++                }
++
++                NegativeEnergyTimer = 1000;
++            }else NegativeEnergyTimer -= diff;
++
++            //Summon Singularity
++            if(SingularityTimer < diff)
++            {
++                if(Unit* sTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                {
++                    Creature* Singularity = m_creature->SummonCreature(ID_SINGULARITY, sTarget->GetPositionX(), sTarget->GetPositionY(), sTarget->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 20000);
++                    if(Singularity)
++                        Singularity->AI()->AttackStart(sTarget);
++
++                }
++                SingularityTimer = 50000;
++            }else SingularityTimer -= diff; 
++
++            DoMeleeAttackIfReady();
++        }
++
++        //Cast Darkness
++        if(DarknessTimer < diff)
++        {
++            m_fDarkPosX = m_creature->GetPositionX();
++            m_fDarkPosY = m_creature->GetPositionY();
++            // Creature* Darkness = m_creature->SummonCreature(25879, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
++            m_creature->CastSpell(m_creature, DARKNESS, true);
++
++            Darkness = true;
++            DarkFiendTimer = 3000;
++            DarknessTimer = 45000;
++        }else DarknessTimer -= diff;
++
++        if(DarkFiendTimer < diff && Darkness)
++        {
++            // Phase2 1 dark fiend : Phase1 8 dark fiend
++            uint8 i=1;
++            if(Phase1)
++                i=8;
++            for(uint8 j=0; j<i; ++j)
++            {
++                //Using Instance Data to stop exploding after first explode
++                if(m_pInstance)
++                    m_pInstance->SetData(TYPE_MURU, NOT_STARTED);
++
++                Creature* sTrash = m_creature->SummonCreature(ID_DARK_FIEND, m_fDarkPosX, m_fDarkPosY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
++                if(Unit* sTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                    if(sTrash)
++                        sTrash->AI()->AttackStart(sTarget);
++            }
++            Darkness = false;
++            DarkFiendTimer = 45000;
++        }else DarkFiendTimer -= diff;
++    }
++};
++ 
++/*######
++## mob_dark_fiend
++######*/
++struct MANGOS_DLL_DECL dark_fiendAI : public ScriptedAI
++{
++    dark_fiendAI(Creature *c) : ScriptedAI(c) 
++    {
++	    pInstance = ((ScriptedInstance*)c->GetInstanceData());
++	    Reset(); 
++    }
++
++    ScriptedInstance* pInstance; 
++
++    bool Reached;
++
++    void Reset() 
++    {
++        m_creature->SetDisplayId(25206);
++        if(!m_creature->HasAura(DARK_FIEND_AURA,EFFECT_INDEX_0))
++            m_creature->CastSpell(m_creature, DARK_FIEND_AURA, true);
++        Reached = false;
++    }
++    
++    void Aggro(Unit *who) {}
++    void JustDied(Unit* Killer) {}
++    void KilledUnit(Unit *Victim) {}
++        
++    void SpellHit(Unit *caster, const SpellEntry *spell)
++    {
++        if (Reached == false)
++        {
++            if (spell->Id == SPELL_DISPELL)
++                Reached  = true;
++            if (spell->Id == SPELL_PURGE)
++                Reached  = true;
++        }
++    }
++
++    void UpdateAI(const uint32 diff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                return;
++        
++        if( m_creature->isAttackReady() && !m_creature->IsNonMeleeSpellCasted(false))
++        {
++            //If we are within range melee the target
++            /*
++            if (!get data Explosion == Done)
++            */
++            if(!Reached)
++                if(m_creature->IsWithinDistInMap(m_creature->getVictim(), ATTACK_DISTANCE))
++                {
++                    m_creature->SetVisibility(VISIBILITY_OFF);
++                    if(pInstance && pInstance->GetData(TYPE_MURU) == NOT_STARTED)
++                    {
++                        m_creature->CastSpell(m_creature->getVictim(), DARK_FIEND_DEBUFF, true);
++                        m_creature->AttackerStateUpdate(m_creature->getVictim());
++                        pInstance->SetData(TYPE_MURU, DONE);
++                        Reached = true;
++                    }
++                    // set data explosion done
++                }
++        }
++    }
++};
++
++/*######
++## mob_voidsentinel
++######*/
++struct MANGOS_DLL_DECL mob_voidsentinelAI : public ScriptedAI
++{
++    mob_voidsentinelAI(Creature *c) : ScriptedAI(c) { Reset(); }
++ 
++    uint32 AuraTimer;
++    uint32 BlastTimer;
++
++    void Reset() 
++    {   
++        AuraTimer   = 3000;
++        BlastTimer  = 15000;
++    }
++    
++    void Aggro(Unit *who){}
++    
++    void JustDied(Unit* Killer) 
++    {
++        for(uint8 i=0; i<8; ++i)
++        {
++            Creature* sTrash = m_creature->SummonCreature(ID_SPAWN, m_creature->GetPositionX()+rand()%2, m_creature->GetPositionY()+rand()%2, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
++            if(Unit* sTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                if(sTrash)
++                    sTrash->AI()->AttackStart(sTarget);
++        }
++    }
++    void KilledUnit(Unit *Victim) {}
++      
++    void UpdateAI(const uint32 diff)
++    {
++        //Return since we have no target
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                return;
++        
++        if(AuraTimer < diff)
++        {
++            DoCast(m_creature, VOID_AURA);
++            AuraTimer = 3000;
++        }else AuraTimer -=diff;
++
++        if(BlastTimer < diff)
++        {
++            DoCast(m_creature->getVictim(), VOID_BLAST, true);
++            BlastTimer = 20000;
++        }else BlastTimer -= diff;
++
++        DoMeleeAttackIfReady();
++
++    }
++};
++
++/*######
++## mob_singularity
++######*/
++struct MANGOS_DLL_DECL mob_singularityAI : public ScriptedAI
++{
++    mob_singularityAI(Creature *c) : ScriptedAI(c) { Reset(); }
++ 
++    uint32 ChangeTargetTimer;
++
++    void Reset()                    
++    {
++        m_creature->SetDisplayId(25206);
++        m_creature->CastSpell(m_creature, AURA_SINGULARITY, true);  //Sigularity aura
++        m_creature->CastSpell(m_creature, SPELL_ARCANEFORM, true);
++        ChangeTargetTimer = 5000;
++    }
++    void Aggro(Unit *who)           {} 
++    void JustDied(Unit* Killer)     {}
++    void KilledUnit(Unit *Victim)   {}
++      
++    void UpdateAI(const uint32 diff)
++    {
++        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
++                return;
++
++        if(ChangeTargetTimer < diff)
++        {
++            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                m_creature->Attack(target, true);
++            ChangeTargetTimer = 5000;
++        }else ChangeTargetTimer -= diff;
++    }
++};
++
++CreatureAI* GetAI_boss_muru(Creature *_Creature)
++{
++    return new boss_muruAI(_Creature);
++}
++ 
++CreatureAI* GetAI_dark_fiend(Creature *_Creature)
++{
++    return new dark_fiendAI(_Creature);
++}
++ 
++CreatureAI* GetAI_mob_voidsentinel(Creature *_Creature)
++{
++    return new mob_voidsentinelAI(_Creature);
++}
++
++CreatureAI* GetAI_mob_singularity(Creature *_Creature)
++{
++    return new mob_singularityAI(_Creature);
++}
++
++void AddSC_boss_muru_entropius()
++{
++    Script *newscript;
++        
++    newscript = new Script;
++    newscript->Name="boss_muru";
++    newscript->GetAI = &GetAI_boss_muru;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name="dark_fiend";
++    newscript->GetAI = &GetAI_dark_fiend;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name="mob_voidsentinel";
++    newscript->GetAI = &GetAI_mob_voidsentinel;
++    newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name="mob_singularity";
++    newscript->GetAI = &GetAI_mob_singularity;
++    newscript->RegisterSelf();
++}
++
+diff --git a/scripts/eastern_kingdoms/sunwell_plateau/instance_sunwell_plateau.cpp b/scripts/eastern_kingdoms/sunwell_plateau/instance_sunwell_plateau.cpp
+index ecad826..ac82cf3 100644
+--- a/scripts/eastern_kingdoms/sunwell_plateau/instance_sunwell_plateau.cpp
++++ b/scripts/eastern_kingdoms/sunwell_plateau/instance_sunwell_plateau.cpp
+@@ -5,7 +5,7 @@
+ /* ScriptData
+ SDName: Instance_Sunwell_Plateau
+ SD%Complete: 70%
+-SDComment:
++SDComment:z
+ SDCategory: Sunwell_Plateau
+ EndScriptData */
+ 
+@@ -28,6 +28,8 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
+     uint32 m_auiEncounter[MAX_ENCOUNTER];
+     std::string strInstData;
+ 
++    uint32 m_auiDeciverEncounter;
++
+     // Creatures
+     uint64 m_uiKalecgos_DragonGUID;
+     uint64 m_uiKalecgos_HumanGUID;
+@@ -62,6 +64,8 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
+     {
+         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+ 
++        m_auiDeciverEncounter           = 0;
++
+         // Creatures
+         m_uiKalecgos_DragonGUID         = 0;
+         m_uiKalecgos_HumanGUID          = 0;
+@@ -105,18 +109,18 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
+     {
+         switch(pCreature->GetEntry())
+         {
+-            case 24850: m_uiKalecgos_DragonGUID     = pCreature->GetGUID(); break;
+-            case 24891: m_uiKalecgos_HumanGUID      = pCreature->GetGUID(); break;
+-            case 24892: m_uiSathrovarrGUID          = pCreature->GetGUID(); break;
+-            case 24882: m_uiBrutallusGUID           = pCreature->GetGUID(); break;
+-            case 25038: m_uiFelmystGUID             = pCreature->GetGUID(); break;
+-            case 25166: m_uiAlythessGUID            = pCreature->GetGUID(); break;
+-            case 25165: m_uiSacrolashGUID           = pCreature->GetGUID(); break;
+-            case 25741: m_uiMuruGUID                = pCreature->GetGUID(); break;
+-            case 25315: m_uiKilJaedenGUID           = pCreature->GetGUID(); break;
+-            case 25608: m_uiKilJaedenControllerGUID = pCreature->GetGUID(); break;
+-            case 26046: m_uiAnveenaGUID             = pCreature->GetGUID(); break;
+-            case 25319: m_uiKalecgosGUID            = pCreature->GetGUID(); break;
++            case NPC_KALECGNOS_DRAGON:      m_uiKalecgos_DragonGUID     = pCreature->GetGUID(); break;
++            case NPC_KALECGNOS_HUMAN:       m_uiKalecgos_HumanGUID      = pCreature->GetGUID(); break;
++            case NPC_SATHROVARR:            m_uiSathrovarrGUID          = pCreature->GetGUID(); break;
++            case NPC_BRUTALLUS:             m_uiBrutallusGUID           = pCreature->GetGUID(); break;
++            case NPC_FELMYST:               m_uiFelmystGUID             = pCreature->GetGUID(); break;
++            case NPC_ALYTHESS:              m_uiAlythessGUID            = pCreature->GetGUID(); break;
++            case NPC_SACROLASH:             m_uiSacrolashGUID           = pCreature->GetGUID(); break;
++            case NPC_MURU:                  m_uiMuruGUID                = pCreature->GetGUID(); break;
++            case NPC_KILJAEDEN:             m_uiKilJaedenGUID           = pCreature->GetGUID(); break;
++            case NPC_KILJAEDEN_CONTROLLER:  m_uiKilJaedenControllerGUID = pCreature->GetGUID(); break;
++            case NPC_ANVEENA:               m_uiAnveenaGUID             = pCreature->GetGUID(); break;
++            case NPC_KALECGNOS:             m_uiKalecgosGUID            = pCreature->GetGUID(); break;
+         }
+     }
+ 
+@@ -124,7 +128,7 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
+     {
+         switch(pGo->GetEntry())
+         {
+-            case 188421:
++            case G0_FORCE_FIELD:
+                 m_uiForceFieldGUID = pGo->GetGUID();
+                 break;
+             case 188523:
+@@ -136,37 +140,54 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
+             case 188119:
+                 m_uiIceBarrierGUID = pGo->GetGUID();
+                 break;
+-            case 188075:
++            case GO_FIRE_BARRIER:
+                 m_uiDoorFireBarrierGUID = pGo->GetGUID();
+-                if (m_auiEncounter[0] == DONE && m_auiEncounter[1] == DONE && m_auiEncounter[2] == DONE)
++                if (/*m_auiEncounter[0] == DONE && m_auiEncounter[1] == DONE &&*/ m_auiEncounter[2] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 187766:
++            case GO_FIRST_GATE:
+                 m_uiDoorTheFirstGateGUID = pGo->GetGUID();
++                pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 187764:
++            case GO_SECOND_GATE:
+                 m_uiDoorTheSecondGateGUID = pGo->GetGUID();
++                pGo->SetGoState(GO_STATE_READY);
+                 if (m_auiEncounter[3] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 187990:
++            case GO_GATE_7:
+                 m_uiDoorRaid_Gate_07GUID = pGo->GetGUID();
+-                if (m_auiEncounter[3] == DONE)
+-                    pGo->SetGoState(GO_STATE_ACTIVE);
++                pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 188118:
++            case GO_MURU_GATE:
+                 m_uiDoorRaid_Gate_08GUID = pGo->GetGUID();
++                pGo->SetGoState(GO_STATE_READY);
+                 if (m_auiEncounter[4] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+-            case 187765:
++            case GO_THIRD_GATE:
+                 m_uiDoorTheThirdGateGUID = pGo->GetGUID();
++                pGo->SetGoState(GO_STATE_READY);
+                 if (m_auiEncounter[4] == DONE)
+                     pGo->SetGoState(GO_STATE_ACTIVE);
+                 break;
+         }
+     }
+ 
++    void OpenDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
++    }
++
++    void CloseDoor(uint64 guid)
++    {
++        if(!guid) return;
++        GameObject* pGo = instance->GetGameObject(guid);
++        if(pGo) pGo->SetGoState(GO_STATE_READY);
++    }
++
+     uint32 GetData(uint32 uiType)
+     {
+         switch(uiType)
+@@ -177,6 +198,7 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
+             case TYPE_EREDAR_TWINS: return m_auiEncounter[3];
+             case TYPE_MURU:         return m_auiEncounter[4];
+             case TYPE_KILJAEDEN:    return m_auiEncounter[5];
++            case TYPE_DECIVER:      return m_auiDeciverEncounter;
+         }
+ 
+         return 0;
+@@ -218,9 +240,6 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
+                 m_auiEncounter[0] = uiData;
+                 break;
+             case TYPE_BRUTALLUS:
+-                if (uiData == SPECIAL)
+-                    DoUseDoorOrButton(m_uiIceBarrierGUID,MINUTE);
+-
+                 m_auiEncounter[1] = uiData;
+                 break;
+             case TYPE_FELMYST:
+@@ -233,16 +252,30 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
+                 if (uiData == DONE)
+                 {
+                     DoUseDoorOrButton(m_uiDoorTheSecondGateGUID);
+-                    DoUseDoorOrButton(m_uiDoorRaid_Gate_07GUID);
++                    //DoUseDoorOrButton(m_uiDoorRaid_Gate_07GUID);
+                 }
+                 break;
+             case TYPE_MURU:
+                 m_auiEncounter[4] = uiData;
+                 if (uiData == DONE)
++                {
+                     DoUseDoorOrButton(m_uiDoorRaid_Gate_08GUID);
++                    DoUseDoorOrButton(m_uiDoorTheThirdGateGUID);
++                }
++                if(uiData == IN_PROGRESS)
++                    CloseDoor(m_uiDoorRaid_Gate_07GUID);
++                else
++                    OpenDoor(m_uiDoorRaid_Gate_07GUID);
++                break;
++            case TYPE_KILJAEDEN: 
++                m_auiEncounter[5] = uiData; 
++                break;
++            case DATA_SET_SPECTRAL_CHECK:  
++                m_uiSpectralRealmTimer = uiData; 
++                break;
++            case TYPE_DECIVER:
++                m_auiDeciverEncounter = uiData;
+                 break;
+-            case TYPE_KILJAEDEN: m_auiEncounter[5] = uiData; break;
+-            case DATA_SET_SPECTRAL_CHECK:  m_uiSpectralRealmTimer = uiData; break;
+         }
+ 
+         if (uiData == DONE)
+diff --git a/scripts/eastern_kingdoms/sunwell_plateau/sunwell_plateau.h b/scripts/eastern_kingdoms/sunwell_plateau/sunwell_plateau.h
+index a71dea4..7acc28e 100644
+--- a/scripts/eastern_kingdoms/sunwell_plateau/sunwell_plateau.h
++++ b/scripts/eastern_kingdoms/sunwell_plateau/sunwell_plateau.h
+@@ -16,6 +16,11 @@ enum InstanceSWP
+     TYPE_MURU                   = 4,
+     TYPE_KILJAEDEN              = 5,
+ 
++    TYPE_DECIVER                = 28,
++    TYPE_SACROLASH              = 40,
++    TYPE_ALYSTHESS              = 41,
++    TYPE_SATHROVARR             = 42,
++
+     DATA_KALECGOS_DRAGON        = 6,
+     DATA_KALECGOS_HUMAN         = 7,
+     DATA_SATHROVARR             = 8,
+@@ -39,10 +44,34 @@ enum InstanceSWP
+ 
+     DATA_PLAYER_SPECTRAL_REALM  = 25,
+     DATA_SET_SPECTRAL_CHECK     = 26,
++    DATA_RANDOM_SPECTRAL_PLAYER = 26,
++    DATA_INST_EJECT_PLAYERS     = 27,
++
++    /*** Doors ***/
++    GO_FIRE_BARRIER                = 188075,    // brutalus + felmyst door
++    G0_FORCE_FIELD                 = 188421,    // kalegnos door
++    GO_MURU_GATE                   = 188118,    // muru door exit
++    GO_GATE_7                      = 187990,    // muru door enter
++    GO_FIRST_GATE                  = 187766,    // kalegnos door exit -> not in db
++    GO_SECOND_GATE                 = 187764,    // eredar twins exit
++    GO_THIRD_GATE                  = 187765,    // unk
++
++    NPC_KALECGNOS_DRAGON            = 24850,
++    NPC_KALECGNOS_HUMAN             = 24891,
++    NPC_SATHROVARR                  = 24892,
++    NPC_BRUTALLUS                   = 24882,
++    NPC_FELMYST                     = 25038,
++    NPC_ALYTHESS                    = 25166,
++    NPC_SACROLASH                   = 25165,
++    NPC_MURU                        = 25741,
++    NPC_KILJAEDEN                   = 25315,
++    NPC_KILJAEDEN_CONTROLLER        = 25608,
++    NPC_ANVEENA                     = 26046,
++    NPC_KALECGNOS                   = 25319,
+ 
+     SPELL_SPECTRAL_REALM                = 46021,
+-    SPELL_TELEPORT_NORMAL_REALM         = 46020,
+-    SPELL_TELEPORT_TO_SPECTRAL_REALM    = 46019,
++    SPELL_TELEPORT_NORMAL_REALM         = 46020,    // invalid location -> FIXME
++    SPELL_TELEPORT_TO_SPECTRAL_REALM    = 46019,    // invalid location -> FIXME
+     SPELL_SPECTRAL_EXHAUSTION           = 44867,
+     SPELL_SPECTRAL_REALM_FORCE_FACTION  = 44852
+ };
+diff --git a/sql/Custom_Updates/Mangos/EasternKingdoms/SunwellPlateau_Mangos.sql b/sql/Custom_Updates/Mangos/EasternKingdoms/SunwellPlateau_Mangos.sql
+new file mode 100644
+index 0000000..22f538c
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/EasternKingdoms/SunwellPlateau_Mangos.sql
+@@ -0,0 +1,62 @@
++/* SUNWELL PLATEAU */
++-- SWP KALECGNOS
++-- Madrigosa should not be spawned
++update `creature` set `spawnMask` = 0 where `id` in (24895, 25319);
++-- position
++replace into `creature` (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `modelid`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `spawndist`, `currentwaypoint`, `curhealth`, `curmana`, `DeathState`, `MovementType`) values (102510, 24891, 580, 1, 1, 23350, 0, 1704.316, 928.544, -74.558, 4.65823, 360, 0, 0, 828555, 169350, 0, 0);
++replace into `creature` (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `modelid`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `spawndist`, `currentwaypoint`, `curhealth`, `curmana`, `DeathState`, `MovementType`) values (100698, 24892, 580, 1, 1, 0, 0, 1681.422, 909.523, -74.558, 0.67234, 604800, 0, 0, 2018275, 1693500, 0, 0);
++-- SWP FELMYST
++-- Felmyst
++UPDATE creature_template SET `ScriptName` = 'boss_felmyst' WHERE `entry` IN (25038); 
++UPDATE creature_template SET `ScriptName` = 'mob_felmyst_vapor' WHERE `entry` IN (25265); 
++UPDATE creature_template SET `ScriptName` = 'mob_felmyst_trail' WHERE `entry` IN (25267); 
++UPDATE creature_template SET `ScriptName` = 'mob_deathcloud' WHERE `entry` IN (25703); 
++
++-- SWP MURU
++-- Muru and Entropius
++UPDATE `creature_template` SET `ScriptName` = 'boss_muru' WHERE `entry` IN (25741);
++-- Dark Fiend
++UPDATE `creature_template` SET `ScriptName` = 'dark_fiend' WHERE `entry` IN (25744); 
++-- Void Sentinel
++UPDATE `creature_template` SET `ScriptName` = 'mob_voidsentinel' WHERE `entry` IN (25772); 
++-- Singularity
++UPDATE creature_template SET `faction_A` = '14', `faction_H` = '14', `ScriptName` = 'mob_singularity' WHERE `entry` IN (25855); 
++
++-- SWP KILJAEDEN
++-- Kiljaeden 
++UPDATE `creature_template` SET `ScriptName` = 'boss_kiljaeden' WHERE `entry` IN (25315); 
++UPDATE `creature_template` SET `ScriptName` = 'mob_deceiver' WHERE `entry` IN (25588); 
++UPDATE `creature_template` SET `ScriptName` = 'mob_orb' WHERE `entry` IN (25502); 
++UPDATE `creature_template` SET `ScriptName` = 'mob_armagedon' WHERE `entry` IN (25735); 
++UPDATE `creature_template` SET `ScriptName` = 'mob_killimp' WHERE `entry` IN (25598); 
++-- Blue Dragon
++UPDATE `creature_template` SET `unit_flags` = '6',`npcflag` = '1', `ScriptName` = 'blue_dragon', `RegenHealth` = '0' WHERE `entry` IN (25653); 
++-- Shadow Spike
++UPDATE `creature_template` SET `faction_A` = '14', `faction_H` = '14', `ScriptName` = 'mob_shadowspike' WHERE `entry` IN (30598); 
++-- Controller
++delete from creature where id = 25608;
++insert into creature values (800010,25608,580,1,1,0,0,1698.61,628.414,27.5395,3.99799,604800,0,0,9347800,1693500,0,0);
++
++-- SWP EREDAR TWINS
++-- Sacrolash
++UPDATE `creature_template` SET `ScriptName` = 'boss_sacrolash' WHERE `entry` IN (25165); 
++-- Alysthes
++UPDATE `creature_template` SET `ScriptName` = 'boss_alythess' WHERE `entry` IN (25166); 
++-- ShadowImage
++UPDATE `creature_template` SET `ScriptName` = 'npc_shadow_image' WHERE `entry` IN (25214); 
++
++-- Missing or missmatched Doors, from UDB
++delete from `gameobject` where `id` in (187990, 187764, 187765, 187766, 188118);
++delete from `gameobject_template` where `entry` in (187990, 187764, 187765, 187766, 188118);
++insert into `gameobject` values (160001, 187990, 580, 1, 1, 1849.66, 597.861, 86.105, 2.42601, 0, 0, 0.936672, 0.350207, 180, 100, 0),
++(160002, 187764, 580, 1, 1, 1876.03, 616.974, 44.6421, 1.46608, 0, 0, 0.669131, 0.743144, 180, 100, 0),
++(160003, 187765, 580, 1, 1, 1700.56, 711.332, 85.444, -0.191984, 0, 0, -0.095845, 0.995396, 180, 100, 0),
++(160004, 187766, 580, 1, 1, 1709.94, 530.091, 93.4119, 1.11701, 0, 0, 0.529919, 0.848048, 180, 100, 0),
++(160005, 188118, 580, 1, 1, 1775.49, 673.15, 91.9614, 1.55334, 0, 0, 0.700909, 0.71325, 180, 100, 1);
++insert into `gameobject_template` values (187990, 0, 7652, 'Doodad_SunwellRaid_Gate_07', '', '', '', 1375, 32, 3.90739, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''),
++(187764, 0, 7651, 'Rohendor, The Second Gate', '', '', '', 0, 32, 4.45398, 0, 0, 0, 0, 0, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''),
++(187765, 0, 7651, 'Archonisus, The Third Gate', '', '', '', 0, 32, 4.7524, 0, 0, 0, 0, 0, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''),
++(187766, 0, 7652, 'Agamath, The First Gate', '', '', '', 0, 32, 2.1379, 0, 0, 0, 0, 0, 0, 0, 86, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''),
++(188118, 0, 7703, 'Doodad_SunwellRaid_Gate_08', '', '', '', 1375, 32, 8.68847, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '');
++-- untargetable
++UPDATE `gameobject_template` SET `faction` = 114 WHERE `entry` in (187990, 187764, 187765, 187766, 188118);
+\ No newline at end of file
+diff --git a/sql/Custom_Updates/ScriptDev2/EasternKingdoms/SunwellPlateau_Script.sql b/sql/Custom_Updates/ScriptDev2/EasternKingdoms/SunwellPlateau_Script.sql
+new file mode 100644
+index 0000000..778028c
+--- /dev/null
++++ b/sql/Custom_Updates/ScriptDev2/EasternKingdoms/SunwellPlateau_Script.sql
+@@ -0,0 +1,74 @@
++/* SUNWELL */
++DELETE FROM script_texts WHERE entry BETWEEN -1580098 AND -1580087;
++INSERT INTO `script_texts` (`entry`,`content_default`,`sound`,`type`,`language`,`emote`,`comment`) VALUES
++-- Kiljaeden ending
++(-1580087,'Mortal heroes - your victory here today was foretold long ago. My brother\'s anguished cry of defeat will echo across the universe - bringing renewed hope to all those who still stand against the Burning Crusade.',12515,1,0,0,'velen_outro1'),
++(-1580088,'As the Legion\'s final defeat draws ever-nearer, stand proud in the knowledge that you have saved worlds without number from the flame.',12516,1,0,0,'velen_outro2'),
++(-1580089,'Just as this day marks an ending, so too does it herald a new beginning...',12517,1,0,0,'velen_outro3'),
++(-1580090,'The creature Entropius, whom you were forced to destroy, was once the noble naaru, M\'uru. In life, M\'uru channeled vast energies of LIGHT and HOPE. For a time, a misguided few sought to steal those energies...',12518,1,0,0,'velen_outro4'),
++(-1580091,'Our arrogance was unpardonable. We damned one of the most noble beings of all. We may never atone for this sin.',12524,1,0,0,'liadrin_outro5'),
++(-1580092,'Than fortunate it is, that I have reclaimed the noble naaru\'s spark from where it fell! Where faith dwells, hope is never lost, young blood elf.',12519,1,0,0,'velen_outro6'),
++(-1580093,'Can it be ?',12525,1,0,0,'liadrin_outro8'),
++(-1580094,'Gaz now, mortals - upon the HEART OF M\'URU! Umblemished. Bathed by the light of Creation - just as it was at the Dawn.',12520,1,0,0,'velen_outro9'),
++(-1580095,'In time, the light and hope held within - will rebirth more than this mere fount of power... Mayhap, they will rebirth the soul of a nation.',12521,1,0,0,'velen_outro10'),
++(-1580096,'Blessed ancestors! I feel it... so much love... so much grace... there are... no words... impossible to describe...',12526,1,0,0,'liadrin_outro11'),
++(-1580097,'Salvation, young one. It waits for us all.',12522,1,0,0,'velen_outro12'),
++(-1580098,'Farewell...!',12523,1,0,0,'velen_outro13');
++DELETE FROM script_texts WHERE entry BETWEEN -1580086 AND -1580036;
++INSERT INTO `script_texts` (`entry`,`content_default`,`sound`,`type`,`language`,`comment`) VALUES
++-- Felmyst
++   (-1580036, 'Glory to Kil\'jaeden! Death to all who oppose!',12477,1,0,'felmyst SAY_FELMYST_BIRTH'),
++   (-1580037, 'I kill for the master!',12480,1,0,'felmyst SAY_FELMYST_KILL1'),
++   (-1580038, 'The end has come! ',12481,1,0,'felmyst SAY_FELMYST_KILL2'),
++   (-1580039, 'Choke on your final breath! ',12478,1,0,'felmyst SAY_FELMYST_BREATH'),
++   (-1580040, 'I am stronger than ever before! ',12479,1,0,'felmyst SAY_FELMYST_TAKEOFF'),
++   (-1580041, 'No more hesitation! Your fates are written! ',12482,1,0,'felmyst SAY_FELMYST_BERSERK'),
++   (-1580042, 'Kil\'jaeden... will... prevail... ',12483,1,0,'felmyst SAY_FELMYST_DEATH'),
++   (-1580043, 'Madrigosa deserved a far better fate. You did what had to be done, but this battle is far from over.',12439,1,0,'felmyst SAY_FELMYST_KALECGOS'),
++-- Eredar Twins
++   (-1580044, 'Misery... Depravity... Confusion... Hatred... Mistrust... Chaos... These are the hallmarks... These are the pillars... ',12484,1,0,'Eredar Twins SAY_INTRO'),
++-- Lady Sacrolash
++   (-1580045, 'Shadow to the aid of fire!',12485,1,0,'Sacrolash SAY_SACROLASH_SHADOW_NOVA'),
++   (-1580046, 'Alythess! Your fire burns within me!',12488,1,0,'Sacrolash SAY_SACROLASH_SISTER_ALYTHESS_DEAD'),
++   (-1580047, 'Shadows, engulf!',12486,1,0,'Sacrolash SAY_SACROLASH_SAC_KILL_1'),
++   (-1580048, 'Ee-nok Kryul!',12487,1,0,'Sacrolash SAY_SACROLASH_SAC_KILL_2'),
++   (-1580049, 'I... fade.',12399,1,0,'Sacrolash SAY_SAC_DEAD'),
++-- Grand Warlock Alythess
++   (-1580050, 'Fire to the aid of shadow!',12489,1,0,'Alythess SAY_ALYTHESS_CANFLAGRATION'),
++   (-1580051, 'Sacrolash!',12492,1,0,'Alythess SAY_ALYTHESS_SISTER_SACROLASH_DEAD'),
++   (-1580052, 'Fire, consume!',12490,1,0,'Alythess SAY_ALYTHESS_ALY_KILL_1'),
++   (-1580053, 'Ed-ir Halach!',12491,1,0,'Alythess SAY_ALYTHESS_ALY_KILL_2'),
++   (-1580054, 'De-ek Anur!',12494,1,0,'Alythess SAY_ALYTHESS_ALY_DEAD'),
++   (-1580055, 'Your luck has run its course!',12493,1,0,'Alythess SAY_ALYTHESS_BERSERK'),
++-- Kil'jaeden
++   (-1580056, 'All my plans have led to this!',12495,1,0,'Kil\'jaeden SAY_KJ_OFFCOMBAT1'),
++   (-1580057, 'Stay on task! Do not waste time!',12496,1,0,'Kil\'jaeden SAY_KJ_OFFCOMBAT2'),
++   (-1580058, 'I have waited long enough!',12497,1,0,'Kil\'jaeden SAY_KJ_OFFCOMBAT3'),
++   (-1580059, 'Fail me and suffer for eternity!',12498,1,0,'Kil\'jaeden SAY_KJ_OFFCOMBAT4'),
++   (-1580060, 'Drain the girl! Drain her power until there is nothing but a vacant shell!',12499,1,0,'Kil\'jaeden SAY_KJ_OFFCOMBAT5'),
++   (-1580061, 'The expendible have perished... So be it! Now I shall succeed where Sargeras could not! I will bleed this wretched world and secure my place as the true master of the Burning Legion. The end has come! Let the unraveling of this world commence!',12500,1,0,'Kil\'jaeden SAY_KJ_EMERGE'),
++   (-1580062, 'Another step towards destruction!',12501,1,0,'Kil\'jaeden SAY_KJ_SLAY1'),
++   (-1580063, 'Anak-ky\'ri!',12502,1,0,'Kil\'jaeden SAY_KJ_SLAY2'),
++   (-1580064, 'Who can you trust?',12503,1,0,'Kil\'jaeden SAY_KJ_REFLECTION1'),
++   (-1580065, 'The enemy is upon you!',12504,1,0,'Kil\'jaeden SAY_KJ_REFLECTION2'),
++   (-1580066, 'Chaos!',12505,1,0,'Kil\'jaeden SAY_KJ_DARKNESS1'),
++   (-1580067, 'Destruction!',12506,1,0,'Kil\'jaeden SAY_KJ_DARKNESS2'),
++   (-1580068, 'Oblivion!',12507,1,0,'Kil\'jaeden SAY_KJ_DARKNESS3'),
++   (-1580069, 'I will not be denied! This world shall fall!',12508,1,0,'Kil\'jaeden SAY_KJ_DENINE'),
++   (-1580070, 'Do not harbor false hope. You cannot win!',12509,1,0,'Kil\'jaeden SAY_KJ_CANNOT_WIN'),
++   (-1580071, 'Aggghh! The powers of the Sunwell... turned... against me! What have you done? WHAT HAVE YOU DONE?',12510,1,0,'Kil\'jaeden SAY_KJ_LOST_POWER'),
++   (-1580072, 'You are not alone. The Blue Dragonflight shall help you vanquish the Deceiver. ',12438,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_INTRO'),
++   (-1580073, 'Anveena, you must awaken, this world needs you!',12445,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_AWAKEN'),
++   (-1580074, 'I serve only the Master now.',12511,1,0,'Kil\'jaeden(Kalecgos) SAY_ANVEENA_IMPRISONED'),
++   (-1580075, 'You must let go! You must become what you were always meant to be! The time is now, Anveena!',12446,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_LETGO'),
++   (-1580076, 'But I\'m... lost... I cannot find my way back!',12512,1,0,'Kil\'jaeden(Kalecgos) SAY_ANVEENA_LOST'),
++   (-1580077, 'Anveena, I love you! Focus on my voice, come back for me now! Only you can cleanse the Sunwell!',12447,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_FOCUS'),
++   (-1580078, 'Kalec... Kalec?',12513,1,0,'Kil\'jaeden(Kalecgos) SAY_ANVEENA_KALEC'),
++   (-1580079, 'Yes, Anveena! Let fate embrace you now!',12448,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_FATE'),
++   (-1580080, 'The nightmare is over, the spell is broken! Goodbye, Kalec, my love!',12514,1,0,'Kil\'jaeden(Kalecgos) SAY_ANVEENA_GOODBYE'),
++   (-1580081, 'Goodbye, Anveena, my love. Few will remember your name, yet this day you change the course of destiny. What was once corrupt is now pure. Heroes, do not let her sacrifice be in vain.',12450,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_GOODBYE'),
++   (-1580082, 'Strike now, heroes, while he is weakened! Vanquish the Deceiver!',12449,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_ENCOURAGE'),
++   (-1580083, 'I will channel my power into the orbs, be ready!',12440,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_ORB1'),
++   (-1580084, 'I have empowered another orb! Use it quickly!',12441,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_ORB2'),
++   (-1580085, 'Another orb is ready! Make haste!',12442,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_ORB3'),
++   (-1580086, 'I have channeled all I can! The power is in your hands!',12443,1,0,'Kil\'jaeden(Kalecgos) SAY_KALECGOS_ORB4');
+\ No newline at end of file
+diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
+index 508a854..7adb88e 100644
+--- a/system/ScriptLoader.cpp
++++ b/system/ScriptLoader.cpp
+@@ -145,6 +145,10 @@ extern void AddSC_instance_sunken_temple();                 //sunken_temple
+ extern void AddSC_sunken_temple();
+ extern void AddSC_boss_brutallus();                         //sunwell_plateau
+ extern void AddSC_boss_kalecgos();
++extern void AddSC_boss_eredar_twins();
++extern void AddSC_boss_felmyst();
++extern void AddSC_boss_kiljaden();
++extern void AddSC_boss_muru_entropius();
+ extern void AddSC_instance_sunwell_plateau();
+ extern void AddSC_boss_ironaya();                           //uldaman
+ extern void AddSC_uldaman();
+@@ -616,6 +620,10 @@ void AddScripts()
+     AddSC_sunken_temple();
+     AddSC_boss_brutallus();                                 //sunwell_plateau
+     AddSC_boss_kalecgos();
++    AddSC_boss_eredar_twins();
++    AddSC_boss_felmyst();
++    AddSC_boss_kiljaden();
++    AddSC_boss_muru_entropius();
+     AddSC_instance_sunwell_plateau();
+     AddSC_boss_ironaya();                                   //uldaman
+     AddSC_uldaman();
