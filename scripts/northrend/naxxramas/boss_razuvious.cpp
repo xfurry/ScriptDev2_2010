@@ -41,8 +41,32 @@ enum
     SPELL_DISRUPTING_SHOUT   = 55543,
     SPELL_DISRUPTING_SHOUT_H = 29107,
     SPELL_JAGGED_KNIFE       = 55550,
-    SPELL_HOPELESS           = 29125
+    SPELL_HOPELESS           = 29125,
+
+    SPELL_FORCE_OBEDIENCE   = 55479,
+    NPC_DEATH_KNIGHT_UNDERSTUDY = 16803
 };
+
+bool GossipHello_npc_obedience_crystal(Player* pPlayer, Creature* pCreature)
+{
+    ScriptedInstance *pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
+    if(pInstance->GetData(TYPE_RAZUVIOUS) != DONE)
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "To use Mind Control click here !", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_obedience_crystal(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
+    {
+        if (Unit* target = GetClosestCreatureWithEntry(pCreature, NPC_DEATH_KNIGHT_UNDERSTUDY, 100.0f))
+            pPlayer->CastSpell(target, SPELL_FORCE_OBEDIENCE, true);
+        pPlayer->CLOSE_GOSSIP_MENU();
+        pPlayer->TalkedToCreature(pCreature->GetEntry(), pCreature->GetGUID());
+    }
+    return true;
+}
 
 struct MANGOS_DLL_DECL boss_razuviousAI : public ScriptedAI
 {
@@ -60,6 +84,9 @@ struct MANGOS_DLL_DECL boss_razuviousAI : public ScriptedAI
     uint32 m_uiDisruptingShoutTimer;
     uint32 m_uiJaggedKnifeTimer;
     uint32 m_uiCommandSoundTimer;
+    uint32 m_uiAggroCheckTimer;
+
+    std::list<Creature*> lUnderstudies;
 
     void Reset()
     {
@@ -67,6 +94,17 @@ struct MANGOS_DLL_DECL boss_razuviousAI : public ScriptedAI
         m_uiDisruptingShoutTimer   = 15000;                 // 15 seconds
         m_uiJaggedKnifeTimer       = urand(10000, 15000);
         m_uiCommandSoundTimer      = 40000;                 // 40 seconds
+        m_uiAggroCheckTimer         = 1000;
+
+        GetCreatureListWithEntryInGrid(lUnderstudies, m_creature, NPC_DEATH_KNIGHT_UNDERSTUDY, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lUnderstudies.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lUnderstudies.begin(); iter != lUnderstudies.end(); ++iter)
+            {
+                if ((*iter) && !(*iter)->isAlive())
+                    (*iter)->Respawn();
+            }
+        }
     }
 
     void KilledUnit(Unit* Victim)
@@ -87,6 +125,16 @@ struct MANGOS_DLL_DECL boss_razuviousAI : public ScriptedAI
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_RAZUVIOUS, DONE);
+
+        GetCreatureListWithEntryInGrid(lUnderstudies, m_creature, NPC_DEATH_KNIGHT_UNDERSTUDY, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lUnderstudies.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lUnderstudies.begin(); iter != lUnderstudies.end(); ++iter)
+            {
+                if ((*iter) && (*iter)->isAlive())
+                    (*iter)->ForcedDespawn();
+            }
+        }
     }
 
     void Aggro(Unit* pWho)
@@ -100,6 +148,16 @@ struct MANGOS_DLL_DECL boss_razuviousAI : public ScriptedAI
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_RAZUVIOUS, IN_PROGRESS);
+
+        GetCreatureListWithEntryInGrid(lUnderstudies, m_creature, NPC_DEATH_KNIGHT_UNDERSTUDY, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lUnderstudies.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lUnderstudies.begin(); iter != lUnderstudies.end(); ++iter)
+            {
+                if ((*iter) && (*iter)->isAlive())
+                    (*iter)->AI()->AttackStart(m_creature->getVictim());
+            }
+        }
     }
 
     void JustReachedHome()
@@ -110,6 +168,22 @@ struct MANGOS_DLL_DECL boss_razuviousAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_uiAggroCheckTimer < uiDiff && m_pInstance->GetData(TYPE_RAZUVIOUS) != IN_PROGRESS)
+        {
+            GetCreatureListWithEntryInGrid(lUnderstudies, m_creature, NPC_DEATH_KNIGHT_UNDERSTUDY, DEFAULT_VISIBILITY_INSTANCE);
+            if (!lUnderstudies.empty())
+            {
+                for(std::list<Creature*>::iterator iter = lUnderstudies.begin(); iter != lUnderstudies.end(); ++iter)
+                {
+                    if ((*iter) && (*iter)->isAlive() && (*iter)->getVictim())
+                        m_creature->AI()->AttackStart((*iter)->getVictim());
+                }
+            }
+            m_uiAggroCheckTimer = 1000;
+        }
+        else
+            m_uiAggroCheckTimer -= uiDiff;
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -171,5 +245,11 @@ void AddSC_boss_razuvious()
     NewScript = new Script;
     NewScript->Name = "boss_razuvious";
     NewScript->GetAI = &GetAI_boss_razuvious;
+    NewScript->RegisterSelf();
+
+    NewScript = new Script;
+    NewScript->Name = "npc_obedience_crystal";
+    NewScript->pGossipHello =  &GossipHello_npc_obedience_crystal;
+    NewScript->pGossipSelect = &GossipSelect_npc_obedience_crystal;
     NewScript->RegisterSelf();
 }

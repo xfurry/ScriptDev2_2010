@@ -38,8 +38,26 @@ enum
     SPELL_SUMMON_SPORE      = 29234,
     SPELL_BERSERK           = 26662,
 
-    NPC_SPORE               = 16286
+    SPELL_FUNGAL_CREEP      = 29232,
+    NPC_SPORE               = 16286,
+
+    ACHIEV_SPORE_LOSER      = 2182,
+    ACHIEV_SPORE_LOSER_H    = 2183,
 };
+
+#define ADD_1X 2957.040f
+#define ADD_1Y -3997.590f
+#define ADD_1Z 274.280f
+
+#define ADD_2X 2909.130f
+#define ADD_2Y -4042.970f
+#define ADD_2Z 274.280f
+
+#define ADD_3X 2861.102f
+#define ADD_3Y -3997.901f
+#define ADD_3Z 274.280f
+
+bool m_bHasSporeDied;
 
 struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
 {
@@ -68,6 +86,7 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
         m_uiSummonTimer = urand(10000, 15000);              // first seen in vid after approx 12s
         m_uiBerserkTimer = MINUTE*12*IN_MILLISECONDS;       // only in heroic, after 12min
         m_uiNecroticAuraCount = 0;
+        m_bHasSporeDied = false;
     }
 
     void Aggro(Unit* pWho)
@@ -80,6 +99,12 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_LOATHEB, DONE);
+
+        if (!m_bHasSporeDied)
+        {
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_SPORE_LOSER : ACHIEV_SPORE_LOSER_H);
+        }
     }
 
     void JustReachedHome()
@@ -152,6 +177,18 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
         if (m_uiSummonTimer < uiDiff)
         {
             DoCastSpellIfCan(m_creature, SPELL_SUMMON_SPORE);
+            /*
+            Unit* pSummonedSpores = NULL;
+
+            pSummonedSpores = m_creature->SummonCreature(16286,ADD_1X,ADD_1Y,ADD_1Z,0,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,80000);
+            pSummonedSpores = m_creature->SummonCreature(16286,ADD_2X,ADD_2Y,ADD_2Z,0,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,80000);
+            pSummonedSpores = m_creature->SummonCreature(16286,ADD_3X,ADD_3Y,ADD_3Z,0,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,80000);
+            if (pSummonedSpores)
+            {
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    pSummonedSpores->AddThreat(pTarget);
+            }
+            */
             m_uiSummonTimer = m_bIsRegularMode ? 36000 : 18000;
         }
         else
@@ -172,9 +209,65 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
     }
 };
 
+struct MANGOS_DLL_DECL npc_loatheb_sporesAI : public ScriptedAI
+{
+    npc_loatheb_sporesAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        Reset();
+    }
+
+    uint32 DieDelay_Timer;
+
+    void Reset()
+    {
+        DieDelay_Timer = 0;
+    }
+
+    void DamageTaken(Unit* done_by, uint32 &damage)
+    {
+        if (damage > m_creature->GetHealth() && !DieDelay_Timer)
+        {
+            m_creature->CastSpell(m_creature, SPELL_FUNGAL_CREEP, true);
+            m_creature->SetHealth(m_creature->GetMaxHealth());
+            DieDelay_Timer = 500;
+        }
+        if (DieDelay_Timer)
+        {
+            damage = 0;
+            return;
+        }
+    }
+
+    void JustDied(Unit* Killer) 
+    {
+        if(Killer != GetClosestCreatureWithEntry(m_creature, NPC_LOATHEB, 80.0f))
+            m_bHasSporeDied = true;
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (DieDelay_Timer)
+            if (DieDelay_Timer < diff)
+            {
+                m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                DieDelay_Timer = 0;
+            }else DieDelay_Timer -= diff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
 CreatureAI* GetAI_boss_loatheb(Creature* pCreature)
 {
     return new boss_loathebAI(pCreature);
+}
+
+CreatureAI* GetAI_npc_loatheb_spores(Creature* pCreature)
+{
+    return new npc_loatheb_sporesAI(pCreature);
 }
 
 void AddSC_boss_loatheb()
@@ -183,5 +276,10 @@ void AddSC_boss_loatheb()
     NewScript = new Script;
     NewScript->Name = "boss_loatheb";
     NewScript->GetAI = &GetAI_boss_loatheb;
+    NewScript->RegisterSelf();
+
+    NewScript = new Script;
+    NewScript->Name = "npc_loatheb_spores";
+    NewScript->GetAI = &GetAI_npc_loatheb_spores;
     NewScript->RegisterSelf();
 }

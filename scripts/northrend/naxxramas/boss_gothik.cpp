@@ -68,6 +68,10 @@ enum eSpellDummy
     SPELL_C_TO_SKULL        = 27937
 };
 
+const float PosPlatform[4] = {2640.5f, -3360.6f, 285.26f, 0};
+const float PosGroundLive[4] = {2692.174f, -3400.963f, 267.680f, 1.7f};
+const float PosGroundDeath[4] = {2690.378f, -3328.279f, 267.681f, 1.7f};
+
 struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
 {
     boss_gothikAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -157,6 +161,7 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_GOTHIK, FAIL);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void SummonAdds(bool bRightSide, uint32 uiSummonEntry)
@@ -210,10 +215,38 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
         }
     }
 
+    void JustSummoned(Creature* pSummoned)
+    {
+        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            pSummoned->AI()->AttackStart(pTarget);
+    }
+
+    void TeleportToLive()
+    {   
+        m_creature->StopMoving();
+        m_creature->GetMotionMaster()->Clear(false);
+        m_creature->GetMotionMaster()->MoveIdle();
+        m_creature->SendMonsterMove(PosGroundLive[0], PosGroundLive[1], PosGroundLive[2], SPLINETYPE_NORMAL, SPLINEFLAG_NONE, 0);
+        m_creature->GetMap()->CreatureRelocation(m_creature, PosGroundLive[0], PosGroundLive[1], PosGroundLive[2], 0.0f);
+    }
+
+    void TeleportToDead()
+    {
+        m_creature->StopMoving();
+        m_creature->GetMotionMaster()->Clear(false);
+        m_creature->GetMotionMaster()->MoveIdle();
+        m_creature->SendMonsterMove(PosGroundDeath[0], PosGroundDeath[1], PosGroundDeath[2], SPLINETYPE_NORMAL, SPLINEFLAG_NONE, 0);
+        m_creature->GetMap()->CreatureRelocation(m_creature, PosGroundDeath[0], PosGroundDeath[1], PosGroundDeath[2], 0.0f);
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        // remove for debug!
+        if(!HasPlayersInLeftSide())
+            m_creature->AI()->EnterEvadeMode();
 
         switch(m_uiPhase)
         {
@@ -234,6 +267,8 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
                 }
                 else
                     m_uiSpeechTimer -= uiDiff;
+
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
                 break;
             }
@@ -310,7 +345,7 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
 
                     if (m_uiTeleportTimer < uiDiff)
                     {
-                        uint32 uiTeleportSpell = m_pInstance->IsInRightSideGothArea(m_creature) ? SPELL_TELEPORT_LEFT : SPELL_TELEPORT_RIGHT;
+                        /*uint32 uiTeleportSpell = m_pInstance->IsInRightSideGothArea(m_creature) ? SPELL_TELEPORT_LEFT : SPELL_TELEPORT_RIGHT;
 
                         if (DoCastSpellIfCan(m_creature, uiTeleportSpell) == CAST_OK)
                         {
@@ -318,7 +353,14 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
                             m_uiTeleportTimer = 15000;
                             m_uiShadowboltTimer = 2000;
                             return;
-                        }
+                        }*/
+                        if(m_pInstance->IsInRightSideGothArea(m_creature)) 
+                            TeleportToDead();
+                        else
+                            TeleportToLive();
+                        DoResetThreat();
+                        m_uiTeleportTimer = 15000;
+                        m_uiShadowboltTimer = 2000;
                     }
                     else
                         m_uiTeleportTimer -= uiDiff;
@@ -331,6 +373,8 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
                 }
                 else
                     m_uiShadowboltTimer -= uiDiff;
+
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
                 DoMeleeAttackIfReady();                     // possibly no melee at all
                 break;

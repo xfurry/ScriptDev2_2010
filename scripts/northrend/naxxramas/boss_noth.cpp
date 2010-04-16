@@ -82,6 +82,12 @@ enum
     PHASE_SKELETON_3                    = 3
 };
 
+// Teleport position of Noth on his balcony
+#define TELE_X 2631.370f
+#define TELE_Y -3529.680f
+#define TELE_Z 274.040f
+#define TELE_O 6.277f
+
 struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
 {
     boss_nothAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -102,6 +108,8 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
     uint32 m_uiCurseTimer;
     uint32 m_uiSummonTimer;
 
+    float LastX, LastY, LastZ;
+
     void Reset()
     {
         m_uiPhase = PHASE_GROUND;
@@ -111,6 +119,13 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
         m_uiBlinkTimer = 25000;
         m_uiCurseTimer = 4000;
         m_uiSummonTimer = 30000;
+
+        LastX = 0;
+        LastY = 0;
+        LastZ = 0;
+
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void Aggro(Unit* pWho)
@@ -171,6 +186,17 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
 
                 if (DoCastSpellIfCan(m_creature, SPELL_TELEPORT) == CAST_OK)
                 {
+                    m_creature->InterruptNonMeleeSpells(true);
+                    LastX = m_creature->GetPositionX();
+                    LastY = m_creature->GetPositionY();
+                    LastZ = m_creature->GetPositionZ();
+                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    m_creature->StopMoving();
+                    m_creature->GetMotionMaster()->Clear(false);
+                    m_creature->GetMotionMaster()->MoveIdle();
+                    m_creature->GetMap()->CreatureRelocation(m_creature, TELE_X, TELE_Y, TELE_Z, TELE_O);
+                    m_creature->SendMonsterMove(TELE_X, TELE_Y, TELE_Z, SPLINETYPE_NORMAL, SPLINEFLAG_NONE, 0);
                     DoScriptText(EMOTE_TELEPORT, m_creature);
                     m_creature->GetMotionMaster()->MoveIdle();
                     m_uiPhaseTimer = 70000;
@@ -243,6 +269,14 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
                 if (DoCastSpellIfCan(m_creature, SPELL_TELEPORT_RETURN) == CAST_OK)
                 {
                     DoScriptText(EMOTE_TELEPORT_RETURN, m_creature);
+                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    m_creature->GetMap()->CreatureRelocation(m_creature, LastX, LastY, LastZ, 0);
+                    m_creature->SendMonsterMove(LastX, LastY, LastZ, SPLINETYPE_NORMAL, SPLINEFLAG_NONE, 0);
+                    DoStartMovement(m_creature->getVictim());
+                    LastX = 0;
+                    LastY = 0;
+                    LastZ = 0;
                     m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
                     m_uiPhaseTimer = 90000;
                     m_uiPhase = PHASE_GROUND;
