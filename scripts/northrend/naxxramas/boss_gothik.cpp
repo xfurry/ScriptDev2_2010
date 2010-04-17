@@ -221,24 +221,6 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
             pSummoned->AI()->AttackStart(pTarget);
     }
 
-    void TeleportToLive()
-    {   
-        m_creature->StopMoving();
-        m_creature->GetMotionMaster()->Clear(false);
-        m_creature->GetMotionMaster()->MoveIdle();
-        m_creature->SendMonsterMove(PosGroundLive[0], PosGroundLive[1], PosGroundLive[2], SPLINETYPE_NORMAL, SPLINEFLAG_NONE, 0);
-        m_creature->GetMap()->CreatureRelocation(m_creature, PosGroundLive[0], PosGroundLive[1], PosGroundLive[2], 0.0f);
-    }
-
-    void TeleportToDead()
-    {
-        m_creature->StopMoving();
-        m_creature->GetMotionMaster()->Clear(false);
-        m_creature->GetMotionMaster()->MoveIdle();
-        m_creature->SendMonsterMove(PosGroundDeath[0], PosGroundDeath[1], PosGroundDeath[2], SPLINETYPE_NORMAL, SPLINEFLAG_NONE, 0);
-        m_creature->GetMap()->CreatureRelocation(m_creature, PosGroundDeath[0], PosGroundDeath[1], PosGroundDeath[2], 0.0f);
-    }
-
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -345,7 +327,7 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
 
                     if (m_uiTeleportTimer < uiDiff)
                     {
-                        /*uint32 uiTeleportSpell = m_pInstance->IsInRightSideGothArea(m_creature) ? SPELL_TELEPORT_LEFT : SPELL_TELEPORT_RIGHT;
+                        uint32 uiTeleportSpell = m_pInstance->IsInRightSideGothArea(m_creature) ? SPELL_TELEPORT_LEFT : SPELL_TELEPORT_RIGHT;
 
                         if (DoCastSpellIfCan(m_creature, uiTeleportSpell) == CAST_OK)
                         {
@@ -353,14 +335,7 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
                             m_uiTeleportTimer = 15000;
                             m_uiShadowboltTimer = 2000;
                             return;
-                        }*/
-                        if(m_pInstance->IsInRightSideGothArea(m_creature)) 
-                            TeleportToDead();
-                        else
-                            TeleportToLive();
-                        DoResetThreat();
-                        m_uiTeleportTimer = 15000;
-                        m_uiShadowboltTimer = 2000;
+                        }
                     }
                     else
                         m_uiTeleportTimer -= uiDiff;
