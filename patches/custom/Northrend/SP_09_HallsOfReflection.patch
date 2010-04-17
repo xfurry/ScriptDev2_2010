@@ -3037,7 +3037,7 @@ index 0000000..593332c
 +    GO_CAPTAIN_CHEST_HORDE_H        = 202337, //3246
 +    GO_CAPTAIN_CHEST_ALY_H          = 202336, //3333
 +
-+    MOB_WAVES_NUM_1              = 4,
++    MOB_WAVES_NUM_1              = 5,
 +    MOB_WAVES_DELAY_1            = 30000,  //in milliseconds
 +
 +    MOB_SPECTRAL_FOOTMAN        = 38173,
