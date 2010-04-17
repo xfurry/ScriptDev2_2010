@@ -24,23 +24,20 @@ EndScriptData */
 #include "precompiled.h"
 #include "zulgurub.h"
 
-enum
-{
-    SPELL_LIGHTNING_CLOUD   =   25033,
-    SPELL_LIGHTNING_WAVE    =   24819
-};
+#define SPELL_LIGHTNINGCLOUD         25033
+#define SPELL_LIGHTNINGWAVE          24819
 
 struct MANGOS_DLL_DECL boss_wushoolayAI : public ScriptedAI
 {
     boss_wushoolayAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
-    uint32 m_uiLightningCloud_Timer;
-    uint32 m_uiLightningWave_Timer;
+    uint32 LightningCloud_Timer;
+    uint32 LightningWave_Timer;
 
     void Reset()
     {
-        m_uiLightningCloud_Timer = 5000 + rand()%5000;
-        m_uiLightningWave_Timer = 8000 + rand()%8000;
+        LightningCloud_Timer = urand(5000, 10000);
+        LightningWave_Timer = urand(8000, 16000);
     }
 
     void UpdateAI(const uint32 diff)
@@ -48,23 +45,22 @@ struct MANGOS_DLL_DECL boss_wushoolayAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (m_uiLightningCloud_Timer < diff)
+        //LightningCloud_Timer
+        if (LightningCloud_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_LIGHTNING_CLOUD);
-            m_uiLightningCloud_Timer = 15000 + rand()%5000;
-        }
-        else
-            m_uiLightningCloud_Timer -= diff;
- 
-        if (m_uiLightningWave_Timer < diff)
-         {
-            if (Unit* pTarget =SelectUnit(SELECT_TARGET_RANDOM,0))
-                DoCast(pTarget,SPELL_LIGHTNING_WAVE);
- 
-            m_uiLightningWave_Timer = 12000 + rand()%4000;
-        }
-        else
-            m_uiLightningWave_Timer -= diff;
+            DoCastSpellIfCan(m_creature->getVictim(),SPELL_LIGHTNINGCLOUD);
+            LightningCloud_Timer = urand(15000, 20000);
+        }else LightningCloud_Timer -= diff;
+
+        //LightningWave_Timer
+        if (LightningWave_Timer < diff)
+        {
+            Unit* target = NULL;
+            target = SelectUnit(SELECT_TARGET_RANDOM,0);
+            if (target) DoCastSpellIfCan(target,SPELL_LIGHTNINGWAVE);
+
+            LightningWave_Timer = urand(12000, 16000);
+        }else LightningWave_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }

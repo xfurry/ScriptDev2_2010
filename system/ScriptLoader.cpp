@@ -176,7 +176,6 @@ extern void AddSC_boss_thekal();
 extern void AddSC_boss_venoxis();
 extern void AddSC_boss_wushoolay();
 extern void AddSC_instance_zulgurub();
-extern void AddSC_zulgurub();
 
 //extern void AddSC_alterac_mountains();
 extern void AddSC_arathi_highlands();
@@ -653,7 +652,6 @@ void AddScripts()
     AddSC_boss_venoxis();
     AddSC_boss_wushoolay();
     AddSC_instance_zulgurub();
-    AddSC_zulgurub();
 
     //AddSC_alterac_mountains();
     AddSC_arathi_highlands();

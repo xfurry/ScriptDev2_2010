@@ -24,11 +24,6 @@ EndScriptData */
 #include "precompiled.h"
 #include "zulgurub.h"
 
-enum
-{
-    SAY_PROTECT_ALTAR   =   -1309023
-};
-
 struct MANGOS_DLL_DECL instance_zulgurub : public ScriptedInstance
 {
     instance_zulgurub(Map* pMap) : ScriptedInstance(pMap) {Initialize();};
@@ -44,9 +39,6 @@ struct MANGOS_DLL_DECL instance_zulgurub : public ScriptedInstance
     uint64 m_uiJindoGUID;
     uint64 m_uiHakkarGUID;
 
-    uint32 m_uiMinionSay;
-	bool protectsay;
-
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
@@ -56,9 +48,6 @@ struct MANGOS_DLL_DECL instance_zulgurub : public ScriptedInstance
         m_uiThekalGUID  = 0;
         m_uiJindoGUID   = 0;
         m_uiHakkarGUID  = 0;
-
-        m_uiMinionSay = 0;
-		protectsay = false;
     }
 
     // each time High Priest dies lower Hakkar's HP
@@ -148,9 +137,6 @@ struct MANGOS_DLL_DECL instance_zulgurub : public ScriptedInstance
             case TYPE_HAKKAR:
                 m_auiEncounter[8] = uiData;
                 break;
-            case DATA_SAY_ENTRANCE:
-                m_uiMinionSay = uiData;
-                break;
         }
 
         if (uiData == DONE)
@@ -168,29 +154,6 @@ struct MANGOS_DLL_DECL instance_zulgurub : public ScriptedInstance
             OUT_SAVE_INST_DATA_COMPLETE;
         }
     }
-
-	/*void Update(uint32 uiDiff)
-	{
-		// Hakkar should yell SAY_MINION_DESTROY at the beginning of instance, and SAY_PROTECT_ALTAR when players step on altar
-		Creature* pHakkar = instance->GetCreature(m_uiHakkarGUID);
-		/*Player* pWho;
-		if (pWho)
-		{
-			if (pWho->IsWithinDist2d(-11896,-1318,15))
-				if (!minionsay)
-				{
-				DoScriptText(SAY_MINION_DESTROY,pHakkar);
-						minionsay = true;
-				}
- 
-			if (pWho->IsWithinDist2d(-11791,-1556,15))
-				if (!protectsay)
-				{
-					DoScriptText(SAY_PROTECT_ALTAR,pHakkar);
-					protectsay = true;
-				}
-		}
-	}*/
 
     const char* Save()
     {
@@ -243,8 +206,6 @@ struct MANGOS_DLL_DECL instance_zulgurub : public ScriptedInstance
                 return m_auiEncounter[7];
             case TYPE_HAKKAR:
                 return m_auiEncounter[8];
-            case DATA_SAY_ENTRANCE:
-                return m_uiMinionSay;
         }
         return 0;
     }
@@ -263,7 +224,6 @@ struct MANGOS_DLL_DECL instance_zulgurub : public ScriptedInstance
                 return m_uiJindoGUID;
             case DATA_HAKKAR:
                 return m_uiHakkarGUID;
-            
         }
         return 0;
     }

@@ -23,68 +23,52 @@ EndScriptData */
 
 #include "precompiled.h"
 
-enum
-{
-    SPELL_FROSTBREATH   =   16099,
-    SPELL_MASSIVEGEYSER =   22421,   //Not working. Cause its a summon...
-    SPELL_SLAM          =   24326,
-    SPELL_TRASH         =   3391
-};
+#define SPELL_FROSTBREATH            16099
+#define SPELL_MASSIVEGEYSER          22421                  //Not working. Cause its a summon...
+#define SPELL_SLAM                   24326
+
 struct MANGOS_DLL_DECL boss_gahzrankaAI : public ScriptedAI
 {
-     boss_gahzrankaAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
- 
-    uint32 m_uiFrostbreath_Timer;
-    uint32 m_uiMassiveGeyser_Timer;
-    uint32 m_uiSlam_Timer;
-    uint32 m_uiTrash_Timer;
+    boss_gahzrankaAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+    uint32 Frostbreath_Timer;
+    uint32 MassiveGeyser_Timer;
+    uint32 Slam_Timer;
 
-     void Reset()
-     {
-        m_uiFrostbreath_Timer = 8000;
-        m_uiMassiveGeyser_Timer = 25000;
-        m_uiSlam_Timer = 17000;
-        m_uiTrash_Timer = 10000;
-     }
- 
-    void UpdateAI(const uint32 uiDiff)
-     {
-         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-             return;
- 
-        if (m_uiFrostbreath_Timer < uiDiff)
-         {
-             DoCast(m_creature->getVictim(),SPELL_FROSTBREATH);
-            m_uiFrostbreath_Timer = 7000 + rand()%4000;
-        }
-        else
-            m_uiFrostbreath_Timer -= uiDiff;
- 
-        if (m_uiMassiveGeyser_Timer < uiDiff)
-         {
-             DoCast(m_creature->getVictim(),SPELL_MASSIVEGEYSER);
-             DoResetThreat();
- 
-            m_uiMassiveGeyser_Timer = 22000 + rand()%10000;
-        }
-        else
-            m_uiMassiveGeyser_Timer -= uiDiff;
- 
-        if (m_uiSlam_Timer < uiDiff)
-         {
-             DoCast(m_creature->getVictim(),SPELL_SLAM);
-            m_uiSlam_Timer = 12000 + rand()%8000;
-        }
-        else
-            m_uiSlam_Timer -= uiDiff;
- 
-        if (m_uiTrash_Timer < uiDiff)
+    void Reset()
+    {
+        Frostbreath_Timer = 8000;
+        MassiveGeyser_Timer = 25000;
+        Slam_Timer = 17000;
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        //Frostbreath_Timer
+        if (Frostbreath_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_TRASH);
-            m_uiTrash_Timer = 10000 + rand()%10000;
-        }
-        else
-            m_uiTrash_Timer -= uiDiff;
+            DoCastSpellIfCan(m_creature->getVictim(),SPELL_FROSTBREATH);
+            Frostbreath_Timer = urand(7000, 11000);
+        }else Frostbreath_Timer -= diff;
+
+        //MassiveGeyser_Timer
+        if (MassiveGeyser_Timer < diff)
+        {
+            DoCastSpellIfCan(m_creature->getVictim(),SPELL_MASSIVEGEYSER);
+            DoResetThreat();
+
+            MassiveGeyser_Timer = urand(22000, 32000);
+        }else MassiveGeyser_Timer -= diff;
+
+        //Slam_Timer
+        if (Slam_Timer < diff)
+        {
+            DoCastSpellIfCan(m_creature->getVictim(),SPELL_SLAM);
+            Slam_Timer = urand(12000, 20000);
+        }else Slam_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -96,7 +80,7 @@ CreatureAI* GetAI_boss_gahzranka(Creature* pCreature)
 
 void AddSC_boss_gahzranka()
 {
-    Script* newscript;
+    Script *newscript;
     newscript = new Script;
     newscript->Name = "boss_gahzranka";
     newscript->GetAI = &GetAI_boss_gahzranka;

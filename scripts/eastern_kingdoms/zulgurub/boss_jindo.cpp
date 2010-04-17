@@ -24,28 +24,20 @@ EndScriptData */
 #include "precompiled.h"
 #include "zulgurub.h"
 
-enum
-{
-    NPC_SACRIFICED_TROLL            =   14826,
-    
-    SAY_AGGRO                       =   -1309014,
- 
-    SPELL_SUMMON_BRAIN_WASH_TOTEM   =   24262,
-    SPELL_POWERFULL_HEALING_WARD    =   24309,  //We will not use this spell. We will summon a totem by script cause the spell totems will not cast.
-    SPELL_HEX                       =   24053,
-    SPELL_DELUSIONS_OF_JINDO        =   24306,
-    //SPELL_SHADEOFJINDO              24308     //We will not use this spell. We will summon a shade by script.
- 
-    //Healing Ward Spell
-    SPELL_HEAL                      =   24311,  //Totems are not working right. Right heal spell ID is 38588 but this spell is not casting...
+#define SAY_AGGRO                       -1309014
 
-    //Brain Wash Totem Spell
-    SPELL_BRAIN_WASH                =   24261,
- 
-    //Shade of Jindo Spell
-    SPELL_SHADOWSHOCK               =   24458,
-    SPELL_SHADE_OF_JINDO            =   24307   //passive - making them visible only when affected by Delusion Curse
-};	
+#define SPELL_BRAINWASHTOTEM            24262
+#define SPELL_POWERFULLHEALINGWARD      24309               //We will not use this spell. We will summon a totem by script cause the spell totems will not cast.
+#define SPELL_HEX                       24053
+#define SPELL_DELUSIONSOFJINDO          24306
+#define SPELL_SHADEOFJINDO              24308               //We will not use this spell. We will summon a shade by script.
+
+//Healing Ward Spell
+#define SPELL_HEAL                      38588               //Totems are not working right. Right heal spell ID is 24311 but this spell is not casting...
+
+//Shade of Jindo Spell
+#define SPELL_SHADOWSHOCK               19460
+#define SPELL_INVISIBLE                 24699
 
 struct MANGOS_DLL_DECL boss_jindoAI : public ScriptedAI
 {
@@ -57,87 +49,84 @@ struct MANGOS_DLL_DECL boss_jindoAI : public ScriptedAI
 
     ScriptedInstance* m_pInstance;
 
-    uint32 m_uiBrainWashTotem_Timer;
-    uint32 m_uiHealingWard_Timer;
-    uint32 m_uiHex_Timer;
-    uint32 m_uiDelusions_Timer;
-    uint32 m_uiTeleport_Timer;
+    uint32 BrainWashTotem_Timer;
+    uint32 HealingWard_Timer;
+    uint32 Hex_Timer;
+    uint32 Delusions_Timer;
+    uint32 Teleport_Timer;
 
     void Reset()
     {
-        m_uiBrainWashTotem_Timer = 20000;
-        m_uiHealingWard_Timer = 16000;
-        m_uiHex_Timer = 8000;
-        m_uiDelusions_Timer = 10000;
-        m_uiTeleport_Timer = 5000;
+        BrainWashTotem_Timer = 20000;
+        HealingWard_Timer = 16000;
+        Hex_Timer = 8000;
+        Delusions_Timer = 10000;
+        Teleport_Timer = 5000;
     }
 
-    void Aggro(Unit* pWho)
+    void Aggro(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
 
-    void UpdateAI(const uint32 uiDiff)
+    void UpdateAI(const uint32 diff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (m_uiBrainWashTotem_Timer < uiDiff)
-         {
-            DoCast(m_creature, SPELL_SUMMON_BRAIN_WASH_TOTEM);
-            m_creature->SummonCreature(15112, m_creature->GetPositionX()+3, m_creature->GetPositionY()-2, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,30000);
-            m_uiBrainWashTotem_Timer = 18000 + rand()%8000;
-        }
-        else
-            m_uiBrainWashTotem_Timer -= uiDiff;
- 
-        if (m_uiHealingWard_Timer < uiDiff)
-         {
-            DoCast(m_creature, SPELL_POWERFULL_HEALING_WARD);
+        //BrainWashTotem_Timer
+        if (BrainWashTotem_Timer < diff)
+        {
+            DoCastSpellIfCan(m_creature, SPELL_BRAINWASHTOTEM);
+            BrainWashTotem_Timer = urand(18000, 26000);
+        }else BrainWashTotem_Timer -= diff;
+
+        //HealingWard_Timer
+        if (HealingWard_Timer < diff)
+        {
+            //DoCastSpellIfCan(m_creature, SPELL_POWERFULLHEALINGWARD);
             m_creature->SummonCreature(14987, m_creature->GetPositionX()+3, m_creature->GetPositionY()-2, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,30000);
-            m_uiHealingWard_Timer = 14000 + rand()%6000;
-        }
-        else
-            m_uiHealingWard_Timer -= uiDiff;
- 
-        if (m_uiHex_Timer < uiDiff)
-         {
-             DoCast(m_creature->getVictim(), SPELL_HEX);			
-             if (m_creature->getThreatManager().getThreat(m_creature->getVictim()))
-                 m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(),-80);
-            m_uiHex_Timer = 12000 + rand()%8000;
-        }
-        else
-            m_uiHex_Timer -= uiDiff;
- 
-         //Casting the delusion curse with a shade. So shade will attack the same target with the curse.
-        if (m_uiDelusions_Timer < uiDiff)
-         {
-             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
-             {
-                DoCast(target, SPELL_DELUSIONS_OF_JINDO);
+            HealingWard_Timer = urand(14000, 20000);
+        }else HealingWard_Timer -= diff;
 
-                Creature* pShade = m_creature->SummonCreature(14986, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
-                if (pShade)
-                    pShade->AI()->AttackStart(target);
-             }
-            m_uiDelusions_Timer = 4000 + rand()%8000;
-        }
-        else
-            m_uiDelusions_Timer -= uiDiff;
- 
-        if (m_uiTeleport_Timer < uiDiff)
-         {
-            Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
-            if (pTarget && pTarget->GetTypeId() == TYPEID_PLAYER)
-             {
-                DoTeleportPlayer(pTarget, -11583.7783f, -1249.4278f, 79.5471f, 4.745f);
- 
+        //Hex_Timer
+        if (Hex_Timer < diff)
+        {
+            DoCastSpellIfCan(m_creature->getVictim(), SPELL_HEX);
+
+            if (m_creature->getThreatManager().getThreat(m_creature->getVictim()))
+                m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(),-80);
+
+            Hex_Timer = urand(12000, 20000);
+        }else Hex_Timer -= diff;
+
+        //Casting the delusion curse with a shade. So shade will attack the same target with the curse.
+        if (Delusions_Timer < diff)
+        {
+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            {
+                DoCastSpellIfCan(target, SPELL_DELUSIONSOFJINDO);
+
+                Creature *Shade = m_creature->SummonCreature(14986, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
+                if (Shade)
+                    Shade->AI()->AttackStart(target);
+            }
+
+            Delusions_Timer = urand(4000, 12000);
+        }else Delusions_Timer -= diff;
+
+        //Teleporting a random gamer and spawning 9 skeletons that will attack this gamer
+        if (Teleport_Timer < diff)
+        {
+            Unit* target = NULL;
+            target = SelectUnit(SELECT_TARGET_RANDOM,0);
+            if (target && target->GetTypeId() == TYPEID_PLAYER)
+            {
+                DoTeleportPlayer(target, -11583.7783f, -1249.4278f, 77.5471f, 4.745f);
+
                 if (m_creature->getThreatManager().getThreat(m_creature->getVictim()))
-                    m_creature->getThreatManager().modifyThreatPercent(pTarget,-100);
+                    m_creature->getThreatManager().modifyThreatPercent(target,-100);
 
-                /*
-                // Skeletons shouldn't be summoned but respawned
                 Creature *Skeletons;
                 Skeletons = m_creature->SummonCreature(14826, target->GetPositionX()+2, target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
                 if (Skeletons)
@@ -166,27 +155,10 @@ struct MANGOS_DLL_DECL boss_jindoAI : public ScriptedAI
                 Skeletons = m_creature->SummonCreature(14826, target->GetPositionX()+3, target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
                 if (Skeletons)
                     Skeletons->AI()->AttackStart(target);
-				*/
-                std::list<Creature*> lSkeletons;
-                GetCreatureListWithEntryInGrid(lSkeletons,pTarget,NPC_SACRIFICED_TROLL,20.0f);
-                if (lSkeletons.empty())
-                    debug_log("SD2 ERROR : In Zul'Gurub no skeletons with the entry %i were found",NPC_SACRIFICED_TROLL);
-                else
-                {
-                    for(std::list<Creature*>::iterator iter = lSkeletons.begin(); iter != lSkeletons.end(); ++iter)
-                        if ((*iter) && (*iter)->isDead())
-                        {
-                            (*iter)->setDeathState(ALIVE);
-                            (*iter)->SetHealth((*iter)->GetMaxHealth());
-                            (*iter)->AI()->AttackStart(pTarget);
-                        }
-                }
-             }
- 
-            m_uiTeleport_Timer = 15000 + rand()%8000;
-        }
-        else
-            m_uiTeleport_Timer -= uiDiff;
+            }
+
+            Teleport_Timer = urand(15000, 23000);
+        }else Teleport_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -203,17 +175,17 @@ struct MANGOS_DLL_DECL mob_healing_wardAI : public ScriptedAI
 
     ScriptedInstance* m_pInstance;
 
-    uint32 m_uiHeal_Timer;
+    uint32 Heal_Timer;
 
     void Reset()
     {
-        m_uiHeal_Timer = 2000;
+        Heal_Timer = 2000;
     }
 
-    void UpdateAI (const uint32 uiDiff)
+    void UpdateAI (const uint32 diff)
     {
         //Heal_Timer
-        if (m_uiHeal_Timer < uiDiff)
+        if (Heal_Timer < diff)
         {
             if (m_pInstance)
             {
@@ -223,8 +195,8 @@ struct MANGOS_DLL_DECL mob_healing_wardAI : public ScriptedAI
                         DoCastSpellIfCan(pJindo, SPELL_HEAL);
                 }
             }
-            m_uiHeal_Timer = 3000;
-        }else m_uiHeal_Timer -= uiDiff;
+            Heal_Timer = 3000;
+        }else Heal_Timer -= diff;
 
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -244,59 +216,28 @@ struct MANGOS_DLL_DECL mob_shade_of_jindoAI : public ScriptedAI
 
     ScriptedInstance* m_pInstance;
 
-    uint32 m_uiShadowShock_Timer;
+    uint32 ShadowShock_Timer;
 
     void Reset()
     {
-        m_uiShadowShock_Timer = 1000;
-        DoCast(m_creature, SPELL_SHADE_OF_JINDO);
+        ShadowShock_Timer = 1000;
+        m_creature->CastSpell(m_creature, SPELL_INVISIBLE,true);
     }
 
-    void UpdateAI (const uint32 uiDiff)
+    void UpdateAI (const uint32 diff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
         //ShadowShock_Timer
-        if (m_uiShadowShock_Timer < uiDiff)
+        if (ShadowShock_Timer < diff)
         {
             DoCastSpellIfCan(m_creature->getVictim(), SPELL_SHADOWSHOCK);
-            m_uiShadowShock_Timer = 2000;
-        }else m_uiShadowShock_Timer -= uiDiff;
+            ShadowShock_Timer = 2000;
+        }else ShadowShock_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }
-};
-
-//Brain wash totem
-struct MANGOS_DLL_DECL mob_brain_wash_totemAI : public ScriptedAI
-{	 
-	mob_brain_wash_totemAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Reset();
-	}
-
-	ScriptedInstance* m_pInstance;
-
-	uint32 m_uiBrainWash_Timer;
-
-	void Reset()
-	{
-		m_uiBrainWash_Timer = 1000;		
-	}
-	void UpdateAI (const uint32 uiDiff)
-	{
-		if (m_uiBrainWash_Timer < uiDiff)
-		{
-			Unit *target = SelectUnit(SELECT_TARGET_TOPAGGRO,0);
-			//Unit *pJindo = Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_JINDO));
-			if (target)			
-			DoCast(target,SPELL_BRAIN_WASH);
-			//if (pJindo->getThreatManager().getThreat(pJindo->getVictim()))
-              //  pJindo->getThreatManager().modifyThreatPercent(target,-100);	 // causing Crash		
-		}else m_uiBrainWash_Timer -=uiDiff;
-	}	
 };
 
 CreatureAI* GetAI_boss_jindo(Creature* pCreature)
@@ -312,11 +253,6 @@ CreatureAI* GetAI_mob_healing_ward(Creature* pCreature)
 CreatureAI* GetAI_mob_shade_of_jindo(Creature* pCreature)
 {
     return new mob_shade_of_jindoAI(pCreature);
-}
-
-CreatureAI* GetAI_mob_brain_wash_totem(Creature* pCreature)
-{
-	return new mob_brain_wash_totemAI(pCreature);
 }
 
 void AddSC_boss_jindo()
@@ -337,9 +273,4 @@ void AddSC_boss_jindo()
     newscript->Name = "mob_shade_of_jindo";
     newscript->GetAI = &GetAI_mob_shade_of_jindo;
     newscript->RegisterSelf();
-
-    newscript = new Script;
-	newscript->Name = "mob_brain_wash_totem";
-	newscript->GetAI = &GetAI_mob_brain_wash_totem;
-	newscript->RegisterSelf();
 }

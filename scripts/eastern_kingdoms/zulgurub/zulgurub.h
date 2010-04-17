@@ -29,8 +29,7 @@ enum
     DATA_LORKHAN            = 11,
     DATA_THEKAL             = 12,
     DATA_ZATH               = 13,
-    DATA_HAKKAR             = 14,
-    DATA_SAY_ENTRANCE       = 15
+    DATA_HAKKAR             = 14
 };
 
 #endif
