@@ -838,7 +838,12 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             if (uiData == IN_PROGRESS)
                 CloseDoor(m_uiYoggGateGUID);
             else
+            {
                 OpenDoor(m_uiYoggGateGUID);
+                CloseDoor(m_uiBrainDoor3GUID);
+                CloseDoor(m_uiBrainDoor1GUID);
+                CloseDoor(m_uiBrainDoor2GUID);
+            }
             if (uiData == DONE)
                 OpenDoor(m_uiCelestialDoorGUID);
             break;
@@ -1055,12 +1060,19 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return m_auiAssemblyGUIDs[1];
         case DATA_BRUNDIR:
             return m_auiAssemblyGUIDs[2];
-
+            // mimiron hard  mode button
         case DATA_RED_BUTTON:
             return m_uiMimironButtonGUID;
-
+            // thorim encounter starter lever
         case DATA_THORIM_LEVER:
             return m_uiThorimLeverGUID;
+            // madness chamber doors
+        case DATA_BRAIN_DOOR1:
+            return m_uiBrainDoor1GUID;
+        case DATA_BRAIN_DOOR2:
+            return m_uiBrainDoor2GUID;
+        case DATA_BRAIN_DOOR3:
+            return m_uiBrainDoor3GUID;
         }
 
         return 0;

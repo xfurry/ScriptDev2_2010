@@ -77,6 +77,9 @@ enum
     DATA_YOGG_BRAIN             = 62,
     DATA_THORIM_LEVER           = 63,
     DATA_MADNESS_DOOR           = 64,
+    DATA_BRAIN_DOOR1            = 65,
+    DATA_BRAIN_DOOR2            = 66,
+    DATA_BRAIN_DOOR3            = 67,
 
     TYPE_LEVIATHAN_HARD         = 37,
     TYPE_XT002_HARD             = 38,
