@@ -3,7 +3,7 @@
 update `creature_template` set `ScriptName` = 'boss_archavon' where `entry` = 31125;
 update `creature_template` set `ScriptName` = 'boss_koralon' where `entry` = 35013;
 update `creature_template` set `ScriptName` = 'boss_emalon' where `entry` = 33993;
-update `creature_template` set `ScriptName` = 'npc_tempest_minion' where `entry` = 26693;
+update `creature_template` set `ScriptName` = 'npc_tempest_minion' where `entry` = 33998;
 update `creature_template` set `ScriptName` = 'npc_tempest_warder' where `entry` in (33998, 34049);
 UPDATE `creature_template` SET `ScriptName` = 'mob_flame_warder' WHERE `entry`=35143;
 UPDATE `creature_template` SET `ScriptName` = 'boss_toravon' WHERE `entry`= 38433;
