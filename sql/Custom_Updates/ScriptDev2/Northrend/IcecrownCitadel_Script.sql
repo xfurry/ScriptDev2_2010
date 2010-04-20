@@ -83,8 +83,8 @@ INSERT INTO `script_texts` VALUES ('-1610060', 'Our work must not be interrupted
 INSERT INTO `script_texts` VALUES ('-1610061', 'Quickly! Poison them all while they\'re still close!', null, null, null, null, null, null, null, null, 16930, '1', '0', '0', 'poison_nova');
 INSERT INTO `script_texts` VALUES ('-1610062', 'Enough moving around! Hold still while I blow them all up!', null, null, null, null, null, null, null, null, 16929, '1', '0', '0', 'explosive_barrage');
 INSERT INTO `script_texts` VALUES ('-1610063', 'Krick begins rapidly conjuring explosive mines!', null, null, null, null, null, null, null, null, '0', '3', '0', '0', 'ick_explosion');
-INSERT INTO `script_texts` VALUES ('-1610064', 'I\'ve changed my mind...go get that one instead!', null, null, null, null, null, null, null, null, 16931, '1', '0', '0', 'pursue1');
-INSERT INTO `script_texts` VALUES ('-1610065', 'No! That one! That one! Get that one!', null, null, null, null, null, null, null, null, 16932, '1', '0', '0', 'pursue2');
+INSERT INTO `script_texts` VALUES ('-1610064', 'No! That one! That one! Get that one!', null, null, null, null, null, null, null, null, 16932, '1', '0', '0', 'pursue2');
+INSERT INTO `script_texts` VALUES ('-1610065', 'I\'ve changed my mind...go get that one instead!', null, null, null, null, null, null, null, null, 16931, '1', '0', '0', 'pursue1');
 INSERT INTO `script_texts` VALUES ('-1610066', 'What are you attacking him for? The dangerous one is over there,fool!', null, null, null, null, null, null, null, null, 16933, '1', '0', '0', 'pursue3');
 INSERT INTO `script_texts` VALUES ('-1610067', 'Ooh...We could probably use these parts!', null, null, null, null, null, null, null, null, 16927, '1', '0', '0', 'slay1');
 INSERT INTO `script_texts` VALUES ('-1610068', 'Arms and legs are in short supply...Thanks for your contribution!', null, null, null, null, null, null, null, null, 16928, '1', '0', '0', 'slay2');
