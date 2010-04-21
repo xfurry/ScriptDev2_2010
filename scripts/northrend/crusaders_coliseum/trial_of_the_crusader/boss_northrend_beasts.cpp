@@ -24,22 +24,196 @@ EndScriptData */
 #include "precompiled.h"
 #include "trial_of_the_crusader.h"
 
+enum gormok
+{
+    SAY_WIPE                    = -1605004,
+    SAY_GARROSH_BEASTS          = -1605109,
+    SAY_VARIAN_BEASTS           = -1605103,
+    SAY_SUMMON_JORMUNGARS       = -1605002,
+
+    SPELL_IMPALE_10             = 66331,
+    SPELL_IMPALE_10HC           = 67478,
+    SPELL_IMPALE_25             = 67477,
+    SPELL_IMPALE_25HC           = 67479,
+    SPELL_STOMP_10              = 66330,
+    SPELL_STOMP_10HC            = 67647,
+    SPELL_STOMP_25              = 67648,
+    SPELL_STOMP_25HC            = 67649,
+    SPELL_RISING_ANGER          = 66636,
+
+    NPC_SNOBOLD_VASSAL          = 34800,
+    SPELL_SNOBOLLED             = 66406,
+    SPELL_BATTER                = 66408,
+    SPELL_FIREBOMB              = 66313,
+    SPELL_FIREBOMB_DOT          = 66318,
+    NPC_FIREBOMB                = 34854,
+    SPELL_HEADCRACK             = 66407,
+
+    SPELL_BERSERK               = 26662,
+};
+
+enum jormungars
+{
+    SAY_SUMMON_ICEHOWL          = -1605003,
+
+    // acidmaw
+    // mobile
+    SPELL_ACID_SPEW_10          = 66819,
+    SPELL_ACID_SPEW_10HC        = 67609,
+    SPELL_ACID_SPEW_25          = 67610,
+    SPELL_ACID_SPEW_25HC        = 67611,
+    SPELL_PARALYTIC_BITE_10     = 66824,
+    SPELL_PARALYTIC_BITE_10HC   = 67613,
+    SPELL_PARALYTIC_BITE_25     = 67612,
+    SPELL_PARALYTIC_BITE_25HC   = 67614,
+    SPELL_SLIME_POOL_10         = 66883,
+    SPELL_SLIME_POOL_10HC       = 67641,
+    SPELL_SLIME_POOL_25         = 67642,
+    SPELL_SLIME_POOL_25HC       = 67643,
+    NPC_SLIME_POOL              = 35176,
+    // stationary
+    SPELL_ACID_SPIT_10          = 66880,
+    SPELL_ACID_SPIT_10HC        = 67607,
+    SPELL_ACID_SPIT_25          = 67606,
+    SPELL_ACID_SPIT_25HC        = 67608,
+    SPELL_PARALYTIC_SPRAY_10    = 66901,
+    SPELL_PARALYTIC_SPRAY_10HC  = 67616,
+    SPELL_PARALYTIC_SPRAY_25    = 67615,
+    SPELL_PARALYTIC_SPRAY_25HC  = 67617,
+    SPELL_SWEEP_10              = 66794,
+    SPELL_SWEEP_10HC            = 67644,
+    SPELL_SWEEP_25              = 67645,
+    SPELL_SWEEP_25HC            = 67646,
+
+
+    SPELL_PARALYTIC_TOXIN       = 66823,
+    SPELL_ENRAGE                = 68335,
+
+    // dreadscale
+    // mobile
+    SPELL_BURNING_BITE_10       = 66879,
+    SPELL_BURNING_BITE_10HC     = 67625,
+    SPELL_BURNING_BITE_25       = 67624,
+    SPELL_BURNING_BITE_25HC     = 67626,
+    SPELL_MOLTEN_SPEW_10        = 66820,
+    SPELL_MOLTEN_SPEW_25        = 67635,
+    SPELL_MOLTEN_SPEW_10HC      = 67636,
+    SPELL_MOLTEN_SPEW_25HC      = 67637,  
+    SPELL_MOLTEN_SPEW_TRIG      = 66821,
+
+    // stationary
+    SPELL_FIRE_SPIT_10          = 66796,
+    SPELL_FIRE_SPIT_10HC        = 67633,
+    SPELL_FIRE_SPIT_25          = 67632,
+    SPELL_FIRE_SPIT_25HC        = 67634,
+    SPELL_BURNING_SPRAY_10      = 66902,
+    SPELL_BURNING_SPRAY_10HC    = 67628,
+    SPELL_BURNING_SPRAY_25      = 67627,
+    SPELL_BURNING_SPRAY_25HC    = 67629,
+
+    SPELL_BURNING_BILE          = 66869,
+};
+
+enum icehowl
+{
+    SAY_VICTORY                 = -1605000,
+    EMOTE_TRAMPLE               = -1605131,
+    EMOTE_STUN                  = -1605132,
+
+    SPELL_FEROCIOUS_BUTT_10     = 66770,
+    SPELL_FEROCIOUS_BUTT_10HC   = 67655,
+    SPELL_FEROCIOUS_BUTT_25     = 67654,
+    SPELL_FEROCIOUS_BUTT_25HC   = 67656,
+    SPELL_ARCTIC_BREATH_10      = 66689,
+    SPELL_ARCTIC_BREATH_10HC    = 67651,
+    SPELL_ARCTIC_BREATH_25      = 67650,
+    SPELL_ARCTIC_BREATH_25HC    = 67652,
+    SPELL_WHIRL_10              = 67345,
+    SPELL_WHIRL_10HC            = 67663,
+    SPELL_WHIRL_25              = 67664,
+    SPELL_WHIRL_25HC            = 67665,
+    SPELL_MASSIVE_CRASH_10      = 66683,
+    SPELL_MASSIVE_CRASH_10HC    = 67660,
+    SPELL_MASSIVE_CRASH_25      = 67661,
+    SPELL_MASSIVE_CRASH_25HC    = 67662,
+    SPELL_SURGE_OF_ADRENALINE   = 68667,    // used only in non heroic
+    SPELL_TRAMPLE               = 66734,
+    SPELL_STAGGERED_DAZE        = 66758,
+    SPELL_FROTHING_RAGE         = 66759,
+};
+
 struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
 {
     boss_gormokAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+            pCreature->ApplySpellImmune(0, IMMUNITY_EFFECT, IMMUNE_TO_MOVEMENT_IMPAIRMENT_AND_LOSS_CONTROL_MASK, true); // check this!!!
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
 
-    void Reset() {}
+    uint8 Difficulty;
+
+    uint8 maxSnobold;
+    uint8 snoboldNo;
+
+    uint32 m_uiSnoboldTimer;
+    uint32 m_uiStompTimer;
+    uint32 m_uiImpaleTimer;
+
+    uint32 m_uiDoorTimer;
+    bool doorClosed;
+
+    uint32 TeamInInstance;
+
+    uint32 m_uiBerserkTimer;
+
+    void Reset() 
+    {
+        m_uiSnoboldTimer    = urand(15000, 20000);
+        m_uiStompTimer      = urand(20000, 25000);
+        m_uiImpaleTimer     = 10000;
+        snoboldNo           = 0;
+
+        m_uiDoorTimer       = 8000;
+        doorClosed          = false;
+
+        TeamInInstance = GetFaction();
+
+        m_uiBerserkTimer    = 300000;  // 5 min
+
+        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+            maxSnobold = 4;
+        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+            maxSnobold = 5;
+    }
 
     void JustReachedHome()
     {
         if (m_pInstance)
+        {
             m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
+            m_pInstance->SetData(TYPE_STAGE,0);
+            if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+            {
+                m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
+                m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
+            }
+        }
+
+        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_WIPE, pTirion);
+
+        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        {
+            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        m_creature->ForcedDespawn();
     }
 
     void Aggro(Unit* pWho)
@@ -47,10 +221,138 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
         m_creature->SetInCombatWithZone();
     }
 
+    uint32 GetFaction()
+    {
+        uint32 faction = 0;
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (!PlayerList.isEmpty())
+            {
+                if (Player* pPlayer = PlayerList.begin()->getSource())
+                    faction = pPlayer->GetTeam();
+            }
+        }
+        return faction;
+    }
+
+    void SummonJormungars()
+    {
+
+        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_SUMMON_JORMUNGARS, Tirion);
+
+        if (Creature* pDreadscale = m_creature->SummonCreature(NPC_DREADSCALE, SpawnLoc[28].x + 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
+        {
+            pDreadscale->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x + 10, SpawnLoc[1].y, SpawnLoc[1].z);
+            pDreadscale->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+            pDreadscale->SetInCombatWithZone();
+        }
+        if (Creature* pAcidmaw = m_creature->SummonCreature(NPC_ACIDMAW, SpawnLoc[28].x - 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
+        {
+            pAcidmaw->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 10, SpawnLoc[1].y, SpawnLoc[1].z);
+            pAcidmaw->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+            pAcidmaw->SetInCombatWithZone();
+        }
+        
+        // open gate
+        if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+            m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        SummonJormungars();
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
+        //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        if (m_uiDoorTimer < uiDiff && !doorClosed)
+        {
+            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+            if(TeamInInstance == ALLIANCE)
+            {
+                if(Creature *Varian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
+                    DoScriptText(SAY_VARIAN_BEASTS, Varian);
+            }
+            else if(TeamInInstance == HORDE)
+            {
+                if(Creature *Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                    DoScriptText(SAY_GARROSH_BEASTS, Garrosh);
+            }
+            doorClosed = true;
+            m_uiDoorTimer = 30000;
+        }
+        else
+            m_uiDoorTimer -= uiDiff;
+
+        // spells
+        if (m_uiSnoboldTimer < uiDiff)
+        {
+            if(snoboldNo < maxSnobold)
+            {
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                {
+                    DoCast(pTarget, SPELL_SNOBOLLED, true);
+                    DoCast(m_creature, SPELL_RISING_ANGER);
+                    if(Creature *pSnobold = m_creature->SummonCreature(NPC_SNOBOLD_VASSAL, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                        pSnobold->AddThreat(pTarget,0.0f);
+                }
+                snoboldNo++;
+            }
+            m_uiSnoboldTimer = 30000 + rand()%15000;
+        }
+        else
+            m_uiSnoboldTimer -= uiDiff;
+
+        if (m_uiStompTimer < uiDiff)
+        {
+            if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                DoCast(m_creature, SPELL_STOMP_10);
+            if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                DoCast(m_creature, SPELL_STOMP_25);
+            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                DoCast(m_creature, SPELL_STOMP_10HC);
+            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                DoCast(m_creature, SPELL_STOMP_25HC);
+            m_uiStompTimer = urand(20000, 25000);
+        }
+        else
+            m_uiStompTimer -= uiDiff;
+
+        if (m_uiImpaleTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(pTarget, SPELL_IMPALE_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(pTarget, SPELL_IMPALE_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(pTarget, SPELL_IMPALE_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(pTarget, SPELL_IMPALE_25HC);
+            }
+            m_uiImpaleTimer = 10000;
+        }
+        else
+            m_uiImpaleTimer -= uiDiff;
+
+        // berserk
+        if (m_uiBerserkTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_BERSERK);
+            m_uiBerserkTimer = 60000;
+        }
+        else
+            m_uiBerserkTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
@@ -66,17 +368,84 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
     boss_acidmawAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
 
-    void Reset() {}
+    uint8 Difficulty;
+
+    // mobile
+    uint32 m_uiAcidSpewTimer;
+    uint32 m_uiParaliticBiteTimer;
+    uint32 m_uiSlimePoolTimer;
+
+    // stationary
+    uint32 m_uiAcidSpitTimer;
+    uint32 m_uiParaliticSprayTimer;
+    uint32 m_uiSweepTimer;
+
+    uint8 phase;
+    bool startPhase;
+    uint32 phaseStartTimer;
+    uint32 phaseChangeTimer;
+
+    bool hasEnraged;
+
+    uint32 m_uiDoorTimer;
+    bool doorClosed;
+
+    uint32 m_uiBerserkTimer;
+
+    void Reset() 
+    {
+        // mobile
+        m_uiAcidSpewTimer       = 5000;
+        m_uiParaliticBiteTimer  = urand(5000,10000);
+        m_uiSlimePoolTimer      = urand(20000,30000);
+
+        // stationary
+        m_uiAcidSpitTimer       = 5000;
+        m_uiParaliticSprayTimer = urand(16000,21000);
+        m_uiSweepTimer          = urand(20000,30000);
+
+        phase               = 0;    // not started yet
+        startPhase          = false;
+        phaseStartTimer     = 8000;
+        phaseChangeTimer    = 50000;
+
+        hasEnraged          = false;
+
+        m_uiDoorTimer       = 5000;
+        doorClosed          = false;
+
+        m_uiBerserkTimer    = 300000;  // 5 min
+    }
 
     void JustReachedHome()
     {
         if (m_pInstance)
+        {
             m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
+            m_pInstance->SetData(TYPE_STAGE,0);
+            if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+            {
+                m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
+                m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
+            }
+        }
+
+        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_WIPE, pTirion);
+
+        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        {
+            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        m_creature->ForcedDespawn();
     }
 
     void Aggro(Unit* pWho)
@@ -84,10 +453,243 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         m_creature->SetInCombatWithZone();
     }
 
+    bool IsThereAnyTwin()
+    {
+        if(GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
+            return true;
+ 
+        return false;
+    }
+
+    void SummonIcehowl()
+    {
+        if (Creature* pIcehowl = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_ICEHOWL)))
+        {
+            if (pIcehowl->isAlive()) 
+            {
+                pIcehowl->setFaction(14);
+                pIcehowl->SetVisibility(VISIBILITY_ON);
+                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                pIcehowl->SetInCombatWithZone();
+
+                if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
+
+                if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                    m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+            }
+            else
+            {
+                pIcehowl->Respawn();
+                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                pIcehowl->SetInCombatWithZone();
+
+                if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
+
+                if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                    m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+            }
+        }
+        else 
+        {
+            if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
+
+            if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+            {
+                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                pIcehowl->SetInCombatWithZone();
+            }
+            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+        }
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        if(!IsThereAnyTwin())
+            SummonIcehowl();
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
+        //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        if(!IsThereAnyTwin() && !hasEnraged)
+        {
+                hasEnraged = true;
+                phase = 2;
+                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                DoCast(m_creature, SPELL_ENRAGE);
+        }
+
+        if (m_uiDoorTimer < uiDiff && !doorClosed)
+        {
+            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+            doorClosed = true;
+            m_uiDoorTimer = 30000;
+        }
+        else
+            m_uiDoorTimer -= uiDiff;
+
+        if (phaseStartTimer < uiDiff && !startPhase)
+        {
+            phase = 1;
+            m_creature->StopMoving();
+            m_creature->GetMotionMaster()->Clear();
+            m_creature->GetMotionMaster()->MoveIdle();
+            SetCombatMovement(false);
+            startPhase = true;
+            phaseStartTimer = 30000;
+        }
+        else
+            phaseStartTimer -= uiDiff;
+
+        // stationary
+        if(phase == 1)
+        {
+            if (phaseChangeTimer < uiDiff)
+            {
+                phase = 2;
+                m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                SetCombatMovement(true);
+                phaseChangeTimer = 50000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiAcidSpitTimer < uiDiff)
+            {
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_ACID_SPIT_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_ACID_SPIT_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_ACID_SPIT_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_ACID_SPIT_25HC);
+                }
+                m_uiAcidSpitTimer = 3000;
+            }
+            else
+                m_uiAcidSpitTimer -= uiDiff;
+
+            if (m_uiParaliticSprayTimer < uiDiff)
+            {
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_25HC);
+                }
+                m_uiParaliticSprayTimer = urand(16000,20000);
+            }
+            else
+                m_uiParaliticSprayTimer -= uiDiff;
+
+            if (m_uiSweepTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(m_creature, SPELL_SWEEP_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(m_creature, SPELL_SWEEP_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(m_creature, SPELL_SWEEP_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(m_creature, SPELL_SWEEP_25HC);
+                m_uiSweepTimer = urand(20000,30000);
+            }
+            else
+                m_uiSweepTimer -= uiDiff;
+        }
+
+        // mobile
+        if(phase == 2)
+        {
+            if (phaseChangeTimer < uiDiff && IsThereAnyTwin())
+            {
+                phase = 1;
+                m_creature->StopMoving();
+                m_creature->GetMotionMaster()->Clear();
+                m_creature->GetMotionMaster()->MoveIdle();
+                SetCombatMovement(false);
+                phaseChangeTimer = 50000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiParaliticBiteTimer < uiDiff)
+            {
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_PARALYTIC_BITE_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_PARALYTIC_BITE_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_PARALYTIC_BITE_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_PARALYTIC_BITE_25HC);
+                }
+                m_uiParaliticBiteTimer = urand(5000,7000);
+            }
+            else
+                m_uiParaliticBiteTimer -= uiDiff;
+
+            if (m_uiSlimePoolTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(m_creature, SPELL_SLIME_POOL_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(m_creature, SPELL_SLIME_POOL_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(m_creature, SPELL_SLIME_POOL_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(m_creature, SPELL_SLIME_POOL_25HC);
+                m_uiSlimePoolTimer = urand(20000,30000);
+            }
+            else
+                m_uiSlimePoolTimer -= uiDiff;
+
+            if (m_uiAcidSpewTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(m_creature, SPELL_ACID_SPEW_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(m_creature, SPELL_ACID_SPEW_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(m_creature, SPELL_ACID_SPEW_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(m_creature, SPELL_ACID_SPEW_25HC);
+                m_uiAcidSpewTimer = 3000+rand()%2000;
+            }
+            else
+                m_uiAcidSpewTimer -= uiDiff;
+        }
+
+        // berserk
+        if (m_uiBerserkTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_BERSERK);
+            m_uiBerserkTimer = 60000;
+        }
+        else
+            m_uiBerserkTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
@@ -103,17 +705,87 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
     boss_dreadscaleAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
 
-    void Reset() {}
+    uint8 Difficulty;
+
+    // mobile
+    uint32 m_uiBurningBiteTimer;
+    uint32 m_uiMoltenSpewTimer;
+    uint32 m_uiSlimePoolTimer;
+
+    // stationary
+    uint32 m_uiFireSpitTimer;
+    uint32 m_uiBurningSprayTimer;
+    uint32 m_uiSweepTimer;
+
+    uint8 phase;
+    bool startPhase;
+    uint32 phaseStartTimer;
+    uint32 phaseChangeTimer;
+
+    bool hasEnraged;
+
+    uint32 m_uiDoorTimer;
+    bool doorClosed;
+
+    uint32 m_uiBerserkTimer;
+
+    void Reset() 
+    {
+        // mobile
+        m_uiBurningBiteTimer    = urand(5000,7000);
+        m_uiMoltenSpewTimer     = urand(15000,30000);
+        m_uiSlimePoolTimer      = urand(20000,30000);
+
+        // stationary
+        m_uiFireSpitTimer       = 3000;
+        m_uiBurningSprayTimer   = urand(15000,30000);
+        m_uiSweepTimer          = urand(20000,30000);
+
+        phase               = 0;    // not started yet
+        startPhase          = false;
+        phaseStartTimer     = 8000;
+        phaseChangeTimer    = 50000;
+
+        hasEnraged          = false;
+
+        m_uiDoorTimer       = 5000;
+        doorClosed          = false;
+
+        m_uiBerserkTimer    = 300000;  // 5 min
+    }
 
     void JustReachedHome()
     {
         if (m_pInstance)
+        {
             m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
+            m_pInstance->SetData(TYPE_STAGE,0);
+            if(!IsThereAnyTwin())
+            {
+                if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                {
+                    m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
+                    m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
+                }
+            }
+        }
+
+        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_WIPE, pTirion);
+
+        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        {
+            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        m_creature->ForcedDespawn();
     }
 
     void Aggro(Unit* pWho)
@@ -121,10 +793,234 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         m_creature->SetInCombatWithZone();
     }
 
+    bool IsThereAnyTwin()
+    {
+        if(GetClosestCreatureWithEntry(m_creature, NPC_ACIDMAW, 180.0f))
+            return true;
+ 
+        return false;
+    }
+
+    void SummonIcehowl()
+    {
+        if (Creature* pIcehowl = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_ICEHOWL)))
+        {
+            if (pIcehowl->isAlive()) 
+            {
+                pIcehowl->setFaction(14);
+                pIcehowl->SetVisibility(VISIBILITY_ON);
+                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                pIcehowl->SetInCombatWithZone();
+
+                if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
+
+                if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                    m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+            }
+            else
+            {
+                pIcehowl->Respawn();
+                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                pIcehowl->SetInCombatWithZone();
+
+                if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
+
+                if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                    m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+            }
+        }
+        else 
+        {
+            if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
+
+            if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+            {
+                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                pIcehowl->SetInCombatWithZone();
+            }
+            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+        }
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        if(!IsThereAnyTwin())
+            SummonIcehowl();
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
+        //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        if(!IsThereAnyTwin() && !hasEnraged)
+        {
+                hasEnraged = true;
+                phase = 2;
+                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                DoCast(m_creature, SPELL_ENRAGE);
+        }
+
+        if (phaseStartTimer < uiDiff && !startPhase)
+        {
+            phase = 2;
+            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+            SetCombatMovement(true);
+            startPhase = true;
+            phaseStartTimer = 30000;
+        }
+        else
+            phaseStartTimer -= uiDiff;
+
+        // stationary
+        if(phase == 1)
+        {
+            if (phaseChangeTimer < uiDiff)
+            {
+                phase = 2;
+                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                SetCombatMovement(true);
+                phaseChangeTimer = 50000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiFireSpitTimer < uiDiff)
+            {
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_FIRE_SPIT_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_FIRE_SPIT_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_FIRE_SPIT_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_FIRE_SPIT_25HC);
+                }
+                m_uiFireSpitTimer = urand(3000, 5000);
+            }
+            else
+                m_uiFireSpitTimer -= uiDiff;
+
+            if (m_uiBurningSprayTimer < uiDiff)
+            {
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_BURNING_SPRAY_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_BURNING_SPRAY_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_BURNING_SPRAY_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_BURNING_SPRAY_25HC);
+                }
+                m_uiBurningSprayTimer = urand(15000,20000);
+            }
+            else
+                m_uiBurningSprayTimer -= uiDiff;
+
+            if (m_uiSweepTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(m_creature, SPELL_SWEEP_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(m_creature, SPELL_SWEEP_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(m_creature, SPELL_SWEEP_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(m_creature, SPELL_SWEEP_25HC);
+                m_uiSweepTimer = urand(20000,30000);
+            }
+            else
+                m_uiSweepTimer -= uiDiff;
+        }
+
+        // mobile
+        if(phase == 2)
+        {
+            if (phaseChangeTimer < uiDiff && IsThereAnyTwin())
+            {
+                phase = 1;
+                m_creature->StopMoving();
+                m_creature->GetMotionMaster()->Clear();
+                m_creature->GetMotionMaster()->MoveIdle();
+                SetCombatMovement(false);
+                phaseChangeTimer = 50000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiBurningBiteTimer < uiDiff)
+            {
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_BURNING_BITE_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_BURNING_BITE_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_BURNING_BITE_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_BURNING_BITE_25HC);
+                }
+                m_uiBurningBiteTimer = urand(5000,7000);
+            }
+            else
+                m_uiBurningBiteTimer -= uiDiff;
+
+            if (m_uiSlimePoolTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_10);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_25);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_10HC);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 45000);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_25HC);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+                m_uiSlimePoolTimer = urand(20000,30000);
+            }
+            else
+                m_uiSlimePoolTimer -= uiDiff;
+
+            if (m_uiMoltenSpewTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(m_creature, SPELL_MOLTEN_SPEW_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(m_creature, SPELL_MOLTEN_SPEW_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(m_creature, SPELL_MOLTEN_SPEW_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(m_creature, SPELL_MOLTEN_SPEW_25HC);
+                m_uiMoltenSpewTimer = urand(15000,20000);
+            }
+            else
+                m_uiMoltenSpewTimer -= uiDiff;
+        }
+
+        // berserk
+        if (m_uiBerserkTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_BERSERK);
+            m_uiBerserkTimer = 60000;
+        }
+        else
+            m_uiBerserkTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
@@ -140,17 +1036,84 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
     boss_icehowlAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
 
-    void Reset() {}
+    uint8 Difficulty;
+
+    uint32 m_uiFerociousButtTimer;
+    uint32 m_uiArticBreathTimer;
+    uint32 m_uiWhirlTimer;
+    uint32 m_uiMassiveCrashTimer;
+    uint32 m_uiTrampleTimer;
+    uint32 m_uiFrothingRageTimer;
+
+    uint8 m_uiTrampleStage;
+
+    bool m_bIsTrample;
+    bool m_bTrampleCasted;
+    bool m_bMovementStarted;
+    bool m_bAdrenalineCasted;
+
+    uint32 m_uiBerserkTimer;
+
+    uint32 m_uiDoorTimer;
+    bool doorClosed;
+
+    float fPosX, fPosY, fPosZ;
+
+    void Reset() 
+    {
+        m_uiFerociousButtTimer  = urand(20000,30000);
+        m_uiArticBreathTimer    = urand(25000,30000);
+        m_uiWhirlTimer          = urand(20000,25000);
+        m_uiMassiveCrashTimer   = 45000;
+        m_uiTrampleTimer        = 50000;
+        m_uiFrothingRageTimer   = 30000;
+
+        m_uiBerserkTimer        = 300000;  // 5 min
+
+        m_uiDoorTimer       = 5000;
+        doorClosed          = false;
+
+        m_uiTrampleStage    = 0;
+
+        m_bMovementStarted  = false;
+        m_bTrampleCasted    = false;
+        m_bIsTrample        = false;
+        m_bAdrenalineCasted = false;
+        fPosX = 0;
+        fPosY = 0;
+        fPosZ = 0;
+    }
 
     void JustReachedHome()
     {
         if (m_pInstance)
+        {
             m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
+            m_pInstance->SetData(TYPE_STAGE,0);
+            if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+            {
+                m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
+                m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
+            }
+        }
+
+        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_WIPE, pTirion);
+
+        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        {
+            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        m_creature->SetVisibility(VISIBILITY_OFF);
+        m_creature->setFaction(35);
     }
 
     void Aggro(Unit* pWho)
@@ -158,10 +1121,269 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
         m_creature->SetInCombatWithZone();
     }
 
+    void JustDied(Unit* pKiller)
+    {
+        if (m_pInstance)
+        {
+            m_pInstance->SetData(TYPE_NORTHREND_BEASTS, DONE);
+            m_pInstance->SetData(TYPE_STAGE,0);
+        }
+
+        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_VICTORY, pTirion);
+
+        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        {
+            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pBarret->SetVisibility(VISIBILITY_ON);
+        }
+    }
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if(!m_pInstance) 
+            return;
+
+        //if(type != POINT_MOTION_TYPE) 
+            //return;
+
+        if(id != 1 && m_bMovementStarted) 
+            m_creature->GetMotionMaster()->MovePoint(1, fPosX, fPosY, fPosZ);
+        else    
+        {
+            m_creature->GetMotionMaster()->MovementExpired();
+            m_bMovementStarted = false;
+            SetCombatMovement(true);
+            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+        }
+    }
+
+    void DoCastSurgeOfAdrenaline()
+    {
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (PlayerList.isEmpty())
+                return;
+
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (i->getSource()->isAlive())
+                    i->getSource()->CastSpell(i->getSource(), SPELL_SURGE_OF_ADRENALINE, true);
+            }
+        } 
+    }
+
+    void DamageTaken(Unit *done_by, uint32 &uiDamage)
+    {
+        // increase damage if dazzed
+        if(m_creature->HasAura(SPELL_STAGGERED_DAZE))
+            uiDamage += uiDamage/2;
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
+        //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        if (m_uiDoorTimer < uiDiff && !doorClosed)
+        {
+            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+            doorClosed = true;
+            m_uiDoorTimer = 30000;
+        }
+        else
+            m_uiDoorTimer -= uiDiff;
+
+        // spells
+        if (m_bIsTrample)
+        {
+            if(m_uiTrampleTimer < uiDiff)
+            {
+                switch(m_uiTrampleStage)
+                {
+                    // go to center
+                case 0:
+                    m_creature->GetMap()->CreatureRelocation(m_creature, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z, 0);
+                    m_creature->SendMonsterMove(SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                    //m_creature->GetMotionMaster()->MovePoint(0, SpawnLoc[1].y, SpawnLoc[1].z);
+                    m_creature->GetMotionMaster()->MoveIdle();
+                    ++m_uiTrampleStage;
+                    m_uiTrampleTimer = 3000;
+                    break;
+                    // cast massive crash & stop
+                case 1:
+                    m_creature->GetMotionMaster()->MoveIdle();
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(m_creature, SPELL_MASSIVE_CRASH_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(m_creature, SPELL_MASSIVE_CRASH_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(m_creature, SPELL_MASSIVE_CRASH_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(m_creature, SPELL_MASSIVE_CRASH_25HC);
+                    ++m_uiTrampleStage;
+                    m_uiTrampleTimer = 8000;
+                    break;
+                    // wait 5 secs -> cast surge of addrenaline on players
+                case 2:
+                    if (Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    {
+                        if(!m_bAdrenalineCasted)
+                        {
+                            m_bAdrenalineCasted = true;
+                            DoCastSurgeOfAdrenaline();
+                        }
+                    }
+                    // pick a target and run for it
+                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                    {
+                        pTarget->GetPosition(fPosX, fPosY, fPosZ);
+                        DoScriptText(EMOTE_TRAMPLE, m_creature, pTarget);
+                        m_bMovementStarted = true;
+                        //m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                        //m_creature->SetSpeedRate(MOVE_RUN, 4.0f);
+                        m_creature->GetMotionMaster()->Clear();
+                        m_creature->GetMotionMaster()->MovePoint(1, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ());
+                        SetCombatMovement(false);
+                        if(m_creature->HasAura(SPELL_SURGE_OF_ADRENALINE, EFFECT_INDEX_0))
+                            m_creature->RemoveAurasDueToSpell(SPELL_SURGE_OF_ADRENALINE);
+                    }
+                    ++m_uiTrampleStage;
+                    m_uiTrampleTimer = 500;
+                    break;
+                    // run to the target; if target hit cast Trample, else go to next phase
+                case 3:
+                    if (m_bMovementStarted)
+                    {
+                        Map* pMap = m_creature->GetMap();
+                        Map::PlayerList const &lPlayers = pMap->GetPlayers();
+                        for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
+                        {
+                            Unit* pPlayer = itr->getSource();
+                            if (!pPlayer) 
+                                continue;
+                            if (pPlayer->isAlive() && pPlayer->IsWithinDistInMap(m_creature, 5.0f))
+                            {
+                                DoCast(pPlayer, SPELL_TRAMPLE);
+                                m_bTrampleCasted = true;
+                                m_bMovementStarted = false;
+                                m_creature->GetMotionMaster()->MovementExpired();
+                                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                            }
+                        }
+                    } 
+                    else 
+                        ++m_uiTrampleStage;
+
+                    if(m_bTrampleCasted)
+                        ++m_uiTrampleStage;
+                    break;
+                    // if trample not casted, cast stun, else continue
+                case 4:
+                    if(!m_bTrampleCasted)
+                    {
+                        DoScriptText(EMOTE_STUN, m_creature);
+                        DoCast(m_creature, SPELL_STAGGERED_DAZE);
+                    }
+                    m_bMovementStarted = false;
+                    m_bAdrenalineCasted = false;
+                    m_bTrampleCasted = false;
+                    m_creature->GetMotionMaster()->MovementExpired();
+                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                    SetCombatMovement(true);
+                    m_uiMassiveCrashTimer = urand(45000, 50000);
+                    m_bIsTrample = false;
+                    break;
+                default:
+                    m_uiTrampleTimer = 100000;
+                }
+            }else m_uiTrampleTimer -= uiDiff;
+        }
+
+        if(m_bIsTrample)
+            return;
+
+        if (m_uiFrothingRageTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_FROTHING_RAGE);
+            m_uiFrothingRageTimer = 40000;
+        }
+        else
+            m_uiFrothingRageTimer -= uiDiff;
+
+        // berserk
+        if (m_uiBerserkTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_BERSERK);
+            m_uiBerserkTimer = 60000;
+        }
+        else
+            m_uiBerserkTimer -= uiDiff;
+
+        if (m_uiMassiveCrashTimer < uiDiff)
+        {
+            m_bIsTrample = true;
+            m_uiTrampleTimer = 500;
+            m_uiTrampleStage = 0;
+            m_uiMassiveCrashTimer = urand(45000, 50000);
+        }
+        else
+            m_uiMassiveCrashTimer -= uiDiff;
+
+        if (m_uiWhirlTimer < uiDiff)
+        {
+            if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                DoCast(m_creature, SPELL_WHIRL_10);
+            if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                DoCast(m_creature, SPELL_WHIRL_25);
+            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                DoCast(m_creature, SPELL_WHIRL_10HC);
+            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                DoCast(m_creature, SPELL_WHIRL_25HC);
+            m_uiWhirlTimer = urand(20000, 25000);
+        }
+        else
+            m_uiWhirlTimer -= uiDiff;
+
+        if (m_uiArticBreathTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(pTarget, SPELL_ARCTIC_BREATH_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(pTarget, SPELL_ARCTIC_BREATH_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(pTarget, SPELL_ARCTIC_BREATH_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(pTarget, SPELL_ARCTIC_BREATH_25HC);
+            }
+            m_uiArticBreathTimer = urand(25000,30000);
+        }
+        else
+            m_uiArticBreathTimer -= uiDiff;
+
+        if (m_uiFerociousButtTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(pTarget, SPELL_FEROCIOUS_BUTT_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(pTarget, SPELL_FEROCIOUS_BUTT_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(pTarget, SPELL_FEROCIOUS_BUTT_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(pTarget, SPELL_FEROCIOUS_BUTT_25HC);
+            }
+            m_uiFerociousButtTimer = urand(20000, 30000);
+        }
+        else
+            m_uiFerociousButtTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
@@ -170,6 +1392,126 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
 CreatureAI* GetAI_boss_icehowl(Creature* pCreature)
 {
     return new boss_icehowlAI(pCreature);
+}
+
+// snobold
+struct MANGOS_DLL_DECL mob_snoboldAI : public ScriptedAI
+{
+    mob_snoboldAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        Reset();
+    }
+    ScriptedInstance *m_pInstance;
+
+    uint32 spellTimer;
+    uint32 FireBombTimer;
+
+    void Reset()
+    {
+        spellTimer = 10000;
+        FireBombTimer = 10000 + rand()%8000;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (spellTimer < uiDiff)
+        {
+            switch(urand(0, 1))
+            {
+            case 0:
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    DoCast(pTarget, SPELL_BATTER);
+                break;
+            case 1:
+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    DoCast(pTarget, SPELL_HEADCRACK);
+                break;
+            }
+            spellTimer = 10000;
+        }else spellTimer -= uiDiff;
+
+        if(FireBombTimer < uiDiff)
+        {
+            //DoCast(m_creature, SPELL_FIREBOMB);
+            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            {
+                if(Creature *pBomb = m_creature->SummonCreature(NPC_FIREBOMB, 
+                    target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, 
+                    TEMPSUMMON_TIMED_DESPAWN, 30000))
+                {
+                    pBomb->CastSpell(pBomb, SPELL_FIREBOMB_DOT, false);
+                    pBomb->addUnitState(UNIT_STAT_ROOT);
+                    pBomb->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    pBomb->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                }
+            }
+            FireBombTimer = 10000 + rand()%8000;
+        }
+        else FireBombTimer -= uiDiff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_mob_snobold(Creature* pCreature)
+{
+    return new mob_snoboldAI (pCreature);
+}
+
+// slime pool
+struct MANGOS_DLL_DECL mob_slime_poolAI : public ScriptedAI
+{
+    mob_slime_poolAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        Reset();
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        SetCombatMovement(false);
+    }
+    ScriptedInstance *m_pInstance;
+
+    uint32 spellTimer;
+
+    void Reset()
+    {
+        spellTimer = 1000;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (spellTimer < uiDiff)
+        {
+            Map *map = m_creature->GetMap();
+            if (map->IsDungeon())
+            {
+                Map::PlayerList const &PlayerList = map->GetPlayers();
+
+                if (PlayerList.isEmpty())
+                    return;
+
+                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                {
+                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
+                        i->getSource()->DealDamage(i->getSource(), 2000, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NATURE, NULL, false);
+                }
+            } 
+            spellTimer = 1000;
+        }else spellTimer -= uiDiff;
+    }
+};
+
+CreatureAI* GetAI_mob_slime_pool(Creature* pCreature)
+{
+    return new mob_slime_poolAI (pCreature);
 }
 
 void AddSC_northrend_beasts()
@@ -182,6 +1524,11 @@ void AddSC_northrend_beasts()
     newscript->RegisterSelf();
 
     newscript = new Script;
+    newscript->Name = "mob_snobold_vassal";
+    newscript->GetAI = &GetAI_mob_snobold;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
     newscript->Name = "boss_acidmaw";
     newscript->GetAI = &GetAI_boss_acidmaw;
     newscript->RegisterSelf();
@@ -189,6 +1536,11 @@ void AddSC_northrend_beasts()
     newscript = new Script;
     newscript->Name = "boss_dreadscale";
     newscript->GetAI = &GetAI_boss_dreadscale;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_slime_pool";
+    newscript->GetAI = &GetAI_mob_slime_pool;
     newscript->RegisterSelf();
 
     newscript = new Script;
