@@ -148,7 +148,7 @@ static LocationsXY OrbLoc[]=
 };
 
 #define LOC_Z           394.33f
-#define ROOM_RADIUS     100.0f
+#define ROOM_RADIUS     50.0f
 
 /*######
 ## boss_fjola
@@ -195,6 +195,8 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         TeamInInstance = GetFaction();
 
         m_uiBerserkTimer    = 900000;  // 15 min
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
     }
 
     void JustDied(Unit* pKiller)
@@ -554,6 +556,8 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         m_uiCastTimeOut        = 900000;
 
         m_uiBerserkTimer    = 900000;  // 15 min
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
 
         m_uiEssenceBuffCheckTimer = 500;
         lEssences.clear();
@@ -938,6 +942,7 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
 
     uint32 m_uiCreatureEntry;
     uint32 m_uiDieTimer;
+    uint32 m_uiCheckTimer;
     bool m_bMustDie;
 
     float dstX, dstY, dstZ;
@@ -946,55 +951,65 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
     {
         m_uiDieTimer    = 2000;
         m_bMustDie      = false;
-    }
-
-    void MoveInLineOfSight(Unit* pWho)
-    {
-        if(m_creature->GetDistance2d(pWho) <= 3.0f)
-        {
-            switch (m_uiCreatureEntry)
-            {
-            case NPC_CONCENTRATED_DARKNESS:
-                if(pWho->HasAura(SPELL_DARK_ESSENCE))
-                    DoCast(pWho, SPELL_POWERING_UP);
-                else if(pWho->HasAura(SPELL_LIGHT_ESSENCE))
-                {
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                        DoCast(m_creature, SPELL_UNLEASHED_DARK_10);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                        DoCast(m_creature, SPELL_UNLEASHED_DARK_25);
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                        DoCast(m_creature, SPELL_UNLEASHED_DARK_10HC);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                        DoCast(m_creature, SPELL_UNLEASHED_DARK_25HC);
-                }
-                break;
-            case NPC_CONCENTRATED_LIGHT:
-                if(pWho->HasAura(SPELL_LIGHT_ESSENCE))
-                    DoCast(pWho, SPELL_POWERING_UP);
-                else if(pWho->HasAura(SPELL_DARK_ESSENCE))
-                {
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                        DoCast(m_creature, SPELL_UNLEASHED_LIGHT_10);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                        DoCast(m_creature, SPELL_UNLEASHED_LIGHT_25);
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                        DoCast(m_creature, SPELL_UNLEASHED_LIGHT_10HC);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                        DoCast(m_creature, SPELL_UNLEASHED_LIGHT_25HC);
-                }
-                break;
-            }
-            m_bMustDie = true; 
-        }
-        else
-            return;
+        m_uiCheckTimer  = 1000;
     }
 
     void AttackStart(Unit *pWho)
     {
         if(!pWho) 
             return;
+    }
+
+    void CheckDistance()
+    {
+        Map* pMap = m_creature->GetMap();
+        if (pMap && pMap->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = pMap->GetPlayers();
+            if (!PlayerList.isEmpty())
+            {
+                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                {
+                    if(m_creature->GetDistance2d(i->getSource()) <= 3.0f)
+                    {
+                        switch (m_uiCreatureEntry)
+                        {
+                        case NPC_CONCENTRATED_DARKNESS:
+                            if(i->getSource()->HasAura(SPELL_DARK_ESSENCE))
+                                DoCast(i->getSource(), SPELL_POWERING_UP);
+                            else if(i->getSource()->HasAura(SPELL_LIGHT_ESSENCE))
+                            {
+                                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                                    DoCast(m_creature, SPELL_UNLEASHED_DARK_10);
+                                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                                    DoCast(m_creature, SPELL_UNLEASHED_DARK_25);
+                                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                                    DoCast(m_creature, SPELL_UNLEASHED_DARK_10HC);
+                                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                                    DoCast(m_creature, SPELL_UNLEASHED_DARK_25HC);
+                            }
+                            break;
+                        case NPC_CONCENTRATED_LIGHT:
+                            if(i->getSource()->HasAura(SPELL_LIGHT_ESSENCE))
+                                DoCast(i->getSource(), SPELL_POWERING_UP);
+                            else if(i->getSource()->HasAura(SPELL_DARK_ESSENCE))
+                            {
+                                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                                    DoCast(m_creature, SPELL_UNLEASHED_LIGHT_10);
+                                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                                    DoCast(m_creature, SPELL_UNLEASHED_LIGHT_25);
+                                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                                    DoCast(m_creature, SPELL_UNLEASHED_LIGHT_10HC);
+                                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                                    DoCast(m_creature, SPELL_UNLEASHED_LIGHT_25HC);
+                            }
+                            break;
+                        }
+                        m_bMustDie = true; 
+                    }
+                }
+            }
+        }
     }
 
     void ChooseDirection()
@@ -1014,6 +1029,14 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
             m_creature->GetMotionMaster()->MovementExpired();
             ChooseDirection();
         }
+
+        if (m_uiCheckTimer < uiDiff)
+        {
+            CheckDistance();
+            m_uiCheckTimer = 500;
+        }
+        else
+            m_uiCheckTimer -= uiDiff;
 
         if (m_uiDieTimer < uiDiff && m_bMustDie)
         {

@@ -37,8 +37,8 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1605003,"The air freezes with the introduction of our next combatant, Icehowl! Kill or be killed, champions!","","","","","","","","",16040,1,0,0,"icehowl intro"),
 (-1605004,"Tragic... They fought valiantly, but the beasts of Northrend triumphed. Let us observe a moment of silence for our fallen heroes.","","","","","","","","",16042,1,0,0,"beasts wipe"),
 (-1605000,"The monster's menajerie has been vanquished!","","","","","","","","",16041,1,0,0,"beasts victory"),
-(-1605131,"Iceholw glares at $N and lets out a bellowing roar!","","","","","","","","",0,1,0,0,"icehowl emote"),
-(-1605132,"Iceholw crashes into the Colliseum wall and is stunned!","","","","","","","","",0,1,0,0,"icehowl emote"),
+(-1605131,"Iceholw glares at $N and lets out a bellowing roar!","","","","","","","","",0,3,0,0,"icehowl emote"),
+(-1605132,"Iceholw crashes into the Colliseum wall and is stunned!","","","","","","","","",0,3,0,0,"icehowl emote"),
 -- Jaru
 (-1605005,"Grand Warlock Wilfred Fizzlebang will summon forth your next challenge. Stand by for his entry!","","","","","","","","",16043,1,0,0,"jaru intro1"),
 (-1605006,"Thank you, Highlord! Now challengers, I will begin the ritual of summoning! When I am done, a fearsome Doomguard will appear!","","","","","","","","",16268,1,0,0,"jaru intro2"),
