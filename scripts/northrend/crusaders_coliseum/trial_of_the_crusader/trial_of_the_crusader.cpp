@@ -736,7 +736,7 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                     if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_WELCOME, Tirion);
 
-                    /* temp */
+                    /* temp *
                     m_bIsIntro = false;
                     isIntroDone = true;
                     m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
