@@ -107,6 +107,7 @@ enum
 
     NPC_VOICE_OF_YOGG_SARON     = 33280,
     MOB_VISION_TENTACLE         = 33943,
+    SPELL_GRIM_REPRISAL         = 63305,
     // npc hp: 15k on 10 man; 40k on 25 man
     // npc no: 10
 
@@ -141,11 +142,13 @@ enum
     MOB_DESCEND_INTO_MADNESS    = 34072,
     SPELL_LUNATIC_GAZE          = 64167,    //affects players which take the portal to madness
     NPC_LAUGHING_SKULL          = 33990,
+    SKULL_DISPLAY_ID            = 25206, 
 
     // brain's chamber
     MOB_BRAIN_OF_YOGG_SARON     = 33890,
     SPELL_SHATTERED_ILLUSION    = 64173,
     SPELL_INDUCE_MADNESS        = 64059,
+    SPELL_INSANE                = 63120,
 
 
     // tentacules
@@ -181,6 +184,8 @@ enum
     SPELL_RESILIENCE_OF_NATURE  = 62670,
     MOB_SANITY_WELL             = 33991,
     SPELL_SANITY_WELL           = 64169,    // regen sanity
+    SPELL_SANITY_WELL_VISUAL    = 63288,
+    SPELL_SUMMON_SANITY_WELL    = 64170,
 
     KEEPER_HODIR                = 33411,
     SPELL_FORTITUDE_OF_FROST    = 62650,
@@ -291,6 +296,13 @@ static VisionLocXY DragonLoc[]=
     {2071.001709f, -54.414040f, 239.719345f, 0.528450f},
 };
 
+static VisionLocXY SkullDragonLoc[]=
+{
+    {2075.898193f, -5.637041f,  239.787735f},
+    {2137.949219f, -26.778023f, 239.717712f},
+    {2084.131836f, -52.716999f, 239.720703f},
+};
+
 // stormwind
 const float PosGarona[4] = {1935.398926f, 54.017738f, 240.376465f, 2.008213f};
 const float PosKing[4] = {1930.465670f, 62.674065f, 242.376373f, 5.196925f};
@@ -306,6 +318,13 @@ static VisionLocXY KeepLoc[]=
     {1944.612061f, 91.062439f, 239.666443f, 4.076213f},
     {1955.231079f, 71.870926f, 239.666443f, 3.255475f},
     {1949.701416f, 51.040390f, 239.666443f, 2.481856f},
+};
+
+static VisionLocXY SkullKeepLoc[]=
+{
+    {1908.942261f, 58.934380f, 239.666382f},
+    {1916.902954f, 86.755638f, 239.66662f},
+    {1944.789307f, 78.614716f, 239.666382f},
 };
 
 // lich king
@@ -324,6 +343,14 @@ static VisionLocXY IcecrownLoc[]=
     {1919.831421f, -131.184784f, 239.989716f, 4.213656f},
     {1919.120728f, -145.960281f, 239.989716f, 1.908511f},
     {1907.462891f, -139.149307f, 239.989716f, 0.176708f},
+};
+
+static VisionLocXY SkullIcecrownLoc[]=
+{
+    {1962.658569f, -111.356392f, 239.98986f},
+    {1940.515625f, -152.933945f, 239.989868f},
+    {1889.130371f, -122.932549f, 239.98986f},
+    {1908.828003f, -88.593613f, 239.98986f},
 };
 
 #define REQUEST_HELP    "Help me fight Yogg-Saron!"
@@ -364,6 +391,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
     uint32 empoweringShadowsTimer;
     uint32 summonTimer;
     uint32 deafeningRoarTimer;
+    uint8 stack;
 
     Creature *pGuardian;
     std::list<Creature*> lGuardianList;
@@ -376,7 +404,6 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
         isPhase2 = false;
         sanityTimer = 10000;
         m_uiKeepersAlive = 0;
-        //m_creature->setFaction(35);
         m_creature->SetVisibility(VISIBILITY_OFF);
         m_creature->SetHealth(m_creature->GetMaxHealth());
 
@@ -392,6 +419,26 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
     void Aggro(Unit *who) 
     {
         //if(m_pInstance) m_pInstance->SetData(TYPE_YOGGSARON, IN_PROGRESS);
+    }
+
+    void JustReachedHome()
+    {
+        if (m_pInstance)
+        {
+            m_pInstance->SetData(TYPE_YOGGSARON, NOT_STARTED);
+
+            if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_SARA)))
+            {
+                if(!pSara->isAlive())
+                    pSara->Respawn();
+            }
+
+            if (Creature* pYoggBrain = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_YOGG_BRAIN))))
+            {
+                if(!pYoggBrain->isAlive())
+                    pYoggBrain->Respawn();
+            }
+        }
     }
 
     void KilledUnit(Unit* pVictim)
@@ -424,6 +471,18 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                     (*iter)->ForcedDespawn();
             }
         }
+        if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_SARA)))
+        {
+            if(pSara->isAlive())
+                pSara->DealDamage(pSara, pSara->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        }
+
+        if (Creature* pYoggBrain = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_YOGG_BRAIN))))
+        {
+            if(pYoggBrain->isAlive())
+                pYoggBrain->DealDamage(pYoggBrain, pYoggBrain->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        }
+
     }
 
     void StartSecondPhase()
@@ -431,6 +490,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
         m_creature->SetVisibility(VISIBILITY_ON);
         //DoCast(m_creature, SPELL_EMERGE); 
         m_creature->setFaction(14);
+        StartSanity();
         isPhase2 = true;
         DoCast(m_creature, SPELL_SHADOWY_BARRIER_YOGG);
     }
@@ -447,11 +507,75 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
         summonTimer             = 40000;
         deafeningRoarTimer      = 30000;
         isPhase3 = true;
+
+        if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_SARA)))
+        {
+            pSara->SetVisibility(VISIBILITY_OFF);
+            m_creature->DealDamage(pSara, pSara->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        }
     }
 
     void CastShatterIllusion()
     {
         //DoCast(m_creature, SPELL_SHATTERED_ILLUSION); // spell is broken -> is cast on players and should be cast on Yogg & tentacles
+    }
+
+    void StartSanity()
+    {
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (PlayerList.isEmpty())
+                return;
+
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (i->getSource()->isAlive())
+                {
+                    DoCast(i->getSource(), SPELL_SANITY);
+                    if(i->getSource()->HasAura(SPELL_SANITY, EFFECT_INDEX_0))
+                        i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0)->SetStackAmount(100);
+                }
+            }
+        }
+    }
+
+    void DoCastSanity()
+    {
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (PlayerList.isEmpty())
+                return;
+
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (i->getSource()->isAlive())
+                {
+                    // reduce sanity
+                    if(i->getSource()->HasAura(SPELL_SANITY, EFFECT_INDEX_0))
+                    {
+                        if(Aura *aura = i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0))
+                        {
+                            stack = aura->GetStackAmount();
+                            if(stack == 100)
+                                DoCast(i->getSource(), SPELL_INSANE);
+                            /*if(stack > 1)
+                                i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0)->SetStackAmount(stack - 1);
+                            else
+                            {
+                                i->getSource()->RemoveAurasDueToSpell(SPELL_SANITY);
+                                DoCast(i->getSource(), SPELL_INSANE);
+                            }*/
+                        }
+                    }
+                }
+            }
+        }
     }
 
     Creature* SelectRandomGuardian(float fRange)
@@ -477,6 +601,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
         {
             if (sanityTimer < uiDiff)
             {
+                DoCastSanity();
                 DoCast(m_creature, SPELL_SANITY);
                 sanityTimer = 20000;
             }else sanityTimer -= uiDiff;
@@ -491,6 +616,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                 Reset();
                 return;
             }
+
             if (summonTimer < uiDiff)
             {
                 uint8 i = urand(0, 11);
@@ -554,10 +680,13 @@ struct MANGOS_DLL_DECL mob_madness_portalAI : public ScriptedAI
     uint8 m_uiDestination;
     uint32 m_uiCheckTimer;
 
+    bool m_bHasTeleported;
+
     void Reset()
     {
         m_uiDestination = 10;
         m_uiCheckTimer = 500;
+        m_bHasTeleported = false;
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -577,7 +706,7 @@ struct MANGOS_DLL_DECL mob_madness_portalAI : public ScriptedAI
         if(m_creature->GetPositionZ() < 245.0f)
             m_uiDestination = 3;
 
-        if(m_uiCheckTimer < uiDiff)
+        if(m_uiCheckTimer < uiDiff && !m_bHasTeleported)
         {
             Map *map = m_creature->GetMap();
             if (map->IsDungeon())
@@ -593,8 +722,12 @@ struct MANGOS_DLL_DECL mob_madness_portalAI : public ScriptedAI
                     {
                         i->getSource()->TeleportTo(i->getSource()->GetMapId(), TeleportLoc[m_uiDestination].x, TeleportLoc[m_uiDestination].y, TeleportLoc[m_uiDestination].z, i->getSource()->GetOrientation());
                         if(m_uiDestination < 3)
-                            m_creature->ForcedDespawn();
+                        {
+                            //m_creature->ForcedDespawn();
                             //m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                            m_bHasTeleported = true;
+                            m_creature->SetVisibility(VISIBILITY_OFF);
+                        }
                     }
                 }
             } 
@@ -828,7 +961,12 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
                             pTemp->SetDisplayId(28621);
                             pTemp->SetMaxHealth(m_bIsRegularMode ? 15000 : 40000);
                             pTemp->setFaction(7); 
+                            pTemp->CastSpell(pTemp, SPELL_GRIM_REPRISAL, false);
                         }
+                    }
+                    for(uint8 i = 0; i < 3; i++)
+                    {
+                        m_creature->SummonCreature(NPC_LAUGHING_SKULL, SkullKeepLoc[i].x, SkullKeepLoc[i].y, SkullKeepLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
                     }
                     ++m_uiVisionPhase;
                     m_uiSpeechTimer = 1000;
@@ -951,7 +1089,12 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
                             pTemp->SetDisplayId(DisplayDragons[i]);
                             pTemp->SetMaxHealth(m_bIsRegularMode ? 15000 : 40000);
                             pTemp->setFaction(7);
+                            pTemp->CastSpell(pTemp, SPELL_GRIM_REPRISAL, false);
                         }
+                    }
+                    for(uint8 i = 0; i < 3; i++)
+                    {
+                        m_creature->SummonCreature(NPC_LAUGHING_SKULL, SkullDragonLoc[i].x, SkullDragonLoc[i].y, SkullDragonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
                     }
                     ++m_uiVisionPhase;
                     m_uiSpeechTimer = 1000;
@@ -1042,7 +1185,12 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
                             pTemp->SetMaxHealth(m_bIsRegularMode ? 15000 : 40000);
                             pTemp->SetDisplayId(25627);
                             pTemp->setFaction(7);
+                            pTemp->CastSpell(pTemp, SPELL_GRIM_REPRISAL, false);
                         }
+                    }
+                    for(uint8 i = 0; i < 4; i++)
+                    {
+                        m_creature->SummonCreature(NPC_LAUGHING_SKULL, SkullIcecrownLoc[i].x, SkullIcecrownLoc[i].y, SkullIcecrownLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
                     }
                     ++m_uiVisionPhase;
                     m_uiSpeechTimer = 1000;
@@ -1477,6 +1625,40 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         return false;
     }
 
+    void SummonFirstTentacles()
+    {
+        uint8 i = urand(0, 11);
+        if(Creature *pTemp = m_creature->SummonCreature(MOB_CONSTRICTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            {
+                pTemp->AddThreat(pTarget,1000.0f);
+                pTemp->AI()->AttackStart(pTarget);
+                m_lTentacleGUIDList.push_back(pTemp->GetGUID());
+            }
+        }
+        i = urand(0, 11);
+        if(Creature *pTemp = m_creature->SummonCreature(MOB_CRUSHER_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            {
+                pTemp->AddThreat(pTarget,1000.0f);
+                pTemp->AI()->AttackStart(pTarget);
+                m_lTentacleGUIDList.push_back(pTemp->GetGUID());
+            }
+        }
+        i = urand(0, 11);
+        if(Creature *pTemp = m_creature->SummonCreature(MOB_CORRUPTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            {
+                pTemp->AddThreat(pTarget,1000.0f);
+                pTemp->AI()->AttackStart(pTarget);
+                m_lTentacleGUIDList.push_back(pTemp->GetGUID());
+            }
+        }
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
         if (m_bIsIntro)
@@ -1614,8 +1796,9 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                         pYogg->CastSpell(pYogg, SPELL_SHADOWY_BARRIER_YOGG, false);
                         ((boss_yogg_saronAI*)pYogg->AI())->StartSecondPhase();
                     }
+                    SummonFirstTentacles();
                     phaseYellTimer = 30000 + urand(5000, 10000);
-                    summonTimer = 1000;
+                    summonTimer = 10000;
                     waitTimer = 20000;
                     phase = 2;
                     ++Step;
@@ -1714,36 +1897,41 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
             if (summonTimer < uiDiff)
             {
                 uint8 i = urand(0, 11);
-                switch(urand(0, 2))
+                switch(urand(0, 4))
                 {
                 case 0:
+                case 1:
                     if(Creature *pTemp = m_creature->SummonCreature(MOB_CONSTRICTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                     {
                         if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
                         {
-                            pTemp->AddThreat(pTarget,0.0f);
-                            pTemp->AI()->AttackStart(pTarget);
-                            m_lTentacleGUIDList.push_back(pTemp->GetGUID());
-                        }
-                    }
-                    break;
-                case 1:
-                    if(Creature *pTemp = m_creature->SummonCreature(MOB_CRUSHER_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                    {
-                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
-                        {
-                            pTemp->AddThreat(pTarget,0.0f);
+                            pTemp->AddThreat(pTarget,1000.0f);
                             pTemp->AI()->AttackStart(pTarget);
                             m_lTentacleGUIDList.push_back(pTemp->GetGUID());
                         }
                     }
                     break;
                 case 2:
+                    if(!GetClosestCreatureWithEntry(m_creature, MOB_CRUSHER_TENTACLE, 100.0f))
+                    {
+                        if(Creature *pTemp = m_creature->SummonCreature(MOB_CRUSHER_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                        {
+                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                            {
+                                pTemp->AddThreat(pTarget,1000.0f);
+                                pTemp->AI()->AttackStart(pTarget);
+                                m_lTentacleGUIDList.push_back(pTemp->GetGUID());
+                            }
+                        }
+                        break;
+                    }
+                case 3:
+                case 4:
                     if(Creature *pTemp = m_creature->SummonCreature(MOB_CORRUPTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                     {
                         if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
                         {
-                            pTemp->AddThreat(pTarget,0.0f);
+                            pTemp->AddThreat(pTarget,1000.0f);
                             pTemp->AI()->AttackStart(pTarget);
                             m_lTentacleGUIDList.push_back(pTemp->GetGUID());
                         }
@@ -1888,7 +2076,10 @@ struct MANGOS_DLL_DECL keeper_freyaAI : public ScriptedAI
         DoCast(m_creature, SPELL_RESILIENCE_OF_NATURE);
 
         for(uint8 i = 0; i < 5; i++)
-            m_creature->SummonCreature(MOB_SANITY_WELL, SanityWellLoc[i].x, SanityWellLoc[i].y, SanityWellLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
+        {
+            if(Creature* pSanityWell = m_creature->SummonCreature(MOB_SANITY_WELL, SanityWellLoc[i].x, SanityWellLoc[i].y, SanityWellLoc[i].z, 0, TEMPSUMMON_MANUAL_DESPAWN, 30000))
+                pSanityWell->CastSpell(pSanityWell, SPELL_SANITY_WELL_VISUAL, true);
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -2077,7 +2268,7 @@ bool GossipHello_hodir_image(Player* pPlayer, Creature* pCreature)
 
     //if(m_pInstance && m_pInstance->GetData(TYPE_HODIR) == DONE && m_pInstance->GetData(TYPE_FREYA) == DONE && m_pInstance->GetData(TYPE_THORIM) == DONE && m_pInstance->GetData(TYPE_MIMIRON) == DONE)
     // hodir doesn't save! fix it!!!
-    if(m_pInstance /*&& m_pInstance->GetData(TYPE_HODIR) == DONE*/)
+    //if(m_pInstance && m_pInstance->GetData(TYPE_HODIR) == DONE)
     {
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
@@ -2136,7 +2327,7 @@ bool GossipHello_freya_image(Player* pPlayer, Creature* pCreature)
 {
     ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
 
-    if(m_pInstance && m_pInstance->GetData(TYPE_FREYA) == DONE)
+    //if(m_pInstance && m_pInstance->GetData(TYPE_FREYA) == DONE)
     {
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
@@ -2192,7 +2383,7 @@ bool GossipHello_mimiron_image(Player* pPlayer, Creature* pCreature)
 {
     ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
 
-    if(m_pInstance && m_pInstance->GetData(TYPE_MIMIRON) == DONE)
+    //if(m_pInstance && m_pInstance->GetData(TYPE_MIMIRON) == DONE)
     {
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
@@ -2248,7 +2439,7 @@ bool GossipHello_thorim_image(Player* pPlayer, Creature* pCreature)
 {
     ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
 
-    if(m_pInstance && m_pInstance->GetData(TYPE_THORIM) == DONE)
+    //if(m_pInstance && m_pInstance->GetData(TYPE_THORIM) == DONE)
     {
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
@@ -2430,7 +2621,7 @@ struct MANGOS_DLL_DECL mob_guardian_of_yogg_saronAI : public ScriptedAI
             uiDamage = 0;
             selfKillTimer = 500;
             mustDie = true;
-            hasCasted = true;
+            //hasCasted = true;
         }
     }
 
@@ -2717,6 +2908,8 @@ struct MANGOS_DLL_DECL mob_sanity_wellAI : public ScriptedAI
     void Reset()
     {
         checkTimer = 2000;
+        DoCast(m_creature, SPELL_SANITY_WELL);
+        DoCast(m_creature, SPELL_SANITY_WELL_VISUAL);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -2738,13 +2931,13 @@ struct MANGOS_DLL_DECL mob_sanity_wellAI : public ScriptedAI
                 {
                     if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
                     {
-                        // reduce sanity
+                        // increase sanity
                         if(i->getSource()->HasAura(SPELL_SANITY, EFFECT_INDEX_0))
                         {
-                            if(Aura *aura = i->getSource()->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0))
+                            if(Aura *aura = i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0))
                             {
                                 stack = aura->GetStackAmount();
-                                i->getSource()->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0)->SetStackAmount(stack - 1);
+                                i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0)->SetStackAmount(stack - 1);
                             }
                         }
                     }
@@ -2753,8 +2946,56 @@ struct MANGOS_DLL_DECL mob_sanity_wellAI : public ScriptedAI
             checkTimer = 2000;
         }
         else checkTimer -= uiDiff;
+    }
+};
 
-        DoMeleeAttackIfReady();
+struct MANGOS_DLL_DECL mob_laughing_skullAI : public ScriptedAI
+{
+    mob_laughing_skullAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        pCreature->SetDisplayId(SKULL_DISPLAY_ID);
+        pCreature->setFaction(14);
+        SetCombatMovement(false);
+        pCreature->GetMotionMaster()->MoveConfused();
+        Reset();
+    }
+
+    ScriptedInstance *m_pInstance;
+
+    uint32 checkTimer;
+
+    void Reset()
+    {
+        checkTimer = 2000;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (checkTimer < uiDiff)
+        {
+            Map *map = m_creature->GetMap();
+            if (map->IsDungeon())
+            {
+                Map::PlayerList const &PlayerList = map->GetPlayers();
+
+                if (PlayerList.isEmpty())
+                    return;
+
+                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                {
+                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 4)
+                        DoCast(i->getSource(), SPELL_LUNATIC_GAZE);
+                }
+            } 
+            checkTimer = 2000;
+        }
+        else checkTimer -= uiDiff;
     }
 };
 
@@ -2858,6 +3099,10 @@ CreatureAI* GetAI_mob_sanity_well(Creature* pCreature)
     return new mob_sanity_wellAI(pCreature);
 }
 
+CreatureAI* GetAI_mob_laughing_skull(Creature* pCreature)
+{
+    return new mob_laughing_skullAI(pCreature);
+}
 
 void AddSC_boss_yogg_saron()
 {
@@ -2968,5 +3213,10 @@ void AddSC_boss_yogg_saron()
     newscript = new Script;
     newscript->Name = "mob_sanity_well";
     newscript->GetAI = &GetAI_mob_sanity_well;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_laughing_skull";
+    newscript->GetAI = &GetAI_mob_laughing_skull;
     newscript->RegisterSelf();
 }
