@@ -484,7 +484,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
                 int32 iTextId = 0;
                 //AddDrakeLootMode();
 
-                achievProgress++;
+                achievProgress += 1;
 
                 switch(pTemp->GetEntry())
                 {
