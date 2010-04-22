@@ -367,6 +367,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
     uint32 LifeSparkTimer;
     uint8 hp;
     uint32 hpDelayTimer;
+    uint64 m_uiHeartGUID;
     bool heart1;
     bool heart2;
     bool heart3;
@@ -400,6 +401,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         Addcount = 0;
+        m_uiHeartGUID   = 0;
         heart1 = false;
         heart2 = false;
         heart3 = false;
@@ -572,7 +574,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
         
         if (m_pInstance->GetData(TYPE_XT002) == SPECIAL && !isHardMode)
         {
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_HEART))))
+            if (Creature* pTemp = m_pInstance->instance->GetCreature(m_uiHeartGUID))
             {
                 if (!pTemp->isAlive())
                 {
@@ -637,15 +639,15 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             DoCast(m_creature, SPELL_STUN);
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
-            if(!m_bIsRegularMode)
-                Heart->SetMaxHealth(7199999);
+            if(Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+            {
+                m_uiHeartGUID = Heart->GetGUID();
+                if(!m_bIsRegularMode)
+                    Heart->SetMaxHealth(7199999);
+            }
 
             if (m_pInstance)
-            {
                 m_pInstance->SetData(TYPE_XT002, SPECIAL);
-                //m_pInstance->SetData(DATA_HEART, Heart->GetGUID());
-            }
         }
 
         if (phase2 && Heart_Timer < diff)
@@ -681,15 +683,15 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 DoCast(m_creature, SPELL_STUN);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
-                if(!m_bIsRegularMode)
-                    Heart->SetMaxHealth(7199999);
-
-                if (m_pInstance)
+                if(Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                 {
-                    //m_pInstance->SetData(TYPE_XT002, SPECIAL);
-                    //m_pInstance->SetData(DATA_HEART, Heart->GetGUID());
+                    m_uiHeartGUID = Heart->GetGUID();
+                    if(!m_bIsRegularMode)
+                        Heart->SetMaxHealth(7199999);
                 }
+
+                //if (m_pInstance)
+                    //m_pInstance->SetData(TYPE_XT002, SPECIAL);
             }
 
             if (!phase2 && heart1 && heart2 && !heart3 && (m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 25)
@@ -706,15 +708,15 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 DoCast(m_creature, SPELL_STUN);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
-                if(!m_bIsRegularMode)
-                    Heart->SetMaxHealth(7199999);
-
-                if (m_pInstance)
+                if(Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                 {
-                    //m_pInstance->SetData(TYPE_XT002, SPECIAL);
-                    //m_pInstance->SetData(DATA_HEART, Heart->GetGUID());
+                    m_uiHeartGUID = Heart->GetGUID();
+                    if(!m_bIsRegularMode)
+                        Heart->SetMaxHealth(7199999);
                 }
+
+                //if (m_pInstance)
+                    //m_pInstance->SetData(TYPE_XT002, SPECIAL);
             }
 
             if (phase2 && add_summon_delay < diff)
