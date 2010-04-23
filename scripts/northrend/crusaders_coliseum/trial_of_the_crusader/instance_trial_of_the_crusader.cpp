@@ -36,12 +36,12 @@ struct MANGOS_DLL_DECL instance_trial_of_the_crusader : public ScriptedInstance
 {
     instance_trial_of_the_crusader(Map* pMap) : ScriptedInstance(pMap) 
     {
-        Difficulty = (uint8)pMap->GetDifficulty();
+        Difficulty = pMap->GetDifficulty();
         Initialize();
     };
 
     uint32 m_auiEncounter[MAX_ENCOUNTER];
-    uint8 Difficulty;
+    uint32 Difficulty;
     bool m_bNeedSave;
     std::string strInstData;
 

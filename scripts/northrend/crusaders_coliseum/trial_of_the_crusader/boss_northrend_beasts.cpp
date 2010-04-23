@@ -147,15 +147,14 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
     boss_gormokAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
             pCreature->ApplySpellImmune(0, IMMUNITY_EFFECT, IMMUNE_TO_MOVEMENT_IMPAIRMENT_AND_LOSS_CONTROL_MASK, true); // check this!!!
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     uint8 maxSnobold;
     uint8 snoboldNo;
@@ -368,13 +367,12 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
     boss_acidmawAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     // mobile
     uint32 m_uiAcidSpewTimer;
@@ -705,13 +703,12 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
     boss_dreadscaleAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     // mobile
     uint32 m_uiBurningBiteTimer;
@@ -1036,13 +1033,12 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
     boss_icehowlAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     uint32 m_uiFerociousButtTimer;
     uint32 m_uiArticBreathTimer;

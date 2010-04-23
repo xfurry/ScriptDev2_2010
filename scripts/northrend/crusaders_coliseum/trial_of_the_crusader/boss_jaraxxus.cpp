@@ -181,14 +181,13 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
     boss_jaraxxusAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         //SetEquipmentSlots(false, EQUIP_MAIN, EQUIP_OFFHAND, EQUIP_RANGED);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     uint32 m_uiFelFireballTimer;
     uint32 m_uiFelLightningTimer;

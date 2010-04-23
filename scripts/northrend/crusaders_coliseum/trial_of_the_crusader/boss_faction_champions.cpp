@@ -74,13 +74,13 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
     boss_faction_championAI(Creature *pCreature, uint32 aitype) : ScriptedAI(pCreature) 
     {
         m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         mAIType = aitype;
         Init();
     }
     
     ScriptedInstance *m_pInstance;
-    uint8 Difficulty;
+    uint32 Difficulty;
     uint32 mAIType;
     
     uint32 ThreatTimer;

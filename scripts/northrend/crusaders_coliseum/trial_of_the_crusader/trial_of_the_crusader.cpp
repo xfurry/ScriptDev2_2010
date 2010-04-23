@@ -137,11 +137,11 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
     npc_tirionAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
     ScriptedInstance *m_pInstance;
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     uint32 IntroTimer;
     uint32 IntroStep;
@@ -691,12 +691,12 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
     npc_crusader_anouncerAI(Creature* pCreature) : ScriptedAI(pCreature) 
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     bool flag25;
 

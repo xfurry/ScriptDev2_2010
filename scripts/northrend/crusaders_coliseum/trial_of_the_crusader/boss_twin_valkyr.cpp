@@ -159,15 +159,14 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
     boss_fjolaAI(Creature* pCreature) : ScriptedAI(pCreature) 
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         SetEquipmentSlots(false, EQUIP_MAIN_1, -1, -1);
         doorClosed = false;
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     uint32 m_uiTwinSpikeTimer;
     uint32 m_uiSpecialSpellTimer;
@@ -520,13 +519,13 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
     boss_eydisAI(Creature* pCreature) : ScriptedAI(pCreature) 
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         SetEquipmentSlots(false, EQUIP_MAIN_2, -1, -1);
         Reset();
     }
 
     ScriptedInstance *m_pInstance;
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     uint32 m_uiTwinSpikeTimer;
     uint32 m_uiSpecialSpellTimer;
@@ -930,7 +929,7 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
     mob_valkyr_orbAI(Creature *pCreature) : ScriptedAI(pCreature) 
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         SetCombatMovement(false);  
         m_uiCreatureEntry = pCreature->GetEntry();
         ChooseDirection();
@@ -938,7 +937,7 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
     }
 
     ScriptedInstance *m_pInstance;
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     uint32 m_uiCreatureEntry;
     uint32 m_uiDieTimer;
@@ -1060,12 +1059,12 @@ struct MANGOS_DLL_DECL mob_valkyr_essenceAI : public ScriptedAI
     mob_valkyr_essenceAI(Creature *pCreature) : ScriptedAI(pCreature) 
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
 
     ScriptedInstance *m_pInstance;
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     uint32 m_uiPlayerCheckTimer;
     uint32 m_uiCreatureEntry;

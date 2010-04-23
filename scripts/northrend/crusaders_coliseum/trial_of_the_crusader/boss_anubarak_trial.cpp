@@ -95,14 +95,13 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
     boss_anubarak_trialAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         m_bHasTaunted = false;
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-
-    uint8 Difficulty;
+    uint32 Difficulty;
 
     bool m_bIsPhase3;
     bool m_bStopSummoning;
