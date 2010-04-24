@@ -30,7 +30,7 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1605125,"Welcome Warchief Thrall, Overlord Hellscream.","","","","","","","","",16056,1,0,0,"ttirion horde1"),
 (-1605126,"I hope you can see the merits of these events in time Garrosh. We cannot win against the scourge if we continue to war against one another!","","","","","","","","",16057,1,0,0,"tirion horde2"),
 (-1605127,"Under my roof gentelmen, I trust you will behave!","","","","","","","","",16058,1,0,0,"tirion horde3"),
-(-1605128,"If you will follow me then!","","","","","","","","",16059,3,0,0,"tirion horde4"),
+(-1605128,"If you will follow me then!","","","","","","","","",16059,1,0,0,"tirion horde4"),
 -- Beasts:
 (-1605001,"Hailing from the deepest, darkest carverns of the storm peaks, Gormok the Impaler! Battle on, heroes!.","","","","","","","","",16038,1,0,0,"gormok intro"),
 (-1605002,"Steel yourselves, heroes, for the twin terrors Acidmaw and Dreadscale. Enter the arena!","","","","","","","","",16039,1,0,0,"jormungar intro"),
