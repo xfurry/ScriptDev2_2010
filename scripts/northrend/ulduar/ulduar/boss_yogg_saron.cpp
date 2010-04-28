@@ -2614,14 +2614,17 @@ struct MANGOS_DLL_DECL mob_guardian_of_yogg_saronAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
     {
-        if(uiDamage > m_creature->GetHealth() && !hasCasted)
+        if(uiDamage > m_creature->GetHealth())
         {
-            m_creature->SetHealth(m_creature->GetMaxHealth());
-            DoCast(m_creature, m_bIsRegularMode ? SPELL_SHADOW_NOVA : SPELL_SHADOW_NOVA_H);
             uiDamage = 0;
             selfKillTimer = 500;
-            mustDie = true;
-            //hasCasted = true;
+            m_creature->SetHealth(m_creature->GetMaxHealth());
+            if(!hasCasted)
+            {
+                DoCast(m_creature, m_bIsRegularMode ? SPELL_SHADOW_NOVA : SPELL_SHADOW_NOVA_H);
+                mustDie = true;
+                hasCasted = true;
+            }
         }
     }
 
