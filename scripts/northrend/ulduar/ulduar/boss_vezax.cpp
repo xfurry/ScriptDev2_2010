@@ -171,7 +171,10 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
             Creature *Animus = m_creature->SummonCreature(NPC_SARONITE_ANIMUS, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
             Animus->SetInCombatWithZone();
             isHardMode = true;
-            SaroniteVaporCount = 0;        
+            SaroniteVaporCount = 0;  
+            // Todo: add hard loot mode
+            //m_creature->RemoveLootMode(2);
+            //m_creature->AddLootMode(4)
         }
     }
 
@@ -405,45 +408,7 @@ void AddSC_boss_vezax()
     newscript->RegisterSelf();
 }
 
-
 /* check this:
-
-enum Enums
-{
-    //General Vezax yells
-    SAY_VEZAX_AGGRO                     = -1999925,
-    SAY_VEZAX_KILL_PLAYER_1             = -1999926,
-    SAY_VEZAX_KILL_PLAYER_2             = -1999927,
-    SAY_VEZAX_SUMMON                    = -1999928,
-    SAY_VEZAX_ENRAGE                    = -1999929,
-    SAY_VEZAX_DEATH                     = -1999930,
-    SAY_VEZAX_SURGE                     = -1999931,
- 
-    //Vezax spells
-    SPELL_ENRAGE                        = 61632, // Increases the caster's attack speed by 150% and all damage it deals by 500% for 5 min.
-    SPELL_AURA_OF_DESPAIR               = 62692, // Unable to regenerate or gain mana from most natural sources. Melee attack speed reduced by 20%.
-    SPELL_SHADOW_CRASH                  = 60835, // Fires a missile towards a random target. When this missile lands, it deals 5655 to 6345 Shadow damage to all enemies within 10 yards of that location.
-    SPELL_SHADOW_CRASH_H                = 63721, // deals 11310 to 12690 Shadow damage
-    SPELL_SEARING_FLAMES                = 62661, // Deals 13875 to 16125 Fire damage to all enemies within 100 yards, Armor reduced by 75% for 10 seconds.
-    SPELL_SURGE_OF_DARKNESS             = 62662, // Physical damage increased by 100%. Movement speed reduced by 55%.
-    SPELL_MARK_OF_FACELESS              = 63276, // Siphoning 5000 health from nearby allies every 1 sec., healing General Vezax.
-    SPELL_CORRUPTED_RAGE                = 68415, // Your insight into Shamanistic Rage is intensified but corrupted by General Vezax's Aura of Despair, hindering your ability to heal.
-    SPELL_SARONITE_BARRIER              = 63364,
- 
-    //summons
-    BOSS_SARONITE_ANIMUS                = 33524, //only hardmode (if at least 6 saronite vapors arent destroyed)
-    NPC_SARONITE_VAPORS                 = 33488,
- 
-    //summons spells
-    SPELL_PROFOUND_OF_DARKNESS          = 63420, //saronite animus
-    SPELL_SARONITE_VAPORS               = 63323, //not working yet
- 
-    //phases
-    PHASE_NORMAL                        = 1,
-    PHASE_ANIMUS_SPAWNED                = 2,
-    PHASE_HARD_MODE_ACTIVE              = 3
-};
- 
 struct VaporsPositions
 {
     float x, y, z;
@@ -460,103 +425,5 @@ static VaporsPositions VaporsSP[] =
     {1872.992554,106.913689,342.377960},
     {1813.253906,97.265800,342.377960},
     {1845.484863,124.527130,341.802368}
-};
- 
-struct TRINITY_DLL_DECL boss_general_vezaxAI : public BossAI
-{
-    boss_general_vezaxAI(Creature* pCreature) : BossAI(pCreature, TYPE_VEZAX) {}
- 
-    uint32 EnrageTimer;
-    uint32 ShadowCrashTimer;
-    uint32 SearingFlamesTimer;
-    uint32 SurgeOfDarknessTimer;
-    uint32 MarkOfFacelessTimer;
-    uint32 SummonVaporsTimer;
- 
-    uint8 Phase;
-    uint8 VaporsCounter;
-    bool HardMode;
-    bool AchievHardModeKill;
-    bool AchievShadowdodger;
-    bool AnimusSummoned;
- 
-    void Reset()
-    {
-        EnrageTimer = 10*MINUTE*IN_MILISECONDS;
-        ShadowCrashTimer = 10000;
-        SearingFlamesTimer = urand(5000,10000);
-        SurgeOfDarknessTimer = 65000;
-        MarkOfFacelessTimer = urand(15000,25000);
-        SummonVaporsTimer = 30000;
- 
-        Phase = PHASE_NORMAL;
-        VaporsCounter = 0;
-        HardMode = true;
-        AchievHardModeKill = true;
-        AchievShadowdodger = true;
-        AnimusSummoned = false;
- 
-        m_creature->ResetLootMode();
-        m_creature->SetMaxHealth(HEROIC(5000000,20000000));
-    }
- 
-    void EnterCombat(Unit* pWho)
-    {
-        DoScriptText(SAY_VEZAX_AGGRO, m_creature);
-        DoZoneInCombat();
- 
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, SPELL_AURA_OF_DESPAIR, true);
-        DoCastAOE(SPELL_AURA_OF_DESPAIR, true);
-        m_creature->AddLootMode(2); // emblem of valor drop
-    }
- 
-    void JustDied(Unit* pKiller)
-    {
-        DoScriptText(SAY_VEZAX_DEATH, m_creature);
-    }
- 
-    void KilledUnit(Unit* pVictim)
-    {
-        DoScriptText(RAND(SAY_VEZAX_KILL_PLAYER_1,SAY_VEZAX_KILL_PLAYER_2), m_creature);
-    }
- 
-    void UpdateAI(const uint32 diff)
-    {
-        if (!UpdateVictim())
-            return;
- 
-        if (diff > EnrageTimer) {
-            DoCast(m_creature, SPELL_ENRAGE);
-            DoScriptText(SAY_VEZAX_ENRAGE, m_creature);
-        } else EnrageTimer -= diff;
- 
-        if (Phase != PHASE_ANIMUS_SPAWNED) {
-            if (diff > SearingFlamesTimer) {
-                DoCastVictim(SPELL_SEARING_FLAMES);
-                SearingFlamesTimer = urand(5000,10000);
-            } else SearingFlamesTimer -= diff;
-        }
- 
-        if (diff > SurgeOfDarknessTimer) {
-            DoCast(m_creature, SPELL_SURGE_OF_DARKNESS);
-            DoScriptText(SAY_VEZAX_SURGE, m_creature);
-            SurgeOfDarknessTimer = 65000;
-        } else SurgeOfDarknessTimer -= diff;
- 
-        if ((Phase == PHASE_NORMAL) && (VaporsCounter<8)) {
-            if (diff > SummonVaporsTimer) {
-                m_creature->SummonCreature(NPC_SARONITE_VAPORS, VaporsSP[VaporsCounter].x, VaporsSP[VaporsCounter].y, VaporsSP[VaporsCounter].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 25000);
-                m_creature->SummonCreature(NPC_SARONITE_VAPORS, VaporsSP[VaporsCounter+1].x, VaporsSP[VaporsCounter+1].y, VaporsSP[VaporsCounter+1].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 25000);
-                VaporsCounter+=2;
-                if (VaporsCounter == 6) {
-                    Phase = PHASE_ANIMUS_SPAWNED;
-                    DoCast(m_creature, SPELL_SARONITE_BARRIER);
-                    m_creature->SummonCreature(BOSS_SARONITE_ANIMUS, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_CORPSE_DESPAWN);
-                    m_creature->RemoveLootMode(2);
-                    m_creature->AddLootMode(4); // change emblem of valor for emblem of conquest and add hard mode loot items
-                }
-            } else SummonVaporsTimer -= diff;
-        }
-    }
 };
 */

@@ -147,8 +147,6 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
     uint32 IntroTimer;
     uint32 IntroStep;
 
-    Creature *Algalon;
-
     bool hasYoggChecked;
 
     uint8 phase;
@@ -481,30 +479,29 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
             switch(Step)
             {
             case 1:
-                Algalon = m_creature;
-                Algalon->setFaction(35);
-                Algalon->RemoveAllAuras();
-                Algalon->DeleteThreatList();
-                Algalon->CombatStop(true);
-                Algalon->InterruptNonMeleeSpells(false);
-                Algalon->SetHealth(m_creature->GetMaxHealth());
-                Algalon->GetMotionMaster()->MovePoint(0, 1631.970f, -302.635f, 417.321f);
-                Algalon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                m_creature->setFaction(35);
+                m_creature->RemoveAllAuras();
+                m_creature->DeleteThreatList();
+                m_creature->CombatStop(true);
+                m_creature->InterruptNonMeleeSpells(false);
+                m_creature->SetHealth(m_creature->GetMaxHealth());
+                m_creature->GetMotionMaster()->MovePoint(0, 1631.970f, -302.635f, 417.321f);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 ++Step;
                 OutroTimer = 5000;
                 break;
             case 3:
                 // make boss kneel
-                Algalon->SetSplineFlags(SPLINEFLAG_UNKNOWN12);
+                m_creature->SetSplineFlags(SPLINEFLAG_UNKNOWN12);
                 if(isDespawned)
                 {
-                    DoScriptText(SAY_DESPAWN1, Algalon);
+                    DoScriptText(SAY_DESPAWN1, m_creature);
                     ++Step;
                     OutroTimer = 15000;
                 }
                 else
                 {
-                    DoScriptText(SAY_OUTRO1, Algalon);
+                    DoScriptText(SAY_OUTRO1, m_creature);
                     ++Step;
                     OutroTimer = 37000;
                 }
@@ -512,13 +509,13 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
             case 5:
                 if(isDespawned)
                 {
-                    DoScriptText(SAY_DESPAWN2, Algalon);
+                    DoScriptText(SAY_DESPAWN2, m_creature);
                     ++Step;
                     OutroTimer = 8000;
                 }
                 else
                 {
-                    DoScriptText(SAY_OUTRO2, Algalon);
+                    DoScriptText(SAY_OUTRO2, m_creature);
                     ++Step;
                     OutroTimer = 17000;
                 }
@@ -526,13 +523,13 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
             case 7:
                 if(isDespawned)
                 {
-                    DoScriptText(SAY_DESPAWN3, Algalon);
+                    DoScriptText(SAY_DESPAWN3, m_creature);
                     ++Step;
                     OutroTimer = 7000;
                 }
                 else
                 {
-                    DoScriptText(SAY_OUTRO3, Algalon);
+                    DoScriptText(SAY_OUTRO3, m_creature);
                     ++Step;
                     OutroTimer = 12000;
                 }
@@ -540,13 +537,13 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
             case 9:
                 if(isDespawned)
                 {
-                    DoCast(Algalon, SPELL_ASCEND);
+                    DoCast(m_creature, SPELL_ASCEND);
                     ++Step;
                     OutroTimer = 5000;
                 }
                 else
                 {
-                    DoScriptText(SAY_OUTRO4, Algalon);
+                    DoScriptText(SAY_OUTRO4, m_creature);
                     ++Step;
                     OutroTimer = 11000;
                 }
@@ -556,11 +553,11 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
                 {
                     if (m_pInstance)
                         m_pInstance->SetData(TYPE_YOGGSARON, DONE);
-                    Algalon->ForcedDespawn();
+                    m_creature->ForcedDespawn();
                 }
                 else
                 {
-                    DoScriptText(SAY_OUTRO5, Algalon);
+                    DoScriptText(SAY_OUTRO5, m_creature);
                     if (m_pInstance)
                         m_pInstance->SetData(TYPE_YOGGSARON, DONE);
                     ++Step;

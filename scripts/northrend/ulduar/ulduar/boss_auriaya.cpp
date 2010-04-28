@@ -390,7 +390,7 @@ struct MANGOS_DLL_DECL mob_feral_defenderAI : public ScriptedAI
         if (stack_delay < diff && !rdy)
         {
             DoCast(m_creature, SPELL_FERAL_ESSENCE);
-            if (m_creature->GetAura(SPELL_FERAL_ESSENCE, EFFECT_INDEX_0)->GetStackAmount() == 8)
+            if (m_creature->HasAura(SPELL_FERAL_ESSENCE) && m_creature->GetAura(SPELL_FERAL_ESSENCE, EFFECT_INDEX_0)->GetStackAmount() == 8)
                 rdy = true;
             stack_delay = 500;
         }else stack_delay -= diff;

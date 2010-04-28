@@ -185,8 +185,6 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
     uint8 IcicleCount;
     uint32 AuraCheckTimer;
 
-    Creature* Hodir;
-
     bool isOutro;
     uint32 OutroTimer;
     uint32 Step;
@@ -445,21 +443,20 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
             switch(Step)
             {
             case 1:
-                Hodir = m_creature;
-                Hodir->setFaction(35);
-                Hodir->RemoveAllAuras();
-                Hodir->DeleteThreatList();
-                Hodir->CombatStop(true);
-                Hodir->InterruptNonMeleeSpells(false);
-                Hodir->SetHealth(Hodir->GetMaxHealth());
-                Hodir->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                Hodir->GetMotionMaster()->MovePoint(0, 1984.64f, -206.37f, 432.68f);
+                m_creature->setFaction(35);
+                m_creature->RemoveAllAuras();
+                m_creature->DeleteThreatList();
+                m_creature->CombatStop(true);
+                m_creature->InterruptNonMeleeSpells(false);
+                m_creature->SetHealth(m_creature->GetMaxHealth());
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                m_creature->GetMotionMaster()->MovePoint(0, 1984.64f, -206.37f, 432.68f);
                 ++Step;
                 OutroTimer = 10000;
                 break;
             case 3:
-                Hodir->SetOrientation(4.99f);
-                DoScriptText(SAY_DEATH, Hodir);
+                m_creature->SetOrientation(4.99f);
+                DoScriptText(SAY_DEATH, m_creature);
                 ++Step;
                 OutroTimer = 5000;
                 break;
@@ -497,7 +494,7 @@ struct MANGOS_DLL_DECL npc_hodir_druidAI : public ScriptedAI
 
     void Reset()
     {
-        spellTimer = 10000;
+        spellTimer = 5000;
         FriendlyList.clear();
     }
 
@@ -508,11 +505,16 @@ struct MANGOS_DLL_DECL npc_hodir_druidAI : public ScriptedAI
             FriendlyList.push_back(pWho->GetGUID());
     }
 
+    void Aggro(Unit* pWho)
+    {
+        DoStartMovement(pWho, 20.0f);
+    }
+
     uint64 SelectRandomPlayer()
     {
         //This should not appear!
         if (FriendlyList.empty()){
-            spellTimer = 10000;
+            spellTimer = 5000;
             return NULL;
         }
 
@@ -555,7 +557,7 @@ struct MANGOS_DLL_DECL npc_hodir_druidAI : public ScriptedAI
                     DoCast(pTemp, SPELL_STARLIGHT);
                 break;
             }
-            spellTimer = 10000;
+            spellTimer = 5000;
         }else spellTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
@@ -584,7 +586,7 @@ struct MANGOS_DLL_DECL npc_hodir_shamanAI : public ScriptedAI
 
     void Reset()
     {
-        spellTimer = 10000;
+        spellTimer = 5000;
         FriendlyList.clear();
     }
 
@@ -595,11 +597,16 @@ struct MANGOS_DLL_DECL npc_hodir_shamanAI : public ScriptedAI
             FriendlyList.push_back(pWho->GetGUID());
     }
 
+    void Aggro(Unit* pWho)
+    {
+        DoStartMovement(pWho, 20.0f);
+    }
+
     uint64 SelectRandomPlayer()
     {
         //This should not appear!
         if (FriendlyList.empty()){
-            spellTimer = 10000;
+            spellTimer = 5000;
             return NULL;
         }
 
@@ -642,7 +649,7 @@ struct MANGOS_DLL_DECL npc_hodir_shamanAI : public ScriptedAI
                     DoCast(pTemp, m_bIsRegularMode ? SPELL_STORM_CLOUD : SPELL_STORM_CLOUD_H);
                 break;
             }
-            spellTimer = 10000;
+            spellTimer = 5000;
         }else spellTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
@@ -669,7 +676,7 @@ struct MANGOS_DLL_DECL npc_hodir_mageAI : public ScriptedAI
 
     void Reset()
     {
-        spellTimer = 10000;
+        spellTimer = 5000;
         FriendlyList.clear();
     }
 
@@ -680,11 +687,16 @@ struct MANGOS_DLL_DECL npc_hodir_mageAI : public ScriptedAI
             FriendlyList.push_back(pWho->GetGUID());
     }
 
+    void Aggro(Unit* pWho)
+    {
+        DoStartMovement(pWho, 20.0f);
+    }
+
     uint64 SelectRandomPlayer()
     {
         //This should not appear!
         if (FriendlyList.empty()){
-            spellTimer = 10000;
+            spellTimer = 5000;
             return NULL;
         }
 
@@ -735,7 +747,7 @@ struct MANGOS_DLL_DECL npc_hodir_mageAI : public ScriptedAI
                     DoCast(pTemp, SPELL_CONJURE_TOASTY_FIRE);
                 break;
             }
-            spellTimer = 10000;
+            spellTimer = 5000;
         }else spellTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
@@ -762,7 +774,7 @@ struct MANGOS_DLL_DECL npc_hodir_priestAI : public ScriptedAI
 
     void Reset()
     {
-        spellTimer = 10000;
+        spellTimer = 5000;
         FriendlyList.clear();
     }
 
@@ -773,11 +785,16 @@ struct MANGOS_DLL_DECL npc_hodir_priestAI : public ScriptedAI
             FriendlyList.push_back(pWho->GetGUID());
     }
 
+    void Aggro(Unit* pWho)
+    {
+        DoStartMovement(pWho, 20.0f);
+    }
+
     uint64 SelectRandomPlayer()
     {
         //This should not appear!
         if (FriendlyList.empty()){
-            spellTimer = 10000;
+            spellTimer = 5000;
             return NULL;
         }
 
@@ -825,7 +842,7 @@ struct MANGOS_DLL_DECL npc_hodir_priestAI : public ScriptedAI
                     DoCast(pTemp, SPELL_DISPEL_MAGIC);
                 break;
             }
-            spellTimer = 10000;
+            spellTimer = 5000;
         }else spellTimer -= uiDiff;
 
         DoMeleeAttackIfReady();

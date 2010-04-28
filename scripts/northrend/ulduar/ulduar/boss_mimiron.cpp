@@ -936,13 +936,13 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
             pButton->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
         }
 
-        if(Torso = GetClosestCreatureWithEntry(m_creature, NPC_VX001, 80.0f))
+        if(Creature* Torso = GetClosestCreatureWithEntry(m_creature, NPC_VX001, 80.0f))
             m_creature->DealDamage(Torso, Torso->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
-        if(Head = GetClosestCreatureWithEntry(m_creature, NPC_AERIAL_UNIT, 80.0f))
+        if(Creature* Head = GetClosestCreatureWithEntry(m_creature, NPC_AERIAL_UNIT, 80.0f))
             m_creature->DealDamage(Head, Head->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
-        if (Tank = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LEVIATHAN_MK))))
+        if (Creature* Tank = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LEVIATHAN_MK))))
              ((boss_leviathan_mkAI*)Tank->AI())->Reset();
     }
 

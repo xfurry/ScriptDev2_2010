@@ -458,8 +458,6 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
     uint32 NatureBombTimer;
     uint32 LifebindersGiftTimer;
 
-    Creature* Freya;
-
     bool isOutro;
     uint32 OutroTimer;
     uint32 Step;
@@ -815,21 +813,20 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             switch(Step)
             {
             case 1:
-                Freya = m_creature;
-                Freya->setFaction(35);
-                Freya->RemoveAllAuras();
-                Freya->DeleteThreatList();
-                Freya->CombatStop(true);
-                Freya->InterruptNonMeleeSpells(false);
-                Freya->SetHealth(Freya->GetMaxHealth());
-                Freya->GetMotionMaster()->MovePoint(0, 2359.40f, -52.39f, 425.64f);
-                Freya->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                m_creature->setFaction(35);
+                m_creature->RemoveAllAuras();
+                m_creature->DeleteThreatList();
+                m_creature->CombatStop(true);
+                m_creature->InterruptNonMeleeSpells(false);
+                m_creature->SetHealth(m_creature->GetMaxHealth());
+                m_creature->GetMotionMaster()->MovePoint(0, 2359.40f, -52.39f, 425.64f);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 ++Step;
                 OutroTimer = 7000;
                 break;
             case 3:
-                Freya->SetOrientation(4.99f);
-                DoScriptText(SAY_DEATH, Freya);
+                m_creature->SetOrientation(4.99f);
+                DoScriptText(SAY_DEATH, m_creature);
                 ++Step;
                 OutroTimer = 10000;
                 break;
