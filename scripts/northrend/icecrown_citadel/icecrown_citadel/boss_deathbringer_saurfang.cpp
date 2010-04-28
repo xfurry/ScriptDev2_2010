@@ -101,6 +101,8 @@ enum
     SPELL_BERSERK               = 26662,
 
     NPC_BLOOD_BEAST             = 38508,
+
+    EQUIP_ID                    = 51905,
 };
 
 struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
@@ -109,6 +111,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
+        SetEquipmentSlots(false, EQUIP_ID, -1, -1);
         Reset();
     }
 
