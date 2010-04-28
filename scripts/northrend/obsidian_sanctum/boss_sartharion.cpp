@@ -364,39 +364,18 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
 
         if (achievProgress == 1)
         {
-            AchievementEntry const *AchievTwilightAssist = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_TWILIGHT_ASSIST : ACHIEV_TWILIGHT_ASSIST_H);
-            Map* pMap = m_creature->GetMap();
-
-            if (pMap && pMap->IsDungeon() && AchievTwilightAssist)
-            {
-                Map::PlayerList const &players = pMap->GetPlayers();
-                for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                    itr->getSource()->CompletedAchievement(AchievTwilightAssist);
-            }
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWILIGHT_ASSIST : ACHIEV_TWILIGHT_ASSIST_H);
         }
         else if (achievProgress == 2)
         {
-            AchievementEntry const *AchievTwilightDuo = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_TWILIGHT_DUO : ACHIEV_TWILIGHT_DUO_H);
-            Map* pMap = m_creature->GetMap();
-
-            if (pMap && pMap->IsDungeon() && AchievTwilightDuo)
-            {
-                Map::PlayerList const &players = pMap->GetPlayers();
-                for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                    itr->getSource()->CompletedAchievement(AchievTwilightDuo);
-            }
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWILIGHT_DUO : ACHIEV_TWILIGHT_DUO_H);
         }
         else if (achievProgress == 3)
         {
-            AchievementEntry const *AchievTwilightZone = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_TWILIGHT_ZONE : ACHIEV_TWILIGHT_ZONE_H);
-            Map* pMap = m_creature->GetMap();
-
-            if (pMap && pMap->IsDungeon() && AchievTwilightZone)
-            {
-                Map::PlayerList const &players = pMap->GetPlayers();
-                for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                    itr->getSource()->CompletedAchievement(AchievTwilightZone);
-            }
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWILIGHT_ZONE : ACHIEV_TWILIGHT_ZONE_H);
         }
 
         if (m_pInstance)
@@ -432,10 +411,11 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         Unit* pVesp = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_VESPERON));
 
         //if at least one of the dragons are alive and are being called
-
         if (pTene && pTene->isAlive() && !pTene->getVictim())
         {
             bCanUseWill = true;
+            achievProgress += 1;
+            //AddDrakeLootMode();
             pTene->GetMotionMaster()->MovePoint(POINT_ID_INIT, m_aTene[0].m_fX, m_aTene[0].m_fY, m_aTene[0].m_fZ);
 
             if (!pTene->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
@@ -445,6 +425,8 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         if (pShad && pShad->isAlive() && !pShad->getVictim())
         {
             bCanUseWill = true;
+            achievProgress += 1;
+            //AddDrakeLootMode();
             pShad->GetMotionMaster()->MovePoint(POINT_ID_INIT, m_aShad[0].m_fX, m_aShad[0].m_fY, m_aShad[0].m_fZ);
 
             if (!pShad->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
@@ -454,6 +436,8 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         if (pVesp && pVesp->isAlive() && !pVesp->getVictim())
         {
             bCanUseWill = true;
+            achievProgress += 1;
+            //AddDrakeLootMode();
             pVesp->GetMotionMaster()->MovePoint(POINT_ID_INIT, m_aVesp[0].m_fX, m_aVesp[0].m_fY, m_aVesp[0].m_fZ);
 
             if (!pVesp->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
@@ -482,9 +466,6 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
                     pTemp->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
                 int32 iTextId = 0;
-                //AddDrakeLootMode();
-
-                achievProgress += 1;
 
                 switch(pTemp->GetEntry())
                 {
