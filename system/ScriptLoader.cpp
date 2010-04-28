@@ -316,6 +316,14 @@ extern void AddSC_boss_Ick_and_Krick();
 extern void AddSC_boss_Tyrannus();
 extern void AddSC_instance_pit_of_saron();
 extern void AddSC_Pit_Of_Saron();
+extern void AddSC_instance_icecrown_citadel();              //icecrown citadel raid
+extern void AddSC_icecrown_citadel();
+extern void AddSC_boss_marrowgar();
+extern void AddSC_boss_deathwhisper();
+extern void AddSC_boss_saurfang();
+extern void AddSC_boss_festergut();
+extern void AddSC_boss_rotface();
+extern void AddSC_boss_professor_putricide();
 extern void AddSC_boss_anubrekhan();                        //naxxramas
 extern void AddSC_boss_four_horsemen();
 extern void AddSC_boss_faerlina();
@@ -779,7 +787,7 @@ void AddScripts()
     AddSC_boss_moorabi();
     AddSC_boss_sladran();
     AddSC_instance_gundrak();
-    AddSC_boss_Bronjahn();                                   //icecrown citadel - frozen halls - forge of souls
+    AddSC_boss_Bronjahn();                                  //icecrown citadel - frozen halls - forge of souls
     AddSC_boss_Devourer_Of_Souls();
     AddSC_Forge_Of_Souls();                                
     AddSC_instance_forge_of_souls();
@@ -792,7 +800,15 @@ void AddScripts()
     AddSC_boss_Ick_and_Krick();
     AddSC_boss_Tyrannus();
     AddSC_instance_pit_of_saron();
-    AddSC_Pit_Of_Saron();                                   
+    AddSC_Pit_Of_Saron(); 
+    AddSC_instance_icecrown_citadel();                      //icecrown citadel raid
+    AddSC_icecrown_citadel();
+    AddSC_boss_marrowgar();
+    AddSC_boss_deathwhisper();
+    AddSC_boss_saurfang();
+    AddSC_boss_festergut();
+    AddSC_boss_rotface();
+    AddSC_boss_professor_putricide();	
     AddSC_boss_anubrekhan();                                //naxxramas
     AddSC_boss_four_horsemen();
     AddSC_boss_faerlina();

@@ -2277,6 +2277,18 @@
 							RelativePath="..\scripts\northrend\icecrown_citadel\icecrown_citadel\gunship_battle.cpp"
 							>
 						</File>
+						<File
+							RelativePath="..\scripts\northrend\icecrown_citadel\icecrown_citadel\icecrown_citadel.cpp"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\northrend\icecrown_citadel\icecrown_citadel\icecrown_citadel.h"
+							>
+						</File>
+						<File
+							RelativePath="..\scripts\northrend\icecrown_citadel\icecrown_citadel\instance_icecrown_citadel.cpp"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="frozen_halls"

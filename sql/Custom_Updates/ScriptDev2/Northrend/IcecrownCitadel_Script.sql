@@ -262,7 +262,7 @@ INSERT INTO script_waypoint VALUES
    (37554, 8, 5342.130371, 1770.953613, 766.681885, 0, 'last wall'),
    (37554, 9, 5277.262207, 1697.252563, 785.987793, 0, 'last stand');
 
-delete from script_texts where entry between -1609418 and -1609392;
+delete from script_texts where entry between -1609500 and -1609392;
 /* ICECROWN CITADEL TODO:*/
 -- Lord Marrowgar
 INSERT INTO `script_texts` VALUES ('-1609392', 'This is the beginning AND the end, mortals. None may enter the master\'s sanctum!', '', '', '', '', '', '', '', '', '16950', '1', '0', '0', 'intro');
@@ -275,6 +275,7 @@ INSERT INTO `script_texts` VALUES ('-1609398', 'More bones for the offering!', '
 INSERT INTO `script_texts` VALUES ('-1609399', 'Languish in damnation!', '', '', '', '', '', '', '', '', '16943', '1', '0', '0', 'slay2');
 INSERT INTO `script_texts` VALUES ('-1609400', 'I see... only darkness...', '', '', '', '', '', '', '', '', '16944', '1', '0', '0', 'death');
 INSERT INTO `script_texts` VALUES ('-1609401', 'THE MASTER\'S RAGE COURSES THROUGH ME!', '', '', '', '', '', '', '', '', '16945', '1', '0', '0', 'berserk');
+
 -- Lady Deathwhisper
 INSERT INTO `script_texts` VALUES ('-1609402', 'Fix your eyes upon your crude hands! The sinew, the soft meat, the dark blood coursing within!', '', '', '', '', '', '', '', '', '16878', '1', '0', '0', 'speech3');
 INSERT INTO `script_texts` VALUES ('-1609403', 'It is a weakness! A crippling flaw! A joke played by the creators upon their own creations!', '', '', '', '', '', '', '', '', '17268', '1', '0', '0', 'speech4');
@@ -293,5 +294,108 @@ INSERT INTO `script_texts` VALUES ('-1609415', 'This charade has gone on long en
 INSERT INTO `script_texts` VALUES ('-1609416', 'All part of the masters plan! Your end is... inevitable!', '', '', '', '', '', '', '', '', '16871', '1', '0', '0', 'death');
 INSERT INTO `script_texts` VALUES ('-1609417', 'Do you yet grasp of the futility of your actions?', '', '', '', '', '', '', '', '', '16869', '1', '0', '0', 'slay1');
 INSERT INTO `script_texts` VALUES ('-1609418', 'Embrace the darkness... Darkness eternal!', '', '', '', '', '', '', '', '', '16870', '1', '0', '0', 'slay2');
+
 -- Gunship battle
+
 -- Saurfang
+INSERT INTO `script_texts` VALUES
+('-1609419','BY THE MIGHT OF THE LICH KING!','', '', '', '', '', '', '', '','16694','1','0','0','saurfang SAY_AGGRO'),
+('-1609420','The ground runs red with your blood!','', '', '', '', '', '', '', '', '16699','1','0','0','saurfang SAY_FALLENCHAMPION'),
+('-1609421','Feast, my minions!', '', '', '', '', '', '', '', '','16700','1','0','0','saurfang SAY_BLOODBEASTS'),
+('-1609422','You are nothing!', '', '', '', '', '', '', '', '','16695','1','0','0','saurfang SAY_KILL1'),
+('-1609423','Your soul will find no redemption here!', '', '', '', '', '', '', '', '','16696','1','0','0','saurfang SAY_KILL2'),
+('-1609424','I have become... death!','', '', '', '', '', '', '', '','16698','1','0','0','saurfang SAY_BERSERK'),
+('-1609425','I... Am... Released.','', '', '', '', '', '', '', '','16697', '1','0','0','saurfang SAY_DEATH'),
+-- intro aly
+('-1609426','For every Horde soldier that you killed, for every Alliance dog that fell, the Lich King\'s armies grew. 
+        Even now the Val\'kyr work to raise your fallen... As Scourge.','', '', '', '', '', '', '', '','16701','1','0','0','saurfang intro aly 1'),
+('-1609427','Things are about to get much worse. Come, taste the power that the Lich King has bestowed upon me!','', '', '', '', '', '', '', '', '16702','1','0','0','saurfang intro aly 2'),
+('-1609428','A lone orc, against the might of the Alliance?', '', '', '', '', '', '', '', '','16970','1','0','0','bronzebeard intro aly 3'),
+('-1609429','Charge!', '', '', '', '', '', '', '', '','16971','1','0','0','bronzebeard intro aly 4'),
+('-1609430','Hahahaha! Dwarves.', '', '', '', '', '', '', '', '','16703','1','0','0','saurfang intro aly 5'),
+-- intro horde
+('-1609431','Kor\'kron, move out! Champions, watch your backs. The Scourge have been..','', '', '', '', '', '', '', '','17103','1','0','0','saurfang father intro horde 1'),
+('-1609432','Join me, father. Join me and we will crush this world in the name of the Scourge -- for the glory of the Lich King!','', '', '', '', '', '', '', '', '16704','1','0','0','saurfang intro horde 2'),
+('-1609433','My boy died at the Wrath Gate. I am here only to collect his body.', '', '', '', '', '', '', '', '','17097','1','0','0','saurfang father intro horde 3'),
+('-1609434','Stubborn and old. What chance do you have? I am stronger, and more powerful than you ever were.', '', '', '', '', '', '', '', '','16705','1','0','0','saurfang intro horde 4'),
+('-1609435','We named him Dranosh. It means "Heart of Draenor" in orcish. I would not let the warlocks take him. 
+        My boy would be safe, hidden away by the elders of Garadar.', '', '', '', '', '', '', '', '','17098','1','0','0','saurfang father intro horde 5'),
+('-1609436','I made a promise to his mother before she died; 
+        that I would cross the Dark Portal alone - whether I lived or died, my son would be safe. Untainted...','17099','', '', '', '', '', '', '', '', '1','0','0','saurfang father intro horde 6'),
+('-1609437','Today, I fulfill that promise.','', '', '', '', '', '', '', '','17100', '1','0','0','saurfang father intro horde 7'),
+('-1609438','High Overlord Saurfang charges!','', '', '', '', '', '', '', '', '17104','2','0','0','saurfang father intro horde 8'),
+('-1609439','Pathetic old orc. Come then heroes. Come and face the might of the Scourge!','16706', '', '', '', '', '', '', '', '', '1','0','0','saurfang intro horde 8'),
+-- outro aly
+('-1609440','Muradin Bronzebeard gasps for air','', '', '', '', '', '', '', '','16975','2','0','0','saurfang outro aly 1'),
+('-1609441','That was Saurfang\'s boy - the Horde commander at the Wrath Gate. Such a tragic end...','', '', '', '', '', '', '', '', '16976','1','0','0','saurfang outro aly 2'),
+('-1609442','What in the... There, in the distance!', '', '', '', '', '', '', '', '','16977','1','0','0','saurfang outro aly 3'),
+('-1609443','Soldiers, fall in! Looks like the Horde are comin\' in to take another shot!', '', '', '', '', '', '', '', '','16978','1','0','0','saurfang outro aly 4'),
+('-1609444','Don\'t force my hand, orc. We can\'t let you pass.', '', '', '', '', '', '', '', '','16972','1','0','0','saurfang outro aly 4'),
+('-1609445','Behind you lies the body of my only son. Nothing will keep me from him.','', '', '', '', '', '', '', '', '17094','1','0','0','saurfang outro aly 5'),
+('-1609446','He... I can\'t do it. Get back on your ship and we\'ll spare your life.','', '', '', '', '', '', '', '','16973','1','0','0','saurfang outro aly 6'),
+('-1609447','Stand down, Muradin. Let a grieving father pass.','', '', '', '', '', '', '', '','16690','1','0','0','saurfang outro aly 7'),
+('-1609448','[Orcish] No\'ku kil zil\'nok ha tar.','', '', '', '', '', '', '', '', '17096','1','0','0','saurfang outro aly 8'),
+('-1609449','I will not forget this kindess. I thank you, highness.', '', '', '', '', '', '', '', '','17095','1','0','0','saurfang outro aly 9'),
+('-1609450','I... I was not at the Wrathgate.
+        But the soldiers who survived told me much of what happened.
+        Your son fought with honor. He died a hero\'s death. He deserves a hero\'s burial.', '', '', '', '', '', '', '', '','16691','1','0','0','saurfang outro aly 10'),
+('-1609451','Lady Jaina Proudmoore cries.', '', '', '', '', '', '', '', '','16651','2','0','0','saurfang outro aly 11'),
+('-1609452','Jaina, why are you crying?','', '', '', '', '', '', '', '', '16692','1','0','0','saurfang outro aly 12'),
+('-1609453','It was nothing, your majesty. Just... I\'m proud of my king.', '', '', '', '', '', '', '', '','16652', '1','0','0','saurfang outro aly 12'),
+('-1609454','Muradin, secure the deck and prepare our soldiers for an assault on the Upper Citadel. 
+        I\'ll send out another regiment from Stormwind.','', '', '', '', '', '', '', '','16693','1','0','0','saurfang outro aly 13'),
+('-1609455','Let\'s get the move then. Move out!','', '', '', '', '', '', '', '','16974','1','0','0','saurfang outro aly 14'),
+-- outro horde
+('-1609456','High Overlord Saurfang coughs.','', '', '', '', '', '', '', '','17105','2','0','0','saurfang outro horde 1'),
+('-1609457','High Overlord Saurfang weeps over the corpse of his son.','', '', '', '', '', '', '', '', '17106','2','0','0','saurfang outro horde 2'),
+('-1609458','You will have a proper ceremony in Nagrand next to the pyres of your mother and ancestors.', '', '', '', '', '', '', '', '','17101','1','0','0','saurfang outro horde 3'),
+('-1609459','Honor, young heroes... no matter how dire the battle... Never forsake it!', '', '', '', '', '', '', '', '','17102','1','0','0','saurfang outro horde 4'),
+
+-- Rotface
+('-1609460','What? Precious? Noooooooooo!!!','', '', '', '', '', '', '', '','16993','1','0','0','rotface preciou dies'),
+('-1609461','WEEEEEE!','', '', '', '', '', '', '', '', '16986','1','0','0','rotface aggro'),
+('-1609462','Icky sticky.', '', '', '', '', '', '', '', '','16991','1','0','0','rotface slime spray'),
+('-1609463','I think I made an angry poo-poo. It gonna blow!', '', '', '', '', '', '', '', '','16992','1','0','0','rotface ooze explode'),
+('-1609464','Great news, everyone! The slime is flowing again!', '', '', '', '', '', '', '', '','17126','1','0','0','rotface slime flow1'),
+('-1609465','Good news, everyone! I\'ve fixed the poison slime pipes!','', '', '', '', '', '', '', '','17123','1','0','0','rotface slime flow2'),
+('-1609466','Daddy make toys out of you!','', '', '', '', '', '', '', '','16987','1','0','0','rotface kill 1'),
+('-1609467','I brokes-ded it...','', '', '', '', '', '', '', '','16988','1','0','0','rotface kill 2'),
+('-1609468','Sleepy Time!','', '', '', '', '', '', '', '', '16990','1','0','0','rotface berserk'),
+('-1609469','Bad news daddy.', '', '', '', '', '', '', '', '','16989','1','0','0','rotface death1'),
+('-1609470','Terrible news, everyone, Rotface is dead! But great news everyone, he left behind plenty of ooze for me to use! Whaa...? I\'m a poet, and I didn\'t know it? Astounding!', '', '', '', '', '', '', '', '','17146','1','0','0','rotface death2'),
+
+-- Festergut
+('-1609471','NOOOO! You kill Stinky! You pay!','', '', '', '', '', '', '', '','16907','1','0','0','festergut stinky dies'),
+('-1609472','Fun time!','', '', '', '', '', '', '', '', '16901','1','0','0','festergut aggro'),
+('-1609473','Just an ordinary gas cloud. But watch out, because that\'s no ordinary gas cloud! ', '', '', '', '', '', '', '', '','17119','1','0','0','festergut blight'),
+('-1609474','Festergut farts.', '', '', '', '', '', '', '', '','16911','2','0','0','festergut spore'),
+('-1609475','Gyah! Uhhh, I not feel so good... Festergut vomits.', '', '', '', '', '', '', '', '','16906','1','0','0','festergut punguent blight'),
+('-1609476','Daddy, I did it','', '', '', '', '', '', '', '','16902','1','0','0','festergut kill 1'),
+('-1609477','Dead, dead, dead!','', '', '', '', '', '', '', '','16903', '1','0','0','festergut kill 2'),
+('-1609478','Fun time over!','', '', '', '', '', '', '', '','16905','1','0','0','festergut berserk'),
+('-1609479','Da ... Ddy...','', '', '', '', '', '', '', '', '16904','1','0','0','festergut death1'),
+('-1609480','Oh, Festergut. You were always my favorite. Next to Rotface. The good news is you left behind so much gas, I can practically taste it!', '', '', '', '', '', '', '', '','17124','1','0','0','festergut death2'),
+
+-- Putricide
+('-1609481','Good news, everyone! I think I perfected a plague that will destroy all life on Azeroth!','', '', '', '', '', '', '', '','17114','1','0','0','putricide aggro'),
+('-1609482','You can\'t come in here all dirty like that! You need that nasty flesh scrubbed off first!','', '', '', '', '', '', '', '', '17125','1','0','0','putricide airlock'),
+('-1609483','Two oozes, one room! So many delightful possibilities...', '', '', '', '', '', '', '', '','17122','1','0','0','putricide phase change'),
+('-1609484','Hmm. I don\'t feel a thing. Whaa...? Where\'d those come from?', '', '', '', '', '', '', '', '','17120','1','0','0','putricide transform1'),
+('-1609485','Tastes like... Cherry! Oh! Excuse me!', '', '', '', '', '', '', '', '','17121','1','0','0','putricide transform2'),
+('-1609486','Hmm... Interesting...','', '', '', '', '', '', '', '','17115','1','0','0','putricide kill1'),
+('-1609487','That was unexpected!','', '', '', '', '', '', '', '','17116', '1','0','0','putricide kill2'),
+('-1609488','Great news, everyone!','', '', '', '', '', '', '', '','17118','1','0','0','putricide berserk'),
+('-1609489','Bad news, everyone! I don\'t think I\'m going to make it','', '', '', '', '', '', '', '', '17117','1','0','0','putricide death');
+
+-- TODO:
+-- Prince council
+
+-- Blood Queen
+
+-- Sister Svalna
+
+-- Dreamwalker
+
+-- Sindragosa
+
+-- Lich King
