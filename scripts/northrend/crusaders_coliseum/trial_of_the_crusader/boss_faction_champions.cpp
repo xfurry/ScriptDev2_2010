@@ -91,7 +91,7 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
     void Init()
     {
         CCTimer = rand()%10000;
-        ThreatTimer = 5000;
+        ThreatTimer = 15000;
 
         TeamInInstance = GetFaction();
     }
@@ -166,11 +166,10 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
                     m_creature->AddThreat(pUnit, 1000000.0f * threat);
                     empty = false;
                 }
-                else
-                    //EnterEvadeMode();
-                    m_creature->DeleteThreatList();
             }
         }
+        //if(empty) 
+            //EnterEvadeMode();
     }
 
     void UpdatePower()
@@ -360,31 +359,43 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
                     if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_2)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
                     if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_3)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
                     if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_4)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
                     if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_5)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
                     if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_6)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
 
                     if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
@@ -393,31 +404,43 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                         if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_8)))
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                         if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_9)))
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                         if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_10)))
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                         if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1)))
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                         if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2)))
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                     } 
                 }
@@ -427,31 +450,43 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
                     if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_2)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
                     if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_3)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
                     if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_4)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
                     if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_5)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
                     if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_6)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
+                        else
+                            pTemp->AI()->EnterEvadeMode();
                     }
 
                     if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
@@ -460,31 +495,43 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                         if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_8)))
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                         if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_9)))
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                         if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_10)))
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                         if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1)))
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                         if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2)))
                         {
                             if(!pTemp->isAlive())
                                 pTemp->Respawn();
+                            else
+                                pTemp->AI()->EnterEvadeMode();
                         }
                     }
                 }
@@ -863,11 +910,18 @@ enum paly_holy
     SPELL_HOLY_SHOCK_10HC       = 68015,
     SPELL_HOLY_SHOCK_25         = 68014,
     SPELL_HOLY_SHOCK_25HC       = 68016,
+
+    EQUIP_ID_PALY_HOLY_HORDE    = 45205,
 };
 
 struct MANGOS_DLL_DECL boss_fc_holy_pallyAI : public boss_faction_championAI
 {
-    boss_fc_holy_pallyAI(Creature *pCreature) : boss_faction_championAI(pCreature, AI_HEALER) {Init();}
+    boss_fc_holy_pallyAI(Creature *pCreature) : boss_faction_championAI(pCreature, AI_HEALER) 
+    {
+        if(m_uiCreatureEntry == 34445)
+            SetEquipmentSlots(false, EQUIP_ID_PALY_HOLY_HORDE, -1, -1);
+        Init();
+    }
     
     bool m_bBubbleUsed;
     bool m_bProtectionUsed;
@@ -875,6 +929,7 @@ struct MANGOS_DLL_DECL boss_fc_holy_pallyAI : public boss_faction_championAI
     uint32 m_uiGCDTimer;
     uint32 m_uiShockTimer;
     uint32 m_uiHammerOfJusticeTimer;
+    uint32 m_uiCreatureEntry;
     
     void Init()
     {
@@ -884,6 +939,7 @@ struct MANGOS_DLL_DECL boss_fc_holy_pallyAI : public boss_faction_championAI
         m_bProtectionUsed = false;
         m_uiFreedomTimer = 10000 + rand()%15000;
         m_uiHammerOfJusticeTimer = 15000 + rand()%10000;
+        m_uiCreatureEntry = m_creature->GetEntry();
     }
     
     void UpdateAI(const uint32 diff)
@@ -1473,11 +1529,21 @@ enum mage
     SPELL_FROSTBOLT_25HC        = 68005,
     SPELL_ICEBLOCK              = 65802,
     SPELL_POLYMORPH             = 65801,
+
+    EQUIP_ID_MAGE_ALY           = 45129,
+    EQUIP_ID_MAGE_HORDE         = 45208,
 };
 
 struct MANGOS_DLL_DECL boss_fc_mageAI : public boss_faction_championAI
 {
-    boss_fc_mageAI(Creature *pCreature) : boss_faction_championAI(pCreature, AI_RANGED) {Init();}
+    boss_fc_mageAI(Creature *pCreature) : boss_faction_championAI(pCreature, AI_RANGED) 
+    {
+        if(m_uiCreatureEntry == 34468)
+            SetEquipmentSlots(false, EQUIP_ID_MAGE_ALY, -1, -1);
+        if(m_uiCreatureEntry == 34449)
+            SetEquipmentSlots(false, EQUIP_ID_MAGE_HORDE, -1, -1);
+        Init();
+    }
     
 	uint32 m_uiArcaneBarrageTimer;
     uint32 m_uiBlinkTimer;
@@ -1486,6 +1552,7 @@ struct MANGOS_DLL_DECL boss_fc_mageAI : public boss_faction_championAI
 	bool m_bIceBlockUsed;
 	uint32 m_uiPolymorphTimer;
 	uint32 m_uiGCDTimer;
+    uint32 m_uiCreatureEntry;
 
     void Init()
     {
@@ -1496,6 +1563,7 @@ struct MANGOS_DLL_DECL boss_fc_mageAI : public boss_faction_championAI
         m_bIceBlockUsed = false;
         m_uiPolymorphTimer = 3000+rand()%3000;
         m_uiGCDTimer = 2000;
+        m_uiCreatureEntry = m_creature->GetEntry();
     }
     
     void UpdateAI(const uint32 diff)
@@ -1606,11 +1674,18 @@ enum hunter
     SPELL_WING_CLIP             = 66207,
     SPELL_STEADY_SHOT           = 65867,
     SPELL_WYVERN_STING          = 65877,
+
+    EQUIP_ID_HUNTER_ALY         = 45128,
 };
 
 struct MANGOS_DLL_DECL boss_fc_hunterAI : public boss_faction_championAI
 {
-    boss_fc_hunterAI(Creature *pCreature) : boss_faction_championAI(pCreature, AI_RANGED) {Init();}
+    boss_fc_hunterAI(Creature *pCreature) : boss_faction_championAI(pCreature, AI_RANGED) 
+    {
+        if(m_uiCreatureEntry == 34467)
+            SetEquipmentSlots(false, EQUIP_ID_HUNTER_ALY, -1, -1);
+        Init();
+    }
     
 	uint32 m_uiAimedShotTimer;
     uint32 m_uiCallPetTimer;
@@ -1623,6 +1698,7 @@ struct MANGOS_DLL_DECL boss_fc_hunterAI : public boss_faction_championAI
 	uint32 m_uiWingClipTimer;
 	uint32 m_uiWyvernStingTimer;
     uint32 m_uiGCDTimer;
+    uint32 m_uiCreatureEntry;
 
     void Init()
     {
@@ -1635,6 +1711,7 @@ struct MANGOS_DLL_DECL boss_fc_hunterAI : public boss_faction_championAI
 		m_uiWingClipTimer =  6000+rand()%2000;
 		m_uiWyvernStingTimer = 7000+rand()%3000;
 		m_uiGCDTimer = 1000;
+        m_uiCreatureEntry = m_creature->GetEntry();
     }
     
     void UpdateAI(const uint32 diff)
@@ -1755,11 +1832,21 @@ enum druid_balance
     SPELL_WRATH_10HC            = 67952,
     SPELL_WRATH_25              = 67951,
     SPELL_WRATH_25HC            = 67953,
+
+    EQUIP_ID_DRUID_HORDE        = 45212,
+    EQUIP_ID_DRUID_ALY          = 45128,
 };
 
 struct MANGOS_DLL_DECL boss_fc_boomkinAI : public boss_faction_championAI
 {
-    boss_fc_boomkinAI(Creature *pCreature) : boss_faction_championAI(pCreature, AI_RANGED) {Init();}
+    boss_fc_boomkinAI(Creature *pCreature) : boss_faction_championAI(pCreature, AI_RANGED) 
+    {
+        if(m_uiCreatureEntry == 34451)
+            SetEquipmentSlots(false, EQUIP_ID_DRUID_HORDE, -1, -1);
+        if(m_uiCreatureEntry == 34460)
+            SetEquipmentSlots(false, EQUIP_ID_DRUID_ALY, -1, -1);
+        Init();
+    }
     
 	uint32 m_uiBarkskinTimer;
 	uint32 m_uiCycloneTimer;
@@ -1768,6 +1855,7 @@ struct MANGOS_DLL_DECL boss_fc_boomkinAI : public boss_faction_championAI
     uint32 m_uiFaerieFireTimer;
     uint32 m_uiForceOfNatureTimer;
 	uint32 m_uiGCDTimer;
+    uint32 m_uiCreatureEntry;
     
 	void Init()
     {
@@ -1778,6 +1866,7 @@ struct MANGOS_DLL_DECL boss_fc_boomkinAI : public boss_faction_championAI
         m_uiFaerieFireTimer = 10000;
         m_uiForceOfNatureTimer = 12000+rand()%2000;
 		m_uiGCDTimer = 1500;
+        m_uiCreatureEntry = m_creature->GetEntry();
     }
 
     void Aggro(Unit *who)
@@ -2376,11 +2465,18 @@ enum paladin_retribution
     SPELL_SEAL_OF_COMMAND_25        = 68020,
     SPELL_SEAL_OF_COMMAND_10HC      = 68021,
     SPELL_SEAL_OF_COMMAND_25HC      = 68022,
+
+    EQUIP_ID_PALY_RETRI_HORDE       = 35015,
 };
 
 struct MANGOS_DLL_DECL boss_fc_ret_pallyAI : public boss_faction_championAI
 {
-    boss_fc_ret_pallyAI(Creature *pCreature) : boss_faction_championAI(pCreature, AI_MELEE) {Init();}
+    boss_fc_ret_pallyAI(Creature *pCreature) : boss_faction_championAI(pCreature, AI_MELEE) 
+    {
+        if(m_uiCreatureEntry == 34456)
+            SetEquipmentSlots(false, EQUIP_ID_PALY_RETRI_HORDE, -1, -1);
+        Init();
+    }
     
 	bool m_bShieldUsed;
     uint32 m_uiAvengingWrathTimer;
@@ -2391,6 +2487,7 @@ struct MANGOS_DLL_DECL boss_fc_ret_pallyAI : public boss_faction_championAI
 	uint32 m_uiHandOfProtectionTimer;
 	uint32 m_uiJudgementOfCommandTimer;
 	uint32 m_uiRepentanceTimer;
+    uint32 m_uiCreatureEntry;
 
     void Init()
     {
@@ -2403,6 +2500,7 @@ struct MANGOS_DLL_DECL boss_fc_ret_pallyAI : public boss_faction_championAI
         m_uiJudgementOfCommandTimer = 6000;
 	    m_uiRepentanceTimer = 2000 + rand()%5000;
         m_bShieldUsed = false;
+        m_uiCreatureEntry = m_creature->GetEntry();
     }
 
     void Aggro(Unit *who)
@@ -2496,7 +2594,8 @@ struct MANGOS_DLL_DECL boss_fc_pet_catAI : public boss_faction_championAI
 
     void Init()
     {
-        m_uiClawTimer=3000;       
+        m_uiClawTimer=3000;    
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 diff)
@@ -2539,7 +2638,8 @@ struct MANGOS_DLL_DECL boss_fc_pet_zhaagrymAI : public boss_faction_championAI
     void Init()
     {
         m_uiDevourMagicTimer = 5000;
-        m_uiSpellLockTimer = 6000 + rand()%4000;       
+        m_uiSpellLockTimer = 6000 + rand()%4000; 
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 diff)

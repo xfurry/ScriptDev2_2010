@@ -512,7 +512,7 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
             if(!m_creature->HasAura(SPELL_PERMAFROST, EFFECT_INDEX_0))
             {
                 DoCast(m_creature, SPELL_SUBMERGE_ANUB);
-                m_creature->DeleteThreatList();
+                //m_creature->DeleteThreatList();
                 m_creature->SetHealth(m_creature->GetMaxHealth()/2);
                 submergeTimer = 10000;
                 isSubmerged = true;

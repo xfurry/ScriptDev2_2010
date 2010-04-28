@@ -39,8 +39,8 @@ UPDATE creature_template SET scriptname='boss_fc_warrior' WHERE `entry` in (3447
 UPDATE creature_template SET scriptname='boss_fc_rogue' WHERE `entry` in (34472, 34454);
 UPDATE creature_template SET scriptname='boss_fc_enh_shammy' WHERE `entry` in (34463, 34455);
 UPDATE creature_template SET scriptname='boss_fc_ret_pally' WHERE `entry` in (34471, 34456);
-UPDATE creature_template SET scriptname='boss_fc_pet_zhaagrym' WHERE `entry` = 35465;
-UPDATE creature_template SET scriptname='boss_fc_pet_cat' WHERE `entry` = 35610;
+UPDATE creature_template SET flags_extra = 1, scriptname='boss_fc_pet_zhaagrym' WHERE `entry` = 35465;
+UPDATE creature_template SET flags_extra = 1, scriptname='boss_fc_pet_cat' WHERE `entry` = 35610;
 -- Valkyr twins
 UPDATE creature_template SET scriptname='boss_fjola' WHERE `entry`=34497;
 UPDATE creature_template SET scriptname='boss_eydis' WHERE `entry`=34496;
