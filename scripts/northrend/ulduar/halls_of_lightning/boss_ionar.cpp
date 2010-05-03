@@ -335,6 +335,7 @@ struct MANGOS_DLL_DECL mob_spark_of_ionarAI : public ScriptedAI
     mob_spark_of_ionarAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         Reset();
     }
 
