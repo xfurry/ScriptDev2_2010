@@ -274,6 +274,7 @@ struct MANGOS_DLL_DECL npc_brann_hosAI : public npc_escortAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        pCreature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
         Reset();
     }
 
@@ -704,6 +705,7 @@ struct MANGOS_DLL_DECL npc_brann_hosAI : public npc_escortAI
                         m_pInstance->DoUseDoorOrButton(m_pInstance->GetData64(DATA_GO_ABEDNEUM));
                         m_pInstance->DoUseDoorOrButton(m_pInstance->GetData64(DATA_GO_SKY_FLOOR));
                         m_pInstance->SetData(TYPE_TRIBUNAL, DONE);
+                        //m_pInstance->DoUpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET, 59046);
 
                         if (!bHasBeenDamaged && !m_bIsRegularMode)
                         {
@@ -744,8 +746,8 @@ bool GossipHello_npc_brann_hos(Player* pPlayer, Creature* pCreature)
     if (pCreature->isQuestGiver())
         pPlayer->PrepareQuestMenu(pCreature->GetGUID());
 
-    pPlayer->SEND_GOSSIP_MENU(TEXT_ID_START, pCreature->GetGUID());
     pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_START, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+    pPlayer->SEND_GOSSIP_MENU(TEXT_ID_START, pCreature->GetGUID());
 
     //pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_PROGRESS, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
     //pPlayer->SEND_GOSSIP_MENU(TEXT_ID_PROGRESS, pCreature->GetGUID());
@@ -759,6 +761,7 @@ bool GossipSelect_npc_brann_hos(Player* pPlayer, Creature* pCreature, uint32 uiS
         pPlayer->CLOSE_GOSSIP_MENU();
         ((npc_brann_hosAI*)pCreature->AI())->m_uiStep = 1;
         ((npc_brann_hosAI*)pCreature->AI())->Start(true, false, pPlayer->GetGUID());
+        pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
     }
 
     return true;
