@@ -58,13 +58,20 @@ enum
     SPELL_LEGION_FLAME          = 68124,
     NPC_LEGIONS_FLAME           = 34784,
 
+    SPELL_LEGION_FLAME_10       = 66877,
+    SPELL_LEGION_FLAME_25       = 67070,
+    SPELL_LEGION_FLAME_10HC     = 67071,
+    SPELL_LEGION_FLAME_25HC     = 67072,
+
     SPELL_INFERNAL_ERUPTION     = 66258,
     NPC_INFERNAL_VOLCANO        = 34813,
     NPC_FELFLAME_INFERNAL       = 34815,
     SPELL_INFERNAL_ERUPTION_VOL = 66255,
     SPELL_FEL_INFERNO           = 67047,
-    SPELL_FEL_STEAK_10          = 66494,
+    SPELL_FEL_STEAK_10          = 66519,
     SPELL_FEL_STEAK_25          = 67042,
+    SPELL_FEL_STEAK_10HC        = 67043,
+    SPELL_FEL_STEAK_25HC        = 67044,
 
     SPELL_NETHER_PORTAL_10      = 66264,
     SPELL_NETHER_PORTAL_25      = 68405,
@@ -425,10 +432,10 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 
         if (m_uiNetherPowerTimer < uiDiff)
         {
-            SpellEntry *spell = (SpellEntry *)GetSpellStore()->LookupEntry(SPELL_NETHER_POWER);
+            //SpellEntry *spell = (SpellEntry *)GetSpellStore()->LookupEntry(SPELL_NETHER_POWER);
             //if(m_creature->AddAura(new NetherPowerAura(spell, 0, NULL, m_creature, m_creature)))
                 //m_creature->GetAura(SPELL_NETHER_POWER, 0)->SetStackAmount(Heroic ? 10 : 5);
-            //DoCast(m_creature, SPELL_NETHER_POWER);
+            DoCast(m_creature, SPELL_NETHER_POWER);
             m_uiNetherPowerTimer = 40000;
         }
         else
@@ -459,38 +466,27 @@ struct MANGOS_DLL_DECL mob_legion_flameAI : public ScriptedAI
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         SetCombatMovement(false);
         Reset();
     }
     ScriptedInstance *m_pInstance;
-
-    uint32 spellTimer;
+    uint32 Difficulty;
 
     void Reset()
     {
-        spellTimer = 1000;
+        if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+            DoCast(m_creature, SPELL_LEGION_FLAME_10);
+        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+            DoCast(m_creature, SPELL_LEGION_FLAME_25);
+        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+            DoCast(m_creature, SPELL_LEGION_FLAME_10HC);
+        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+            DoCast(m_creature, SPELL_LEGION_FLAME_25HC);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (spellTimer < uiDiff)
-        {
-            Map *map = m_creature->GetMap();
-            if (map->IsDungeon())
-            {
-                Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                if (PlayerList.isEmpty())
-                    return;
-
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
-                        i->getSource()->DealDamage(i->getSource(), urand(2925, 3075), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_FIRE, NULL, false);
-                }
-            }
-            spellTimer = 10000;
-        }else spellTimer -= uiDiff;
     }
 };
 
@@ -505,7 +501,7 @@ struct MANGOS_DLL_DECL mob_infernal_volcanoAI : public ScriptedAI
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
         Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
-        if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+        if (Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
             pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         SetCombatMovement(false);
         Reset();
@@ -580,10 +576,14 @@ struct MANGOS_DLL_DECL mob_felflame_infernalAI : public ScriptedAI
             case 0:
                 if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
                 {
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_FEL_STEAK_10);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
                         DoCast(pTarget, SPELL_FEL_STEAK_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_FEL_STEAK_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_FEL_STEAK_25HC);
                 }
                 break;
             case 1:

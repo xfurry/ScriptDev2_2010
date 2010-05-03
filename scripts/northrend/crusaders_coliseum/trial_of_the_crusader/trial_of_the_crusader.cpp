@@ -736,7 +736,7 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                     if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_WELCOME, Tirion);
 
-                    /* temp *
+                    /* temp */
                     m_bIsIntro = false;
                     isIntroDone = true;
                     m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
@@ -1103,7 +1103,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
             }
             else 
             {
-                if (Creature* pGromok = pCreature->SummonCreature(NPC_GORMOK, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
+                if (Creature* pGromok = pCreature->SummonCreature(NPC_GORMOK, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
                 {
                     pGromok->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
                     pGromok->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
@@ -1170,14 +1170,27 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
                     pTemp->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                     pTemp->SetInCombatWithZone();
                 }
+                else
+                {
+                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+                    pTemp->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                    pTemp->SetInCombatWithZone();
+                }
             }
             else 
             {
                 if (Creature* pFjola = pCreature->SummonCreature(NPC_FJOLA, SpawnLoc[28].x + 5, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
                 {
+                    m_pInstance->SetData64(DATA_FJOLA, pFjola->GetGUID());
                     pFjola->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x + 5, SpawnLoc[1].y, SpawnLoc[1].z);
                     pFjola->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                     pFjola->SetInCombatWithZone();
+                }
+                else
+                {
+                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+                    pTemp->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                    pTemp->SetInCombatWithZone();
                 }
             }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(DATA_EYDIS)))
@@ -1194,6 +1207,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
             {
                 if (Creature* pEydis = pCreature->SummonCreature(NPC_EYDIS, SpawnLoc[28].x - 5, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME)) 
                 {
+                    m_pInstance->SetData64(DATA_EYDIS, pEydis->GetGUID());
                     pEydis->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 5, SpawnLoc[1].y, SpawnLoc[1].z);
                     pEydis->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                     pEydis->SetInCombatWithZone();
@@ -1206,6 +1220,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
                 pCreature->SummonCreature(NPC_DARK_ESSENCE, SpawnLoc[i].x, SpawnLoc[i].y, SpawnLoc[i].z, 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
             for(uint8 i = 24; i < 26; i++)
                 pCreature->SummonCreature(NPC_LIGHT_ESSENCE, SpawnLoc[i].x, SpawnLoc[i].y, SpawnLoc[i].z, 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
+
             break;
         };
 

@@ -196,6 +196,8 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         m_uiBerserkTimer    = 900000;  // 15 min
         if(m_pInstance)
             m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
+
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void JustDied(Unit* pKiller)
@@ -215,8 +217,8 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 
         if(m_pInstance) 
         {
-            if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-            //if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS)))
+            //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
+            if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS)))
                 if(pEydis->isAlive())
                     pEydis->DealDamage(pEydis, pEydis->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
@@ -228,6 +230,20 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
         }
+        // despawn all adds
+        std::list<Creature*> lAdds;
+        GetCreatureListWithEntryInGrid(lAdds, m_creature, NPC_LIGHT_ESSENCE, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAdds, m_creature, NPC_DARK_ESSENCE, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAdds, m_creature, NPC_CONCENTRATED_DARKNESS, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAdds, m_creature, NPC_CONCENTRATED_LIGHT, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lAdds.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lAdds.begin(); iter != lAdds.end(); ++iter)
+            {
+                if ((*iter) && !(*iter)->isAlive())
+                    (*iter)->ForcedDespawn();
+            }
+        }
     }
 
     void Aggro(Unit* pWho)
@@ -238,8 +254,8 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         if(m_pInstance)
         {
             m_pInstance->SetData(TYPE_TWIN_VALKYR, IN_PROGRESS);
-            if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-            //if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS)))
+            //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
+            if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS)))
             {
                 if(pEydis->isAlive())
                     pEydis->AI()->AttackStart(m_creature->getVictim());
@@ -271,8 +287,8 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         {
             if(m_pInstance->GetData(TYPE_TWIN_VALKYR) != NOT_STARTED)
             {
-                if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-                //if(Creature *pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
+                //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
+                if(Creature *pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
                 {
                     if(!pEydis->isAlive())
                         pEydis->Respawn();
@@ -285,7 +301,29 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
                 m_pInstance->SetData(TYPE_TWIN_VALKYR, NOT_STARTED);
             }
         }
-        //m_creature->GetMotionMaster()->MovePoint(0, WipeLoc[1].x, WipeLoc[1].y, m_creature->GetPositionZ());
+
+        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        {
+            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        // despawn all adds
+        std::list<Creature*> lAdds;
+        GetCreatureListWithEntryInGrid(lAdds, m_creature, NPC_LIGHT_ESSENCE, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAdds, m_creature, NPC_DARK_ESSENCE, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAdds, m_creature, NPC_CONCENTRATED_DARKNESS, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAdds, m_creature, NPC_CONCENTRATED_LIGHT, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lAdds.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lAdds.begin(); iter != lAdds.end(); ++iter)
+            {
+                if ((*iter) && !(*iter)->isAlive())
+                    (*iter)->ForcedDespawn();
+            }
+        }
+
+        m_creature->ForcedDespawn();
     }
 
     uint32 GetFaction()
@@ -322,33 +360,19 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 
         if(uiDamage > 0)
         {
-            if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-            //if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
+            //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
+            if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
                 pEydis->DealDamage(pEydis, uiDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         }
     }
 
     void RemoveAllAuras()
     {
-        Map *map = m_creature->GetMap();
-        if (map->IsDungeon())
+        if(m_pInstance)
         {
-            Map::PlayerList const &PlayerList = map->GetPlayers();
-
-            if (PlayerList.isEmpty())
-                return;
-
-            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-            {
-                if (i->getSource()->isAlive())
-                {
-                    if(i->getSource()->HasAura(SPELL_EMPOWERED_DARKNESS, EFFECT_INDEX_0))
-                        i->getSource()->RemoveAurasDueToSpell(SPELL_EMPOWERED_DARKNESS);
-                    if(i->getSource()->HasAura(SPELL_EMPOWERED_LIGHT, EFFECT_INDEX_0))
-                        i->getSource()->RemoveAurasDueToSpell(SPELL_EMPOWERED_LIGHT);
-                }
-            }
-        } 
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_EMPOWERED_DARKNESS);
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_EMPOWERED_LIGHT);
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -357,8 +381,8 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-        //if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
+        //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
+        if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
         {
             if(m_creature->getVictim()->GetGUID() == pEydis->GetGUID()) 
                 EnterEvadeMode();
@@ -461,8 +485,8 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 
         if (m_uiTwinPactTimer < uiDiff)
         {
-            if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-            //if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
+            //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
+            if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
             {
                 DoScriptText(SAY_PACT, m_creature);
                 m_creature->CastStop();
@@ -538,7 +562,10 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
     std::list<Creature*> lEssences;
     std::list<Creature*> lConcentrates;
 
-    float summX, summY, summZ;
+    uint8 m_uiMaxOrbs;
+
+    float angle;
+    float homeX, homeY;
 
     uint32 m_uiBerserkTimer;
 
@@ -548,10 +575,15 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         m_uiSpecialSpellTimer  = urand(55000, 60000); 
         m_uiTwinPactTimer      = 900000;
         m_uiDarkToutchTimer    = 12000;
-        if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || RAID_DIFFICULTY_25MAN_NORMAL)
+        if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
             m_uiOrbSummonTimer = urand(30000, 35000);
         else
             m_uiOrbSummonTimer = urand(10000, 15000);
+
+        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+            m_uiMaxOrbs = 10;
+        else
+            m_uiMaxOrbs = 25;
         m_uiCastTimeOut        = 900000;
 
         m_uiBerserkTimer    = 900000;  // 15 min
@@ -561,6 +593,8 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         m_uiEssenceBuffCheckTimer = 500;
         lEssences.clear();
         lConcentrates.clear();
+
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void JustDied(Unit* pKiller)
@@ -651,8 +685,8 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         {
             if(m_pInstance->GetData(TYPE_TWIN_VALKYR) != NOT_STARTED)
             {
-                if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
-                //if(Creature *pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
+                //if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
+                if(Creature *pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
                 {
                     if(!pFjola->isAlive())
                         pFjola->Respawn();
@@ -665,7 +699,13 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
                 m_pInstance->SetData(TYPE_TWIN_VALKYR, NOT_STARTED);
             }
         }
-        //m_creature->GetMotionMaster()->MovePoint(0, WipeLoc[0].x, WipeLoc[0].y, m_creature->GetPositionZ());
+        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        {
+            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        m_creature->ForcedDespawn();
     }
 
     void DamageTaken(Unit *pDoneBy, uint32 &uiDamage)
@@ -685,8 +725,8 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
 
         if(uiDamage > 0)
         {
-            if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
-            //if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
+            //if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
+            if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
                 pFjola->DealDamage(pFjola, uiDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         }
     }
@@ -733,7 +773,8 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
 
     void SummonOrbs()
     {
-        for(uint8 i = 0; i < 8; i++) // maybe 16??
+        //srand ( (unsigned)time(NULL) );
+        for(uint8 i = 0; i < m_uiMaxOrbs; i++)
         {
             // init random orb
             uint32 m_uiCreatureEntry;
@@ -746,12 +787,12 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
                 m_uiCreatureEntry = NPC_CONCENTRATED_LIGHT;
                 break;
             }
-            // summon at given location
-            /*float angle = rand_norm() * 2 * 3.1416;
-            summX = SpawnLoc[1].x + ROOM_RADIUS * sinf(angle);
-            summY = SpawnLoc[1].z + ROOM_RADIUS * cosf(angle);
-            summZ = 395.0f;*/
-            if(Creature* pOrb = m_creature->SummonCreature(m_uiCreatureEntry, OrbLoc[i].x, OrbLoc[i].y, LOC_Z, 0.0f, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
+            // init random location
+            angle = (float) rand()*360/RAND_MAX + 1;
+            homeX = SpawnLoc[1].x + ROOM_RADIUS*cos(angle*(M_PI/180));
+            homeY = SpawnLoc[1].y + ROOM_RADIUS*sin(angle*(M_PI/180));
+            // summon orbs
+            if(Creature* pOrb = m_creature->SummonCreature(m_uiCreatureEntry, homeX, homeY, LOC_Z, 0.0f, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
                 pOrb->setFaction(14);
         }
     }
@@ -761,8 +802,8 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim()) 
             return;
 
-        if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
-        //if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
+        //if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
+        if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
         {
             if(m_creature->getVictim()->GetGUID() == pFjola->GetGUID()) 
                 EnterEvadeMode();
@@ -872,8 +913,8 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         if (m_uiTwinPactTimer < uiDiff)
         {
             DoScriptText(SAY_PACT, m_creature);
-            if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
-            //if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
+            //if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
+            if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
             {
                 m_creature->CastStop();
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
@@ -930,6 +971,7 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
         Difficulty = pCreature->GetMap()->GetDifficulty();
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         SetCombatMovement(false);  
         m_uiCreatureEntry = pCreature->GetEntry();
         ChooseDirection();
@@ -944,19 +986,14 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
     uint32 m_uiCheckTimer;
     bool m_bMustDie;
 
-    float dstX, dstY, dstZ;
+    double angle;
+    double destX,destY;
 
     void Reset() 
     {
         m_uiDieTimer    = 2000;
         m_bMustDie      = false;
         m_uiCheckTimer  = 1000;
-    }
-
-    void AttackStart(Unit *pWho)
-    {
-        if(!pWho) 
-            return;
     }
 
     void CheckDistance()
@@ -969,13 +1006,13 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
             {
                 for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                 {
-                    if(m_creature->GetDistance2d(i->getSource()) <= 3.0f)
+                    if(m_creature->GetDistance2d(i->getSource()) <= 3.0f && !m_bMustDie)
                     {
                         switch (m_uiCreatureEntry)
                         {
                         case NPC_CONCENTRATED_DARKNESS:
                             if(i->getSource()->HasAura(SPELL_DARK_ESSENCE))
-                                DoCast(i->getSource(), SPELL_POWERING_UP);
+                                i->getSource()->CastSpell(i->getSource(), SPELL_POWERING_UP, false);
                             else if(i->getSource()->HasAura(SPELL_LIGHT_ESSENCE))
                             {
                                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
@@ -990,7 +1027,7 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
                             break;
                         case NPC_CONCENTRATED_LIGHT:
                             if(i->getSource()->HasAura(SPELL_LIGHT_ESSENCE))
-                                DoCast(i->getSource(), SPELL_POWERING_UP);
+                                i->getSource()->CastSpell(i->getSource(), SPELL_POWERING_UP, false);
                             else if(i->getSource()->HasAura(SPELL_DARK_ESSENCE))
                             {
                                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
@@ -1004,7 +1041,8 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
                             }
                             break;
                         }
-                        m_bMustDie = true; 
+                        m_uiDieTimer = 1000;
+                        m_bMustDie = true;
                     }
                 }
             }
@@ -1012,18 +1050,20 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
     }
 
     void ChooseDirection()
-    {
-        float angle = rand_norm() * 2.0f * 3.1416f;
-        dstX = SpawnLoc[1].x + SpawnLoc[1].y * sinf(angle);
-        dstY = SpawnLoc[1].x + SpawnLoc[1].y * cosf(angle);
-        dstZ = 394.5f;
+    {       
+        //srand ( (unsigned)time(NULL) );
+        angle=(double) rand()*360/RAND_MAX+1;
+        destX=SpawnLoc[1].x+ROOM_RADIUS*cos(angle*(M_PI/180));
+        destY=SpawnLoc[1].y+ROOM_RADIUS*sin(angle*(M_PI/180));
 
-        m_creature->GetMotionMaster()->MovePoint(0, dstX, dstY, dstZ);
+        m_creature->SetSpeedRate(MOVE_RUN, 2.0f);
+        m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+        m_creature->GetMotionMaster()->MovePoint(0, destX, destY, LOC_Z);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if(abs(m_creature->GetPositionX() - dstX) < 2.0f && abs(m_creature->GetPositionY() - dstY) < 2.0f)
+        if(abs(m_creature->GetPositionX() - destX) < 2.0f && abs(m_creature->GetPositionY() - destY) < 2.0f)
         {
             m_creature->GetMotionMaster()->MovementExpired();
             ChooseDirection();
@@ -1092,10 +1132,7 @@ struct MANGOS_DLL_DECL mob_valkyr_essenceAI : public ScriptedAI
                     if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(),i->getSource()->GetPositionY()) < 2)
                     {
                         if(i->getSource()->HasAura(SPELL_DARK_ESSENCE))
-                        {
                             i->getSource()->RemoveAurasDueToSpell(SPELL_DARK_ESSENCE);
-                            //i->getSource()->
-                        }
 
                         i->getSource()->CastSpell(i->getSource(), SPELL_LIGHT_ESSENCE, false);
 

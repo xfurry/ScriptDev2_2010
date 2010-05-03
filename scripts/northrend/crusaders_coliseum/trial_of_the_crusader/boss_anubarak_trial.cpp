@@ -545,8 +545,7 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
                 m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE_ANUB);
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
             }
-            isSubmerged = false;
-            submergeTimer = 1000;
+            submergeTimer = 600000;
         }else submergeTimer -= uiDiff;
 
         DoMeleeAttackIfReady();

@@ -156,10 +156,10 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     uint32 Difficulty;
 
-    uint8 maxSnobold;
-    uint8 snoboldNo;
+    uint8 m_uiMaxSnobold;
+    uint8 m_uiSnoboldNo;
+    uint8 m_uiHealthPoint;
 
-    uint32 m_uiSnoboldTimer;
     uint32 m_uiStompTimer;
     uint32 m_uiImpaleTimer;
 
@@ -172,10 +172,9 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
 
     void Reset() 
     {
-        m_uiSnoboldTimer    = urand(15000, 20000);
         m_uiStompTimer      = urand(20000, 25000);
         m_uiImpaleTimer     = 10000;
-        snoboldNo           = 0;
+        m_uiSnoboldNo           = 1;
 
         m_uiDoorTimer       = 8000;
         doorClosed          = false;
@@ -185,9 +184,15 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
         m_uiBerserkTimer    = 300000;  // 5 min
 
         if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-            maxSnobold = 4;
+        {
+            m_uiMaxSnobold = 5;
+            m_uiHealthPoint = 20;
+        }
         if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-            maxSnobold = 5;
+        {
+            m_uiMaxSnobold = 6;
+            m_uiHealthPoint = 17;
+        }
     }
 
     void JustReachedHome()
@@ -243,13 +248,13 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
         if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
             DoScriptText(SAY_SUMMON_JORMUNGARS, Tirion);
 
-        if (Creature* pDreadscale = m_creature->SummonCreature(NPC_DREADSCALE, SpawnLoc[28].x + 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
+        if (Creature* pDreadscale = m_creature->SummonCreature(NPC_DREADSCALE, SpawnLoc[28].x + 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
         {
             pDreadscale->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x + 10, SpawnLoc[1].y, SpawnLoc[1].z);
             pDreadscale->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
             pDreadscale->SetInCombatWithZone();
         }
-        if (Creature* pAcidmaw = m_creature->SummonCreature(NPC_ACIDMAW, SpawnLoc[28].x - 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
+        if (Creature* pAcidmaw = m_creature->SummonCreature(NPC_ACIDMAW, SpawnLoc[28].x - 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
         {
             pAcidmaw->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 10, SpawnLoc[1].y, SpawnLoc[1].z);
             pAcidmaw->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
@@ -264,6 +269,24 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         SummonJormungars();
+    }
+
+    void DamageTaken(Unit *pDoneBy,uint32 &uiDamage)
+    {
+        if (m_uiSnoboldNo > m_uiMaxSnobold)
+            return;
+
+        if (m_creature->GetHealthPercent() <= (100-(m_uiHealthPoint*m_uiSnoboldNo)))
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            {
+                DoCast(pTarget, SPELL_SNOBOLLED, true);
+                DoCast(m_creature, SPELL_RISING_ANGER); // broken
+                if(Creature *pSnobold = m_creature->SummonCreature(NPC_SNOBOLD_VASSAL, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                    pSnobold->AddThreat(pTarget,0.0f);
+            }
+            m_uiSnoboldNo++;
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -293,24 +316,6 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
             m_uiDoorTimer -= uiDiff;
 
         // spells
-        if (m_uiSnoboldTimer < uiDiff)
-        {
-            if(snoboldNo < maxSnobold)
-            {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                {
-                    DoCast(pTarget, SPELL_SNOBOLLED, true);
-                    DoCast(m_creature, SPELL_RISING_ANGER);
-                    if(Creature *pSnobold = m_creature->SummonCreature(NPC_SNOBOLD_VASSAL, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                        pSnobold->AddThreat(pTarget,0.0f);
-                }
-                snoboldNo++;
-            }
-            m_uiSnoboldTimer = 30000 + rand()%15000;
-        }
-        else
-            m_uiSnoboldTimer -= uiDiff;
-
         if (m_uiStompTimer < uiDiff)
         {
             if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
@@ -328,7 +333,7 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
 
         if (m_uiImpaleTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_IMPALE_10);
@@ -401,12 +406,12 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         // mobile
         m_uiAcidSpewTimer       = 5000;
         m_uiParaliticBiteTimer  = urand(5000,10000);
-        m_uiSlimePoolTimer      = urand(20000,30000);
+        m_uiSlimePoolTimer      = urand(12000,15000);
 
         // stationary
-        m_uiAcidSpitTimer       = 5000;
-        m_uiParaliticSprayTimer = urand(16000,21000);
-        m_uiSweepTimer          = urand(20000,30000);
+        m_uiAcidSpitTimer       = 3000;
+        m_uiParaliticSprayTimer = urand(7000,13000);
+        m_uiSweepTimer          = urand(12000,15000);
 
         phase               = 0;    // not started yet
         startPhase          = false;
@@ -595,7 +600,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
                     if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                         DoCast(pTarget, SPELL_PARALYTIC_SPRAY_25HC);
                 }
-                m_uiParaliticSprayTimer = urand(16000,20000);
+                m_uiParaliticSprayTimer = urand(7000,13000);
             }
             else
                 m_uiParaliticSprayTimer -= uiDiff;
@@ -610,7 +615,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
                     DoCast(m_creature, SPELL_SWEEP_10HC);
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     DoCast(m_creature, SPELL_SWEEP_25HC);
-                m_uiSweepTimer = urand(20000,30000);
+                m_uiSweepTimer = urand(10000,15000);
             }
             else
                 m_uiSweepTimer -= uiDiff;
@@ -659,7 +664,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
                     DoCast(m_creature, SPELL_SLIME_POOL_10HC);
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     DoCast(m_creature, SPELL_SLIME_POOL_25HC);
-                m_uiSlimePoolTimer = urand(20000,30000);
+                m_uiSlimePoolTimer = urand(13000,15000);
             }
             else
                 m_uiSlimePoolTimer -= uiDiff;
@@ -735,14 +740,14 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
     void Reset() 
     {
         // mobile
-        m_uiBurningBiteTimer    = urand(5000,7000);
-        m_uiMoltenSpewTimer     = urand(15000,30000);
-        m_uiSlimePoolTimer      = urand(20000,30000);
+        m_uiBurningBiteTimer    = urand(3000,5000);
+        m_uiMoltenSpewTimer     = urand(7000,13000);
+        m_uiSlimePoolTimer      = urand(13000,15000);
 
         // stationary
         m_uiFireSpitTimer       = 3000;
-        m_uiBurningSprayTimer   = urand(15000,30000);
-        m_uiSweepTimer          = urand(20000,30000);
+        m_uiBurningSprayTimer   = urand(5000,7000);
+        m_uiSweepTimer          = urand(13000,15000);
 
         phase               = 0;    // not started yet
         startPhase          = false;
@@ -921,7 +926,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
                     if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                         DoCast(pTarget, SPELL_BURNING_SPRAY_25HC);
                 }
-                m_uiBurningSprayTimer = urand(15000,20000);
+                m_uiBurningSprayTimer = urand(7000,13000);
             }
             else
                 m_uiBurningSprayTimer -= uiDiff;
@@ -936,7 +941,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
                     DoCast(m_creature, SPELL_SWEEP_10HC);
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     DoCast(m_creature, SPELL_SWEEP_25HC);
-                m_uiSweepTimer = urand(20000,30000);
+                m_uiSweepTimer = urand(10000,15000);
             }
             else
                 m_uiSweepTimer -= uiDiff;
@@ -989,7 +994,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     //DoCast(m_creature, SPELL_SLIME_POOL_25HC);
                     m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-                m_uiSlimePoolTimer = urand(20000,30000);
+                m_uiSlimePoolTimer = urand(10000,15000);
             }
             else
                 m_uiSlimePoolTimer -= uiDiff;
@@ -1004,7 +1009,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
                     DoCast(m_creature, SPELL_MOLTEN_SPEW_10HC);
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     DoCast(m_creature, SPELL_MOLTEN_SPEW_25HC);
-                m_uiMoltenSpewTimer = urand(15000,20000);
+                m_uiMoltenSpewTimer = urand(7000,13000);
             }
             else
                 m_uiMoltenSpewTimer -= uiDiff;
@@ -1207,6 +1212,11 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
                     m_creature->SendMonsterMove(SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
                     //m_creature->GetMotionMaster()->MovePoint(0, SpawnLoc[1].y, SpawnLoc[1].z);
                     m_creature->GetMotionMaster()->MoveIdle();
+                    SetCombatMovement(false);
+                    m_creature->RemoveAllAuras();
+                    m_creature->CombatStop(true);
+                    m_creature->InterruptNonMeleeSpells(false);
+                    //m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     ++m_uiTrampleStage;
                     m_uiTrampleTimer = 3000;
                     break;
@@ -1240,8 +1250,8 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
                         pTarget->GetPosition(fPosX, fPosY, fPosZ);
                         DoScriptText(EMOTE_TRAMPLE, m_creature, pTarget);
                         m_bMovementStarted = true;
-                        //m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                         //m_creature->SetSpeedRate(MOVE_RUN, 4.0f);
+                        m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                         m_creature->GetMotionMaster()->Clear();
                         m_creature->GetMotionMaster()->MovePoint(1, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ());
                         SetCombatMovement(false);
@@ -1288,6 +1298,8 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
                     m_bMovementStarted = false;
                     m_bAdrenalineCasted = false;
                     m_bTrampleCasted = false;
+                    SetCombatMovement(true);
+                    //m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     m_creature->GetMotionMaster()->MovementExpired();
                     m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
                     SetCombatMovement(true);
@@ -1400,12 +1412,14 @@ struct MANGOS_DLL_DECL mob_snoboldAI : public ScriptedAI
     }
     ScriptedInstance *m_pInstance;
 
-    uint32 spellTimer;
     uint32 FireBombTimer;
+    uint32 m_uiBatterTimer;
+    uint32 m_uiHeadcrackTimer;
 
     void Reset()
     {
-        spellTimer = 10000;
+        m_uiBatterTimer     = 3000;
+        m_uiHeadcrackTimer  = 5000 + rand()%2000;
         FireBombTimer = 10000 + rand()%8000;
     }
 
@@ -1415,21 +1429,19 @@ struct MANGOS_DLL_DECL mob_snoboldAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (spellTimer < uiDiff)
+        if (m_uiHeadcrackTimer < uiDiff)
         {
-            switch(urand(0, 1))
-            {
-            case 0:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
-                    DoCast(pTarget, SPELL_BATTER);
-                break;
-            case 1:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
-                    DoCast(pTarget, SPELL_HEADCRACK);
-                break;
-            }
-            spellTimer = 10000;
-        }else spellTimer -= uiDiff;
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                DoCast(pTarget, SPELL_HEADCRACK);
+            m_uiHeadcrackTimer = urand(7000, 9000);
+        }else m_uiHeadcrackTimer -= uiDiff;
+
+        if (m_uiBatterTimer < uiDiff)
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                DoCast(pTarget, SPELL_BATTER);
+            m_uiBatterTimer = urand(3000, 6000);
+        }else m_uiBatterTimer -= uiDiff;
 
         if(FireBombTimer < uiDiff)
         {
