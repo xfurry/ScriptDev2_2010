@@ -439,6 +439,21 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                     pYoggBrain->Respawn();
             }
         }
+
+        std::list<Creature*> lAddsList;
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_IMMORTAL_GUARDIAN, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_GUARDIAN_OF_YOGG, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_CONSTRICTOR_TENTACLE, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_CRUSHER_TENTACLE, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_CORRUPTOR_TENTACLE, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lAddsList.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lAddsList.begin(); iter != lAddsList.end(); ++iter)
+            {
+                if ((*iter) && !(*iter)->isAlive())
+                    (*iter)->ForcedDespawn();
+            }
+        }
     }
 
     void KilledUnit(Unit* pVictim)
@@ -810,9 +825,9 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
     {
         // fix how the creature looks! it should be positioned upper, but the melee can still reach him. Strange...
         //StartVisions(2, 600000);    //for debug only!
-        m_creature->GetMotionMaster()->MoveIdle();
-        m_creature->GetMap()->CreatureRelocation(m_creature, m_creature->GetPositionX(), m_creature->GetPositionY(), 255.011f, 0.0f);
-        m_creature->SendMonsterMove(m_creature->GetPositionX(), m_creature->GetPositionY(), 255.011f, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+        //m_creature->GetMotionMaster()->MoveIdle();
+        //m_creature->GetMap()->CreatureRelocation(m_creature, m_creature->GetPositionX(), m_creature->GetPositionY(), 255.011f, 0.0f);
+        //m_creature->SendMonsterMove(m_creature->GetPositionX(), m_creature->GetPositionY(), 255.011f, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
     }
 
     void MoveInLineOfSight(Unit* pWho)

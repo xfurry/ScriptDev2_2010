@@ -47,20 +47,6 @@ enum
     SAY_OUTRO4                      = -1603149,
     SAY_OUTRO5                      = -1603279,
 
-    /* not needed
-    SAY_BLACK_HOLE                   = -15391,
-    SAY_DEATH1                       = -15393,
-    SAY_TIMER1                       = -15398,
-    SAY_TIMER2                       = -15399,
-    SAY_TIMER3                       = -15400,
-    SAY_DEATH2                       = -15401,
-    SAY_DEATH3                       = -15402,
-    SAY_ADDS2                        = -15403,
-    SAY_SUMMON1                      = -15405,
-    SAY_SUMMON2                      = -15406,
-    SAY_SUMMON3                      = -15407,
-    */
-
     //spells to be casted
     SPELL_QUANTUM_STRIKE            = 64395, //Normal Quantum Strike
     SPELL_QUANTUM_STRIKE_H          = 64592, //Heroic Quantum Strike
@@ -86,7 +72,7 @@ enum
     SPELL_ARCANE_BARRAGE_H          = 64607, //Heroic Arcane Barage?
 
     CREATURE_DARK_MATTER            = 33089,    // populates the black holes = 7
-
+    CREATURE_COSMIC_SMASH           = 33104,
 };
 
 //Positional defines
@@ -209,6 +195,20 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_ALGALON, DONE);
+
+        std::list<Creature*> lAddsList;
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, CREATURE_COLLAPSING_STAR, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, CREATURE_BLACK_HOLE, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, CREATURE_LIVING_CONSTELLATION, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, CREATURE_DARK_MATTER, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lAddsList.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lAddsList.begin(); iter != lAddsList.end(); ++iter)
+            {
+                if ((*iter) && !(*iter)->isAlive())
+                    (*iter)->ForcedDespawn();
+            }
+        }
 
         m_creature->ForcedDespawn();
     }
@@ -588,14 +588,12 @@ struct MANGOS_DLL_DECL mob_collapsing_starAI : public ScriptedAI
     mob_collapsing_starAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         pCreature->SetSpeedRate(MOVE_RUN, 0.5f);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-    bool m_bIsRegularMode;
 
     uint32 healthTimer;
 
@@ -606,7 +604,6 @@ struct MANGOS_DLL_DECL mob_collapsing_starAI : public ScriptedAI
 
     void JustDied(Unit *victim)
     {
-        DoCast(m_creature, m_bIsRegularMode ? SPELL_BLACK_HOLE_EXPLOSION : SPELL_BLACK_HOLE_EXPLOSION_H);
         m_creature->SummonCreature(CREATURE_BLACK_HOLE, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
     }
 
@@ -669,17 +666,20 @@ struct MANGOS_DLL_DECL mob_black_holeAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         SetCombatMovement(false);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
+    bool m_bIsRegularMode;
 
     uint32 playersCheckTimer;
 
     void Reset()
     {
         playersCheckTimer = 1000;
+        DoCast(m_creature, m_bIsRegularMode ? SPELL_BLACK_HOLE_EXPLOSION : SPELL_BLACK_HOLE_EXPLOSION_H);
     }
 
     void UpdateAI(const uint32 uiDiff)
