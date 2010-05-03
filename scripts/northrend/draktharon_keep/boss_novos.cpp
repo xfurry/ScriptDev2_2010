@@ -240,7 +240,8 @@ struct MANGOS_DLL_DECL boss_novosAI : public ScriptedAI
             Start_Check = 0;
         }
         
-        if(!m_bIsRegularMode)
+        if(!m_bIsRegularMode && Phase2)
+        {
             if (SummonMinion_Timer < uiDiff )
             {    
                 for(uint8 i = 0; i < 5; i++)
@@ -250,6 +251,7 @@ struct MANGOS_DLL_DECL boss_novosAI : public ScriptedAI
                 }
                 SummonMinion_Timer = urand (25000,30000);
             }else SummonMinion_Timer -= uiDiff;
+        }
         
         if (Handler_Spawn < uiDiff && Phase1 == true)
         {    
