@@ -378,7 +378,11 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
         m_auiEncounter[0] = uiData;
         DoUseDoorOrButton(m_uiAnubDoorGUID);
         if (uiData == DONE)
+        {
             OpenDoor(m_uiAnubGateGUID);
+            m_uiArachnofobiaTimer = 0;
+            m_bIsArachnofobia = true;
+        }
         break;
     case TYPE_FAERLINA:
         m_auiEncounter[1] = uiData;
@@ -471,6 +475,7 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
         DoUseDoorOrButton(m_uiHorsemenDoorGUID);
         if (uiData == DONE)
         {
+            //DoUpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET, 59450);
             DoUseDoorOrButton(m_uiMiliEyeRampGUID);
             DoUseDoorOrButton(m_uiMiliEyeGUID);
             DoRespawnGameObject(m_uiMiliPortalGUID, 30*MINUTE);
