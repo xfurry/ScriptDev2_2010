@@ -156,16 +156,18 @@ enum
     // Alagon
     GO_GIFT_OF_OBSERVER_H       = 194821,
     GO_GIFT_OF_OBSERVER         = 194822,
-    GO_GIFT_OF_OBSERVER_HH      = 194823,
-    // Freya
-    GO_FREYA_GIFT1              = 194324,//rare 25
-    GO_FREYA_GIFT2              = 194325,
-    GO_FREYA_GIFT               = 194326,//10
-    GO_FREYA_GIFT_RARE          = 194327,// rare 10
-    GO_FREYA_GIFT_RARE_H        = 194328,//25
-    GO_FREYA_GIFT5              = 194329,//25
-    GO_FREYA_GIFT6              = 194330,//25
-    GO_FREYA_GIFT_H             = 194331,//25
+    GO_GIFT_OF_OBSERVER_HH      = 194823,   // unk
+    // Freya -> each chest is for a mode = more elders alive = more items in chest
+    // 10 man
+    GO_FREYA_GIFT               = 194324,//10 normal
+    GO_FREYA_GIFT_1             = 194325,//10 1 elder
+    GO_FREYA_GIFT_2             = 194326,//10 2 elders
+    GO_FREYA_GIFT_3             = 194327,//10 3 elders
+    // 25 man
+    GO_FREYA_GIFT_H             = 194328,//25 normal
+    GO_FREYA_GIFT_H_1           = 194329,//25 1 elder
+    GO_FREYA_GIFT_H_2           = 194330,//25 2 elder
+    GO_FREYA_GIFT_H_3           = 194331,//25 3 elders
     // Mimiron
     GO_CACHE_OF_INOVATION       = 194789,
     GO_CACHE_OF_INOVATION_H     = 194956,
@@ -223,6 +225,9 @@ enum
 
     ACHIEV_IRON_COUNCIL         = 2888,
     ACHIEV_IRON_COUNCIL_H       = 2889,
+
+    ACHIEV_KEEPERS              = 2890,
+    ACHIEV_KEEPERS_H            = 2891,
 };
 
 #endif

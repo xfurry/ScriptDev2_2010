@@ -419,6 +419,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
     void Aggro(Unit *who) 
     {
         //if(m_pInstance) m_pInstance->SetData(TYPE_YOGGSARON, IN_PROGRESS);
+        m_creature->SetInCombatWithZone();
     }
 
     void JustReachedHome()
@@ -1430,6 +1431,21 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         {
             if(pMimironImage->isAlive())
                 pMimironImage->SetVisibility(VISIBILITY_ON);
+        }
+
+        std::list<Creature*> lAddsList;
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_IMMORTAL_GUARDIAN, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_GUARDIAN_OF_YOGG, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_CONSTRICTOR_TENTACLE, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_CRUSHER_TENTACLE, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_CORRUPTOR_TENTACLE, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lAddsList.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lAddsList.begin(); iter != lAddsList.end(); ++iter)
+            {
+                if ((*iter) && !(*iter)->isAlive())
+                    (*iter)->ForcedDespawn();
+            }
         }
 
         m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
@@ -2529,6 +2545,7 @@ struct MANGOS_DLL_DECL mob_immortal_guardianAI : public ScriptedAI
         healthCheckTimer = 1000;
         stack = 0;
         hp = 90;
+        m_creature->SetRespawnDelay(DAY);
 
         if(m_creature->isAlive())
         {
@@ -2562,6 +2579,9 @@ struct MANGOS_DLL_DECL mob_immortal_guardianAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_pInstance && m_pInstance->GetData(TYPE_YOGGSARON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -2610,6 +2630,7 @@ struct MANGOS_DLL_DECL mob_guardian_of_yogg_saronAI : public ScriptedAI
         dominateMindTimer = 30000;
         mustDie = false;
         hasCasted = false;
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void SpellHit(Unit *caster, const SpellEntry *spell)
@@ -2645,6 +2666,9 @@ struct MANGOS_DLL_DECL mob_guardian_of_yogg_saronAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_pInstance && m_pInstance->GetData(TYPE_YOGGSARON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -2696,10 +2720,14 @@ struct MANGOS_DLL_DECL mob_corruptor_tentacleAI : public ScriptedAI
         eruptTimer = 100;
         hasErupted = false;
         spellTimer = 10000;
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_pInstance && m_pInstance->GetData(TYPE_YOGGSARON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -2755,10 +2783,14 @@ struct MANGOS_DLL_DECL mob_constrictor_tentacleAI : public ScriptedAI
     void Reset()
     {
         squeezeTimer = 10000;
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_pInstance && m_pInstance->GetData(TYPE_YOGGSARON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -2796,6 +2828,7 @@ struct MANGOS_DLL_DECL mob_crusher_tentacleAI : public ScriptedAI
         eruptTimer = 100;
         hasErupted = false;
         diminishPowerTimer = 10000;
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
@@ -2806,6 +2839,9 @@ struct MANGOS_DLL_DECL mob_crusher_tentacleAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_pInstance && m_pInstance->GetData(TYPE_YOGGSARON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 

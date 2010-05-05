@@ -158,9 +158,10 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiThorimLootGUID;
     uint64 m_uiThorimRareLootGUID;
     uint64 m_uiFreyaLootGUID;
-    uint64 m_uiFreyaRareLootGUID;
+    uint64 m_uiFreyaLoot1GUID;
+    uint64 m_uiFreyaLoot2GUID;
+    uint64 m_uiFreyaLoot3GUID;
     uint64 m_uiMimironLootGUID;
-    uint64 m_uiMimironRareLootGUID;
     uint64 m_uiAlagonLootGUID;
 
     void Initialize()
@@ -224,9 +225,10 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiThorimLootGUID      = 0;
         m_uiThorimRareLootGUID  = 0;
         m_uiFreyaLootGUID       = 0;
-        m_uiFreyaRareLootGUID   = 0;
+        m_uiFreyaLoot1GUID      = 0;
+        m_uiFreyaLoot2GUID      = 0; 
+        m_uiFreyaLoot3GUID      = 0;
         m_uiMimironLootGUID     = 0;
-        m_uiMimironRareLootGUID = 0;
         m_uiAlagonLootGUID      = 0;
 
         // doors
@@ -612,13 +614,29 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 m_uiFreyaLootGUID = pGo->GetGUID();
             break;
             // Freya rare
-        case GO_FREYA_GIFT_RARE:   
+        case GO_FREYA_GIFT_1:   
             if(Regular)
-                m_uiFreyaRareLootGUID = pGo->GetGUID();
+                m_uiFreyaLoot1GUID = pGo->GetGUID();
             break;
-        case GO_FREYA_GIFT_RARE_H: 
+        case GO_FREYA_GIFT_H_1: 
             if(!Regular)
-                m_uiFreyaRareLootGUID = pGo->GetGUID();
+                m_uiFreyaLoot1GUID = pGo->GetGUID();
+            break;
+        case GO_FREYA_GIFT_2:
+            if(Regular)
+                m_uiFreyaLoot2GUID = pGo->GetGUID();
+            break;
+        case GO_FREYA_GIFT_H_2:
+            if(!Regular)
+                m_uiFreyaLoot2GUID = pGo->GetGUID();
+            break;
+        case GO_FREYA_GIFT_3:
+            if(Regular)
+                m_uiFreyaLoot3GUID = pGo->GetGUID();
+            break;
+        case GO_FREYA_GIFT_H_3:
+            if(!Regular)
+                m_uiFreyaLoot3GUID = pGo->GetGUID();
             break;
 
             // Thorim
@@ -649,15 +667,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             if(!Regular)
                 m_uiMimironLootGUID = pGo->GetGUID();
             break;
-            // Mimiron rare
-        case GO_FREYA_GIFT1:    // fix id
-            if(Regular)
-                m_uiMimironRareLootGUID = pGo->GetGUID();
-            break;
-        case GO_FREYA_GIFT5:    // fix id
-            if(!Regular)
-                m_uiMimironRareLootGUID = pGo->GetGUID();
-            break;
 
             // Alagon
         case GO_GIFT_OF_OBSERVER:
@@ -671,14 +680,14 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         }
     }
 
-    void Update (uint32 diff)
+    /*void Update (uint32 diff)
     {
         if (m_uiDoorCheckTimer <= diff && !hasChecked)
         {
             OpenMadnessDoor();
             m_uiDoorCheckTimer = 1000;//remove stress from core
         } else m_uiDoorCheckTimer -= diff;
-    }
+    }*/
 
     void OpenDoor(uint64 guid)
     {
@@ -785,6 +794,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             {
                 DoRespawnGameObject(m_uiMimironLootGUID, 30*MINUTE);
                 OpenMadnessDoor();
+                CheckKeepers();
             }
             if (uiData == NOT_STARTED)
                 OpenDoor(m_uiMimironButtonGUID);
@@ -801,6 +811,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 DoUseDoorOrButton(m_uiHodirExitDoorGUID);
                 DoRespawnGameObject(m_uiHodirLootGUID, 30*MINUTE);
                 OpenMadnessDoor();
+                CheckKeepers();
             }    
             break;
         case TYPE_THORIM:
@@ -814,16 +825,26 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 OpenDoor(m_uiArenaEnterDoorGUID);
             if (uiData == DONE)
             {
-                DoRespawnGameObject(m_uiThorimLootGUID, 30*MINUTE);
+                if(mHardBoss[5] != DONE)
+                    DoRespawnGameObject(m_uiThorimLootGUID, 30*MINUTE);
                 OpenMadnessDoor();
+                CheckKeepers();
             }
             break;
         case TYPE_FREYA:
             m_auiEncounter[10] = uiData;
             if (uiData == DONE)
             {
-                DoRespawnGameObject(m_uiFreyaLootGUID, 30*MINUTE);
+                if(mHardBoss[6] == 0)
+                    DoRespawnGameObject(m_uiFreyaLootGUID, 30*MINUTE);
+                else if(mHardBoss[6] == 1)
+                    DoRespawnGameObject(m_uiFreyaLoot1GUID, 30*MINUTE);
+                else if(mHardBoss[6] == 2)
+                    DoRespawnGameObject(m_uiFreyaLoot2GUID, 30*MINUTE);
+                else if(mHardBoss[6] == 3)
+                    DoRespawnGameObject(m_uiFreyaLoot3GUID, 30*MINUTE);
                 OpenMadnessDoor();
+                CheckKeepers();
             }
             break;
 
@@ -881,10 +902,12 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             mHardBoss[2] = uiData;  // todo: add extra loot
             break;
         case TYPE_FREYA_HARD:
-            mHardBoss[6] = uiData;  // todo: add extra loot
+            mHardBoss[6] = uiData; 
             break;
         case TYPE_THORIM_HARD:
-            mHardBoss[5] = uiData;  // todo: add extra loot
+            mHardBoss[5] = uiData;
+            if(uiData == DONE)
+                DoRespawnGameObject(m_uiThorimRareLootGUID, 30*MINUTE);
             break;
         case TYPE_MIMIRON_HARD:
             mHardBoss[3] = uiData;  // todo: add extra loot
@@ -1176,6 +1199,13 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         // check if the other bosses in the antechamber are dead
         if(m_auiEncounter[4] == DONE && m_auiEncounter[5] == DONE && m_auiEncounter[6] == DONE)
             DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEV_IRON_COUNCIL : ACHIEV_IRON_COUNCIL_H);
+    }
+
+    void CheckKeepers()
+    {
+        // check if the other bosses in the antechamber are dead
+        if(m_auiEncounter[7] == DONE && m_auiEncounter[8] == DONE && m_auiEncounter[9] == DONE && m_auiEncounter[10] == DONE)
+            DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEV_KEEPERS : ACHIEV_KEEPERS_H);
     }
 };
 

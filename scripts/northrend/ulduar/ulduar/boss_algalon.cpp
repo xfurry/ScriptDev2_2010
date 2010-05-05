@@ -600,6 +600,7 @@ struct MANGOS_DLL_DECL mob_collapsing_starAI : public ScriptedAI
     void Reset()
     {
         healthTimer = 1000;
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void JustDied(Unit *victim)
@@ -609,6 +610,9 @@ struct MANGOS_DLL_DECL mob_collapsing_starAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_pInstance && m_pInstance->GetData(TYPE_ALGALON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -642,10 +646,14 @@ struct MANGOS_DLL_DECL mob_living_constellationAI : public ScriptedAI
     void Reset()
     {
         ArcaneBarrageTimer = 15000;
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_pInstance && m_pInstance->GetData(TYPE_ALGALON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -680,10 +688,14 @@ struct MANGOS_DLL_DECL mob_black_holeAI : public ScriptedAI
     {
         playersCheckTimer = 1000;
         DoCast(m_creature, m_bIsRegularMode ? SPELL_BLACK_HOLE_EXPLOSION : SPELL_BLACK_HOLE_EXPLOSION_H);
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_pInstance && m_pInstance->GetData(TYPE_ALGALON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 

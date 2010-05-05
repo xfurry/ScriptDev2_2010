@@ -96,8 +96,10 @@ UPDATE creature_template SET ScriptName = "boss_freya" WHERE entry = 32906;
 UPDATE creature_template SET ScriptName = "boss_elder_brightleaf" WHERE entry = 32915;
 UPDATE creature_template SET ScriptName = "boss_elder_ironbranch" WHERE entry = 32913;
 UPDATE creature_template SET ScriptName = "boss_elder_stonebark" WHERE entry = 32914;
-UPDATE creature_template SET ScriptName = "mob_nature_bomb" WHERE entry = 34129;
-UPDATE creature_template SET ScriptName = "mob_iron_roots" WHERE entry in (33088, 33168);
+UPDATE creature_template SET ScriptName = "mob_iron_roots" WHERE entry in (33088);
+UPDATE creature_template SET ScriptName = "mob_str_iron_roots" WHERE entry in (33168);
+UPDATE creature_template SET ScriptName = "mob_freya_ground" WHERE entry in (33215, 33228, 33170, 33050, 34129);
+UPDATE creature_template SET ScriptName = "mob_freya_spawned" WHERE entry in (32916, 32919, 33202, 33203, 32918);
 
 -- Hodir
 UPDATE creature_template SET ScriptName = "boss_hodir" WHERE entry = 32845;
@@ -229,7 +231,7 @@ UPDATE gameobject_template SET faction = 0 WHERE entry in (194255, 194630, 19463
 #UPDATE gameobject_template SET faction = 114 WHERE entry in (194255, 194630, 194631);
 
 -- loot chests
-UPDATE gameobject_template SET faction = 0 WHERE entry in (195046, 195047, 194307, 194308, 194200, 194201, 194312, 194313, 194314, 194315, 194821,
+UPDATE gameobject_template SET faction = 0, data15 = 1 WHERE entry in (195046, 195047, 194307, 194308, 194200, 194201, 194312, 194313, 194314, 194315, 194821,
 194822, 194823, 194324, 194325, 194326, 194327, 194328, 194329, 194330, 194331, 194789, 194956);
 update gameobject set spawntimesecs = -604800 where id in (195046, 195047, 194307, 194308, 194200, 194201, 194312, 194313, 194314, 194315, 194821,
 194822, 194823, 194324, 194325, 194326, 194327, 194328, 194329, 194330, 194331, 194789, 194956);
@@ -240,4 +242,5 @@ update `creature_template` set `lootid` = 0 where `entry` in (32927, 32857);
 -- Mobs
 UPDATE creature_template SET ScriptName = "generic_creature" WHERE entry in (34086, 34085, 34069, 33237, 34234, 33236, 33264, 34164, 34196, 34199, 34198, 
 34190, 34197, 33699, 34134, 34135, 34133, 33430, 33528, 33431, 33527, 33526, 33525, 33355, 33354, 34193, 34183, 32908, 32885, 32907, 32883, 33125, 33110, 32874, 
-32877, 32878, 32904, 32876, 33110, 33822, 33818, 33824, 33823, 33772, 33838, 33819, 33820, 32882, 32875, 33346, 34057, 33228, 32918, 33202, 32919, 32916, 33203);
+32877, 32878, 32904, 32876, 33110, 33822, 33818, 33824, 33823, 33772, 33838, 33819, 33820, 32882, 32875, 33346, 34057);
+

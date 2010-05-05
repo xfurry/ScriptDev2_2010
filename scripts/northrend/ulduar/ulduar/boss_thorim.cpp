@@ -107,6 +107,10 @@ enum
     SPELL_STOMP_H                   = 62413,
     SPELL_RUNE_DETONATION           = 62526,
 
+    ACHIEV_LOSE_ILLUSION            = 3176,
+    ACHIEV_LOSE_ILLUSION_H          = 3183,
+    ACHIEV_SIFFED                   = 2977,
+    ACHIEV_SIFFED_H                 = 2978,
 };
 #define LOC_Z                       419.5f  
 struct LocationsXY
@@ -128,13 +132,13 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
 {
     boss_thorimAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
 
     bool m_bIsRegularMode;
-    ScriptedInstance *pInstance;
+    ScriptedInstance* m_pInstance;
 
     uint8 phase;
     bool hasStarted;
@@ -205,14 +209,15 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
         IntroStep           = 1;
         isOutro             = false;
 
-        if(GameObject* pLever = pInstance->instance->GetGameObject(pInstance->GetData64(DATA_THORIM_LEVER)))
+        if(GameObject* pLever = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_THORIM_LEVER)))
             pLever->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1); 
 
-        if(pInstance) 
+        if(m_pInstance) 
         {
-            pInstance->SetData(TYPE_THORIM, NOT_STARTED);
+            m_pInstance->SetData(TYPE_THORIM, NOT_STARTED);
+            m_pInstance->SetData(TYPE_THORIM_HARD, NOT_STARTED);
 
-            if(Creature* Sif = pInstance->instance->GetCreature(m_uiSifGUID))
+            if(Creature* Sif = m_pInstance->instance->GetCreature(m_uiSifGUID))
             {
                 if(Sif && !Sif->isAlive())
                     Sif->ForcedDespawn();
@@ -253,14 +258,14 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
             }
 
             // respawn runic colossus
-            if (Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_RUNIC_COLOSSUS))))
+            if (Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_RUNIC_COLOSSUS))))
             {
                 if (!pColossus->isAlive())
                     pColossus->Respawn();
             }
 
             // respawn ancient rune giant
-            if (Creature* pRuneGiant = ((Creature*)Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_RUNE_GIANT))))
+            if (Creature* pRuneGiant = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_RUNE_GIANT))))
             {
                 if (!pRuneGiant->isAlive())
                     pRuneGiant->Respawn();
@@ -278,11 +283,14 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
 
     void DoOutro()
     {
-        if(pInstance) 
+        if(m_pInstance) 
         {
-            pInstance->SetData(TYPE_THORIM, DONE);
             if(isHardMode)
-                pInstance->SetData(TYPE_THORIM_HARD, DONE);
+            {
+                m_pInstance->SetData(TYPE_THORIM_HARD, DONE);
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_LOSE_ILLUSION : ACHIEV_LOSE_ILLUSION_H);
+            }
+            m_pInstance->SetData(TYPE_THORIM, DONE);
         }
 
         m_creature->ForcedDespawn();
@@ -291,11 +299,11 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
     // for debug only
     void JustDied(Unit* pKiller)
     {
-       if(pInstance) 
+       if(m_pInstance) 
         {
-            pInstance->SetData(TYPE_THORIM, DONE);
             if(isHardMode)
-                pInstance->SetData(TYPE_THORIM_HARD, DONE);
+                m_pInstance->SetData(TYPE_THORIM_HARD, DONE);
+            m_pInstance->SetData(TYPE_THORIM, DONE);
         }
     }
 
@@ -312,11 +320,11 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
     {
         if(!isOutro)
         {
-            if(pInstance && pInstance->GetData(TYPE_THORIM) == SPECIAL && !hasStarted)
+            if(m_pInstance && m_pInstance->GetData(TYPE_THORIM) == SPECIAL && !hasStarted)
             {
                 m_creature->SetInCombatWithZone();
                 hasStarted = true;
-                if(GameObject* pLever = pInstance->instance->GetGameObject(pInstance->GetData64(DATA_THORIM_LEVER)))
+                if(GameObject* pLever = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_THORIM_LEVER)))
                     pLever->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
                 phase = 0;
             }
@@ -336,8 +344,8 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                         break;
                     case 3:
                         DoScriptText(SAY_AGGRO2, m_creature);
-                        if (pInstance)
-                            pInstance->SetData(TYPE_THORIM, IN_PROGRESS);
+                        if (m_pInstance)
+                            m_pInstance->SetData(TYPE_THORIM, IN_PROGRESS);
                         if(Creature* Sif = m_creature->SummonCreature(NPC_SIF, m_creature->GetPositionX() + 10, m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 200000))
                         {
                             Sif->setFaction(35);
@@ -347,7 +355,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                         IntroTimer = 9000;
                         break;
                     case 5:
-                        if(Creature* Sif = pInstance->instance->GetCreature(m_uiSifGUID))
+                        if(Creature* Sif = m_pInstance->instance->GetCreature(m_uiSifGUID))
                             DoScriptText(SAY_SIF_INTRO, Sif);
                         phase = 1;
                         isIntro = false;
@@ -375,7 +383,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                 if (hardModeTimer <= diff && isHardMode)
                 {
                     isHardMode = false;
-                    if(Creature* Sif = pInstance->instance->GetCreature(m_uiSifGUID))
+                    if(Creature* Sif = m_pInstance->instance->GetCreature(m_uiSifGUID))
                     {
                         if(Sif && Sif->isAlive())
                         {
@@ -398,28 +406,40 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                     {
                     case 0:
                         i = urand(0, 5);
-                        if(Creature *pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_CHAMPION, ArenaLoc[i].x, ArenaLoc[i].y, LOC_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
+                        if(Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_CHAMPION, ArenaLoc[i].x, ArenaLoc[i].y, LOC_Z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                         {
                             pTemp->GetMotionMaster()->MovePoint(0, 2134.72f, -263.148f, 419.846f);
-                            pTemp->SetInCombatWithZone();
+                            if(pTemp->IsWithinLOSInMap(m_creature->getVictim()))
+                            {
+                                pTemp->AI()->AttackStart(m_creature->getVictim());
+                                pTemp->AddThreat(m_creature->getVictim(), 100.0f);
+                            }
                         }
                         break;
                     case 1:
                         i = urand(0, 5);
-                        if(Creature *pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_EVOKER, ArenaLoc[i].x, ArenaLoc[i].y, LOC_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
+                        if(Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_EVOKER, ArenaLoc[i].x, ArenaLoc[i].y, LOC_Z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                         {
                             pTemp->GetMotionMaster()->MovePoint(0, 2134.72f, -263.148f, 419.846f);
-                            pTemp->SetInCombatWithZone();
+                            if(pTemp->IsWithinLOSInMap(m_creature->getVictim()))
+                            {
+                                pTemp->AI()->AttackStart(m_creature->getVictim());
+                                pTemp->AddThreat(m_creature->getVictim(), 100.0f);
+                            }
                         }
                         break;
                     case 2:
                         i = urand(5, 6);
                         for(uint8 j = 0; j < i; j++)
                         {
-                            if(Creature *pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_COMMONER, ArenaLoc[j].x, ArenaLoc[j].y, LOC_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
+                            if(Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_COMMONER, ArenaLoc[j].x, ArenaLoc[j].y, LOC_Z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                             {
                                 pTemp->GetMotionMaster()->MovePoint(0, 2134.72f, -263.148f, 419.846f);
-                                pTemp->SetInCombatWithZone();
+                                if(pTemp->IsWithinLOSInMap(m_creature->getVictim()))
+                                {
+                                    pTemp->AI()->AttackStart(m_creature->getVictim());
+                                    pTemp->AddThreat(m_creature->getVictim(), 100.0f);
+                                }
                             }
                         }
                         break;
@@ -428,19 +448,27 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                         i = urand(k + 1, k + 2);
                         for(uint8 j = k; j < i; j++)
                         {
-                            if(Creature *pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_WARBRINGER, ArenaLoc[j].x, ArenaLoc[j].y, LOC_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
+                            if(Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_WARBRINGER, ArenaLoc[j].x, ArenaLoc[j].y, LOC_Z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                             {
                                 pTemp->GetMotionMaster()->MovePoint(0, 2134.72f, -263.148f, 419.846f);
-                                pTemp->SetInCombatWithZone();
+                                if(pTemp->IsWithinLOSInMap(m_creature->getVictim()))
+                                {
+                                    pTemp->AI()->AttackStart(m_creature->getVictim());
+                                    pTemp->AddThreat(m_creature->getVictim(), 100.0f);
+                                }
                             }
                         }
                         break;
                     case 4:
                         i = urand(0, 5);
-                        if(Creature *pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_ACOLYTE, ArenaLoc[i].x, ArenaLoc[i].y, LOC_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
+                        if(Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_ACOLYTE, ArenaLoc[i].x, ArenaLoc[i].y, LOC_Z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                         {
                             pTemp->GetMotionMaster()->MovePoint(0, 2134.72f, -263.148f, 419.846f);
-                            pTemp->SetInCombatWithZone();
+                            if(pTemp->IsWithinLOSInMap(m_creature->getVictim()))
+                            {
+                                pTemp->AI()->AttackStart(m_creature->getVictim());
+                                pTemp->AddThreat(m_creature->getVictim(), 100.0f);
+                            }
                         }
                         break;
                     }
@@ -463,9 +491,14 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                 if(stormHammerTimer < diff)
                 {
                     if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
-                        DoCast(pTarget, SPELL_STORMHAMMER);
-                    stormHammerTimer = 15000;
-                    deafeningThunderTimer = 3000;
+                    {
+                        if(pTarget->IsWithinLOSInMap(m_creature))
+                        {
+                            DoCast(pTarget, SPELL_STORMHAMMER);
+                            stormHammerTimer = 15000;
+                            deafeningThunderTimer = 3000;
+                        }
+                    }
                 }
                 else stormHammerTimer -= diff; 
 
@@ -473,8 +506,13 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                 if(deafeningThunderTimer < diff)
                 {
                     if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
-                        DoCast(pTarget, SPELL_DEAFENING_THUNDER);
-                    deafeningThunderTimer = 20000;
+                    {
+                        if(pTarget->IsWithinLOSInMap(m_creature))
+                        {
+                            DoCast(pTarget, SPELL_DEAFENING_THUNDER);
+                            deafeningThunderTimer = 20000;
+                        }
+                    }
                 }
                 else deafeningThunderTimer -= diff; 
 
@@ -499,6 +537,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                     DoCast(m_creature, SPELL_BERSERK);
                     if(Creature *pOrb = m_creature->SummonCreature(MOB_LIGHTNING_ORB, 2123.389f, -440.639f, 438.247f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                     {
+                        // fix this!
                         pOrb->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                         pOrb->SetSpeedRate(MOVE_RUN, 4.0f);
                         pOrb->GetMotionMaster()->MovePoint(0, 2166.806f, -441.160f, 438.246f);
@@ -517,7 +556,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                             {
                                 if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
-                                    i->getSource()->DealDamage(i->getSource(), i->getSource()->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_MAGIC, NULL, false);
+                                    m_creature->DealDamage(i->getSource(), i->getSource()->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_MAGIC, NULL, false);
                             }
                         } 
                     }
@@ -528,12 +567,12 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                 //enter phase 2
                 if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 10) && !phaseEnd)
                 {
-                    if (Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_RUNIC_COLOSSUS))))
+                    if (Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_RUNIC_COLOSSUS))))
                     {
                         // check colossus for exploit
                         if(!pColossus->isAlive())
                         {
-                            if(Creature* pGiant = ((Creature*)Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_RUNE_GIANT))))
+                            if(Creature* pGiant = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_RUNE_GIANT))))
                             {
                                 // check giant for exploit
                                 if(!pGiant->isAlive())
@@ -571,12 +610,13 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                     }
                     if(isHardMode)
                     {
-                        if(Creature* Sif = pInstance->instance->GetCreature(m_uiSifGUID))
+                        if(Creature* Sif = m_pInstance->instance->GetCreature(m_uiSifGUID))
                         {
                             //Sif = m_creature->SummonCreature(NPC_SIF, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                             Sif->setFaction(14);
                             DoScriptText(SAY_SIF_EVENT, Sif);
                             Sif->SetInCombatWithZone();
+                            m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_SIFFED : ACHIEV_SIFFED_H);
                         }
                     }
                     m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
@@ -655,7 +695,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                 if(isHardMode)
                 {
                     DoScriptText(SAY_OUTRO_HARD1, m_creature);
-                    if(Creature* Sif = pInstance->instance->GetCreature(m_uiSifGUID))
+                    if(Creature* Sif = m_pInstance->instance->GetCreature(m_uiSifGUID))
                         DoCast(Sif, SPELL_STORMHAMMER);
                 }
                 else
@@ -666,7 +706,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
             case 7:
                 if(isHardMode)
                 {
-                    if(Creature* Sif = pInstance->instance->GetCreature(m_uiSifGUID))
+                    if(Creature* Sif = m_pInstance->instance->GetCreature(m_uiSifGUID))
                     {
                         //summon a tentacule
                         if(Creature *tentacule = m_creature->SummonCreature(34266, Sif->GetPositionX(), Sif->GetPositionY(), Sif->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 7000))

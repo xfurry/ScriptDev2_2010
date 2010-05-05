@@ -39,6 +39,7 @@ enum
     SPELL_ROOT              = 43956,
     SPELL_ROOT_AURA         = 40885,
 
+    // not used
     SPELL_FROZEN_BLOWS_HIT  = 62867,
     SPELL_FROZEN_BLOWS_AURA = 64544,
     SPELL_FROZEN_BLOWS_HIT_H    = 63511,
@@ -48,14 +49,20 @@ enum
     GO_SNOWDRIFT            = 194173,
     NPC_FLASH_FREEZE        = 32938,        //32926
 
-    SAY_AGGRO           = -1603085,
-    SAY_DEATH           = -1603084,
-    SAY_SLAY01          = -1603083,
-    SAY_SLAY02          = -1603082,
-    SAY_FLASH_FREEZE    = -1603081,
-    SAY_FROZEN_BLOWS    = -1603080,
-    SAY_BERSERK         = -1603087,
-    SOUND_FROZEN_BLOWS  = 15556,
+    SAY_AGGRO               = -1603085,
+    SAY_DEATH               = -1603084,
+    SAY_SLAY01              = -1603083,
+    SAY_SLAY02              = -1603082,
+    SAY_FLASH_FREEZE        = -1603081,
+    SAY_FROZEN_BLOWS        = -1603080,
+    SAY_BERSERK             = -1603087,
+    SOUND_FROZEN_BLOWS      = 15556,
+
+    ACHIEV_RARE_CACHE       = 3182,
+    ACHIEV_RARE_CACHE_H     = 3184,
+    ACHIEV_COOLEST_FRIEND   = 2963,
+    ACHIEV_COOLEST_FRIEND_H = 2965,
+
 
     // helper npcs
     // druid
@@ -80,6 +87,8 @@ enum
     SPELL_DISPEL_MAGIC  = 63499,    //friendly
 
 };
+
+bool m_bCoolestFriend;
 
 struct MANGOS_DLL_DECL mob_snowdriftAI : public ScriptedAI
 {
@@ -165,13 +174,13 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
 {
     boss_hodirAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Regular = pCreature->GetMap()->IsRegularDifficulty();
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
 
-    bool Regular;
-    ScriptedInstance *pInstance;
+    bool m_bIsRegularMode;
+    ScriptedInstance* m_pInstance;
 
     // hard mode timer
     uint64 SpeedKillTimer;
@@ -192,10 +201,12 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
     std::vector<Unit*> snowdriftTargets;
     std::vector<Unit*> flashFreezeTargets;
 
+    std::list<Creature*> lFriends;
 
     void Reset()
     {
-        SpeedKillTimer = 180000;
+        SpeedKillTimer = 0;
+        m_bCoolestFriend = true;
 
         EnrageTimer = 480000;
         FlashFreezeTimer = 70000;
@@ -214,12 +225,44 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
 
         isOutro = false;
 
-        if(pInstance) pInstance->SetData(TYPE_HODIR, NOT_STARTED);
+        if(m_pInstance) 
+            m_pInstance->SetData(TYPE_HODIR, NOT_STARTED);
+
+        // respawn friendly npcs
+        // druids
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 33325, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 32901, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 32941, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 33333, DEFAULT_VISIBILITY_INSTANCE);
+        // shamys
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 33328, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 32900, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 33332, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 32950, DEFAULT_VISIBILITY_INSTANCE);
+        // mages
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 32893, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 33327, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 33331, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 32946, DEFAULT_VISIBILITY_INSTANCE);
+        // priests
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 32897, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 33326, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 32948, DEFAULT_VISIBILITY_INSTANCE);
+        GetCreatureListWithEntryInGrid(lFriends, m_creature, 33330, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lFriends.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lFriends.begin(); iter != lFriends.end(); ++iter)
+            {
+                if ((*iter) && !(*iter)->isAlive())
+                    (*iter)->Respawn();
+            }
+        }
     }
 
     void Aggro(Unit *who) 
     {
-        if(pInstance) pInstance->SetData(TYPE_HODIR, IN_PROGRESS);
+        if(m_pInstance) 
+            m_pInstance->SetData(TYPE_HODIR, IN_PROGRESS);
 
         DoScriptText(SAY_AGGRO, m_creature);
 
@@ -228,15 +271,19 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
 
     void DoOutro()
     {
-        if(pInstance) 
+        if(m_pInstance) 
         {
-            if(SpeedKillTimer > 0)
+            if(SpeedKillTimer < 180000)
             {
-                pInstance->SetData(TYPE_HODIR_HARD, DONE);
-                pInstance->SetData(TYPE_HODIR, DONE);
+                m_pInstance->SetData(TYPE_HODIR_HARD, DONE);
+                m_pInstance->SetData(TYPE_HODIR, DONE);
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_RARE_CACHE : ACHIEV_RARE_CACHE_H);
             }
             else
-                pInstance->SetData(TYPE_HODIR, DONE);
+                m_pInstance->SetData(TYPE_HODIR, DONE);
+
+            if (m_bCoolestFriend)
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_COOLEST_FRIEND : ACHIEV_COOLEST_FRIEND_H);
         }
         m_creature->ForcedDespawn();
     }
@@ -244,11 +291,11 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
     // for debug only
     void JustDied(Unit* pKiller)
     {
-       if(pInstance) 
+       if(m_pInstance) 
         {
-            pInstance->SetData(TYPE_HODIR, DONE);
+            m_pInstance->SetData(TYPE_HODIR, DONE);
             if(SpeedKillTimer > 0)
-                pInstance->SetData(TYPE_HODIR_HARD, DONE);
+                m_pInstance->SetData(TYPE_HODIR_HARD, DONE);
         }
     }
 
@@ -269,7 +316,7 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
             DoScriptText(SAY_SLAY02, m_creature);
     }
 
-    void UpdateAI(const uint32 diff)
+    void UpdateAI(const uint32 uiDiff)
     {
         if(!isOutro)
         {
@@ -277,21 +324,20 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
                 return;
 
             // hard mode check
-            if(pInstance && pInstance->GetData(TYPE_HODIR) == IN_PROGRESS)
-                SpeedKillTimer -= diff;
+            SpeedKillTimer += uiDiff;
 
             // Flash freeze visual
-            if(FlashFreezeVisualTimer < diff)
+            if(FlashFreezeVisualTimer < uiDiff)
             {
                 DoScriptText(SAY_FLASH_FREEZE, m_creature);
                 DoCast(m_creature->getVictim(), SPELL_FLASH_FREEZE);
                 FlashFreezeVisualTimer = 40000;
                 FlashFreezeTimer = 5000;
             }
-            else FlashFreezeVisualTimer -= diff;
+            else FlashFreezeVisualTimer -= uiDiff;
 
             // flash freeze -> workaround
-            if(FlashFreezeTimer < diff)
+            if(FlashFreezeTimer < uiDiff)
             {    
                 /*
                 // kill targets which are frozen
@@ -366,10 +412,10 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
                 flashFreezeTargets.clear();
                 */
             }
-            else FlashFreezeTimer -= diff;
+            else FlashFreezeTimer -= uiDiff;
 
             // icicles
-            if(IcicleTimer < diff)
+            if(IcicleTimer < uiDiff)
             {
                 if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
                 {
@@ -378,7 +424,7 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
                     //DoCast(pTarget, SPELL_SNOWDRIFT);   //not working -> workaround
                     m_creature->SummonCreature(NPC_SNOWDRIFT, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
 
-                    // two icicles at 5 secs -> blizzlike
+                    // two icicles at 5 secs
                     if(IcicleCount < 1)
                     {
                         IcicleTimer = 3000;
@@ -391,25 +437,19 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
                     }
                 }
             }
-            else IcicleTimer -= diff;
+            else IcicleTimer -= uiDiff;
 
             // frozen blows
-            if(FrozenBlowsTimer < diff)
+            if(FrozenBlowsTimer < uiDiff)
             {
-                //DoPlaySoundToSet(m_creature, SOUND_FROZEN_BLOWS);
                 DoScriptText(SAY_FROZEN_BLOWS, m_creature);
-                // visual
-                DoCast(m_creature, Regular ? SPELL_FROZEN_BLOWS : SPELL_FROZEN_BLOWS_H);
-                // hit
-                DoCast(m_creature, Regular ? SPELL_FROZEN_BLOWS_HIT : SPELL_FROZEN_BLOWS_HIT_H);
-                // aura
-                m_creature->CastSpell(m_creature->getVictim(), Regular ? SPELL_FROZEN_BLOWS_AURA : SPELL_FROZEN_BLOWS_AURA_H, true);
+                DoCast(m_creature, m_bIsRegularMode ? SPELL_FROZEN_BLOWS : SPELL_FROZEN_BLOWS_H);
                 FrozenBlowsTimer = 60000;
             }
-            else FrozenBlowsTimer -= diff;
+            else FrozenBlowsTimer -= uiDiff;
 
             // freeze
-            if(FreezeTimer < diff)
+            if(FreezeTimer < uiDiff)
             {
                 Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0);
                 if(target) 
@@ -419,20 +459,16 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
                 }
                 FreezeTimer = urand(5000, 10000);
             }
-            else FreezeTimer -= diff;
+            else FreezeTimer -= uiDiff;
 
             // enrage
-            if(EnrageTimer < diff)
+            if(EnrageTimer < uiDiff)
             {
                 DoScriptText(SAY_BERSERK, m_creature);
                 DoCast(m_creature, SPELL_ENRAGE);
                 EnrageTimer = 30000;
             }
-            else EnrageTimer -= diff;
-
-            // Hp check
-            //if(m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 1)
-                //isOutro = true;
+            else EnrageTimer -= uiDiff;
 
             DoMeleeAttackIfReady();
 
@@ -469,11 +505,11 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
         }
         else return;
 
-        if (OutroTimer <= diff)
+        if (OutroTimer <= uiDiff)
         {
             ++Step;
             OutroTimer = 330000;
-        } OutroTimer -= diff;
+        } OutroTimer -= uiDiff;
 
 
     }
@@ -496,6 +532,11 @@ struct MANGOS_DLL_DECL npc_hodir_druidAI : public ScriptedAI
     {
         spellTimer = 5000;
         FriendlyList.clear();
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        m_bCoolestFriend = false;
     }
 
     void MoveInLineOfSight(Unit* pWho)
@@ -590,6 +631,11 @@ struct MANGOS_DLL_DECL npc_hodir_shamanAI : public ScriptedAI
         FriendlyList.clear();
     }
 
+    void JustDied(Unit* pKiller)
+    {
+        m_bCoolestFriend = false;
+    }
+
     void MoveInLineOfSight(Unit* pWho)
     {
         // friendly list
@@ -678,6 +724,11 @@ struct MANGOS_DLL_DECL npc_hodir_mageAI : public ScriptedAI
     {
         spellTimer = 5000;
         FriendlyList.clear();
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        m_bCoolestFriend = false;
     }
 
     void MoveInLineOfSight(Unit* pWho)
@@ -776,6 +827,11 @@ struct MANGOS_DLL_DECL npc_hodir_priestAI : public ScriptedAI
     {
         spellTimer = 5000;
         FriendlyList.clear();
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        m_bCoolestFriend = false;
     }
 
     void MoveInLineOfSight(Unit* pWho)
