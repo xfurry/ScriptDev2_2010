@@ -52,4 +52,6 @@ UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, scriptname='mob
 UPDATE creature_template SET scriptname='mob_nerubian_burrower' WHERE `entry`=34607;
 UPDATE creature_template SET scriptname='mob_swarm_scarab' WHERE `entry`=34605;
 UPDATE creature_template SET npcFlag = 1, scriptname='npc_tirion_end' WHERE `entry`=36095;
+-- loot chests
 update `gameobject` set `position_x` = 679.531, `position_y` = 137.507, `position_z` = 142.129, `orientation` = 6.215 where `id` in (195665, 195666, 195667, 195668, 195669, 195670, 195671, 195672);
+UPDATE gameobject_template SET faction = 0, data15 = 1 WHERE entry in (195665, 195666, 195667, 195668, 195669, 195670, 195671, 195672, 195631, 195632, 195633, 195635);
