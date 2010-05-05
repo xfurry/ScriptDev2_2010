@@ -1103,7 +1103,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
             }
             else 
             {
-                if (Creature* pGromok = pCreature->SummonCreature(NPC_GORMOK, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
+                if (Creature* pGromok = pCreature->SummonCreature(NPC_GORMOK, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
                 {
                     pGromok->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
                     pGromok->RemoveSplineFlag(SPLINEFLAG_WALKMODE);

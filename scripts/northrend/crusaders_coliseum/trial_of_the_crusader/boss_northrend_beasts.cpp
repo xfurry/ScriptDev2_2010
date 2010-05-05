@@ -248,13 +248,13 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
         if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
             DoScriptText(SAY_SUMMON_JORMUNGARS, Tirion);
 
-        if (Creature* pDreadscale = m_creature->SummonCreature(NPC_DREADSCALE, SpawnLoc[28].x + 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
+        if (Creature* pDreadscale = m_creature->SummonCreature(NPC_DREADSCALE, SpawnLoc[28].x + 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
         {
             pDreadscale->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x + 10, SpawnLoc[1].y, SpawnLoc[1].z);
             pDreadscale->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
             pDreadscale->SetInCombatWithZone();
         }
-        if (Creature* pAcidmaw = m_creature->SummonCreature(NPC_ACIDMAW, SpawnLoc[28].x - 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
+        if (Creature* pAcidmaw = m_creature->SummonCreature(NPC_ACIDMAW, SpawnLoc[28].x - 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
         {
             pAcidmaw->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 10, SpawnLoc[1].y, SpawnLoc[1].z);
             pAcidmaw->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
