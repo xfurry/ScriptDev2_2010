@@ -111,6 +111,9 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
+        pCreature->setPowerType(POWER_RAGE); 
+        pCreature->SetMaxPower(POWER_RAGE,1000);
+        pCreature->SetPower(POWER_RAGE,0); 
         SetEquipmentSlots(false, EQUIP_ID, -1, -1);
         Reset();
     }
@@ -131,6 +134,8 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
         m_uiBoilingBlood_Timer  = 60000;
         m_uiBloodNova_Timer     = 15000;
         m_uiBerserkTimer        = 480000;  // 8 min
+
+        m_creature->SetPower(POWER_RAGE,0); 
         
         if(m_creature->HasAura(SPELL_BLOOD_LINK))
             m_creature->RemoveAurasDueToSpell(SPELL_BLOOD_LINK);
@@ -150,7 +155,10 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         if (m_pInstance)
+        {
             m_pInstance->SetData(TYPE_SAURFANG, DONE);
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_MARK_FALLEN_CHAMP);
+        }
 
         DoScriptText(SAY_DEATH, m_creature);
     }
@@ -158,17 +166,24 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
     void JustReachedHome()
     {
         if (m_pInstance)
+        {
             m_pInstance->SetData(TYPE_SAURFANG, FAIL);
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_MARK_FALLEN_CHAMP);
+        }
     }
 
     void DamageDeal(Unit * pDoneTo, uint32 &uiDamage)
     {
-        // TODO: implement blood power gain
-    }
+        int temp1 = m_creature->GetPower(POWER_RAGE);
+        int temp2 = 0.001 * uiDamage;
+        temp1 = temp1 + temp2;
 
-    void SpellHitTarget(Unit*, const SpellEntry*)
-    {
-        // TODO: implement blood power gain
+        if(temp1 > 1000)
+            m_creature->SetPower(POWER_RAGE,1000);   
+        else
+            m_creature->SetPower(POWER_RAGE,temp1); 
+
+        DoCast(m_creature, SPELL_BLOOD_POWER);
     }
 
     void KilledUnit(Unit* pVictim)
@@ -188,14 +203,15 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
         if ((m_creature->GetHealthPercent() < 30.0f) && (!m_creature->HasAura(SPELL_FRENZY)))
             DoCast(m_creature, SPELL_FRENZY);
 
-        /*if (m_creature->GetPower(m_creature->getPowerType()) == m_creature->GetMaxPower(m_creature->getPowerType()))
+        if (m_creature->GetPower(m_creature->getPowerType()) == m_creature->GetMaxPower(m_creature->getPowerType()))
         {
             DoScriptText(SAY_FALLENCHAMPION, m_creature);
 
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
                 DoCast(target, SPELL_MARK_FALLEN_CHAMP);
             m_creature->SetPower(m_creature->getPowerType(),0);
-        }*/
+            m_creature->RemoveAurasDueToSpell(SPELL_BLOOD_POWER);
+        }
 
         if (m_uiBloodBeast_Timer < uiDiff)
         {
@@ -298,6 +314,26 @@ struct MANGOS_DLL_DECL mob_blood_beastAI : public ScriptedAI
     {
         m_uiScentOfBloodTimer = 30000;
         DoCast(m_creature, SPELL_RESISTANT_SKIN);
+    }
+
+    void DamageDeal(Unit * pDoneTo, uint32 &uiDamage)
+    {
+        int temp1;
+        if (Creature* pSaurfang = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SAURFANG))))
+            temp1 = pSaurfang->GetPower(POWER_RAGE);
+
+        int temp2 = 0.001 * uiDamage;
+        temp1 = temp1 + temp2;
+
+        if (Creature* pSaurfang = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SAURFANG))))
+        {
+            if(temp1 > 1000)
+                pSaurfang->SetPower(POWER_RAGE,1000);   
+            else
+                pSaurfang->SetPower(POWER_RAGE,temp1); 
+
+            pSaurfang->CastSpell(pSaurfang, SPELL_BLOOD_POWER, true);
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
