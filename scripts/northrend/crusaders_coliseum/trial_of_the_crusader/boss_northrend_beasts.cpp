@@ -112,6 +112,9 @@ enum jormungars
     SPELL_BURNING_SPRAY_25HC    = 67629,
 
     SPELL_BURNING_BILE          = 66869,
+
+    ACHIEV_TWO_JORMUNGARS       = 3936,
+    ACHIEV_TWO_JORMUNGARS_H     = 3937,
 };
 
 enum icehowl
@@ -140,6 +143,9 @@ enum icehowl
     SPELL_TRAMPLE               = 66734,
     SPELL_STAGGERED_DAZE        = 66758,
     SPELL_FROTHING_RAGE         = 66759,
+
+    ACHIEV_UPPER_BACK_PAIN      = 3797,
+    ACHIEV_UPPER_BACK_PAIN_H    = 3813,
 };
 
 struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
@@ -373,11 +379,13 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
     uint32 Difficulty;
+    bool m_bIsRegularMode;
 
     // mobile
     uint32 m_uiAcidSpewTimer;
@@ -400,6 +408,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
     bool doorClosed;
 
     uint32 m_uiBerserkTimer;
+    uint32 m_uiAchievTimer;
 
     void Reset() 
     {
@@ -424,6 +433,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         doorClosed          = false;
 
         m_uiBerserkTimer    = 300000;  // 5 min
+        m_uiAchievTimer     = 0;
     }
 
     void JustReachedHome()
@@ -515,7 +525,14 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         if(!IsThereAnyTwin())
+        {
             SummonIcehowl();
+            if(m_uiAchievTimer <= 10000)
+            {
+                if(m_pInstance)
+                    m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWO_JORMUNGARS : ACHIEV_TWO_JORMUNGARS_H);
+            }
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -531,6 +548,9 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
                 m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
                 DoCast(m_creature, SPELL_ENRAGE);
         }
+
+        if(hasEnraged)
+            m_uiAchievTimer += uiDiff;
 
         if (m_uiDoorTimer < uiDiff && !doorClosed)
         {
@@ -709,11 +729,13 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
     uint32 Difficulty;
+    bool m_bIsRegularMode;
 
     // mobile
     uint32 m_uiBurningBiteTimer;
@@ -736,6 +758,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
     bool doorClosed;
 
     uint32 m_uiBerserkTimer;
+    uint32 m_uiAchievTimer;
 
     void Reset() 
     {
@@ -760,6 +783,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         doorClosed          = false;
 
         m_uiBerserkTimer    = 300000;  // 5 min
+        m_uiAchievTimer     = 0;
     }
 
     void JustReachedHome()
@@ -854,7 +878,14 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         if(!IsThereAnyTwin())
+        {
             SummonIcehowl();
+            if(m_uiAchievTimer <= 10000)
+            {
+                if(m_pInstance)
+                    m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWO_JORMUNGARS : ACHIEV_TWO_JORMUNGARS_H);
+            }
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -870,6 +901,9 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
                 m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
                 DoCast(m_creature, SPELL_ENRAGE);
         }
+
+        if(hasEnraged)
+            m_uiAchievTimer += uiDiff;
 
         if (phaseStartTimer < uiDiff && !startPhase)
         {
@@ -1039,11 +1073,13 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
     uint32 Difficulty;
+    bool m_bIsRegularMode;
 
     uint32 m_uiFerociousButtTimer;
     uint32 m_uiArticBreathTimer;
@@ -1065,6 +1101,9 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
     bool doorClosed;
 
     float fPosX, fPosY, fPosZ;
+
+    std::list<Creature*> lSnobolds;
+    uint8 m_uiAchievCounter;
 
     void Reset() 
     {
@@ -1089,6 +1128,9 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
         fPosX = 0;
         fPosY = 0;
         fPosZ = 0;
+
+        lSnobolds.clear();
+        m_uiAchievCounter = 0;
     }
 
     void JustReachedHome()
@@ -1137,6 +1179,22 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        GetCreatureListWithEntryInGrid(lSnobolds, m_creature, NPC_SNOBOLD_VASSAL, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lSnobolds.empty() && lSnobolds.size() >= 2)
+        {
+            for(std::list<Creature*>::iterator iter = lSnobolds.begin(); iter != lSnobolds.end(); ++iter)
+            {
+                if ((*iter) && (*iter)->isAlive())
+                    m_uiAchievCounter += 1;
+            }
+        }
+
+        if(m_uiAchievCounter >= 2)
+        {
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_UPPER_BACK_PAIN : ACHIEV_UPPER_BACK_PAIN_H);
         }
     }
     void MovementInform(uint32 type, uint32 id)

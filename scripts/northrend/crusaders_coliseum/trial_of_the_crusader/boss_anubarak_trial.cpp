@@ -70,6 +70,9 @@ enum
 
     SPELL_BERSERK               = 26662,
     SPELL_SUBMERGE_ANUB         = 53421,
+
+    ACHIEV_TRAITOR_KING         = 3800,
+    ACHIEV_TRAITOR_KING_H       = 3816,
 };
 
 struct LocationsXY

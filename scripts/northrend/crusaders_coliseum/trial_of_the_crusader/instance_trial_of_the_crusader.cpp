@@ -378,29 +378,54 @@ struct MANGOS_DLL_DECL instance_trial_of_the_crusader : public ScriptedInstance
                 OpenDoor(m_uiWebDoorGUID);
             if (uiData == DONE) 
             {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCompleteAchievement(ACHIEV_CALL_CRUSADER);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCompleteAchievement(ACHIEV_CALL_CRUSADER_H);
+
                 // init crusader chest for 10 man
                 if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
                 {
+                    DoCompleteAchievement(ACHIEV_CALL_GRAND_CRUSADER);
                     if(m_auiEncounter[6] >= 1 && m_auiEncounter[6] < 25)
                         m_uiTributeChestGUID = m_uiTC10h25GUID;
                     else if(m_auiEncounter[6] >= 25 && m_auiEncounter[6] < 45)
+                    {
                         m_uiTributeChestGUID = m_uiTC10h45GUID;
+                        DoCompleteAchievement(ACHIEV_TRIBUTE_SKILL);
+                    }
                     else if(m_auiEncounter[6] >= 45 && m_auiEncounter[6] < 50)
+                    {
                         m_uiTributeChestGUID = m_uiTC10h50GUID;
+                        DoCompleteAchievement(ACHIEV_TRIBUTE_MAD_SKILL);
+                    }
                     else if(m_auiEncounter[6] == 50)
+                    {
                         m_uiTributeChestGUID = m_uiTC10h99GUID;
+                        DoCompleteAchievement(ACHIEV_TRIBUTE_INSANITY);
+                    }
                 }
                 // init crusader chest for 25 man
                 else if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 {
+                    DoCompleteAchievement(ACHIEV_CALL_GRAND_CRUSADER_H);
                     if(m_auiEncounter[6] >= 1 && m_auiEncounter[6] < 25)
                         m_uiTributeChestGUID = m_uiTC25h25GUID;
                     else if(m_auiEncounter[6] >= 25 && m_auiEncounter[6] < 45)
+                    {
                         m_uiTributeChestGUID = m_uiTC25h45GUID;
+                        DoCompleteAchievement(ACHIEV_TRIBUTE_SKILL_H);
+                    }
                     else if(m_auiEncounter[6] >= 45 && m_auiEncounter[6] < 50)
+                    {
                         m_uiTributeChestGUID = m_uiTC25h50GUID;
+                        DoCompleteAchievement(ACHIEV_TRIBUTE_MAD_SKILL_H);
+                    }
                     else if(m_auiEncounter[6] == 50)
+                    {
                         m_uiTributeChestGUID = m_uiTC25h99GUID;
+                        DoCompleteAchievement(ACHIEV_TRIBUTE_INSANITY_H);
+                    }
                 }
                 // spawn chest if exists
                 if(m_uiTributeChestGUID != 0)

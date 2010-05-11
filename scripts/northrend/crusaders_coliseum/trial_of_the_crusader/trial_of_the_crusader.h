@@ -130,6 +130,20 @@ enum
     DATA_ANNOUNCER              = 0,
     DATA_FLOOR                  = 1,
     DATA_MAIN_GATE              = 2,
+
+    ACHIEV_TRIBUTE_DEDICATED_INSANITY   = 4080,
+    ACHIEV_TRIBUTE_IMMORTALITY_ALY      = 4156,
+    ACHIEV_TRIBUTE_IMMORTALITY_HORDE    = 4079,
+    ACHIEV_TRIBUTE_INSANITY             = 3810,
+    ACHIEV_TRIBUTE_INSANITY_H           = 3819,
+    ACHIEV_TRIBUTE_MAD_SKILL            = 3809,
+    ACHIEV_TRIBUTE_MAD_SKILL_H          = 3818,
+    ACHIEV_TRIBUTE_SKILL                = 3808,
+    ACHIEV_TRIBUTE_SKILL_H              = 3817,
+    ACHIEV_CALL_CRUSADER                = 3917,
+    ACHIEV_CALL_CRUSADER_H              = 3916,
+    ACHIEV_CALL_GRAND_CRUSADER          = 3918,
+    ACHIEV_CALL_GRAND_CRUSADER_H        = 3812,
 };
 
 struct Locations

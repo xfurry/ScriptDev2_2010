@@ -85,6 +85,9 @@ enum
     SPELL_NETHER_POWER          = 67108, // 5 10man, 10 25man
 
     SPELL_BERSERK               = 26662,
+
+    ACHIEV_THREE_SIXTY_PAIN_SPIKE   = 3996,
+    ACHIEV_THREE_SIXTY_PAIN_SPIKE_H = 3997,
 };
 
 enum Equipment
@@ -189,12 +192,14 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         //SetEquipmentSlots(false, EQUIP_MAIN, EQUIP_OFFHAND, EQUIP_RANGED);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
     uint32 Difficulty;
+    bool m_bIsRegularMode;
 
     uint32 m_uiFelFireballTimer;
     uint32 m_uiFelLightningTimer;
@@ -212,6 +217,9 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
     float VolcanoY[3];
 
     std::list<Creature*> lFlames;
+    std::list<Creature*> lMistres;
+
+    uint8 m_uiAchievCounter;
 
     void Reset() 
     {
@@ -226,6 +234,8 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         m_uiBerserkTimer    = 600000;  // 10 min
         m_uiWipeCheckTimer  = 30000;
         lFlames.clear();
+        lMistres.clear();
+        m_uiAchievCounter   = 0;
     }
 
     void JustReachedHome()
@@ -292,6 +302,22 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
                 if ((*iter) && !(*iter)->isAlive())
                     (*iter)->ForcedDespawn();
             }
+        }
+
+        GetCreatureListWithEntryInGrid(lMistres, m_creature, NPC_MISTRESS_OF_PAIN, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lMistres.empty() && lMistres.size() >= 2)
+        {
+            for(std::list<Creature*>::iterator iter = lMistres.begin(); iter != lMistres.end(); ++iter)
+            {
+                if ((*iter) && (*iter)->isAlive())
+                    m_uiAchievCounter += 1;
+            }
+        }
+
+        if(m_uiAchievCounter >= 2)
+        {
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_THREE_SIXTY_PAIN_SPIKE : ACHIEV_THREE_SIXTY_PAIN_SPIKE_H);
         }
     }
 

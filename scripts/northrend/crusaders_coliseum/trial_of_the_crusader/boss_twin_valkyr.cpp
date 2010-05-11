@@ -116,7 +116,10 @@ enum
     SPELL_TOUCH_OF_DARKNESS_10HC    = 67282,
     SPELL_TOUCH_OF_DARKNESS_25HC    = 67283,
 
-    SPELL_BERSERK               = 26662,
+    SPELL_BERSERK                   = 26662,
+
+    ACHIEV_SALT_AND_PEPPER          = 3799,
+    ACHIEV_SALT_AND_PEPPER_H        = 3815,
 };
 
 enum Equipment
@@ -544,12 +547,14 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
         Difficulty = pCreature->GetMap()->GetDifficulty();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         SetEquipmentSlots(false, EQUIP_MAIN_2, -1, -1);
         Reset();
     }
 
     ScriptedInstance *m_pInstance;
     uint32 Difficulty;
+    bool m_bIsRegularMode;
 
     uint32 m_uiTwinSpikeTimer;
     uint32 m_uiSpecialSpellTimer;
@@ -568,6 +573,7 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
     float homeX, homeY;
 
     uint32 m_uiBerserkTimer;
+    uint32 m_uiEncounterTimer;
 
     void Reset() 
     {
@@ -587,6 +593,8 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         m_uiCastTimeOut        = 900000;
 
         m_uiBerserkTimer    = 900000;  // 15 min
+        m_uiEncounterTimer  = 0;
+
         if(m_pInstance)
             m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
 
@@ -617,6 +625,12 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        if(m_uiEncounterTimer < 180000)
+        {
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_SALT_AND_PEPPER : ACHIEV_SALT_AND_PEPPER_H);
         }
     }
 
@@ -801,6 +815,9 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim()) 
             return;
+
+        // achiev timer
+        m_uiEncounterTimer += uiDiff;
 
         //if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
         if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 

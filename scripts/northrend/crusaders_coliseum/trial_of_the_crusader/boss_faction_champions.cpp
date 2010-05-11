@@ -60,6 +60,9 @@ enum
 
     // paladin holy + retri
     SPELL_DIVINE_SHIELD         = 66010,  
+
+    ACHIEV_RESILIENCE_WILL_FIX  = 3798,
+    ACHIEV_RESILIENCE_WILL_FIX_H= 3814,
 };
 
 enum AI
