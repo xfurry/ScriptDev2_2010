@@ -17,7 +17,7 @@
 /* ScriptData
 SDName: Taerar
 SD%Complete: 70
-SDComment: Mark of Nature & Teleport NYI.
+SDComment: Mark of Nature & Teleport NYI. Fix the way to be banished.
 SDCategory: Bosses
 EndScriptData */
 
@@ -29,21 +29,16 @@ enum
     SAY_SUMMONSHADE         = -1000400,
 
     //Spells of Taerar
-    SPELL_SLEEP             = 24778,
+    SPELL_SLEEP             = 24777,
     SPELL_NOXIOUSBREATH     = 24818,
     SPELL_TAILSWEEP         = 15847,
-    SPELL_SUMMON_PLAYER     = 24776,
     // SPELL_MARKOFNATURE   = 25040,                        // Not working
-
-    //Taerar's specific spells
     SPELL_ARCANEBLAST       = 24857,
     SPELL_BELLOWINGROAR     = 22686,
 
     SPELL_SUMMONSHADE_1     = 24841,
     SPELL_SUMMONSHADE_2     = 24842,
     SPELL_SUMMONSHADE_3     = 24843,
-
-    NPC_SHADE               = 15302,
 
     //Spells of Shades of Taerar
     SPELL_POSIONCLOUD       = 24840,
@@ -65,8 +60,8 @@ struct MANGOS_DLL_DECL boss_taerarAI : public ScriptedAI
     //uint32 m_uiMarkOfNature_Timer;
     uint32 m_uiArcaneBlast_Timer;
     uint32 m_uiBellowingRoar_Timer;
-    uint8 m_uiAdds_Summoned;
-    uint8 m_uiWave_Count;
+    uint32 m_uiShades_Timer;
+    uint32 m_uiShadesSummoned;
 
     bool m_bShades;
 
@@ -78,8 +73,8 @@ struct MANGOS_DLL_DECL boss_taerarAI : public ScriptedAI
         //m_uiMarkOfNature_Timer = 45000;
         m_uiArcaneBlast_Timer = 12000;
         m_uiBellowingRoar_Timer = 30000;
-        m_uiAdds_Summoned = 0;
-        m_uiWave_Count = 1;
+        m_uiShades_Timer = 60000;                               //The time that Taerar is banished
+        m_uiShadesSummoned = 0;
 
         m_bShades = false;
     }
@@ -89,55 +84,30 @@ struct MANGOS_DLL_DECL boss_taerarAI : public ScriptedAI
         DoScriptText(SAY_AGGRO, m_creature);
     }
 
-    void DamageTaken(Unit *pDoneBy,uint32 &uiDamage)
-    {
-        if (m_uiWave_Count >= 4)
-            return;
-
-        if (m_creature->GetHealth()*100/m_creature->GetMaxHealth() <= (100+urand(-5,5)-(25*m_uiWave_Count)))
-        {
-            ++m_uiWave_Count;
-
-            //Inturrupt any spell casting
-            m_creature->InterruptNonMeleeSpells(false);
-
-            //horrible workaround, need to fix
-            m_creature->setFaction(35);
-            m_creature->GetMotionMaster()->MoveIdle();
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-
-            DoScriptText(SAY_SUMMONSHADE, m_creature);
-            for(uint8 i = 0; i < 3; ++i)
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                    m_creature->SummonCreature(NPC_SHADE,pTarget->GetPositionX(),pTarget->GetPositionY(),pTarget->GetPositionZ(),0,TEMPSUMMON_CORPSE_DESPAWN,0);                                      
-            m_bShades = true;
-        }
-    }
-
     void JustSummoned(Creature* pSummoned)
     {
         if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
             pSummoned->AI()->AttackStart(pTarget);
-
-        ++m_uiAdds_Summoned;
-    }
-
-    void SummonedCreatureDespawn(Creature *pDespawned)
-    {
-        --m_uiAdds_Summoned;
-        if (m_uiAdds_Summoned == 0)
-         {
-             m_creature->setFaction(14);
-             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-             m_bShades = false;
-         }
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_bShades && m_uiShades_Timer < uiDiff)
+        {
+            //Become unbanished again
+            m_creature->setFaction(14);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            m_bShades = false;
+        }
+        else if (m_bShades)
+        {
+            m_uiShades_Timer -= uiDiff;
+            //Do nothing while banished
+            return;
+        }
+
         //Return since we have no target
-        if (m_bShades || !m_creature->SelectHostileTarget() || !m_creature->getVictim())
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
         //Sleep_Timer
@@ -163,18 +133,11 @@ struct MANGOS_DLL_DECL boss_taerarAI : public ScriptedAI
         //Tailsweep every 2 seconds
         if (m_uiTailSweep_Timer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
-                if (m_creature->HasInArc(3.1415f, pTarget))
-                {
-                    DoCast(pTarget, SPELL_TAILSWEEP);
-                    m_uiTailSweep_Timer = 2000;
-                }
+            DoCastSpellIfCan(m_creature, SPELL_TAILSWEEP);
+            m_uiTailSweep_Timer = 2000;
         }
         else
             m_uiTailSweep_Timer -= uiDiff;
-
-        if (Unit *pEscaper = GetPlayerAtMinimumRange(DEFAULT_VISIBILITY_DISTANCE - 10.0f))
-            DoCast(pEscaper,SPELL_SUMMON_PLAYER);
 
         //MarkOfNature_Timer
         //if (m_uiMarkOfNature_Timer < uiDiff)
@@ -202,6 +165,31 @@ struct MANGOS_DLL_DECL boss_taerarAI : public ScriptedAI
         }
         else
             m_uiBellowingRoar_Timer -= uiDiff;
+
+        //Summon 3 Shades at 75%, 50% and 25% (if bShades is true we already left in line 117, no need to check here again)
+        if (!m_bShades && m_creature->GetHealthPercent() < float(100 - 25*m_uiShadesSummoned))
+        {
+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            {
+                //Inturrupt any spell casting
+                m_creature->InterruptNonMeleeSpells(false);
+
+                //horrible workaround, need to fix
+                m_creature->setFaction(35);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+
+                DoScriptText(SAY_SUMMONSHADE, m_creature);
+
+                int iSize = sizeof(m_auiSpellSummonShade) / sizeof(uint32);
+
+                for(int i = 0; i < iSize; ++i)
+                    m_creature->CastSpell(pTarget, m_auiSpellSummonShade[i], true);
+
+                ++m_uiShadesSummoned;                       // prevent casting twice at same health
+                m_bShades = true;
+            }
+            m_uiShades_Timer = 60000;
+        }
 
         DoMeleeAttackIfReady();
     }

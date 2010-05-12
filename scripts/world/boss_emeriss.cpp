@@ -28,13 +28,10 @@ enum
     SAY_AGGRO               = -1000401,
     SAY_CASTCORRUPTION      = -1000402,
 
-    SPELL_SLEEP             = 24778,                        //24777 is bugged with loop
+    SPELL_SLEEP             = 24777,
     SPELL_NOXIOUSBREATH     = 24818,
     SPELL_TAILSWEEP         = 15847,
     //SPELL_MARKOFNATURE    = 25040,                        // Not working
-    SPELL_SUMMON_PLAYER     = 24776,
-
-    //Emeriss' specific spells
     SPELL_VOLATILEINFECTION = 24928,
     SPELL_CORRUPTIONOFEARTH = 24910
 };
@@ -64,20 +61,6 @@ struct MANGOS_DLL_DECL boss_emerissAI : public ScriptedAI
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
-
-    void DamageTaken(Unit *pDoneBy,uint32 &uiDamage)
-    {
-        if (m_uiCorruptionsCasted >= 4)
-            return;
-
-        if (m_creature->GetHealth()*100/m_creature->GetMaxHealth() <= (100+urand(-5,5)-(25*m_uiCorruptionsCasted)))
-        {
-            ++m_uiCorruptionsCasted;
-            DoScriptText(SAY_CASTCORRUPTION, m_creature);
-            DoCast(m_creature->getVictim(), SPELL_CORRUPTIONOFEARTH);
-        }
-    }
-
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -126,12 +109,19 @@ struct MANGOS_DLL_DECL boss_emerissAI : public ScriptedAI
         //VolatileInfection_Timer
         if (m_uiVolatileInfection_Timer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
-                DoCast(pTarget, SPELL_VOLATILEINFECTION);
+            DoCastSpellIfCan(m_creature->getVictim(), SPELL_VOLATILEINFECTION);
             m_uiVolatileInfection_Timer = urand(7000, 12000);
         }
         else
             m_uiVolatileInfection_Timer -= uiDiff;
+
+        //CorruptionofEarth at 75%, 50% and 25%
+        if (m_creature->GetHealthPercent() < float(100 - 25*m_uiCorruptionsCasted))
+        {
+            ++m_uiCorruptionsCasted;                        // prevent casting twice on same hp
+            DoScriptText(SAY_CASTCORRUPTION, m_creature);
+            DoCastSpellIfCan(m_creature->getVictim(), SPELL_CORRUPTIONOFEARTH);
+        }
 
         DoMeleeAttackIfReady();
     }
