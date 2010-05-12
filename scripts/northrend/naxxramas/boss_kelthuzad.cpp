@@ -82,21 +82,12 @@ enum
 
     SPELL_MANA_DETONATION               = 27819,
     SPELL_SHADOW_FISSURE                = 27810,
-    SPELL_FROST_BLAST                   = 27808,
-
-    // abomination
-    SPELL_FRENZY                        = 28468,
-    SPELL_MORTAL_WOUND                  = 28467,
-
-    ACHIEV_JUST_CANT_GET_ENOUGH         = 2184,
-    ACHIEV_JUST_CANT_GET_ENOUGH_H       = 2185,
+    SPELL_FROST_BLAST                   = 27808
 };
 
 static float M_F_ANGLE = 0.2f;                              // to adjust for map rotation
 static float M_F_HEIGHT = 2.0f;                             // adjust for height difference
 static float M_F_RANGE = 55.0f;                             // ~ range from center of chamber to center of alcove
-
-uint8 m_uiAbominationsDead;
 
 struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
 {
@@ -167,8 +158,6 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
 
         // it may be some spell should be used instead, to control the intro phase
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-
-        m_uiAbominationsDead = 0;
     }
 
     void KilledUnit(Unit* pVictim)
@@ -190,18 +179,11 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
                     continue;
 
                 pGuardian->AI()->EnterEvadeMode();
-                pGuardian->ForcedDespawn();
             }
         }
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_KELTHUZAD, DONE);
-
-        if(m_uiAbominationsDead >= 18)
-        {
-            if(m_pInstance)
-                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_JUST_CANT_GET_ENOUGH : ACHIEV_JUST_CANT_GET_ENOUGH_H);
-        }
     }
 
     void MoveInLineOfSight(Unit* pWho)
@@ -239,8 +221,7 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
             for(std::set<uint64>::iterator itr = m_lSoldierSet.begin(); itr != m_lSoldierSet.end(); ++itr)
             {
                 if (Creature* pSoldier = m_pInstance->instance->GetCreature(*itr))
-                    if(!pSoldier->getVictim())
-                        pSoldier->ForcedDespawn();
+                    pSoldier->ForcedDespawn();
             }
         }
 
@@ -249,8 +230,7 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
             for(std::set<uint64>::iterator itr = m_lUndeadSet.begin(); itr != m_lUndeadSet.end(); ++itr)
             {
                 if (Creature* pSoldier = m_pInstance->instance->GetCreature(*itr))
-                    if(!pSoldier->getVictim())
-                        pSoldier->ForcedDespawn();
+                    pSoldier->ForcedDespawn();
             }
         }
 
@@ -463,7 +443,6 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
                 float fx, fy, fz;
                 m_pInstance->GetChamberCenterCoords(fx, fy, fz);
                 m_creature->GetMotionMaster()->MovePoint(0, fx, fy, fz);
-                DespawnAllIntroCreatures();
 
                 DoScriptText(EMOTE_PHASE2, m_creature);
                 return;
@@ -587,61 +566,6 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
     }
 };
 
-struct MANGOS_DLL_DECL mob_unstoppable_abominationAI : public ScriptedAI
-{
-    mob_unstoppable_abominationAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Reset();
-    }
-
-    ScriptedInstance* m_pInstance;
-
-    uint32 m_uiMortalWoundTimer;
-    uint32 m_uiFrenzyTimer;
-    bool m_bHasFrenzy;
-
-    void Reset()
-    {
-        m_uiMortalWoundTimer = 5000;
-        m_uiFrenzyTimer = 15000;
-        m_bHasFrenzy = false;
-    }
-
-    void JustDied(Unit* pKiller)
-    {
-        ++m_uiAbominationsDead;
-    }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        if (m_uiMortalWoundTimer < uiDiff)
-        {
-            DoCast(m_creature->getVictim(), SPELL_MORTAL_WOUND);
-            m_uiMortalWoundTimer = urand(5000, 7000);
-        }
-        else m_uiMortalWoundTimer -= uiDiff;
-
-        if (m_uiFrenzyTimer < uiDiff && !m_bHasFrenzy)
-        {
-            DoCast(m_creature, SPELL_FRENZY);
-            m_bHasFrenzy = true;
-            m_uiFrenzyTimer = 0;
-        }
-        else m_uiFrenzyTimer -= uiDiff;
-
-        DoMeleeAttackIfReady();
-    }
-};
-
-CreatureAI* GetAI_mob_unstoppable_abomination(Creature* pCreature)
-{
-    return new mob_unstoppable_abominationAI(pCreature);
-}
-
 CreatureAI* GetAI_boss_kelthuzad(Creature* pCreature)
 {
     return new boss_kelthuzadAI(pCreature);
@@ -654,10 +578,5 @@ void AddSC_boss_kelthuzad()
     NewScript = new Script;
     NewScript->Name = "boss_kelthuzad";
     NewScript->GetAI = &GetAI_boss_kelthuzad;
-    NewScript->RegisterSelf();
-
-    NewScript = new Script;
-    NewScript->Name = "mob_unstoppable_abomination";
-    NewScript->GetAI = &GetAI_mob_unstoppable_abomination;
     NewScript->RegisterSelf();
 }

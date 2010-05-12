@@ -29,24 +29,12 @@ enum
     EMOTE_BREATH       = -1533082,
     EMOTE_ENRAGE       = -1533083,
 
-    SPELL_ICEBOLT           = 28522,
-    SPELL_FROST_BREATH      = 29318,
-    SPELL_FROST_BREATH_H    = 28524,
-    SPELL_FROST_AURA        = 28531,
-    SPELL_LIFE_DRAIN        = 28542,
-    SPELL_LIFE_DRAIN_H      = 55665,
-    SPELL_BLIZZARD          = 28547,
-    SPELL_BESERK            = 26662,
-    SPELL_CLEAVE           = 19983,
-    SPELL_TAIL_LASH        = 55697,
-    SPELL_TAIL_LASH_H      = 55696,
-
-    SAPPHIRON_X            = 3522,
-    SAPPHIRON_Y            = -5236,
-    SAPPHIRON_Z            = 137, 
-
-    ACHIEV_THE_HUNDRED_CLUB     = 2146,
-    ACHIEV_THE_HUNDRED_CLUB_H   = 2147,
+    SPELL_ICEBOLT      = 28522,
+    SPELL_FROST_BREATH = 29318,
+    SPELL_FROST_AURA   = 28531,
+    SPELL_LIFE_DRAIN   = 28542,
+    SPELL_BLIZZARD     = 28547,
+    SPELL_BESERK       = 26662
 };
 
 struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
@@ -69,18 +57,9 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
     uint32 Blizzard_Timer;
     uint32 Fly_Timer;
     uint32 Beserk_Timer;
-    uint32 m_uiCleaveTimer;
-    uint32 m_uiTailSweepTimer;
     uint32 phase;
     bool landoff;
     uint32 land_Timer;
-
-    bool isAtGround;
-    std::vector<Unit*> targets;
-    uint32 land_time;
-
-    bool m_bHasResistance;
-    uint32 m_uiResistanceCheckTimer;
 
     void Reset()
     {
@@ -91,42 +70,24 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
         Fly_Timer = 45000;
         Icebolt_Timer = 4000;
         land_Timer = 2000;
-        Beserk_Timer = 900000;
-        m_uiCleaveTimer = 7000;
-        m_uiTailSweepTimer = 20000;
+        Beserk_Timer = 0;
         phase = 1;
         Icebolt_Count = 0;
         landoff = false;
-        isAtGround = true;
-        targets.clear();
-        land_time = 0;
-
-        m_bHasResistance = false;
-        m_uiResistanceCheckTimer = 1000;
 
         //m_creature->ApplySpellMod(SPELL_FROST_AURA, SPELLMOD_DURATION, -1);
-
-        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
-        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
     }
 
     void Aggro(Unit* pWho)
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_SAPPHIRON, IN_PROGRESS);
-        CheckResistance();
     }
 
     void JustDied(Unit* pKiller)
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_SAPPHIRON, DONE);
-
-        if (!m_bHasResistance)
-        {
-            if(m_pInstance)
-                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_THE_HUNDRED_CLUB : ACHIEV_THE_HUNDRED_CLUB_H);
-        }
     }
 
     void JustReachedHome()
@@ -135,55 +96,10 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
             m_pInstance->SetData(TYPE_SAPPHIRON, FAIL);
     }
 
-    void CheckResistance()
-    {
-        Map* pMap = m_creature->GetMap();
-        if (!m_bHasResistance && pMap && pMap->IsDungeon())
-        {
-            Map::PlayerList const &players = pMap->GetPlayers();
-            for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                if(itr->getSource()->GetResistance(SPELL_SCHOOL_FROST) > 100)
-                    m_bHasResistance = true;
-        }
-    }
-
-    void SpellHitTarget(Unit *target, const SpellEntry *spell)
-    {
-        if(spell->Id == SPELL_ICEBOLT)
-        {
-            if (target->isAlive() && target->HasAura(SPELL_ICEBOLT))
-            {
-                target->CastSpell(target, 62766, true);
-                target->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_FROST, true);
-            }
-            return;
-        }
-
-        if(spell->Id == SPELL_FROST_BREATH || spell->Id == SPELL_FROST_BREATH_H)
-        {
-            if (target->GetTypeId() != TYPEID_PLAYER)
-                return;
-
-            if (target->HasAura(SPELL_ICEBOLT))
-            {
-                target->RemoveAurasDueToSpell(62766);
-                target->RemoveAurasDueToSpell(SPELL_ICEBOLT);
-                target->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_FROST, false);
-                return;
-            }
-        }
-    }
-
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
-
-         if (m_uiResistanceCheckTimer < uiDiff && !m_bHasResistance)
-        {
-            CheckResistance();
-            m_uiResistanceCheckTimer = 1000;
-        }else m_uiResistanceCheckTimer -= uiDiff;
 
         if (phase == 1)
         {
@@ -196,7 +112,7 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
             if (LifeDrain_Timer < uiDiff)
             {
                 if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
-                    DoCastSpellIfCan(target,m_bIsRegularMode ? SPELL_LIFE_DRAIN : SPELL_LIFE_DRAIN_H);
+                    DoCastSpellIfCan(target,SPELL_LIFE_DRAIN);
 
                 LifeDrain_Timer = 24000;
             }else LifeDrain_Timer -= uiDiff;
@@ -209,41 +125,21 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
                 Blizzard_Timer = 20000;
             }else Blizzard_Timer -= uiDiff;
 
-            // Cleave
-            if (m_uiCleaveTimer < uiDiff)
-            {
-                DoCast(m_creature->getVictim(), SPELL_CLEAVE);
-                m_uiCleaveTimer = 7000 + rand()%3000;
-            }
-            else
-                m_uiCleaveTimer -= uiDiff;
-
-            // Tail Sweep
-            if (m_uiTailSweepTimer < uiDiff)
-            {
-                DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_TAIL_LASH : SPELL_TAIL_LASH_H);
-                m_uiTailSweepTimer = 15000 + rand()%5000;
-            }
-            else
-                m_uiTailSweepTimer -= uiDiff;
-
             if (m_creature->GetHealthPercent() > 10.0f)
             {
                 if (Fly_Timer < uiDiff)
                 {
                     phase = 2;
                     m_creature->InterruptNonMeleeSpells(false);
-                    m_creature->StopMoving();
                     m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
                     m_creature->GetMotionMaster()->Clear(false);
                     m_creature->GetMotionMaster()->MoveIdle();
-                    m_creature->GetMap()->CreatureRelocation(m_creature, SAPPHIRON_X, SAPPHIRON_Y, SAPPHIRON_Z + 20, m_creature->GetOrientation()); 
-                    m_creature->SendMonsterMove(SAPPHIRON_X, SAPPHIRON_Y, SAPPHIRON_Z + 20, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                    DoCastSpellIfCan(m_creature,11010);
+                    m_creature->SetHover(true);
+                    DoCastSpellIfCan(m_creature,18430);
                     Icebolt_Timer = 4000;
                     Icebolt_Count = 0;
                     landoff = false;
-                    m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
-                    m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
                 }else Fly_Timer -= uiDiff;
             }
         }
@@ -280,20 +176,9 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
                     m_creature->SetHover(false);
                     m_creature->GetMotionMaster()->Clear(false);
                     m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                    m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
-                    m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
                     Fly_Timer = 67000;
                 }else land_Timer -= uiDiff;
             }
-        }
-
-        if(phase == 1 && isAtGround == false)
-        {
-            if(land_time < uiDiff)
-            {
-                isAtGround = true;
-                DoStartMovement(m_creature->getVictim());
-            }else land_time -=uiDiff;
         }
 
         if (m_creature->GetHealthPercent() <= 10.0f)
@@ -306,7 +191,7 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
             }else Beserk_Timer -= uiDiff;
         }
 
-        if (phase!=2 && isAtGround == true)
+        if (phase!=2)
             DoMeleeAttackIfReady();
     }
 };
