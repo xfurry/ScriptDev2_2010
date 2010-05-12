@@ -51,7 +51,6 @@ UPDATE gameobject_template SET ScriptName='go_jump_a_tron' WHERE entry=183146;
 UPDATE gameobject_template SET ScriptName='go_orb_of_command' WHERE entry=179879;
 UPDATE gameobject_template SET ScriptName='go_resonite_cask' WHERE entry=178145;
 UPDATE gameobject_template SET ScriptName='go_sacred_fire_of_life' WHERE entry=175944;
-UPDATE gameobject_template SET ScriptName='go_school_of_red_snapper' WHERE entry=181616;
 UPDATE gameobject_template SET ScriptName='go_shrine_of_the_birds' WHERE entry IN (185547,185553,185551);
 UPDATE gameobject_template SET ScriptName='go_tablet_of_madness' WHERE entry=180368;
 UPDATE gameobject_template SET ScriptName='go_tablet_of_the_seven' WHERE entry=169294;
@@ -114,6 +113,7 @@ UPDATE creature_template SET ScriptName='npc_locksmith' WHERE entry IN (29665,29
 
 /* SPELL */
 UPDATE creature_template SET ScriptName='spell_dummy_npc' WHERE entry IN (16880,1200,26616,26643,16518,25793,25758,25752,25792,25753,26421,26841,27808,27122,28068,12298,12296,24918,17326,17654,16847,18879,26270,26268,30146);
+UPDATE gameobject_template SET ScriptName='spell_dummy_go' WHERE entry IN (181616,186949);
 
 /*  */
 /* ZONE */
@@ -325,6 +325,7 @@ UPDATE creature_template SET ScriptName='npc_iruk' WHERE entry=26219;
 UPDATE creature_template SET ScriptName='npc_kara_thricestar' WHERE entry=26602;
 UPDATE creature_template SET ScriptName='npc_surristrasz' WHERE entry=24795;
 UPDATE creature_template SET ScriptName='npc_tiare' WHERE entry=30051;
+UPDATE creature_template SET ScriptName='npc_lurgglbr' WHERE entry=25208;
 
 /* BURNING STEPPES */
 UPDATE creature_template SET ScriptName='npc_ragged_john' WHERE entry=9563;
@@ -355,6 +356,9 @@ UPDATE creature_template SET ScriptName='npc_taretha' WHERE entry=18887;
 UPDATE creature_template SET ScriptName='npc_thrall_old_hillsbrad' WHERE entry=17876;
 
 /* THE CULLING OF STRATHOLME */
+UPDATE instance_template SET script='instance_culling_of_stratholme' WHERE map=595;
+UPDATE creature_template SET ScriptName='npc_chromie' WHERE entry IN (26527, 27915);
+UPDATE creature_template SET ScriptName='spell_dummy_npc_crates_bunny' WHERE entry=30996;
 
 /* THE DARK PORTAL */
 UPDATE creature_template SET ScriptName='boss_chrono_lord_deja' WHERE entry=17879;

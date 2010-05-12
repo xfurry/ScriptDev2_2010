@@ -140,7 +140,7 @@ struct MANGOS_DLL_DECL boss_s_and_d_dummyAI : public ScriptedAI
         if (pSummoned->GetEntry() == NPC_DAL_GHOST || pSummoned->GetEntry() == NPC_SKA_GHOST)
             m_uiGhostGUID = pSummoned->GetGUID();
 
-        Unit* pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO,1);
+        Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO,1);
 
         if (m_creature->getVictim())
             pSummoned->AI()->AttackStart(pTarget ? pTarget : m_creature->getVictim());
@@ -225,7 +225,7 @@ struct MANGOS_DLL_DECL boss_skarvaldAI : public boss_s_and_d_dummyAI
 
         if (m_uiChargeTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                 DoCastSpellIfCan(pTarget, SPELL_CHARGE);
 
             m_uiChargeTimer = urand(8000, 16000);
@@ -289,7 +289,7 @@ struct MANGOS_DLL_DECL boss_dalronnAI : public boss_s_and_d_dummyAI
 
         if (m_uiDebilitateTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_DEBILITATE : SPELL_DEBILITATE_H);
 
             m_uiDebilitateTimer = urand(12000, 20000);
@@ -299,7 +299,7 @@ struct MANGOS_DLL_DECL boss_dalronnAI : public boss_s_and_d_dummyAI
 
         if (m_uiShadowBoltTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT_H);
 
             m_uiShadowBoltTimer = urand(3000, 6000);

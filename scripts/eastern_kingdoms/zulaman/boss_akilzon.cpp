@@ -169,7 +169,7 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
 
         if (m_uiStaticDisruptTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                 m_creature->CastSpell(pTarget, SPELL_STATIC_DISRUPTION, false);
 
             m_uiStaticDisruptTimer = urand(7000, 14000);
@@ -177,7 +177,7 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
 
         if (m_uiStormTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if (m_creature->IsNonMeleeSpellCasted(false))
                     m_creature->InterruptNonMeleeSpells(false);
@@ -191,7 +191,7 @@ struct MANGOS_DLL_DECL boss_akilzonAI : public ScriptedAI
 
         if (m_uiGustOfWindTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                 m_creature->CastSpell(pTarget, SPELL_GUST_OF_WIND, false);
 
             m_uiGustOfWindTimer = urand(20000, 30000);
@@ -309,7 +309,7 @@ struct MANGOS_DLL_DECL mob_soaring_eagleAI : public ScriptedAI
 
         if (m_uiEagleSwoopTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
             {
                 DoCastSpellIfCan(pTarget,SPELL_EAGLE_SWOOP);
 
