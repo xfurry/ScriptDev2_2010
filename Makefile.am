@@ -102,7 +102,6 @@ scripts/eastern_kingdoms/blackrock_spire/boss_rend_blackhand.cpp \
 scripts/eastern_kingdoms/blackrock_spire/boss_shadow_hunter_voshgajin.cpp \
 scripts/eastern_kingdoms/blackrock_spire/boss_the_beast.cpp \
 scripts/eastern_kingdoms/blackrock_spire/boss_warmaster_voone.cpp \
-scripts/eastern_kingdoms/blackwing_lair/blackwing_lair.h \
 scripts/eastern_kingdoms/blackwing_lair/boss_broodlord_lashlayer.cpp \
 scripts/eastern_kingdoms/blackwing_lair/boss_chromaggus.cpp \
 scripts/eastern_kingdoms/blackwing_lair/boss_ebonroc.cpp \

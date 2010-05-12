@@ -22,7 +22,6 @@ SDCategory: Blackwing Lair
 EndScriptData */
 
 #include "precompiled.h"
-#include "blackwing_lair.h"
 
 #define SAY_AGGRO               -1469000
 #define SAY_LEASH               -1469001
@@ -34,13 +33,7 @@ EndScriptData */
 
 struct MANGOS_DLL_DECL boss_broodlordAI : public ScriptedAI
 {
-    boss_broodlordAI(Creature* pCreature) : ScriptedAI(pCreature) 
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Reset();
-    }
-
-    ScriptedInstance* m_pInstance;
+    boss_broodlordAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
     uint32 Cleave_Timer;
     uint32 BlastWave_Timer;
@@ -53,24 +46,12 @@ struct MANGOS_DLL_DECL boss_broodlordAI : public ScriptedAI
         BlastWave_Timer = 12000;
         MortalStrike_Timer = 20000;
         KnockBack_Timer = 30000;
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_LASHLAYER, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
         DoScriptText(SAY_AGGRO, m_creature);
         m_creature->SetInCombatWithZone();
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_LASHLAYER, IN_PROGRESS);
-    }
-
-    void JustDied(Unit* pKiller)
-    {
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_LASHLAYER, DONE);
     }
 
     void UpdateAI(const uint32 diff)

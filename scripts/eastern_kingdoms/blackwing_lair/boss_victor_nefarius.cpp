@@ -22,7 +22,6 @@ SDCategory: Blackwing Lair
 EndScriptData */
 
 #include "precompiled.h"
-#include "blackwing_lair.h"
 
 #define SAY_GAMESBEGIN_1        -1469004
 #define SAY_GAMESBEGIN_2        -1469005
@@ -158,10 +157,8 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
                 DrakType2 = CREATURE_RED_DRAKANOID;
                 break;
         }
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
     }
 
-    ScriptedInstance* m_pInstance;
     uint32 SpawnedAdds;
     uint32 AddSpawnTimer;
     uint32 ShadowBoltTimer;
@@ -205,9 +202,6 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
         m_creature->setFaction(103);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         AttackStart(target);
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_NEFARIAN, IN_PROGRESS);
     }
 
     void MoveInLineOfSight(Unit *who)
@@ -311,8 +305,7 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
                     m_creature->NearTeleportTo(HIDE_X, HIDE_Y, HIDE_Z, 0.0f);
 
                     //Spawn nef and have him attack a random target
-                    //Creature* Nefarian = m_creature->SummonCreature(CREATURE_NEFARIAN,NEF_X,NEF_Y,NEF_Z,0,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,120000);
-                    Creature* Nefarian = m_creature->SummonCreature(CREATURE_NEFARIAN,m_creature->GetPositionX(),m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,120000);
+                    Creature* Nefarian = m_creature->SummonCreature(CREATURE_NEFARIAN,NEF_X,NEF_Y,NEF_Z,0,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,120000);
                     target = SelectUnit(SELECT_TARGET_RANDOM,0);
 
                     if (target && Nefarian)

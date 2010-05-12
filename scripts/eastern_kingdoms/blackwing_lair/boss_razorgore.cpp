@@ -22,7 +22,6 @@ SDCategory: Blackwing Lair
 EndScriptData */
 
 #include "precompiled.h"
-#include "blackwing_lair.h"
 
 //Razorgore Phase 2 Script
 enum
@@ -40,13 +39,8 @@ enum
 
 struct MANGOS_DLL_DECL boss_razorgoreAI : public ScriptedAI
 {
-    boss_razorgoreAI(Creature* pCreature) : ScriptedAI(pCreature) 
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Reset();
-    }
+    boss_razorgoreAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
-    ScriptedInstance* m_pInstance;
     uint32 m_uiCleaveTimer;
     uint32 m_uiWarStompTimer;
     uint32 m_uiFireballVolleyTimer;
@@ -59,24 +53,16 @@ struct MANGOS_DLL_DECL boss_razorgoreAI : public ScriptedAI
         m_uiConflagrationTimer  = 12000;
         m_uiFireballVolleyTimer = 7000;
 
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_RAZORGORE, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
         m_creature->SetInCombatWithZone();
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_RAZORGORE, IN_PROGRESS);
     }
 
     void JustDied(Unit* pKiller)
     {
         DoScriptText(SAY_DEATH, m_creature);
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_RAZORGORE, DONE);
     }
 
     void UpdateAI(const uint32 uiDiff)

@@ -22,7 +22,6 @@ SDCategory: Blackwing Lair
 EndScriptData */
 
 #include "precompiled.h"
-#include "blackwing_lair.h"
 
 #define SAY_AGGRO               -1469007
 #define SAY_XHEALTH             -1469008
@@ -61,13 +60,8 @@ EndScriptData */
 
 struct MANGOS_DLL_DECL boss_nefarianAI : public ScriptedAI
 {
-    boss_nefarianAI(Creature* pCreature) : ScriptedAI(pCreature) 
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Reset();
-    }
+    boss_nefarianAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
-    ScriptedInstance* m_pInstance;
     uint32 ShadowFlame_Timer;
     uint32 BellowingRoar_Timer;
     uint32 VeilOfShadow_Timer;
@@ -98,9 +92,6 @@ struct MANGOS_DLL_DECL boss_nefarianAI : public ScriptedAI
     void JustDied(Unit* Killer)
     {
         DoScriptText(SAY_DEATH, m_creature);
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_NEFARIAN, DONE);
     }
 
     void Aggro(Unit* pWho)
@@ -115,9 +106,6 @@ struct MANGOS_DLL_DECL boss_nefarianAI : public ScriptedAI
         DoCastSpellIfCan(pWho,SPELL_SHADOWFLAME_INITIAL);
 
         m_creature->SetInCombatWithZone();
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_NEFARIAN, IN_PROGRESS);
     }
 
     void UpdateAI(const uint32 diff)

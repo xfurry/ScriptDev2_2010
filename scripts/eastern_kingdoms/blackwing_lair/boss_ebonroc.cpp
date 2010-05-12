@@ -22,7 +22,6 @@ SDCategory: Blackwing Lair
 EndScriptData */
 
 #include "precompiled.h"
-#include "blackwing_lair.h"
 
 #define SPELL_SHADOWFLAME           22539
 #define SPELL_WINGBUFFET            18500
@@ -31,13 +30,8 @@ EndScriptData */
 
 struct MANGOS_DLL_DECL boss_ebonrocAI : public ScriptedAI
 {
-    boss_ebonrocAI(Creature* pCreature) : ScriptedAI(pCreature) 
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Reset();
-    }
+    boss_ebonrocAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
-    ScriptedInstance* m_pInstance;
     uint32 ShadowFlame_Timer;
     uint32 WingBuffet_Timer;
     uint32 ShadowOfEbonroc_Timer;
@@ -49,23 +43,11 @@ struct MANGOS_DLL_DECL boss_ebonrocAI : public ScriptedAI
         WingBuffet_Timer = 30000;
         ShadowOfEbonroc_Timer = 45000;
         Heal_Timer = 1000;
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_EBONROC, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
         m_creature->SetInCombatWithZone();
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_EBONROC, IN_PROGRESS);
-    }
-
-    void JustDied(Unit* pKiller)
-    {
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_EBONROC, DONE);
     }
 
     void UpdateAI(const uint32 diff)

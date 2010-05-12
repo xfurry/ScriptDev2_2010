@@ -22,7 +22,6 @@ SDCategory: Blackwing Lair
 EndScriptData */
 
 #include "precompiled.h"
-#include "blackwing_lair.h"
 
 #define SPELL_SHADOWFLAME       22539
 #define SPELL_WINGBUFFET        23339
@@ -30,13 +29,8 @@ EndScriptData */
 
 struct MANGOS_DLL_DECL boss_firemawAI : public ScriptedAI
 {
-    boss_firemawAI(Creature* pCreature) : ScriptedAI(pCreature) 
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Reset();
-    }
+    boss_firemawAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
-    ScriptedInstance* m_pInstance;
     uint32 ShadowFlame_Timer;
     uint32 WingBuffet_Timer;
     uint32 FlameBuffet_Timer;
@@ -46,23 +40,11 @@ struct MANGOS_DLL_DECL boss_firemawAI : public ScriptedAI
         ShadowFlame_Timer = 30000;                          //These times are probably wrong
         WingBuffet_Timer = 24000;
         FlameBuffet_Timer = 5000;
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_FIREMAW, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
         m_creature->SetInCombatWithZone();
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_FIREMAW, IN_PROGRESS);
-    }
-
-    void JustDied(Unit* pKiller)
-    {
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_FIREMAW, DONE);
     }
 
     void UpdateAI(const uint32 diff)
