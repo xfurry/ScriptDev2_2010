@@ -332,7 +332,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
 
             if (Pain_And_Suffering_Timer < uiDiff) 
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(m_creature->getVictim(), SPELL_PAIN_AND_SUFFERING);
                 Pain_And_Suffering_Timer = 3000;
             } else Pain_And_Suffering_Timer -= uiDiff;
@@ -371,7 +371,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
 
             if (Pain_And_Suffering_Timer < uiDiff) 
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 10))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(m_creature->getVictim(), SPELL_PAIN_AND_SUFFERING);
                 Pain_And_Suffering_Timer = 3000;
             } else Pain_And_Suffering_Timer -= uiDiff;
