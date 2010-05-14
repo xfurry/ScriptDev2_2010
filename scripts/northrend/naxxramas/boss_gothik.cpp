@@ -68,6 +68,10 @@ enum eSpellDummy
     SPELL_C_TO_SKULL        = 27937
 };
 
+const float PosPlatform[4] = {2640.5f, -3360.6f, 285.26f, 0};
+const float PosGroundLive[4] = {2692.174f, -3400.963f, 267.680f, 1.7f};
+const float PosGroundDeath[4] = {2690.378f, -3328.279f, 267.681f, 1.7f};
+
 struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
 {
     boss_gothikAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -157,6 +161,7 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_GOTHIK, FAIL);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void SummonAdds(bool bRightSide, uint32 uiSummonEntry)
@@ -210,10 +215,20 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
         }
     }
 
+    void JustSummoned(Creature* pSummoned)
+    {
+        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            pSummoned->AI()->AttackStart(pTarget);
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        // remove for debug!
+        if(!HasPlayersInLeftSide())
+            m_creature->AI()->EnterEvadeMode();
 
         switch(m_uiPhase)
         {
@@ -234,6 +249,8 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
                 }
                 else
                     m_uiSpeechTimer -= uiDiff;
+
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
                 break;
             }
@@ -331,6 +348,8 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
                 }
                 else
                     m_uiShadowboltTimer -= uiDiff;
+
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
                 DoMeleeAttackIfReady();                     // possibly no melee at all
                 break;
