@@ -28,14 +28,15 @@ enum
     SAY_AGGRO               = -1000360,
     SAY_SUMMONDRUIDS        = -1000361,
 
-    SPELL_SLEEP             = 24777,
+    SPELL_SLEEP             = 24778,
     SPELL_NOXIOUSBREATH     = 24818,
     SPELL_TAILSWEEP         = 15847,
+    SPELL_SUMMON_PLAYER     = 24776,
     //SPELL_MARKOFNATURE   = 25040,                         // Not working
+
+    //Specific Ysondre
     SPELL_LIGHTNINGWAVE     = 24819,
     SPELL_SUMMONDRUIDS      = 24795,
-
-    SPELL_SUMMON_PLAYER     = 24776,
 
     //druid spells
     SPELL_MOONFIRE          = 21669
@@ -51,7 +52,7 @@ struct MANGOS_DLL_DECL boss_ysondreAI : public ScriptedAI
     uint32 m_uiTailSweep_Timer;
     //uint32 m_uiMarkOfNature_Timer;
     uint32 m_uiLightningWave_Timer;
-    uint32 m_uiSummonDruidModifier;
+    uint8 m_uiSummonDruidModifier; 
 
     void Reset()
     {
@@ -60,7 +61,7 @@ struct MANGOS_DLL_DECL boss_ysondreAI : public ScriptedAI
         m_uiTailSweep_Timer = 4000;
         //m_uiMarkOfNature_Timer = 45000;
         m_uiLightningWave_Timer = 12000;
-        m_uiSummonDruidModifier = 0;
+        m_uiSummonDruidModifier = 0;  
     }
 
     void Aggro(Unit* pWho)
@@ -72,6 +73,22 @@ struct MANGOS_DLL_DECL boss_ysondreAI : public ScriptedAI
     {
         if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             pSummoned->AI()->AttackStart(pTarget);
+    }
+
+    void DamageTaken(Unit *pDoneBy,uint32 &uiDamage)
+    {
+        if (m_uiSummonDruidModifier >= 4)
+            return;
+
+        if (m_creature->GetHealth()*100/m_creature->GetMaxHealth() <= (100+urand(-5,5)-(25*m_uiSummonDruidModifier)))
+        {
+             DoScriptText(SAY_SUMMONDRUIDS, m_creature);
+
+            for(uint8 i = 0; i < 10; ++i)
+                DoCast(m_creature, SPELL_SUMMONDRUIDS, true);
+
+            ++m_uiSummonDruidModifier;
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -128,17 +145,6 @@ struct MANGOS_DLL_DECL boss_ysondreAI : public ScriptedAI
         }
         else
             m_uiLightningWave_Timer -= uiDiff;
-
-        //Summon Druids
-        if (m_creature->GetHealthPercent() <= float(100 - 25*m_uiSummonDruidModifier))
-        {
-            DoScriptText(SAY_SUMMONDRUIDS, m_creature);
-
-            for(int i = 0; i < 10; ++i)
-                DoCastSpellIfCan(m_creature, SPELL_SUMMONDRUIDS, CAST_TRIGGERED);
-
-            ++m_uiSummonDruidModifier;
-        }
 
         DoMeleeAttackIfReady();
     }

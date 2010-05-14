@@ -389,7 +389,7 @@ index d6e0ad0..dc4239e 100644
 +    newscript->RegisterSelf();
  }
 diff --git a/scripts/world/boss_emeriss.cpp b/scripts/world/boss_emeriss.cpp
-index 76a6cbb..04b7129 100644
+index 44727b1..5fc7be0 100644
 --- a/scripts/world/boss_emeriss.cpp
 +++ b/scripts/world/boss_emeriss.cpp
 @@ -28,10 +28,13 @@ enum
@@ -452,7 +452,7 @@ index 76a6cbb..04b7129 100644
      }
  };
 diff --git a/scripts/world/boss_lethon.cpp b/scripts/world/boss_lethon.cpp
-index a524dc8..13045dd 100644
+index a524dc8..a2cbd30 100644
 --- a/scripts/world/boss_lethon.cpp
 +++ b/scripts/world/boss_lethon.cpp
 @@ -16,9 +16,203 @@
@@ -546,7 +546,7 @@ index a524dc8..13045dd 100644
 +
 +    void JustSummoned(Creature* pSummoned)
 +    {
-+        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            pSummoned->AI()->AttackStart(m_creature);
 +    }
 +
@@ -559,7 +559,7 @@ index a524dc8..13045dd 100644
 +        //Sleep_Timer
 +        if (m_uiSleep_Timer < uiDiff)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, SPELL_SLEEP);
 +
 +            m_uiSleep_Timer = 8000 + rand()%7000;
@@ -662,7 +662,7 @@ index a524dc8..13045dd 100644
 +    newscript->RegisterSelf();
 +}
 diff --git a/scripts/world/boss_taerar.cpp b/scripts/world/boss_taerar.cpp
-index 9ae0758..5dda977 100644
+index a41bc10..ff9083e 100644
 --- a/scripts/world/boss_taerar.cpp
 +++ b/scripts/world/boss_taerar.cpp
 @@ -17,7 +17,7 @@
@@ -743,7 +743,7 @@ index 9ae0758..5dda977 100644
 +
 +            DoScriptText(SAY_SUMMONSHADE, m_creature);
 +            for(uint8 i = 0; i < 3; ++i)
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    m_creature->SummonCreature(NPC_SHADE,pTarget->GetPositionX(),pTarget->GetPositionY(),pTarget->GetPositionZ(),0,TEMPSUMMON_CORPSE_DESPAWN,0);                                      
 +            m_bShades = true;
 +        }
@@ -751,7 +751,7 @@ index 9ae0758..5dda977 100644
 +
      void JustSummoned(Creature* pSummoned)
      {
-         if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+         if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
              pSummoned->AI()->AttackStart(pTarget);
 +
 +        ++m_uiAdds_Summoned;
@@ -820,7 +820,7 @@ index 9ae0758..5dda977 100644
 -        //Summon 3 Shades at 75%, 50% and 25% (if bShades is true we already left in line 117, no need to check here again)
 -        if (!m_bShades && m_creature->GetHealthPercent() < float(100 - 25*m_uiShadesSummoned))
 -        {
--            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+-            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -            {
 -                //Inturrupt any spell casting
 -                m_creature->InterruptNonMeleeSpells(false);
@@ -846,7 +846,7 @@ index 9ae0758..5dda977 100644
      }
  };
 diff --git a/scripts/world/boss_ysondre.cpp b/scripts/world/boss_ysondre.cpp
-index 82a361c..94655f3 100644
+index 921ba38..79667e8 100644
 --- a/scripts/world/boss_ysondre.cpp
 +++ b/scripts/world/boss_ysondre.cpp
 @@ -28,15 +28,16 @@ enum
@@ -1012,7 +1012,7 @@ index 0000000..4fd68d6
 +('11832','23','7845.459473', '-2570.232666', '489.285339', '10000', 'SAY_REMULOS8 ERANIKUS MINIONS ATTACK AND YELL'),
 +('11832','24','7845.459473', '-2570.232666', '489.285339', '0', 'PAUSE');
 diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
-index 5771be4..7595726 100644
+index 79f2fa6..8cc3b1a 100644
 --- a/system/ScriptLoader.cpp
 +++ b/system/ScriptLoader.cpp
 @@ -23,6 +23,7 @@ extern void AddSC_example_misc();
@@ -1023,7 +1023,7 @@ index 5771be4..7595726 100644
  extern void AddSC_boss_taerar();
  extern void AddSC_boss_ysondre();
  extern void AddSC_generic_creature();
-@@ -492,6 +493,7 @@ void AddScripts()
+@@ -493,6 +494,7 @@ void AddScripts()
      //world
      AddSC_areatrigger_scripts();
      AddSC_boss_emeriss();
