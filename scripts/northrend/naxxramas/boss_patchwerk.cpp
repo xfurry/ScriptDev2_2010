@@ -38,10 +38,7 @@ enum
     SPELL_HATEFULSTRIKE_H = 59192,
     SPELL_ENRAGE          = 28131,
     SPELL_BERSERK         = 26662,
-    SPELL_SLIMEBOLT       = 32309,
-
-    ACHIEV_QUICK_WERK       = 1856,
-    ACHIEV_QUICK_WERK_H     = 1857,
+    SPELL_SLIMEBOLT       = 32309
 };
 
 struct MANGOS_DLL_DECL boss_patchwerkAI : public ScriptedAI
@@ -62,8 +59,6 @@ struct MANGOS_DLL_DECL boss_patchwerkAI : public ScriptedAI
     bool   m_bEnraged;
     bool   m_bBerserk;
 
-    uint32 uiEncounterTimer;
-
     void Reset()
     {
         m_uiHatefulStrikeTimer = 1000;                      //1 second
@@ -71,7 +66,6 @@ struct MANGOS_DLL_DECL boss_patchwerkAI : public ScriptedAI
         m_uiSlimeboltTimer = 10000;
         m_bEnraged = false;
         m_bBerserk = false;
-        uiEncounterTimer = 0;
     }
 
     void KilledUnit(Unit* pVictim)
@@ -88,12 +82,6 @@ struct MANGOS_DLL_DECL boss_patchwerkAI : public ScriptedAI
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_PATCHWERK, DONE);
-
-        if (uiEncounterTimer < 180000)
-        {
-            if(m_pInstance)
-                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_QUICK_WERK : ACHIEV_QUICK_WERK_H);
-        }
     }
 
     void Aggro(Unit* pWho)
@@ -143,8 +131,6 @@ struct MANGOS_DLL_DECL boss_patchwerkAI : public ScriptedAI
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
-
-        uiEncounterTimer += uiDiff;
 
         // Hateful Strike
         if (m_uiHatefulStrikeTimer < uiDiff)
