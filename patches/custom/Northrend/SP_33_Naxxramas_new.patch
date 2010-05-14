@@ -1,7 +1,13 @@
 diff --git a/scripts/northrend/naxxramas/boss_anubrekhan.cpp b/scripts/northrend/naxxramas/boss_anubrekhan.cpp
-index 8d81583..3c87283 100644
+index 3959ef7..2fac88a 100644
 --- a/scripts/northrend/naxxramas/boss_anubrekhan.cpp
 +++ b/scripts/northrend/naxxramas/boss_anubrekhan.cpp
+@@ -1,4 +1,4 @@
+-/* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
++s /* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation; either version 2 of the License, or
 @@ -47,9 +47,12 @@ enum
      SPELL_SELF_SPAWN_5          = 29105,                    //This spawns 5 corpse scarabs ontop of us (most likely the pPlayer casts this on death)
      SPELL_SELF_SPAWN_10         = 28864,                    //This is used by the crypt guards when they die
@@ -121,7 +127,7 @@ index 8d81583..3c87283 100644
 -            //Do NOT cast it when we are afflicted by locust swarm
 -            if (!m_creature->HasAura(SPELL_LOCUSTSWARM) || !m_creature->HasAura(SPELL_LOCUSTSWARM_H))
 -            {
--                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+-                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
 -                    DoCastSpellIfCan(target, m_bIsRegularMode ? SPELL_IMPALE : SPELL_IMPALE_H);
 -            }
 +            if (CryptGuard_count < MAX_CRYPT_GUARDS)
@@ -211,7 +217,7 @@ index 8d81583..3c87283 100644
          DoMeleeAttackIfReady();
      }
 diff --git a/scripts/northrend/naxxramas/boss_faerlina.cpp b/scripts/northrend/naxxramas/boss_faerlina.cpp
-index d7a27e9..aebecdb 100644
+index 52499bb..95321a7 100644
 --- a/scripts/northrend/naxxramas/boss_faerlina.cpp
 +++ b/scripts/northrend/naxxramas/boss_faerlina.cpp
 @@ -41,8 +41,17 @@ enum
@@ -978,7 +984,7 @@ index ca50c0a..d1a70ea 100644
          }else HolyWrath_Timer -= uiDiff;
  
 diff --git a/scripts/northrend/naxxramas/boss_gluth.cpp b/scripts/northrend/naxxramas/boss_gluth.cpp
-index 81c830d..d2d0c18 100644
+index 2e0016e..8f1ddee 100644
 --- a/scripts/northrend/naxxramas/boss_gluth.cpp
 +++ b/scripts/northrend/naxxramas/boss_gluth.cpp
 @@ -34,7 +34,8 @@ enum
@@ -1147,7 +1153,7 @@ index 81c830d..d2d0c18 100644
 -            if (Creature* pZombie = m_creature->SummonCreature(NPC_ZOMBIE_CHOW, ADD_1X, ADD_1Y, ADD_1Z, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 80000))
 +            if (Creature* pZombie = m_creature->SummonCreature(NPC_ZOMBIE_CHOW, ADD_5X, ADD_5Y, ADD_5Z, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 80000))
              {
-                 if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                 if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    m_lZombieGUIDList.push_back(pZombie->GetGUID());
                      pZombie->AddThreat(pTarget);
@@ -1159,7 +1165,7 @@ index 81c830d..d2d0c18 100644
 -                if (Creature* pZombie = m_creature->SummonCreature(NPC_ZOMBIE_CHOW, ADD_1X, ADD_1Y, ADD_1Z, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 80000))
 +                if (Creature* pZombie = m_creature->SummonCreature(NPC_ZOMBIE_CHOW, ADD_9X, ADD_9Y, ADD_9Z, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 80000))
                  {
-                     if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                     if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    {
                          pZombie->AddThreat(pTarget);
 +                        m_lZombieGUIDList.push_back(pZombie->GetGUID());
@@ -1199,7 +1205,7 @@ index 81c830d..d2d0c18 100644
 +    NewScript->RegisterSelf();
  }
 diff --git a/scripts/northrend/naxxramas/boss_gothik.cpp b/scripts/northrend/naxxramas/boss_gothik.cpp
-index 155043d..58374cb 100644
+index 155043d..525b3c6 100644
 --- a/scripts/northrend/naxxramas/boss_gothik.cpp
 +++ b/scripts/northrend/naxxramas/boss_gothik.cpp
 @@ -68,6 +68,10 @@ enum eSpellDummy
@@ -1221,7 +1227,7 @@ index 155043d..58374cb 100644
      }
  
      void SummonAdds(bool bRightSide, uint32 uiSummonEntry)
-@@ -210,11 +215,39 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
+@@ -210,11 +215,21 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
          }
      }
  
@@ -1229,24 +1235,6 @@ index 155043d..58374cb 100644
 +    {
 +        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            pSummoned->AI()->AttackStart(pTarget);
-+    }
-+
-+    void TeleportToLive()
-+    {   
-+        m_creature->StopMoving();
-+        m_creature->GetMotionMaster()->Clear(false);
-+        m_creature->GetMotionMaster()->MoveIdle();
-+        m_creature->SendMonsterMove(PosGroundLive[0], PosGroundLive[1], PosGroundLive[2], SPLINETYPE_NORMAL, SPLINEFLAG_NONE, 0);
-+        m_creature->GetMap()->CreatureRelocation(m_creature, PosGroundLive[0], PosGroundLive[1], PosGroundLive[2], 0.0f);
-+    }
-+
-+    void TeleportToDead()
-+    {
-+        m_creature->StopMoving();
-+        m_creature->GetMotionMaster()->Clear(false);
-+        m_creature->GetMotionMaster()->MoveIdle();
-+        m_creature->SendMonsterMove(PosGroundDeath[0], PosGroundDeath[1], PosGroundDeath[2], SPLINETYPE_NORMAL, SPLINEFLAG_NONE, 0);
-+        m_creature->GetMap()->CreatureRelocation(m_creature, PosGroundDeath[0], PosGroundDeath[1], PosGroundDeath[2], 0.0f);
 +    }
 +
      void UpdateAI(const uint32 uiDiff)
@@ -1261,7 +1249,7 @@ index 155043d..58374cb 100644
          switch(m_uiPhase)
          {
              case PHASE_SPEECH:
-@@ -235,6 +268,8 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
+@@ -235,6 +250,8 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
                  else
                      m_uiSpeechTimer -= uiDiff;
  
@@ -1270,32 +1258,7 @@ index 155043d..58374cb 100644
                  break;
              }
              case PHASE_BALCONY:
-@@ -310,7 +345,7 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
- 
-                     if (m_uiTeleportTimer < uiDiff)
-                     {
--                        uint32 uiTeleportSpell = m_pInstance->IsInRightSideGothArea(m_creature) ? SPELL_TELEPORT_LEFT : SPELL_TELEPORT_RIGHT;
-+                        /*uint32 uiTeleportSpell = m_pInstance->IsInRightSideGothArea(m_creature) ? SPELL_TELEPORT_LEFT : SPELL_TELEPORT_RIGHT;
- 
-                         if (DoCastSpellIfCan(m_creature, uiTeleportSpell) == CAST_OK)
-                         {
-@@ -318,7 +353,14 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
-                             m_uiTeleportTimer = 15000;
-                             m_uiShadowboltTimer = 2000;
-                             return;
--                        }
-+                        }*/
-+                        if(m_pInstance->IsInRightSideGothArea(m_creature)) 
-+                            TeleportToDead();
-+                        else
-+                            TeleportToLive();
-+                        DoResetThreat();
-+                        m_uiTeleportTimer = 15000;
-+                        m_uiShadowboltTimer = 2000;
-                     }
-                     else
-                         m_uiTeleportTimer -= uiDiff;
-@@ -332,6 +374,8 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
+@@ -332,6 +349,8 @@ struct MANGOS_DLL_DECL boss_gothikAI : public ScriptedAI
                  else
                      m_uiShadowboltTimer -= uiDiff;
  
@@ -1305,7 +1268,7 @@ index 155043d..58374cb 100644
                  break;
              }
 diff --git a/scripts/northrend/naxxramas/boss_grobbulus.cpp b/scripts/northrend/naxxramas/boss_grobbulus.cpp
-index 5270203..ac8516e 100644
+index 5270203..64a234b 100644
 --- a/scripts/northrend/naxxramas/boss_grobbulus.cpp
 +++ b/scripts/northrend/naxxramas/boss_grobbulus.cpp
 @@ -29,3 +29,172 @@ Enrages 26527*/
@@ -1482,10 +1445,10 @@ index 5270203..ac8516e 100644
 +}
 +
 diff --git a/scripts/northrend/naxxramas/boss_kelthuzad.cpp b/scripts/northrend/naxxramas/boss_kelthuzad.cpp
-index b016b8b..8682d74 100644
+index b016b8b..8795a59 100644
 --- a/scripts/northrend/naxxramas/boss_kelthuzad.cpp
 +++ b/scripts/northrend/naxxramas/boss_kelthuzad.cpp
-@@ -82,13 +82,22 @@ enum
+@@ -82,13 +82,25 @@ enum
  
      SPELL_MANA_DETONATION               = 27819,
      SPELL_SHADOW_FISSURE                = 27810,
@@ -1504,12 +1467,15 @@ index b016b8b..8682d74 100644
  static float M_F_HEIGHT = 2.0f;                             // adjust for height difference
  static float M_F_RANGE = 55.0f;                             // ~ range from center of chamber to center of alcove
  
++#define HOME_X                      3748.0f
++#define HOME_Y                      -5113.0f
++
 +uint8 m_uiAbominationsDead;
 +
  struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
  {
      boss_kelthuzadAI(Creature* pCreature) : ScriptedAI(pCreature)
-@@ -158,6 +167,8 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
+@@ -158,6 +170,8 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
  
          // it may be some spell should be used instead, to control the intro phase
          m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -1518,7 +1484,7 @@ index b016b8b..8682d74 100644
      }
  
      void KilledUnit(Unit* pVictim)
-@@ -179,11 +190,18 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
+@@ -179,11 +193,18 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
                      continue;
  
                  pGuardian->AI()->EnterEvadeMode();
@@ -1537,7 +1503,7 @@ index b016b8b..8682d74 100644
      }
  
      void MoveInLineOfSight(Unit* pWho)
-@@ -221,7 +239,8 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
+@@ -221,7 +242,8 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
              for(std::set<uint64>::iterator itr = m_lSoldierSet.begin(); itr != m_lSoldierSet.end(); ++itr)
              {
                  if (Creature* pSoldier = m_pInstance->instance->GetCreature(*itr))
@@ -1547,7 +1513,7 @@ index b016b8b..8682d74 100644
              }
          }
  
-@@ -230,7 +249,8 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
+@@ -230,7 +252,8 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
              for(std::set<uint64>::iterator itr = m_lUndeadSet.begin(); itr != m_lUndeadSet.end(); ++itr)
              {
                  if (Creature* pSoldier = m_pInstance->instance->GetCreature(*itr))
@@ -1557,7 +1523,17 @@ index b016b8b..8682d74 100644
              }
          }
  
-@@ -443,6 +463,7 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
+@@ -422,6 +445,9 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
+ 
+     void UpdateAI(const uint32 uiDiff)
+     {
++        if (m_creature->GetDistance2d(HOME_X, HOME_Y) > 80)
++            EnterEvadeMode();
++
+         if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
+         {
+             if (!m_pInstance)
+@@ -443,6 +469,7 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
                  float fx, fy, fz;
                  m_pInstance->GetChamberCenterCoords(fx, fy, fz);
                  m_creature->GetMotionMaster()->MovePoint(0, fx, fy, fz);
@@ -1565,7 +1541,7 @@ index b016b8b..8682d74 100644
  
                  DoScriptText(EMOTE_PHASE2, m_creature);
                  return;
-@@ -566,6 +587,61 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
+@@ -566,6 +593,61 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
      }
  };
  
@@ -1627,7 +1603,7 @@ index b016b8b..8682d74 100644
  CreatureAI* GetAI_boss_kelthuzad(Creature* pCreature)
  {
      return new boss_kelthuzadAI(pCreature);
-@@ -579,4 +655,9 @@ void AddSC_boss_kelthuzad()
+@@ -579,4 +661,9 @@ void AddSC_boss_kelthuzad()
      NewScript->Name = "boss_kelthuzad";
      NewScript->GetAI = &GetAI_boss_kelthuzad;
      NewScript->RegisterSelf();
@@ -1638,10 +1614,10 @@ index b016b8b..8682d74 100644
 +    NewScript->RegisterSelf();
  }
 diff --git a/scripts/northrend/naxxramas/boss_loatheb.cpp b/scripts/northrend/naxxramas/boss_loatheb.cpp
-index 514d3d7..ee4e3cf 100644
+index 853941b..707b5c7 100644
 --- a/scripts/northrend/naxxramas/boss_loatheb.cpp
 +++ b/scripts/northrend/naxxramas/boss_loatheb.cpp
-@@ -38,9 +38,27 @@ enum
+@@ -38,9 +38,15 @@ enum
      SPELL_SUMMON_SPORE      = 29234,
      SPELL_BERSERK           = 26662,
  
@@ -1653,24 +1629,12 @@ index 514d3d7..ee4e3cf 100644
 +    ACHIEV_SPORE_LOSER_H    = 2183,
  };
  
-+#define ADD_1X 2957.040f
-+#define ADD_1Y -3997.590f
-+#define ADD_1Z 274.280f
-+
-+#define ADD_2X 2909.130f
-+#define ADD_2Y -4042.970f
-+#define ADD_2Z 274.280f
-+
-+#define ADD_3X 2861.102f
-+#define ADD_3Y -3997.901f
-+#define ADD_3Z 274.280f
-+
 +bool m_bHasSporeDied;
 +
  struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
  {
      boss_loathebAI(Creature* pCreature) : ScriptedAI(pCreature)
-@@ -68,6 +86,7 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
+@@ -68,6 +74,7 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
          m_uiSummonTimer = urand(10000, 15000);              // first seen in vid after approx 12s
          m_uiBerserkTimer = MINUTE*12*IN_MILLISECONDS;       // only in heroic, after 12min
          m_uiNecroticAuraCount = 0;
@@ -1678,7 +1642,7 @@ index 514d3d7..ee4e3cf 100644
      }
  
      void Aggro(Unit* pWho)
-@@ -80,6 +99,12 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
+@@ -80,6 +87,12 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
      {
          if (m_pInstance)
              m_pInstance->SetData(TYPE_LOATHEB, DONE);
@@ -1691,26 +1655,7 @@ index 514d3d7..ee4e3cf 100644
      }
  
      void JustReachedHome()
-@@ -152,6 +177,18 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
-         if (m_uiSummonTimer < uiDiff)
-         {
-             DoCastSpellIfCan(m_creature, SPELL_SUMMON_SPORE);
-+            /*
-+            Unit* pSummonedSpores = NULL;
-+
-+            pSummonedSpores = m_creature->SummonCreature(16286,ADD_1X,ADD_1Y,ADD_1Z,0,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,80000);
-+            pSummonedSpores = m_creature->SummonCreature(16286,ADD_2X,ADD_2Y,ADD_2Z,0,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,80000);
-+            pSummonedSpores = m_creature->SummonCreature(16286,ADD_3X,ADD_3Y,ADD_3Z,0,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,80000);
-+            if (pSummonedSpores)
-+            {
-+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-+                    pSummonedSpores->AddThreat(pTarget);
-+            }
-+            */
-             m_uiSummonTimer = m_bIsRegularMode ? 36000 : 18000;
-         }
-         else
-@@ -172,11 +209,67 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
+@@ -172,11 +185,67 @@ struct MANGOS_DLL_DECL boss_loathebAI : public ScriptedAI
      }
  };
  
@@ -1778,7 +1723,7 @@ index 514d3d7..ee4e3cf 100644
  void AddSC_boss_loatheb()
  {
      Script* NewScript;
-@@ -184,4 +277,9 @@ void AddSC_boss_loatheb()
+@@ -184,4 +253,9 @@ void AddSC_boss_loatheb()
      NewScript->Name = "boss_loatheb";
      NewScript->GetAI = &GetAI_boss_loatheb;
      NewScript->RegisterSelf();
@@ -1789,7 +1734,7 @@ index 514d3d7..ee4e3cf 100644
 +    NewScript->RegisterSelf();
  }
 diff --git a/scripts/northrend/naxxramas/boss_maexxna.cpp b/scripts/northrend/naxxramas/boss_maexxna.cpp
-index eb9a525..2fc827d 100644
+index eb9a525..3416213 100644
 --- a/scripts/northrend/naxxramas/boss_maexxna.cpp
 +++ b/scripts/northrend/naxxramas/boss_maexxna.cpp
 @@ -39,6 +39,7 @@ enum
@@ -1836,75 +1781,34 @@ index eb9a525..2fc827d 100644
          }
          else
 diff --git a/scripts/northrend/naxxramas/boss_noth.cpp b/scripts/northrend/naxxramas/boss_noth.cpp
-index a1e8349..6243386 100644
+index a1e8349..41ae5d4 100644
 --- a/scripts/northrend/naxxramas/boss_noth.cpp
 +++ b/scripts/northrend/naxxramas/boss_noth.cpp
-@@ -82,6 +82,12 @@ enum
-     PHASE_SKELETON_3                    = 3
- };
- 
-+// Teleport position of Noth on his balcony
-+#define TELE_X 2631.370f
-+#define TELE_Y -3529.680f
-+#define TELE_Z 274.040f
-+#define TELE_O 6.277f
-+
- struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
- {
-     boss_nothAI(Creature* pCreature) : ScriptedAI(pCreature)
-@@ -102,6 +108,8 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
-     uint32 m_uiCurseTimer;
-     uint32 m_uiSummonTimer;
- 
-+    float LastX, LastY, LastZ;
-+
-     void Reset()
-     {
-         m_uiPhase = PHASE_GROUND;
-@@ -111,6 +119,13 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
+@@ -111,6 +111,9 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
          m_uiBlinkTimer = 25000;
          m_uiCurseTimer = 4000;
          m_uiSummonTimer = 30000;
-+
-+        LastX = 0;
-+        LastY = 0;
-+        LastZ = 0;
 +
 +        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 +        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
      }
  
      void Aggro(Unit* pWho)
-@@ -171,6 +186,17 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
- 
-                 if (DoCastSpellIfCan(m_creature, SPELL_TELEPORT) == CAST_OK)
+@@ -173,6 +176,8 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
                  {
-+                    m_creature->InterruptNonMeleeSpells(true);
-+                    LastX = m_creature->GetPositionX();
-+                    LastY = m_creature->GetPositionY();
-+                    LastZ = m_creature->GetPositionZ();
-+                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-+                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-+                    m_creature->StopMoving();
-+                    m_creature->GetMotionMaster()->Clear(false);
-+                    m_creature->GetMotionMaster()->MoveIdle();
-+                    m_creature->GetMap()->CreatureRelocation(m_creature, TELE_X, TELE_Y, TELE_Z, TELE_O);
-+                    m_creature->SendMonsterMove(TELE_X, TELE_Y, TELE_Z, SPLINETYPE_NORMAL, SPLINEFLAG_NONE, 0);
                      DoScriptText(EMOTE_TELEPORT, m_creature);
                      m_creature->GetMotionMaster()->MoveIdle();
++                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
++                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                      m_uiPhaseTimer = 70000;
-@@ -243,6 +269,14 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
+                     m_uiPhase = PHASE_BALCONY;
+                     ++m_uiPhaseSub;
+@@ -243,6 +248,8 @@ struct MANGOS_DLL_DECL boss_nothAI : public ScriptedAI
                  if (DoCastSpellIfCan(m_creature, SPELL_TELEPORT_RETURN) == CAST_OK)
                  {
                      DoScriptText(EMOTE_TELEPORT_RETURN, m_creature);
 +                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 +                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-+                    m_creature->GetMap()->CreatureRelocation(m_creature, LastX, LastY, LastZ, 0);
-+                    m_creature->SendMonsterMove(LastX, LastY, LastZ, SPLINETYPE_NORMAL, SPLINEFLAG_NONE, 0);
-+                    DoStartMovement(m_creature->getVictim());
-+                    LastX = 0;
-+                    LastY = 0;
-+                    LastZ = 0;
                      m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
                      m_uiPhaseTimer = 90000;
                      m_uiPhase = PHASE_GROUND;
@@ -1964,7 +1868,7 @@ index 3e7a23e..95e0b98 100644
          if (m_uiHatefulStrikeTimer < uiDiff)
          {
 diff --git a/scripts/northrend/naxxramas/boss_razuvious.cpp b/scripts/northrend/naxxramas/boss_razuvious.cpp
-index b6cb7b4..40d2fb4 100644
+index fe732ce..142725a 100644
 --- a/scripts/northrend/naxxramas/boss_razuvious.cpp
 +++ b/scripts/northrend/naxxramas/boss_razuvious.cpp
 @@ -41,9 +41,33 @@ enum
@@ -2099,7 +2003,7 @@ index b6cb7b4..40d2fb4 100644
 +    NewScript->RegisterSelf();
  }
 diff --git a/scripts/northrend/naxxramas/boss_sapphiron.cpp b/scripts/northrend/naxxramas/boss_sapphiron.cpp
-index 27dd989..606d5f4 100644
+index 3ceb9af..57ea12c 100644
 --- a/scripts/northrend/naxxramas/boss_sapphiron.cpp
 +++ b/scripts/northrend/naxxramas/boss_sapphiron.cpp
 @@ -29,12 +29,24 @@ enum
@@ -2254,16 +2158,24 @@ index 27dd989..606d5f4 100644
          if (phase == 1)
          {
              if (FrostAura_Timer < uiDiff)
-@@ -112,7 +196,7 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
+@@ -111,35 +195,55 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
+ 
              if (LifeDrain_Timer < uiDiff)
              {
-                 if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+-                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
 -                    DoCastSpellIfCan(target,SPELL_LIFE_DRAIN);
++                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCastSpellIfCan(target,m_bIsRegularMode ? SPELL_LIFE_DRAIN : SPELL_LIFE_DRAIN_H);
  
                  LifeDrain_Timer = 24000;
              }else LifeDrain_Timer -= uiDiff;
-@@ -125,21 +209,41 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
+ 
+             if (Blizzard_Timer < uiDiff)
+             {
+-                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
++                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                     DoCastSpellIfCan(target,SPELL_BLIZZARD);
+ 
                  Blizzard_Timer = 20000;
              }else Blizzard_Timer -= uiDiff;
  
@@ -2308,6 +2220,15 @@ index 27dd989..606d5f4 100644
                  }else Fly_Timer -= uiDiff;
              }
          }
+@@ -148,7 +252,7 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
+         {
+             if (Icebolt_Timer < uiDiff && Icebolt_Count < 5)
+             {
+-                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
++                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                     DoCastSpellIfCan(target,SPELL_ICEBOLT);
+ 
+                 ++Icebolt_Count;
 @@ -176,11 +280,22 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
                      m_creature->SetHover(false);
                      m_creature->GetMotionMaster()->Clear(false);
@@ -2341,7 +2262,7 @@ index 27dd989..606d5f4 100644
      }
  };
 diff --git a/scripts/northrend/naxxramas/boss_thaddius.cpp b/scripts/northrend/naxxramas/boss_thaddius.cpp
-index 3c31172..d6d2e9b 100644
+index 3c31172..9d71285 100644
 --- a/scripts/northrend/naxxramas/boss_thaddius.cpp
 +++ b/scripts/northrend/naxxramas/boss_thaddius.cpp
 @@ -31,13 +31,17 @@ enum
@@ -3256,7 +3177,7 @@ index 3c31172..d6d2e9b 100644
 +}
 \ No newline at end of file
 diff --git a/scripts/northrend/naxxramas/instance_naxxramas.cpp b/scripts/northrend/naxxramas/instance_naxxramas.cpp
-index e628c7c..af0fcdf 100644
+index e628c7c..92efd0a 100644
 --- a/scripts/northrend/naxxramas/instance_naxxramas.cpp
 +++ b/scripts/northrend/naxxramas/instance_naxxramas.cpp
 @@ -1,18 +1,18 @@
@@ -3734,7 +3655,7 @@ index e628c7c..af0fcdf 100644
  }
  
  bool instance_naxxramas::IsEncounterInProgress()
-@@ -246,157 +374,233 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
+@@ -246,157 +374,238 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
  {
      switch(uiType)
      {
@@ -3823,7 +3744,11 @@ index e628c7c..af0fcdf 100644
 +        m_auiEncounter[0] = uiData;
 +        DoUseDoorOrButton(m_uiAnubDoorGUID);
 +        if (uiData == DONE)
++        {
 +            OpenDoor(m_uiAnubGateGUID);
++            m_uiArachnofobiaTimer = 0;
++            m_bIsArachnofobia = true;
++        }
 +        break;
 +    case TYPE_FAERLINA:
 +        m_auiEncounter[1] = uiData;
@@ -3934,6 +3859,7 @@ index e628c7c..af0fcdf 100644
 +        DoUseDoorOrButton(m_uiHorsemenDoorGUID);
 +        if (uiData == DONE)
 +        {
++            //DoUpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET, 59450);
 +            DoUseDoorOrButton(m_uiMiliEyeRampGUID);
 +            DoUseDoorOrButton(m_uiMiliEyeGUID);
 +            DoRespawnGameObject(m_uiMiliPortalGUID, 30*MINUTE);
@@ -4051,10 +3977,10 @@ index e628c7c..af0fcdf 100644
 +        case DONE:
 +            OpenDoor(m_uiKelthuzadDoorGUID);
 +            Immortal();
-             break;
++            break;
 +        default:
 +            m_auiEncounter[14] = uiData;
-+            break;
+             break;
 +        }
 +        break;
 +    case TYPE_IMMORTAL:
@@ -4102,7 +4028,7 @@ index e628c7c..af0fcdf 100644
      }
  
      if (uiData == DONE)
-@@ -408,7 +612,8 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
+@@ -408,7 +617,8 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
              << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " "
              << m_auiEncounter[6] << " " << m_auiEncounter[7] << " " << m_auiEncounter[8] << " "
              << m_auiEncounter[9] << " " << m_auiEncounter[10] << " " << m_auiEncounter[11] << " "
@@ -4112,7 +4038,7 @@ index e628c7c..af0fcdf 100644
  
          strInstData = saveStream.str();
  
-@@ -429,9 +634,9 @@ void instance_naxxramas::Load(const char* chrIn)
+@@ -429,9 +639,9 @@ void instance_naxxramas::Load(const char* chrIn)
  
      std::istringstream loadStream(chrIn);
      loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3]
@@ -4125,7 +4051,7 @@ index e628c7c..af0fcdf 100644
  
      for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
      {
-@@ -442,40 +647,121 @@ void instance_naxxramas::Load(const char* chrIn)
+@@ -442,40 +652,121 @@ void instance_naxxramas::Load(const char* chrIn)
      OUT_LOAD_INST_DATA_COMPLETE;
  }
  
@@ -4277,7 +4203,7 @@ index e628c7c..af0fcdf 100644
      }
      return 0;
  }
-@@ -484,28 +770,32 @@ uint64 instance_naxxramas::GetData64(uint32 uiData)
+@@ -484,28 +775,32 @@ uint64 instance_naxxramas::GetData64(uint32 uiData)
  {
      switch(uiData)
      {
@@ -4332,7 +4258,7 @@ index e628c7c..af0fcdf 100644
      }
      return 0;
  }
-@@ -572,6 +862,7 @@ void instance_naxxramas::GetGothSummonPointCreatures(std::list<Creature*> &lList
+@@ -572,6 +867,7 @@ void instance_naxxramas::GetGothSummonPointCreatures(std::list<Creature*> &lList
  
  bool instance_naxxramas::IsInRightSideGothArea(Unit* pUnit)
  {
@@ -4340,7 +4266,7 @@ index e628c7c..af0fcdf 100644
      if (GameObject* pCombatGate = instance->GetGameObject(m_uiGothCombatGateGUID))
          return (pCombatGate->GetPositionY() >= pUnit->GetPositionY());
  
-@@ -608,6 +899,17 @@ bool AreaTrigger_at_naxxramas(Player* pPlayer, AreaTriggerEntry* pAt)
+@@ -608,6 +904,17 @@ bool AreaTrigger_at_naxxramas(Player* pPlayer, AreaTriggerEntry* pAt)
          }
      }
  
@@ -4358,7 +4284,7 @@ index e628c7c..af0fcdf 100644
      return false;
  }
  
-@@ -624,4 +926,9 @@ void AddSC_instance_naxxramas()
+@@ -624,4 +931,9 @@ void AddSC_instance_naxxramas()
      pNewScript->Name = "at_naxxramas";
      pNewScript->pAreaTrigger = &AreaTrigger_at_naxxramas;
      pNewScript->RegisterSelf();
@@ -4585,25 +4511,3 @@ index 0000000..597092a
 +UPDATE creature_template SET `unk16` = 200, `type_flags` = 1024 WHERE entry in (30641, 16129);
 +UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14 WHERE entry = 16363;
 \ No newline at end of file
-diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
-index 7adb88e..4f2af7f 100644
---- a/system/ScriptLoader.cpp
-+++ b/system/ScriptLoader.cpp
-@@ -326,6 +326,8 @@ extern void AddSC_boss_maexxna();
- extern void AddSC_boss_noth();
- extern void AddSC_boss_heigan();
- extern void AddSC_boss_patchwerk();
-+extern void AddSC_boss_grobbulus();
-+extern void AddSC_boss_thaddius();
- extern void AddSC_boss_razuvious();
- extern void AddSC_boss_sapphiron();
- extern void AddSC_instance_naxxramas();
-@@ -801,6 +803,8 @@ void AddScripts()
-     AddSC_boss_noth();
-     AddSC_boss_heigan();
-     AddSC_boss_patchwerk();
-+    AddSC_boss_grobbulus();
-+    AddSC_boss_thaddius();
-     AddSC_boss_razuvious();
-     AddSC_boss_sapphiron();
-     AddSC_instance_naxxramas();
