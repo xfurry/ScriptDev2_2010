@@ -115,14 +115,14 @@ struct MANGOS_DLL_DECL boss_IckAI : public ScriptedAI
         if(!GetClosestCreatureWithEntry(m_creature, NPC_KRICK, 50.0f))
         {
             pKrick = m_creature->SummonCreature(NPC_KRICK, KrickPos[0], KrickPos[1], KrickPos[2], KrickPos[3], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000);
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 pKrick->AddThreat(pTarget, 0.0f);
             DoScriptText(SAY_AGGRO, pKrick);
         }
         else
         {
             pKrick = GetClosestCreatureWithEntry(m_creature, NPC_KRICK, 80.0f);
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 pKrick->AddThreat(pTarget, 0.0f);
             DoScriptText(SAY_AGGRO, pKrick);
         }
@@ -176,7 +176,7 @@ struct MANGOS_DLL_DECL boss_IckAI : public ScriptedAI
             }
             //DoScriptText(SAY_ICK_CHASE, m_creature);
 
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_PURSUED);
             DoCast(m_creature, SPELL_CONFUSION);
             m_uiPursueTimer = 13000;
@@ -308,7 +308,7 @@ struct MANGOS_DLL_DECL boss_KrickAI : public ScriptedAI
             {
                 for(uint8 i = 0; i < 4; i++)
                 {
-                    if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                    if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         m_creature->SummonCreature(NPC_EXPLOSIVE_ORB, pTarget->GetPositionX() + urand(0, 3), pTarget->GetPositionY() + urand(0, 3), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 4000);
                 }
                 m_uiSummonOrbsTimer = 1500;

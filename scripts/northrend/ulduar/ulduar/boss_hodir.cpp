@@ -417,7 +417,7 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
             // icicles
             if(IcicleTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     DoCast(pTarget, SPELL_ICICLE);
                     DoCast(pTarget, SPELL_ICE_SHARDS); // not working
@@ -451,7 +451,7 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
             // freeze
             if(FreezeTimer < uiDiff)
             {
-                Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
                 if(target) 
                 {
                     DoCast(target, SPELL_FREEZE);

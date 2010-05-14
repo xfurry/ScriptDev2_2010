@@ -617,7 +617,7 @@ index 0000000..7e566fe
 +        if (RainOfFire_Timer < diff)
 +        {
 +            Unit* target = NULL;
-+            target = SelectUnit(SELECT_TARGET_RANDOM,0);
++            target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 +            if (target) DoCast(target,SPELL_RAINOFFIRE);
 +            RainOfFire_Timer = 28000;
 +        } else RainOfFire_Timer -= diff;
@@ -632,7 +632,7 @@ index 0000000..7e566fe
 +
 +        if (fire_breath_timer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target,SPELL_FLAME_BREATH);
 +            fire_breath_timer = 8000;
 +        }else fire_breath_timer -=diff;

@@ -361,7 +361,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 
     void JustSummoned(Creature* pSummoned)
     {
-        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             pSummoned->AddThreat(pTarget, 100.0f);
     }
 
@@ -374,7 +374,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         // spells
         if (m_uiIncinerateFleshTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_INCINERATE_FLESH_10);
@@ -392,7 +392,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 
         if (m_uiFelFireballTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_FEL_FIREBALL_10);
@@ -410,7 +410,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 
         if (m_uiFelLightningTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_FEL_LIGHTNING_10);
@@ -449,7 +449,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 
         if (m_uiLegionFlameTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_LEGION_FLAME);
             m_uiLegionFlameTimer = 28000;
         }
@@ -548,7 +548,7 @@ struct MANGOS_DLL_DECL mob_infernal_volcanoAI : public ScriptedAI
         if (spellTimer < uiDiff)
         {
             //DoCast(m_creature, SPELL_INFERNAL_ERUPTION_VOL);
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Creature* pInfernal = m_creature->SummonCreature(NPC_FELFLAME_INFERNAL, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                     pInfernal->AddThreat(pTarget, 1000.0f);
@@ -600,7 +600,7 @@ struct MANGOS_DLL_DECL mob_felflame_infernalAI : public ScriptedAI
             switch(urand(0, 1))
             {
             case 0:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_FEL_STEAK_10);
@@ -729,7 +729,7 @@ struct MANGOS_DLL_DECL mob_mistress_of_painAI : public ScriptedAI
                     DoCast(m_creature, SPELL_SHIVAN_SLASH_25);
                 break;
             case 1:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_SPINNING_PAIN_SPIKE);
                 break;
             }

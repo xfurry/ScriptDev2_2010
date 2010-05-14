@@ -150,7 +150,7 @@ struct MANGOS_DLL_DECL boss_tyrande_whisperwindAI : public ScriptedAI
 
         if (m_uiMoonfireTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_MOONFIRE);
             m_uiMoonfireTimer = urand(11000, 15000);
         }
@@ -159,7 +159,7 @@ struct MANGOS_DLL_DECL boss_tyrande_whisperwindAI : public ScriptedAI
 
         if (m_uiStarfallTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_STARFALL);
             m_uiStarfallTimer = urand(15000, 19000);
         }
@@ -168,7 +168,7 @@ struct MANGOS_DLL_DECL boss_tyrande_whisperwindAI : public ScriptedAI
 
         if (m_uiSearingArrowTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_SEARING_ARROW);
             m_uiSearingArrowTimer = 8000;
         }
@@ -244,7 +244,7 @@ struct MANGOS_DLL_DECL boss_fandral_staghelmAI : public ScriptedAI
 
         if (m_uiEntanglingTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_ENTANGLING_ROOTS);
             m_uiEntanglingTimer = urand(7000, 11000);
         }
@@ -253,7 +253,7 @@ struct MANGOS_DLL_DECL boss_fandral_staghelmAI : public ScriptedAI
 
         if (m_uiWrathTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(m_creature, SPELL_WRATH);
             m_uiWrathTimer = urand(5000, 8000);
         }

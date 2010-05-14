@@ -327,7 +327,7 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
         if(m_uiSacrificeTimer < uiDiff)
         {
             m_uiPlayerGUID = 0;
-            if(Unit* pPlayer = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit* pPlayer = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 m_uiPlayerGUID = pPlayer->GetGUID();
                 DoTeleportPlayer(pPlayer, fCoord[0][0], fCoord[0][1], fCoord[0][2], pPlayer->GetOrientation());

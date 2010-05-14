@@ -216,7 +216,7 @@ struct MANGOS_DLL_DECL mob_tribuna_controllerAI : public ScriptedAI
         {
             if (m_uiKaddrak_Encounter_timer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     if (!m_lKaddrakGUIDList.empty())
                         for(std::list<Creature*>::iterator itr = m_lKaddrakGUIDList.begin(); itr != m_lKaddrakGUIDList.end(); ++itr)
                             if ((*itr)->isAlive())
@@ -231,7 +231,7 @@ struct MANGOS_DLL_DECL mob_tribuna_controllerAI : public ScriptedAI
         {
             if (m_uiMarnak_Encounter_timer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     if (Creature* pTemp = m_creature->SummonCreature(NPC_DARK_MATTER_TARGET, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 1000))
                     {
                         pTemp->SetDisplayId(11686);
@@ -248,7 +248,7 @@ struct MANGOS_DLL_DECL mob_tribuna_controllerAI : public ScriptedAI
         {
             if (m_uiAbedneum_Encounter_timer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     if (Creature* pTemp = m_creature->SummonCreature(NPC_SEARING_GAZE_TARGET, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 10000))
                     {
                         pTemp->SetDisplayId(11686);

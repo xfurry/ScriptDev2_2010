@@ -1618,19 +1618,19 @@ index 901ceed..eb7a3a4 100644
 +                    Steptim = 2000 + rand()%6000;
 +                    break;
 +                case 5:
-+                    if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                         DoCast(target,SPELL_LAVA_STRIKE);
 +                    ++Step;
 +                    Steptim = 1000;
 +                    break;
 +                case 7:
-+                    if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                         DoCast(target,SPELL_LAVA_STRIKE);
 +                    ++Step;
 +                    Steptim = 1000;
 +                    break;
 +                case 9:
-+                    if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                         DoCast(target,SPELL_LAVA_STRIKE);
 +                    m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, 1);
 +                    ++Step;

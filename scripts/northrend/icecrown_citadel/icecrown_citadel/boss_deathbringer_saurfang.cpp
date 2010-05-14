@@ -207,7 +207,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
         {
             DoScriptText(SAY_FALLENCHAMPION, m_creature);
 
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_MARK_FALLEN_CHAMP);
             m_creature->SetPower(m_creature->getPowerType(),0);
             m_creature->RemoveAurasDueToSpell(SPELL_BLOOD_POWER);
@@ -246,7 +246,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 
         if (m_uiBoilingBlood_Timer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(target, SPELL_BOILING_BLOOD_10);
@@ -263,7 +263,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 
         if (m_uiBloodNova_Timer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(target, SPELL_BLOOD_NOVA_10);

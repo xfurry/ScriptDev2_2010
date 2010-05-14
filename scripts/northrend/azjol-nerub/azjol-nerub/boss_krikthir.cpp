@@ -245,13 +245,13 @@ struct MANGOS_DLL_DECL boss_krikthirAI : public ScriptedAI
         if (CurseFatigueTimer <= uiDiff)
         {
             //WowWiki say "Curse of Fatigue-Kirk'thir will cast Curse of Fatigue on 2-3 targets periodically."
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if (DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_CURSE_OF_FATIGUE : H_SPELL_CURSE_OF_FATIGUE) == CAST_OK)
                     CurseFatigueTimer = 10000;
             }
 
-               if (Unit* pTarget_1 = SelectUnit(SELECT_TARGET_RANDOM, 1))
+               if (Unit* pTarget_1 = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
             {
                 if (DoCastSpellIfCan(pTarget_1, m_bIsRegularMode ? SPELL_CURSE_OF_FATIGUE : H_SPELL_CURSE_OF_FATIGUE) == CAST_OK)
                     CurseFatigueTimer = 10000;
@@ -301,7 +301,7 @@ struct MANGOS_DLL_DECL npc_watcher_gashraAI : public ScriptedAI
 
         if (WebWrapTimer <= diff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(pTarget, SPELL_WEB_WRAP, true);
                 WebWrapTimer = 17000;
@@ -346,7 +346,7 @@ struct MANGOS_DLL_DECL npc_watcher_narjilAI : public ScriptedAI
 
         if (WebWrapTimer <= diff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(pTarget, SPELL_WEB_WRAP, true);
                 WebWrapTimer = 15000;
@@ -397,7 +397,7 @@ struct MANGOS_DLL_DECL npc_watcher_silthikAI : public ScriptedAI
 
         if (WebWrapTimer <= diff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(pTarget, SPELL_WEB_WRAP, true);
                 WebWrapTimer = 15000;

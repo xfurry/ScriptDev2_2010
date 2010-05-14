@@ -190,7 +190,7 @@ struct MANGOS_DLL_DECL boss_the_lurker_belowAI : public ScriptedAI
 					{
 						OrientationUpdated = 0;
 						Unit* target = NULL;
-						target = SelectUnit(SELECT_TARGET_TOPAGGRO,0);
+                        target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0);
 						m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 						//DoScriptText(EMOTE_SPOUT, m_creature);
 						if(target)
@@ -295,9 +295,9 @@ struct MANGOS_DLL_DECL boss_the_lurker_belowAI : public ScriptedAI
 				if(GeyserTimer < diff)
 				{
 					Unit* target = NULL;
-					target = SelectUnit(SELECT_TARGET_RANDOM,0);
-					if(target == SelectUnit(SELECT_TARGET_TOPAGGRO,0))
-						target = SelectUnit(SELECT_TARGET_TOPAGGRO,1);
+					target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0);
+					if(target == m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
+						target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 1);
 					GeyserTimer = rand()%5000 + 15000;
 					if(target)
 						DoCast(target,SPELL_GEYSER);
@@ -310,7 +310,7 @@ struct MANGOS_DLL_DECL boss_the_lurker_belowAI : public ScriptedAI
 					Unit* target = NULL;
 					int i = 0;
 					bool meleeTarget = false;
-					target = SelectUnit(SELECT_TARGET_TOPAGGRO,0);
+					target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0);
 					if (!target)
 						target = m_creature->getVictim();
 					while (target)
@@ -320,13 +320,13 @@ struct MANGOS_DLL_DECL boss_the_lurker_belowAI : public ScriptedAI
 							meleeTarget = true;
 							break;
 						}
-						target = SelectUnit(SELECT_TARGET_TOPAGGRO,i);
+						target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, i);
 						i++;
 					}
 
 					if(!meleeTarget)
 					{
-						target = SelectUnit(SELECT_TARGET_RANDOM,0);
+						target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 						if(target)
 							DoCast(target,SPELL_WATERBOLT);
 						else
@@ -379,7 +379,7 @@ struct MANGOS_DLL_DECL boss_the_lurker_belowAI : public ScriptedAI
 	{
 		Summoned = m_creature->SummonCreature(entry, x, y, z, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
 		Unit *target = NULL;
-		target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+		target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 		if(target)
 			Summoned->AI()->AttackStart(target);
 	}

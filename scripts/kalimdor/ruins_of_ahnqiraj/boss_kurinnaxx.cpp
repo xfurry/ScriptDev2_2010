@@ -132,7 +132,7 @@ struct MANGOS_DLL_DECL boss_kurinnaxxAI : public ScriptedAI
         //Summon our trap and wait 5 seconds
         if (!m_bHasSummonedTrap && m_uiSandTrap_Timer < 10000)
          {
-            if (Unit* pUnit = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pUnit = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 pUnit->CastSpell(pUnit,SPELL_SUMMON_SANDTRAP,false);
                 m_bHasSummonedTrap = true;
@@ -143,7 +143,7 @@ struct MANGOS_DLL_DECL boss_kurinnaxxAI : public ScriptedAI
         if (m_uiSandTrap_Timer < 5000)
          {
 
-            if (Unit* pUnit = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pUnit = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 if (GameObject *pTrap = GetClosestGameObjectWithEntry(pUnit,GO_TRAP,ATTACK_DISTANCE))
                 {
                     DoCast(pUnit, SPELL_SANDTRAP_EFFECT);

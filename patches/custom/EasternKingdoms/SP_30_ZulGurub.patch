@@ -100,7 +100,7 @@ index caad222..cef271d 100644
 -
 -        ++m_uiSummonCount;
 +        else
-+            pSummoned->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM,0));
++            pSummoned->AI()->AttackStart(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0));
      }
  
      void UpdateAI(const uint32 uiDiff)
@@ -192,7 +192,7 @@ index caad222..cef271d 100644
 +                m_creature->UpdateDamagePhysical(BASE_ATTACK);
  
 -                m_uiGouge_Timer = urand(17000, 27000);
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    AttackStart(pTarget);
 +                m_uiVanish_Timer = 3000;
 +                m_bIsPhaseTwo = true;
@@ -229,7 +229,7 @@ index caad222..cef271d 100644
 + 
 +            if (m_uiBackstab_Timer < uiDiff)
 +             {
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_BACKSTAB);
 +                m_uiBackstab_Timer = 20000 + rand()%20000;
 +             }
@@ -514,7 +514,7 @@ index 4807d45..86614f7 100644
 -            DoCastSpellIfCan(m_creature, SPELL_AVARTAR);
 -            Unit* target = NULL;
 -
--            target = SelectUnit(SELECT_TARGET_RANDOM,1);
+-            target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1);
 -
 -            if (m_creature->getThreatManager().getThreat(m_creature->getVictim()))
 -                m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(),-50);
@@ -532,7 +532,7 @@ index 4807d45..86614f7 100644
 -        }else GroundTremor_Timer -= diff;
 -
 +             DoCast(m_creature, SPELL_AVARTAR);
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,1))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 +            {
 +                if (m_creature->getThreatManager().getThreat(m_creature->getVictim()))
 +                    m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(),-50);
@@ -746,7 +746,7 @@ index 0e24a8a..cc9d244 100644
 -        //CauseInsanity_Timer
 -        /*if (CauseInsanity_Timer < diff)
 -        {
--            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+-            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -                DoCastSpellIfCan(target,SPELL_CAUSEINSANITY);
 -
 -            CauseInsanity_Timer = urand(35000, 43000);
@@ -756,7 +756,7 @@ index 0e24a8a..cc9d244 100644
 -        if (WillOfHakkar_Timer < diff)
 -        {
 -
--            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+-            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -                DoCastSpellIfCan(target,SPELL_WILLOFHAKKAR);
 -
 -            WillOfHakkar_Timer = urand(25000, 35000);
@@ -863,7 +863,7 @@ index 0e24a8a..cc9d244 100644
 +        if (m_uiCauseInsanity_Timer < uiDiff)
          {
 -            if (m_pInstance)
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget,SPELL_CAUSE_INSANITY);
 + 
 +            m_uiCauseInsanity_Timer = 35000 + rand()%8000;
@@ -873,7 +873,7 @@ index 0e24a8a..cc9d244 100644
 +
 +        if (m_uiWillOfHakkar_Timer < uiDiff)
 +         {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget,SPELL_WILL_OF_HAKKAR);
 + 
 +            m_uiWillOfHakkar_Timer = 25000 + rand()%10000;
@@ -1149,7 +1149,7 @@ index f6b50cb..03f5b72 100644
 -            Unit* target = NULL;
 -            for(int i = 0; i < 3; ++i)
 -            {
--                target = SelectUnit(SELECT_TARGET_RANDOM,0);
+-                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 -                Illusion = m_creature->SummonCreature(15163,target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(),0,TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN,30000);
 -                ((CreatureAI*)Illusion->AI())->AttackStart(target);
 +        if (m_uiManaBurn_Timer < uiDiff)
@@ -1176,7 +1176,7 @@ index f6b50cb..03f5b72 100644
 +            Unit* pTarget = NULL;
 +            for(uint8 i = 0; i < 3; ++i)
 +             {
-+                pTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
++                pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 +                pIllusion = m_creature->SummonCreature(NPC_NIGHTMARE_ILLUSION, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
 +                if (pIllusion)
 +                {
@@ -1314,7 +1314,7 @@ index 0fe5033..8846231 100644
 -        {
 -            if (Charge_Timer < diff)
 -            {
--                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+-                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -                    DoCastSpellIfCan(target,SPELL_CHARGE);
 -
 -                Charge_Timer = urand(15000, 30000);
@@ -1334,7 +1334,7 @@ index 0fe5033..8846231 100644
 -
 -            if (SpawnBats_Timer < diff)
 -            {
--                Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0);
+-                Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 -
 -                Creature* Bat = NULL;
 -                Bat = m_creature->SummonCreature(11368, -12291.6220f, -1380.2640f, 144.8304f, 5.483f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
@@ -1378,7 +1378,7 @@ index 0fe5033..8846231 100644
 +			    switch (rand()%5)
 +			    {
 +				    case 0:
-+                        if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +					    DoCast(target,SPELL_CHARGE);
 +					    break;
 +				    case 1:
@@ -1401,7 +1401,7 @@ index 0fe5033..8846231 100644
 +			    switch (rand()%5)
 +				{
 +					case 0:
-+					    if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++					    if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +								DoCast(target, SPELL_SHADOW_WORD_PAIN);
 +						break;					
 +					case 1:
@@ -1430,7 +1430,7 @@ index 0fe5033..8846231 100644
 +            if (m_uiSpawnBats_Timer < uiDiff)
 +             {
 +                DoCast(m_creature,SPELL_SUMMONBATS);
-+			    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++			    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +			    {
 +			        Creature* pBat = NULL;
 +                    for(uint8 i = 0; i < 6; ++i)
@@ -1451,7 +1451,7 @@ index 0fe5033..8846231 100644
 -            {
 -                if (PhaseTwo && ShadowWordPain_Timer < diff)
 -                {
--                    if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+-                    if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -                    {
 -                        DoCastSpellIfCan(target, SPELL_SHADOW_WORD_PAIN);
 -                        ShadowWordPain_Timer = urand(12000, 18000);
@@ -1777,7 +1777,7 @@ index 1da0b83..bc465f9 100644
 -        //Casting the delusion curse with a shade. So shade will attack the same target with the curse.
 -        if (Delusions_Timer < diff)
 -        {
--            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+-            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -            {
 -                DoCastSpellIfCan(target, SPELL_DELUSIONSOFJINDO);
 -
@@ -1793,7 +1793,7 @@ index 1da0b83..bc465f9 100644
 -        if (Teleport_Timer < diff)
 -        {
 -            Unit* target = NULL;
--            target = SelectUnit(SELECT_TARGET_RANDOM,0);
+-            target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 -            if (target && target->GetTypeId() == TYPEID_PLAYER)
 -            {
 -                DoTeleportPlayer(target, -11583.7783f, -1249.4278f, 77.5471f, 4.745f);
@@ -1816,7 +1816,7 @@ index 1da0b83..bc465f9 100644
 +         //Casting the delusion curse with a shade. So shade will attack the same target with the curse.
 +        if (m_uiDelusions_Timer < uiDiff)
 +         {
-+             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++             if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +             {
 +                DoCast(target, SPELL_DELUSIONS_OF_JINDO);
 +
@@ -1831,7 +1831,7 @@ index 1da0b83..bc465f9 100644
 + 
 +        if (m_uiTeleport_Timer < uiDiff)
 +         {
-+            Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
++            Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 +            if (pTarget && pTarget->GetTypeId() == TYPEID_PLAYER)
 +             {
 +                DoTeleportPlayer(pTarget, -11583.7783f, -1249.4278f, 79.5471f, 4.745f);
@@ -2093,7 +2093,7 @@ index 585dc96..16126ec 100644
          {
 -            if (Ambush_Timer < diff)
 -            {
--                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -                {
 -                    m_creature->NearTeleportTo(pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0.0f);
 -                    DoCastSpellIfCan(pTarget, SPELL_AMBUSH);
@@ -2131,7 +2131,7 @@ index 585dc96..16126ec 100644
 +         {
 +            if (m_uiAmbush_Timer < diff)
 +             {
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                 {
 +                    m_creature->GetMap()->CreatureRelocation(m_creature, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0.0f);
 +                    m_creature->SendMonsterMove(pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), SPLINETYPE_NORMAL, SPLINEFLAG_WALKMODE, 1);
@@ -2179,7 +2179,7 @@ index 585dc96..16126ec 100644
 +                if (m_creature->getThreatManager().getThreat(m_creature->getVictim()))
 +                    m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(),-50);
 + 
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,1))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 +                    AttackStart(pTarget);
 + 
 +                m_uiAggro_Timer = 7000 + rand()%13000;
@@ -2200,7 +2200,7 @@ index 585dc96..16126ec 100644
 -            if (Aggro_Timer < diff)
 -        {
 -            Unit* target = NULL;
--            target = SelectUnit(SELECT_TARGET_RANDOM,1);
+-            target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1);
 -
 -            if (m_creature->getThreatManager().getThreat(m_creature->getVictim()))
 -                m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(),-50);
@@ -2509,7 +2509,7 @@ index 7ca283a..0bb80fe 100644
 +                {
 +                    if (m_uiCharge_Timer < uiDiff)
 +                    {
-+                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        {
 +                            DoCast(pTarget,SPELL_CHARGE);
 +                            DoResetThreat();
@@ -2696,7 +2696,7 @@ index 7ca283a..0bb80fe 100644
 -        {
 -            if (Charge_Timer < diff)
 -            {
--                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+-                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -                {
 -                    DoCastSpellIfCan(target,SPELL_CHARGE);
 -                    DoResetThreat();
@@ -3331,7 +3331,7 @@ index f6ec25a..d1d7450 100644
 -        if (LightningWave_Timer < diff)
 -        {
 -            Unit* target = NULL;
--            target = SelectUnit(SELECT_TARGET_RANDOM,0);
+-            target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 -            if (target) DoCastSpellIfCan(target,SPELL_LIGHTNINGWAVE);
 -
 -            LightningWave_Timer = urand(12000, 16000);
@@ -3344,7 +3344,7 @@ index f6ec25a..d1d7450 100644
 + 
 +        if (m_uiLightningWave_Timer < diff)
 +         {
-+            if (Unit* pTarget =SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget =m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget,SPELL_LIGHTNING_WAVE);
 + 
 +            m_uiLightningWave_Timer = 12000 + rand()%4000;

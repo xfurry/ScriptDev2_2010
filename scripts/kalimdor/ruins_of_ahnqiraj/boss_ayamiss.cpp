@@ -115,7 +115,7 @@ struct MANGOS_DLL_DECL boss_ayamissAI : public ScriptedAI
                 pSummoned->AI()->AttackStart(pLarvaTarget);
         
         if (pSummoned->GetEntry() == NPC_HIVEZARA_SWARMER)
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 pSummoned->AI()->AttackStart(pTarget);
     }
 
@@ -158,7 +158,7 @@ struct MANGOS_DLL_DECL boss_ayamissAI : public ScriptedAI
  
         if (m_uiSummonPlayer_Timer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 m_creature->CastSpell(pTarget,SPELL_PARALYZE,false);
                 uint32 random = rand()%2;

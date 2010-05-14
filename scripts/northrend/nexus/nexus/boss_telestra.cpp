@@ -241,7 +241,7 @@ struct MANGOS_DLL_DECL boss_telestraAI : public ScriptedAI
                     break;
                 }
             }
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 Summoned->AI()->AttackStart(pTarget);
             return Summoned->GetGUID();
         }

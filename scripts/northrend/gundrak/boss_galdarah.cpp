@@ -246,7 +246,7 @@ struct MANGOS_DLL_DECL boss_galdarahAI : public ScriptedAI
                 {
                     if (uiPunctureTimer <= uiDiff)
                     {
-                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                             DoCast(pTarget, m_bIsRegularMode ? SPELL_PUNCTURE : H_SPELL_PUNCTURE);
                         uiPunctureTimer = 8000;
                     } else uiPunctureTimer -= uiDiff;
@@ -265,7 +265,7 @@ struct MANGOS_DLL_DECL boss_galdarahAI : public ScriptedAI
 
                     if (uiImpalingChargeTimer <= uiDiff)
                     {
-                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         {
                             DoCast(pTarget, m_bIsRegularMode ? SPELL_IMPALING_CHARGE : H_SPELL_IMPALING_CHARGE);
                             lImpaledPlayers.insert(pTarget->GetGUID());

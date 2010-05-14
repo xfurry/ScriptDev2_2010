@@ -220,7 +220,7 @@ struct MANGOS_DLL_DECL boss_taldaramAI : public ScriptedAI
             bool stop = false;
             while(!stop)
             {
-                m_uEmbraceTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
+                m_uEmbraceTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
                 if(m_uEmbraceTarget && m_uEmbraceTarget->isAlive() && m_uEmbraceTarget->GetTypeId() == TYPEID_PLAYER)
                     stop = true;
                 else

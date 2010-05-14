@@ -504,7 +504,7 @@ index 55fd5d8..d3cfe4d 100644
 +
 +        if (spellTimer < uiDiff)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, SPELL_EXPOSE_WEAKNESS);
 +            spellTimer = 10000;
 +        }else spellTimer -= uiDiff;
@@ -573,7 +573,7 @@ index 55fd5d8..d3cfe4d 100644
 +                DoCast(m_creature, SPELL_DETERMINATION);
 +                break;
 +            case 1:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_ACIC_MANDIBLES);
 +                break;
 +            }
@@ -1398,7 +1398,7 @@ index bb9d39e..65b3612 100644
 +        
 +        if(m_uiHexTimer < diff)
 +        {
-+            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
++            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 +                DoCast(target, SPELL_HEX);
 +            m_uiHexTimer = 20000 + rand()%20000;
 +        }
@@ -1559,7 +1559,7 @@ index bb9d39e..65b3612 100644
 +
 +        if(m_uiHammerOfJusticeTimer < diff)
 +        {
-+            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                if(m_creature->GetDistance2d(target) < 15)
 +                {
@@ -1715,11 +1715,11 @@ index bb9d39e..65b3612 100644
 +                }
 +                break;
 +            case 4:
-+                if(Unit *target = urand(0,1) ? SelectUnit(SELECT_TARGET_RANDOM,0) : DoSelectLowestHpFriendly(40.0f))
++                if(Unit *target = urand(0,1) ? m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0) : DoSelectLowestHpFriendly(40.0f))
 +                    DoCast(target, SPELL_DISPEL_MAGIC);
 +                break;
 +            case 5:
-+                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 +                        DoCast(pTarget, SPELL_MANA_BURN_10);
@@ -1871,7 +1871,7 @@ index bb9d39e..65b3612 100644
 +                    DoCast(m_creature->getVictim(), SPELL_MIND_FLAY_25HC);
 +                break;
 +            case 2:
-+                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 +                        DoCast(pTarget, SPELL_VAMPIRIC_TOUCH_10);
@@ -1884,7 +1884,7 @@ index bb9d39e..65b3612 100644
 +                }
 +                break;
 +            case 3:
-+                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 +                        DoCast(pTarget, SPELL_SHADOW_WORD_PAIN_10);
@@ -1897,7 +1897,7 @@ index bb9d39e..65b3612 100644
 +                }
 +                break;
 +            case 4:
-+                    if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        DoCast(target, SPELL_DISPEL_MAGIC);
 +                    break;
 +            }
@@ -1967,7 +1967,7 @@ index bb9d39e..65b3612 100644
 +
 +        if(m_uiFearTimer < diff)
 +		{
-+            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target, SPELL_FEAR);
 +            m_uiFearTimer = 8000;
 +        }
@@ -1994,7 +1994,7 @@ index bb9d39e..65b3612 100644
 +
 +        if(m_uiUnstableAfflictionTimer  < diff)
 +        {
-+            if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 +                    DoCast(pTarget, SPELL_UNSTABLE_AFFLICTION_10);
@@ -2034,7 +2034,7 @@ index bb9d39e..65b3612 100644
 +                    DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT_25HC);
 +                break;
 +            case 3:
-+                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 +                        DoCast(pTarget, SPELL_CORRUPTION_10);
@@ -2047,7 +2047,7 @@ index bb9d39e..65b3612 100644
 +                }
 +                break;
 +            case 4:
-+                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 +                        DoCast(pTarget, SPELL_CURSE_OF_AGONY_10);
@@ -2060,7 +2060,7 @@ index bb9d39e..65b3612 100644
 +                }
 +                break;
 +            case 5:
-+                if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(target, SPELL_CURSE_OF_EXHAUSTION);
 +                break;
 +			 }
@@ -2152,7 +2152,7 @@ index bb9d39e..65b3612 100644
 +
 +        if(m_uiPolymorphTimer < diff)
 +        {
-+            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
++            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 +                DoCast(target, SPELL_POLYMORPH);
 +            m_uiPolymorphTimer = 15000;
 +        }
@@ -2183,7 +2183,7 @@ index bb9d39e..65b3612 100644
 +                    DoCast(m_creature->getVictim(), SPELL_ARCANE_BLAST_25HC);
 +                break;
 +            case 2:
-+                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 +                        DoCast(pTarget, SPELL_FROSTBOLT_10);
@@ -2287,7 +2287,7 @@ index bb9d39e..65b3612 100644
 +
 +        if(m_uiWyvernStingTimer < diff)
 +		{
-+            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
++            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 +			    DoCast(target, SPELL_WYVERN_STING);
 +            m_uiWyvernStingTimer = 60000;
 +		}
@@ -2432,7 +2432,7 @@ index bb9d39e..65b3612 100644
 +
 +        if(m_uiCycloneTimer < diff)
 +		{
-+            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
++            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 +			    DoCast (target, SPELL_CYCLONE);
 +			m_uiCycloneTimer = 6000+rand()%2000;
 +		}
@@ -2440,7 +2440,7 @@ index bb9d39e..65b3612 100644
 +
 +        if(m_uiEntanglingRootsTimer < diff)
 +		{
-+            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +			    DoCast(target, SPELL_ENTANGLING_ROOTS);
 +			m_uiEntanglingRootsTimer = 10000 + rand()%2000;
 +		}
@@ -2448,7 +2448,7 @@ index bb9d39e..65b3612 100644
 +
 +        if(m_uiFaerieFireTimer < diff)
 +        {
-+            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target, SPELL_FAERIE_FIRE);
 +            m_uiFaerieFireTimer = 10000 + rand()%8000;
 +        }
@@ -2469,7 +2469,7 @@ index bb9d39e..65b3612 100644
 +                    DoCast(m_creature->getVictim(), SPELL_MOONFIRE_25HC);
 +                break;
 +            case 2:
-+                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 +                        DoCast(pTarget, SPELL_INSECT_SWARM_10);
@@ -2482,7 +2482,7 @@ index bb9d39e..65b3612 100644
 +                }
 +                break;
 +            case 3:
-+                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 +                        DoCast(pTarget, SPELL_STARFIRE_10);
@@ -2875,7 +2875,7 @@ index bb9d39e..65b3612 100644
 +
 +		if(m_uiBlindTimer < diff)
 +		{
-+			if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
++			if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 +			{
 +                if(m_creature->IsInRange(target, 0.0f, 15.0f, false))
 +                {
@@ -2948,7 +2948,7 @@ index bb9d39e..65b3612 100644
 +
 +		if(m_uiShockTimer < diff)
 +		{
-+            if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 +                    DoCast(pTarget, SPELL_EARTH_SHOCK_10);
@@ -3046,7 +3046,7 @@ index bb9d39e..65b3612 100644
 +
 +		if(m_uiRepentanceTimer < diff)
 +        {
-+            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
++            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 +			    DoCast(target, SPELL_REPENTANCE);
 +            m_uiRepentanceTimer = 60000 + rand()%4000;
 +        }
@@ -3893,7 +3893,7 @@ index e6eb792..14cf813 100644
 +            switch(urand(0, 1))
 +            {
 +            case 0:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
 +                        DoCast(pTarget, SPELL_FEL_STEAK_10);
@@ -4018,7 +4018,7 @@ index e6eb792..14cf813 100644
 +                    DoCast(m_creature, SPELL_SHIVAN_SLASH_25);
 +                break;
 +            case 1:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_SPINNING_PAIN_SPIKE);
 +                break;
 +            }
@@ -5461,11 +5461,11 @@ index e9b81d8..a544168 100644
 +            switch(urand(0, 1))
 +            {
 +            case 0:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_BATTER);
 +                break;
 +            case 1:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_HEADCRACK);
 +                break;
 +            }

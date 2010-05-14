@@ -828,7 +828,7 @@ struct MANGOS_DLL_DECL boss_fc_resto_shammyAI : public boss_faction_championAI
         
         if(m_uiHexTimer < diff)
         {
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
+            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                 DoCast(target, SPELL_HEX);
             m_uiHexTimer = 20000 + rand()%20000;
         }
@@ -865,7 +865,7 @@ struct MANGOS_DLL_DECL boss_fc_resto_shammyAI : public boss_faction_championAI
                 }
                 break;
             case 3:
-                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_EARTH_SHOCK_10);
@@ -998,7 +998,7 @@ struct MANGOS_DLL_DECL boss_fc_holy_pallyAI : public boss_faction_championAI
 
         if(m_uiHammerOfJusticeTimer < diff)
         {
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(m_creature->GetDistance2d(target) < 15)
                 {
@@ -1154,11 +1154,11 @@ struct MANGOS_DLL_DECL boss_fc_holy_priestAI : public boss_faction_championAI
                 }
                 break;
             case 4:
-                if(Unit *target = urand(0,1) ? SelectUnit(SELECT_TARGET_RANDOM,0) : DoSelectLowestHpFriendly(40.0f))
+                if(Unit *target = urand(0,1) ? m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0) : DoSelectLowestHpFriendly(40.0f))
                     DoCast(target, SPELL_DISPEL_MAGIC);
                 break;
             case 5:
-                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_MANA_BURN_10);
@@ -1310,7 +1310,7 @@ struct MANGOS_DLL_DECL boss_fc_shadow_priestAI : public boss_faction_championAI
                     DoCast(m_creature->getVictim(), SPELL_MIND_FLAY_25HC);
                 break;
             case 2:
-                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_VAMPIRIC_TOUCH_10);
@@ -1323,7 +1323,7 @@ struct MANGOS_DLL_DECL boss_fc_shadow_priestAI : public boss_faction_championAI
                 }
                 break;
             case 3:
-                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_SHADOW_WORD_PAIN_10);
@@ -1336,7 +1336,7 @@ struct MANGOS_DLL_DECL boss_fc_shadow_priestAI : public boss_faction_championAI
                 }
                 break;
             case 4:
-                    if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         DoCast(target, SPELL_DISPEL_MAGIC);
                     break;
             }
@@ -1406,7 +1406,7 @@ struct MANGOS_DLL_DECL boss_fc_warlockAI : public boss_faction_championAI
 
         if(m_uiFearTimer < diff)
 		{
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_FEAR);
             m_uiFearTimer = 8000;
         }
@@ -1433,7 +1433,7 @@ struct MANGOS_DLL_DECL boss_fc_warlockAI : public boss_faction_championAI
 
         if(m_uiUnstableAfflictionTimer  < diff)
         {
-            if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_UNSTABLE_AFFLICTION_10);
@@ -1473,7 +1473,7 @@ struct MANGOS_DLL_DECL boss_fc_warlockAI : public boss_faction_championAI
                     DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT_25HC);
                 break;
             case 3:
-                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_CORRUPTION_10);
@@ -1486,7 +1486,7 @@ struct MANGOS_DLL_DECL boss_fc_warlockAI : public boss_faction_championAI
                 }
                 break;
             case 4:
-                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_CURSE_OF_AGONY_10);
@@ -1499,7 +1499,7 @@ struct MANGOS_DLL_DECL boss_fc_warlockAI : public boss_faction_championAI
                 }
                 break;
             case 5:
-                if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(target, SPELL_CURSE_OF_EXHAUSTION);
                 break;
 			 }
@@ -1603,7 +1603,7 @@ struct MANGOS_DLL_DECL boss_fc_mageAI : public boss_faction_championAI
 
         if(m_uiPolymorphTimer < diff)
         {
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
+            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                 DoCast(target, SPELL_POLYMORPH);
             m_uiPolymorphTimer = 15000;
         }
@@ -1634,7 +1634,7 @@ struct MANGOS_DLL_DECL boss_fc_mageAI : public boss_faction_championAI
                     DoCast(m_creature->getVictim(), SPELL_ARCANE_BLAST_25HC);
                 break;
             case 2:
-                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_FROSTBOLT_10);
@@ -1747,7 +1747,7 @@ struct MANGOS_DLL_DECL boss_fc_hunterAI : public boss_faction_championAI
 
         if(m_uiWyvernStingTimer < diff)
 		{
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
+            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 			    DoCast(target, SPELL_WYVERN_STING);
             m_uiWyvernStingTimer = 60000;
 		}
@@ -1904,7 +1904,7 @@ struct MANGOS_DLL_DECL boss_fc_boomkinAI : public boss_faction_championAI
 
         if(m_uiCycloneTimer < diff)
 		{
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
+            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 			    DoCast (target, SPELL_CYCLONE);
 			m_uiCycloneTimer = 6000+rand()%2000;
 		}
@@ -1912,7 +1912,7 @@ struct MANGOS_DLL_DECL boss_fc_boomkinAI : public boss_faction_championAI
 
         if(m_uiEntanglingRootsTimer < diff)
 		{
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			    DoCast(target, SPELL_ENTANGLING_ROOTS);
 			m_uiEntanglingRootsTimer = 10000 + rand()%2000;
 		}
@@ -1920,7 +1920,7 @@ struct MANGOS_DLL_DECL boss_fc_boomkinAI : public boss_faction_championAI
 
         if(m_uiFaerieFireTimer < diff)
         {
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_FAERIE_FIRE);
             m_uiFaerieFireTimer = 10000 + rand()%8000;
         }
@@ -1941,7 +1941,7 @@ struct MANGOS_DLL_DECL boss_fc_boomkinAI : public boss_faction_championAI
                     DoCast(m_creature->getVictim(), SPELL_MOONFIRE_25HC);
                 break;
             case 2:
-                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_INSECT_SWARM_10);
@@ -1954,7 +1954,7 @@ struct MANGOS_DLL_DECL boss_fc_boomkinAI : public boss_faction_championAI
                 }
                 break;
             case 3:
-                if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_STARFIRE_10);
@@ -2347,7 +2347,7 @@ struct MANGOS_DLL_DECL boss_fc_rogueAI : public boss_faction_championAI
 
 		if(m_uiBlindTimer < diff)
 		{
-			if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
+			if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 			{
                 if(m_creature->IsInRange(target, 0.0f, 15.0f, false))
                 {
@@ -2420,7 +2420,7 @@ struct MANGOS_DLL_DECL boss_fc_enh_shammyAI : public boss_faction_championAI
 
 		if(m_uiShockTimer < diff)
 		{
-            if(Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_EARTH_SHOCK_10);
@@ -2527,7 +2527,7 @@ struct MANGOS_DLL_DECL boss_fc_ret_pallyAI : public boss_faction_championAI
 
 		if(m_uiRepentanceTimer < diff)
         {
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
+            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 			    DoCast(target, SPELL_REPENTANCE);
             m_uiRepentanceTimer = 60000 + rand()%4000;
         }

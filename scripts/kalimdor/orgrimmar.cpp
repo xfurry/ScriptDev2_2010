@@ -299,7 +299,7 @@ struct MANGOS_DLL_DECL boss_voljinAI : public ScriptedAI
 
         if (m_uiShadowWordPainTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_SHADOW_WORD_PAIN);
             m_uiShadowWordPainTimer = 8000;
         }
@@ -308,7 +308,7 @@ struct MANGOS_DLL_DECL boss_voljinAI : public ScriptedAI
 
         if (m_uiShootTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_SHOOT_VOLJIN);
             m_uiShootTimer = urand(6000, 9000);
         }

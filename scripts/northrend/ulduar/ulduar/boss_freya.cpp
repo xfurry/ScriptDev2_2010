@@ -346,7 +346,7 @@ struct MANGOS_DLL_DECL boss_elder_brightleafAI : public ScriptedAI
 
         if(SolarFlareTimer < diff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,1))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SOLAR_FLARE : SPELL_SOLAR_FLARE_H);
             SolarFlareTimer = 10000 + urand(1000, 5000);
         }
@@ -439,7 +439,7 @@ struct MANGOS_DLL_DECL boss_elder_ironbranchAI : public ScriptedAI
 
         if(ImpaleTimer < diff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,1))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_IMPALE : SPELL_IMPALE_H);
             ImpaleTimer = 10000 + urand (1000, 5000);
         }
@@ -451,7 +451,7 @@ struct MANGOS_DLL_DECL boss_elder_ironbranchAI : public ScriptedAI
             int8 times = m_bIsRegularMode ? 1 : 2;
             for(int8 i = 0; i < times; )
             {
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1))
+                if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                 {
                     if(target->HasAura(SPELL_IRON_ROOTS || SPELL_IRON_ROOTS_H))
                         return;
@@ -471,7 +471,7 @@ struct MANGOS_DLL_DECL boss_elder_ironbranchAI : public ScriptedAI
 
         if(ThornSwarmTimer < diff)
         {
-            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1))
+            if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                 DoCast(target, m_bIsRegularMode ? SPELL_THORM_SWARM : SPELL_THORM_SWARM_H);
             ThornSwarmTimer = 30000;
         }
@@ -828,7 +828,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             x = (rand_norm() * 30.0f) - 15.0f;
             y = (rand_norm() * 30.0f) - 15.0f;
             Creature *lasher = DoSpawnCreature(NPC_DETONATING_LASHER, x, y, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 2000);
-            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+            Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
             if(lasher && target)
                 lasher->AddThreat(target, 1.0f);
         }
@@ -840,7 +840,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
         float x = (rand_norm() * 30.0f) - 15.0f;
         float y = (rand_norm() * 30.0f) - 15.0f;
         Creature *add = DoSpawnCreature(NPC_ANCIENT_CONSERVATOR, x, y, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 2000);
-        Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+        Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
         if(add && target)
             add->AddThreat(target, 1.0f);
     }
@@ -851,17 +851,17 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
         Creature *add;
         Unit *target;
         add = DoSpawnCreature(NPC_WATER_SPIRIT, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 2000);
-        target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+        target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
         if(add && target)
             add->AddThreat(target, 1.0f);
 
         add = DoSpawnCreature(NPC_STORM_LASHER, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 2000);
-        target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+        target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
         if(add && target)
             add->AddThreat(target, 1.0f);
 
         add = DoSpawnCreature(NPC_SNAPLASHER, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 2000);
-        target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+        target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
         if(add && target)
             add->AddThreat(target, 1.0f);
     }
@@ -950,7 +950,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                     //DoCast(m_creature, m_bIsRegularMode ? SPELL_UNSTABLE_ENERGY_FREYA : SPELL_UNSTABLE_ENERGY_FREYA_H);
                     for(int8 i = 0; i < 3; ++i)
                     {
-                        if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                        if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         {
                             float x = target->GetPositionX();
                             float y = target->GetPositionY();
@@ -970,7 +970,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                     int8 times = m_bIsRegularMode ? 1 : 2;
                     for(int8 i = 0; i < times; )
                     {
-                        if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1))
+                        if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                         {
                             if(target->HasAura(SPELL_IRON_ROOTS_FREYA || SPELL_IRON_ROOTS_FREYA_H))
                                 return;
@@ -1044,7 +1044,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             //All phases
             if(SunbeamTimer < diff)
             {
-                if( Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if( Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(target, m_bIsRegularMode ? SPELL_SUNBEAM : SPELL_SUNBEAM_H);
                 SunbeamTimer = 6000 + rand()%10000;
             }
@@ -1052,7 +1052,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
 
             if(LifebindersGiftTimer < diff)
             {
-                if( Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if( Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_LIFEBINDERS_GIFT_SUMMON);
                     //m_creature->SummonCreature(MOB_EONARS_GIFT, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
                 LifebindersGiftTimer = 30000;
@@ -1312,7 +1312,7 @@ struct MANGOS_DLL_DECL mob_freya_spawnedAI : public ScriptedAI
 
     void Reset()
     {
-        AttackStart(SelectUnit(SELECT_TARGET_RANDOM,0));
+        AttackStart(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0));
         AncientWaterSpirit = false;
         StormLasher = false;
         Snaplasher = false;
@@ -1413,7 +1413,7 @@ struct MANGOS_DLL_DECL mob_freya_spawnedAI : public ScriptedAI
         {
             if(NaturesFury_Timer < diff)
             {
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), m_bIsRegularMode ? SPELL_NATURES_FURY : SPELL_NATURES_FURY_H);
+                DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_NATURES_FURY : SPELL_NATURES_FURY_H);
                 NaturesFury_Timer = urand(5,6)*IN_MILLISECONDS;
             }else NaturesFury_Timer -= diff;
 

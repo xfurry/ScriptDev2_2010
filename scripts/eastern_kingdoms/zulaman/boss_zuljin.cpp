@@ -354,7 +354,7 @@ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
                         Vortex->CastSpell(Vortex, SPELL_CYCLONE_VISUAL, true);
                         Vortex->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         Vortex->SetSpeedRate(MOVE_RUN, 1.0f);
-                        Vortex->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+                        Vortex->AI()->AttackStart(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0));
                         Vortex->SetInCombatWithZone();
                         m_lSummonsGUIDList.push_back(Vortex->GetGUID());
                     }
@@ -444,7 +444,7 @@ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
 
             if(Grievous_Throw_Timer < diff)
             {
-                if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     m_creature->CastSpell(target, SPELL_GRIEVOUS_THROW, false);
                 Grievous_Throw_Timer = 10000;
             }else Grievous_Throw_Timer -= diff;
@@ -472,7 +472,7 @@ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
             {
                 if(!TankGUID)
                 {
-                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
                         TankGUID = m_creature->getVictim()->GetGUID();
                         m_creature->SetSpeedRate(MOVE_RUN, 5.0f);
@@ -488,7 +488,7 @@ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
                     {
                         Unit* target = m_creature->getVictim();
                         if(!target || !target->isTargetableForAttack()) target = Unit::GetUnit(*m_creature, TankGUID);
-                        if(!target || !target->isTargetableForAttack()) target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                        if(!target || !target->isTargetableForAttack()) target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
                         if(target)
                         {
                             AttackStart(target);
@@ -522,7 +522,7 @@ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
             {
                 if(!TankGUID)
                 {
-                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
                         TankGUID = m_creature->getVictim()->GetGUID();
                         m_creature->SetSpeedRate(MOVE_RUN, 5.0f);
@@ -536,7 +536,7 @@ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
                     Unit* target = m_creature->getVictim();
                     if(!target || !target->isTargetableForAttack())
                     {
-                        target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                        target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
                         AttackStart(target);
                     }
                     if(target)
@@ -553,7 +553,7 @@ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
                                 TankGUID = 0;
                             }
                             else
-                                AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+                                AttackStart(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0));
                         }
                     }
                     else 
@@ -573,7 +573,7 @@ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
 
             if(Pillar_Of_Fire_Timer < diff)
             {
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     float x, y, z;
                     target->GetPosition(x, y, z);
@@ -589,7 +589,7 @@ struct MANGOS_DLL_DECL boss_zuljinAI : public ScriptedAI
 
             if(Flame_Breath_Timer < diff)
             {
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     m_creature->CastSpell(m_creature, SPELL_FLAME_BREATH, false);
                 Flame_Breath_Timer = 10000;
             }else Flame_Breath_Timer -= diff;
@@ -623,7 +623,7 @@ struct MANGOS_DLL_DECL feather_vortexAI : public ScriptedAI
     {
         //if the vortex reach the target, it change his target to another player
         if( m_creature->IsWithinDistInMap(m_creature->getVictim(), ATTACK_DISTANCE))
-            AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+            AttackStart(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0));
     }
 };
 

@@ -198,7 +198,7 @@ struct MANGOS_DLL_DECL boss_archavonAI : public ScriptedAI
             m_uiRockShardsProgressTimer = 3000;
             m_bRLRockShard = true;
             m_pRockShardsTarget = NULL;
-            if (m_pRockShardsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (m_pRockShardsTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 m_creature->getThreatManager().addThreat(m_pRockShardsTarget, 100000000.0f);
             m_uiRockShardsTimer = 15000+rand()%15000;
             return;

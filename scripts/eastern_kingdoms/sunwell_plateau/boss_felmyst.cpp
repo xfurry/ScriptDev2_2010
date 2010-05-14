@@ -289,7 +289,7 @@ struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
                 m_bIsFogOfCorruption    = true;
                 m_bIsFlyPhase           = true;
 
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     m_fPosX = target->GetPositionX();
                     m_fPosY = target->GetPositionY();
@@ -325,7 +325,7 @@ struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
             //100%
             if(m_uiEncapsulateTimer < diff)
             {
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     m_uiEncapsulateGUID = target->GetGUID();
                     DoCast(target, SPELL_ENCAPSULATE_CHANNEL);
@@ -363,7 +363,7 @@ struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
             {
                 if(m_uiMaxBreathCount < 2)
                 {
-                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
                         m_uiVictimGUID = target->GetGUID();
                         DoCast(target, SPELL_VAPOR_DAMAGE, true);
@@ -492,7 +492,7 @@ struct MANGOS_DLL_DECL mob_deathcloudAI : public Scripted_NoMovementAI
 				{
 					if(!cImage->isDead())
 					{
-						if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+						if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 							cImage->CastSpell(target, m_uiImageGUID[i][1], true);
 					}
 				}

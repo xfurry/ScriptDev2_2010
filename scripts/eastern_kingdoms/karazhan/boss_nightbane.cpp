@@ -105,7 +105,7 @@ struct MANGOS_DLL_DECL boss_nightbaneAI : public ScriptedAI
             if (charredearth_timer < diff)
             {
                 Unit* target = NULL;
-                target = SelectUnit(SELECT_TARGET_RANDOM,0);
+                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
                 DoCast(target,SPELL_CHARRED_EARTH);
                 charredearth_timer = 20000; //timer wrong
             }else charredearth_timer -= diff;
@@ -113,7 +113,7 @@ struct MANGOS_DLL_DECL boss_nightbaneAI : public ScriptedAI
             if (tailsweep_timer < diff)
             {
                 Unit* target = NULL;
-                target = SelectUnit(SELECT_TARGET_RANDOM,0);
+                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 
                 if (!m_creature->HasInArc(3.1415f, target)) 
                     DoCast(target,SPELL_TAIL_SWEEP);
@@ -123,7 +123,7 @@ struct MANGOS_DLL_DECL boss_nightbaneAI : public ScriptedAI
             if (searingcinders_timer < diff)
             {
                 Unit* target = NULL;
-                target = SelectUnit(SELECT_TARGET_RANDOM,0);
+                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
                 //DoCast(target,SPELL_SEARING_CINDERS); // unk
                 searingcinders_timer = 10000; //timer wrong
             }else searingcinders_timer -= diff;
@@ -187,7 +187,7 @@ struct MANGOS_DLL_DECL boss_nightbaneAI : public ScriptedAI
                 if (distractingash_timer < diff)
                 {
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM,0);
+                    target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 
                     DoCast(target,SPELL_DISTRACTING_ASH,true);
                     distractingash_timer = 2000;//timer wrong
@@ -206,7 +206,7 @@ struct MANGOS_DLL_DECL boss_nightbaneAI : public ScriptedAI
             if (fireballbarrage_timer < diff)
             {
                 Unit* target = NULL;
-                target = SelectUnit(SELECT_TARGET_RANDOM,0);
+                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 
                 DoCast(target,SPELL_FIREBALL_BARRAGE); // nur wenn das Ziel zu weit weg (!) ist ... mache ich später rein
                 fireballbarrage_timer = 20000; //Timer fehlen noch

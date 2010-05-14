@@ -222,7 +222,7 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
                 case 1: DoScriptText(SAY_CHANGE2, m_creature); break;
                 case 2: DoScriptText(SAY_CHANGE3, m_creature); break;
             }
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_PURSUED);
 
             PursueTimer = 30000;
@@ -258,7 +258,7 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
         {
             for(uint8 i = 0; i < 5; i++)
             {
-                Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
                 int32 dmg = Regular ? (3000 + rand()%2000) : (2000 + rand()%1200);
                 if(target && target->isAlive())
                     m_creature->CastCustomSpell(target, SPELL_MISSILE_BARRAGE, &dmg, 0, 0, false);

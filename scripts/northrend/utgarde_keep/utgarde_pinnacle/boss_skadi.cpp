@@ -281,7 +281,7 @@ struct MANGOS_DLL_DECL boss_skadiAI : public ScriptedAI
             }
             if (pTemp)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     pTemp->AddThreat(pTarget, 0.0f);
                     pTemp->AI()->AttackStart(pTarget);
@@ -338,7 +338,7 @@ struct MANGOS_DLL_DECL boss_skadiAI : public ScriptedAI
                 case 2: DoScriptText(SAY_DRAKEBREATH_3, m_creature); break;
                 }
                 //breath ID missing
-                /*if(Unit* pPlayer = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                /*if(Unit* pPlayer = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     m_creature->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_POISONED_SPEAR : SPELL_POISONED_SPEAR_H, false);
                     pPlayer->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_POISONED : SPELL_POISONED_H, true);
@@ -362,7 +362,7 @@ struct MANGOS_DLL_DECL boss_skadiAI : public ScriptedAI
                         DoScriptText(SAY_DRAKE_DEATH, m_creature);
                         m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
                         m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
-                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                             AttackStart(pTarget);
                     break;
                 }
@@ -426,7 +426,7 @@ struct MANGOS_DLL_DECL boss_skadiAI : public ScriptedAI
 
             if(m_uiPoisonedSpearTimer < uiDiff)
             {
-                if(Unit* pPlayer = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if(Unit* pPlayer = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     m_creature->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_POISONED_SPEAR : SPELL_POISONED_SPEAR_H, false);
                     pPlayer->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_POISONED : SPELL_POISONED_H, true);

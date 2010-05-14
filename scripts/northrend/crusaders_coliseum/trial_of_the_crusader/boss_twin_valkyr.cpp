@@ -427,7 +427,7 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 
         if (m_uiLightToutchTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_TOUCH_OF_LIGHT_10);
@@ -868,7 +868,7 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
 
         if (m_uiDarkToutchTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_TOUCH_OF_DARKNESS_10);

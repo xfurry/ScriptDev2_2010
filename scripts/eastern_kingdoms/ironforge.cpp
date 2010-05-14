@@ -133,7 +133,7 @@ struct MANGOS_DLL_DECL boss_king_magni_bronzebreardAI : public ScriptedAI
 
         if (m_uiStormboltTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_STORM_BOLT);
             m_uiStormboltTimer = 10000;
         }
@@ -172,7 +172,7 @@ struct MANGOS_DLL_DECL boss_high_tinker_mekkatorqueAI : public ScriptedAI
 
         if (m_uiBombTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_BOMB);
             m_uiBombTimer = urand(8000, 15000);
         }

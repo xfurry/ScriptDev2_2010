@@ -247,7 +247,7 @@ struct MANGOS_DLL_DECL boss_alythessAI : public ScriptedAI
 		// 100%
 		if(m_uiFlameTouchedTimer < diff)
         {
-			if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM, 0))
+			if(Unit* victim = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 victim->CastSpell(victim, SPELL_FLAME_TOUCHED, true);
             m_uiFlameTouchedTimer = 30000;
         }else m_uiFlameTouchedTimer -= diff;
@@ -256,7 +256,7 @@ struct MANGOS_DLL_DECL boss_alythessAI : public ScriptedAI
         if(m_uiConflagrationTimer < diff)
         {
             m_uiConfTargetGUID = 0;
-			if (Unit *victim = SelectUnit(SELECT_TARGET_RANDOM, 0))
+			if (Unit *victim = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 m_uiConfTargetGUID = victim->GetGUID();
                 victim->CastSpell(victim, AURA_CONF, true);
@@ -280,7 +280,7 @@ struct MANGOS_DLL_DECL boss_alythessAI : public ScriptedAI
         {
             uint8 i = urand(3,5);
             for(uint8 k=0; k<i; ++k)
-			    if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM, 0))
+			    if(Unit* victim = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				    m_creature->CastSpell(victim, SPELL_FLAME_SEAR, true);	
             m_uiFlameSearTimer = 30000;
         }else m_uiFlameSearTimer -= diff;
@@ -398,7 +398,7 @@ struct MANGOS_DLL_DECL boss_sacrolashAI : public ScriptedAI
 		// 100%
         if(m_uiDarkTouchedTimer < diff)
         {
-			if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM, 0))
+			if(Unit* victim = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				victim->CastSpell(victim, SPELL_DARK_TOUCHED,true);
             m_uiDarkTouchedTimer = urand(10000,13000);
         }else m_uiDarkTouchedTimer -= diff;
@@ -406,7 +406,7 @@ struct MANGOS_DLL_DECL boss_sacrolashAI : public ScriptedAI
 		// 100%
         if(m_uiShadowBladesTimer < diff)
         {
-		    if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM, 0))
+		    if(Unit* victim = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 m_creature->CastSpell(victim, SPELL_DARK_STRIKE, false);
                 m_creature->CastSpell(victim, SPELL_SHADOW_BLADES, true);
@@ -418,7 +418,7 @@ struct MANGOS_DLL_DECL boss_sacrolashAI : public ScriptedAI
         if(m_uiShadowNovaTimer < diff)
         {
             DoScriptText(SAY_SACROLASH_SHADOW_NOVA, m_creature);
-            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_SHADOW_NOVA);
             m_uiShadowNovaTimer = urand(30000,40000);
         }else m_uiShadowNovaTimer -= diff;
@@ -442,7 +442,7 @@ struct MANGOS_DLL_DECL boss_sacrolashAI : public ScriptedAI
                     image->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     image->setFaction(14); 
 
-                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         image->AI()->AttackStart(target);
 			    }
             }
@@ -495,7 +495,7 @@ struct MANGOS_DLL_DECL npc_shadow_imageAI : public ScriptedAI
 		
 		if(m_uiShadowfuryTimer < diff)
         {
-            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 m_creature->CastSpell(target, SPELL_SHADOWFURY, false);
 			m_uiShadowfuryTimer = 8000;	
         }else m_uiShadowfuryTimer -= diff;

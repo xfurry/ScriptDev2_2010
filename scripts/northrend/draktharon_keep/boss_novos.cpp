@@ -205,7 +205,7 @@ struct MANGOS_DLL_DECL boss_novosAI : public ScriptedAI
             {     
                 if (ArcaneCount == 2)
                 {
-                    DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_ARCANE_BLAST : H_SPELL_ARCANE_BLAST);
+                    DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_ARCANE_BLAST : H_SPELL_ARCANE_BLAST);
                     ArcaneCount = 0;
                 }
 
@@ -216,15 +216,15 @@ struct MANGOS_DLL_DECL boss_novosAI : public ScriptedAI
                         switch(urand(0, 1))
                         {
                             case 0: 
-                                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_WRATH_OF_MISERY : H_SPELL_WRATH_OF_MISERY);
+                                DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_WRATH_OF_MISERY : H_SPELL_WRATH_OF_MISERY);
                             case 1: 
-                                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_BLIZZARD : H_SPELL_BLIZZARD);
+                                DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_BLIZZARD : H_SPELL_BLIZZARD);
                         }
                         SpecialCast = 0;
                     }
                     if (SpecialCast < 3)
                     {
-                        DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_FROSTBOLT : H_SPELL_FROSTBOLT);
+                        DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_FROSTBOLT : H_SPELL_FROSTBOLT);
                         SpecialCast ++;
                     }
                     ArcaneCount ++;

@@ -638,7 +638,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                 uint8 i = urand(0, 11);
                 if(Creature *pTemp = m_creature->SummonCreature(MOB_IMMORTAL_GUARDIAN, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                 {
-                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
                         pTemp->AddThreat(pTarget,0.0f);
                         pTemp->AI()->AttackStart(pTarget);
@@ -1661,7 +1661,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         uint8 i = urand(0, 11);
         if(Creature *pTemp = m_creature->SummonCreature(MOB_CONSTRICTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 pTemp->AddThreat(pTarget,1000.0f);
                 pTemp->AI()->AttackStart(pTarget);
@@ -1671,7 +1671,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         i = urand(0, 11);
         if(Creature *pTemp = m_creature->SummonCreature(MOB_CRUSHER_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 pTemp->AddThreat(pTarget,1000.0f);
                 pTemp->AI()->AttackStart(pTarget);
@@ -1681,7 +1681,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         i = urand(0, 11);
         if(Creature *pTemp = m_creature->SummonCreature(MOB_CORRUPTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 pTemp->AddThreat(pTarget,1000.0f);
                 pTemp->AI()->AttackStart(pTarget);
@@ -1868,21 +1868,21 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 
             if (psychosisTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, m_bIsRegularMode ? SPELL_PHYCHOSIS : SPELL_PHYCHOSIS_H);
                 psychosisTimer = urand(15000, 20000);
             }else psychosisTimer -= uiDiff;
 
             if (maladyTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_MALADY_OF_THE_MIND);
                 maladyTimer = urand(20000, 25000);
             }else maladyTimer -= uiDiff;
 
             if (brainLinkTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_BRAIN_LINK);
                 brainLinkTimer = urand(25000, 30000);
             }else brainLinkTimer -= uiDiff;
@@ -1934,7 +1934,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                 case 1:
                     if(Creature *pTemp = m_creature->SummonCreature(MOB_CONSTRICTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                     {
-                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         {
                             pTemp->AddThreat(pTarget,1000.0f);
                             pTemp->AI()->AttackStart(pTarget);
@@ -1947,7 +1947,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                     {
                         if(Creature *pTemp = m_creature->SummonCreature(MOB_CRUSHER_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                         {
-                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                             {
                                 pTemp->AddThreat(pTarget,1000.0f);
                                 pTemp->AI()->AttackStart(pTarget);
@@ -1960,7 +1960,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                 case 4:
                     if(Creature *pTemp = m_creature->SummonCreature(MOB_CORRUPTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                     {
-                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         {
                             pTemp->AddThreat(pTarget,1000.0f);
                             pTemp->AI()->AttackStart(pTarget);
@@ -2637,7 +2637,7 @@ struct MANGOS_DLL_DECL mob_guardian_of_yogg_saronAI : public ScriptedAI
     {
         if(spell->Id == SPELL_SARAS_ANGER)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(pTarget->GetTypeId() == TYPEID_PLAYER)
                 {
@@ -2680,7 +2680,7 @@ struct MANGOS_DLL_DECL mob_guardian_of_yogg_saronAI : public ScriptedAI
 
         if (dominateMindTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_DOMINATE_MIND);
             dominateMindTimer = 30000;
         }else dominateMindTimer -= uiDiff;
@@ -2742,19 +2742,19 @@ struct MANGOS_DLL_DECL mob_corruptor_tentacleAI : public ScriptedAI
             switch(urand(0, 3))
             {
             case 0:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_BLACK_PLAGUE);
                 break;
             case 1:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_APATHY);
                 break;
             case 2:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_CURSE_OF_DOOM);
                 break;
             case 3:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_DRAINING_POISON);
                 break;
             }
@@ -2797,7 +2797,7 @@ struct MANGOS_DLL_DECL mob_constrictor_tentacleAI : public ScriptedAI
         if (squeezeTimer < uiDiff)
         {
             // broken spell
-            //if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            //if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             //DoCast(pTarget, m_bIsRegularMode ? SPELL_SQUEEZE : SPELL_SQUEEZE_H);
             squeezeTimer = 15000;
         }else squeezeTimer -= uiDiff;

@@ -498,7 +498,7 @@ struct MANGOS_DLL_DECL boss_prophet_velenAI : public ScriptedAI
 
         if (m_uiHolyBlastTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_HOLY_BLAST);
             m_uiHolyBlastTimer = urand(7000, 11000);
         }

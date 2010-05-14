@@ -187,7 +187,7 @@ struct MANGOS_DLL_DECL mob_iron_constructAI : public ScriptedAI
                 m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                 m_creature->GetMotionMaster()->MovePoint(0, pTemp->GetPositionX(), pTemp->GetPositionY(), pTemp->GetPositionZ());
 
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     m_creature->AddThreat(pTarget,0.0f);
                     m_creature->AI()->AttackStart(pTarget);
@@ -421,7 +421,7 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
         {
             //slag pot yell
             DoScriptText(SAY_SLAGPOT, m_creature);
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1)){
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1)){
                 DoCast(target, m_bIsRegularMode ? SPELL_SLAG_POT : SPELL_SLAG_POT_H);
                 m_uiPotTarget = target->GetGUID();
             }
@@ -450,7 +450,7 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
 
             /*
             if (Creature* pTemp = m_creature->SummonCreature(MOB_IRON_CONSTRUCT, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     pTemp->AddThreat(pTarget,0.0f);
                     pTemp->AI()->AttackStart(pTarget);

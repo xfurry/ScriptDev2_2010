@@ -156,7 +156,7 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
                 case 2: DoScriptText(SAY_BONESPIKE3, m_creature); break;
             }
 
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCastSpellIfCan(target, SPELL_BONE_SPIKE);
 
@@ -172,7 +172,7 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
 
         if (m_uiColdFlame_Timer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 float fPosX, fPosY, fPosZ;
                 target->GetPosition(fPosX, fPosY, fPosZ);

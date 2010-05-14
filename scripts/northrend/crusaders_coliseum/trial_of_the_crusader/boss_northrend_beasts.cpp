@@ -284,7 +284,7 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
 
         if (m_creature->GetHealthPercent() <= (100-(m_uiHealthPoint*m_uiSnoboldNo)))
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(pTarget, SPELL_SNOBOLLED, true);
                 DoCast(m_creature, SPELL_RISING_ANGER); // broken
@@ -339,7 +339,7 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
 
         if (m_uiImpaleTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_IMPALE_10);
@@ -591,7 +591,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
 
             if (m_uiAcidSpitTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_ACID_SPIT_10);
@@ -609,7 +609,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
 
             if (m_uiParaliticSprayTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_PARALYTIC_SPRAY_10);
@@ -658,7 +658,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
 
             if (m_uiParaliticBiteTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_PARALYTIC_BITE_10);
@@ -931,7 +931,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
 
             if (m_uiFireSpitTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_FIRE_SPIT_10);
@@ -949,7 +949,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
 
             if (m_uiBurningSprayTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_BURNING_SPRAY_10);
@@ -998,7 +998,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
 
             if (m_uiBurningBiteTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(pTarget, SPELL_BURNING_BITE_10);
@@ -1303,7 +1303,7 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
                         }
                     }
                     // pick a target and run for it
-                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
                         pTarget->GetPosition(fPosX, fPosY, fPosZ);
                         DoScriptText(EMOTE_TRAMPLE, m_creature, pTarget);
@@ -1417,7 +1417,7 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
 
         if (m_uiArticBreathTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_ARCTIC_BREATH_10);
@@ -1435,7 +1435,7 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
 
         if (m_uiFerociousButtTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_FEROCIOUS_BUTT_10);
@@ -1489,14 +1489,14 @@ struct MANGOS_DLL_DECL mob_snoboldAI : public ScriptedAI
 
         if (m_uiHeadcrackTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_HEADCRACK);
             m_uiHeadcrackTimer = urand(7000, 9000);
         }else m_uiHeadcrackTimer -= uiDiff;
 
         if (m_uiBatterTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_BATTER);
             m_uiBatterTimer = urand(3000, 6000);
         }else m_uiBatterTimer -= uiDiff;
@@ -1504,7 +1504,7 @@ struct MANGOS_DLL_DECL mob_snoboldAI : public ScriptedAI
         if(FireBombTimer < uiDiff)
         {
             //DoCast(m_creature, SPELL_FIREBOMB);
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Creature *pBomb = m_creature->SummonCreature(NPC_FIREBOMB, 
                     target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, 

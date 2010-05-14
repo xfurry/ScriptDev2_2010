@@ -846,7 +846,7 @@ struct MANGOS_DLL_DECL boss_lady_jaina_proudmooreAI : public ScriptedAI
 
         if (m_uiBlizzardTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_BLIZZARD);
             m_uiBlizzardTimer = urand(15000, 18000);
         }
@@ -855,7 +855,7 @@ struct MANGOS_DLL_DECL boss_lady_jaina_proudmooreAI : public ScriptedAI
 
         if (m_uiFireBlastTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_FIRE_BLAST);
             m_uiFireBlastTimer = urand(5000, 8000);
         }
@@ -864,7 +864,7 @@ struct MANGOS_DLL_DECL boss_lady_jaina_proudmooreAI : public ScriptedAI
 
         if (m_uiFireballTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_FIREBALL);
             m_uiFireballTimer = urand(7000, 10000);
         }
@@ -873,7 +873,7 @@ struct MANGOS_DLL_DECL boss_lady_jaina_proudmooreAI : public ScriptedAI
 
         if (m_uiTeleportTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_TELEPORT);
             m_uiTeleportTimer = urand(17000, 25000);
         }

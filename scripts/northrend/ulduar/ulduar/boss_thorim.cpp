@@ -481,7 +481,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                 if(chargeOrbTimer < diff)
                 {
                     // missing orbs from DB :(
-                    //if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    //if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     //DoCast(pTarget, SPELL_CHARGE_ORB);
                     chargeOrbTimer = 10000;
                 }
@@ -490,7 +490,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                 // storm hammer
                 if(stormHammerTimer < diff)
                 {
-                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
                         if(pTarget->IsWithinLOSInMap(m_creature))
                         {
@@ -505,7 +505,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                 // deafening thunder
                 if(deafeningThunderTimer < diff)
                 {
-                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
                         if(pTarget->IsWithinLOSInMap(m_creature))
                         {
@@ -812,7 +812,7 @@ struct MANGOS_DLL_DECL boss_runic_colossusAI : public ScriptedAI
                 DoCast(m_creature->getVictim(), SPELL_SMASH);
                 break;
             case 1:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, m_bIsRegularMode ? SPELL_CHARGE : SPELL_CHARGE_H);
                 break;
             }
@@ -884,7 +884,7 @@ struct MANGOS_DLL_DECL boss_ancient_rune_giantAI : public ScriptedAI
                 DoCast(m_creature->getVictim(), m_bIsRegularMode? SPELL_STOMP : SPELL_STOMP_H);
                 break;
             case 1:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_RUNE_DETONATION);
                 break;
             }
@@ -937,7 +937,7 @@ struct MANGOS_DLL_DECL npc_sifAI : public ScriptedAI
                 DoCast(m_creature, m_bIsRegularMode? SPELL_FROST_NOVA : SPELL_FROST_NOVA_H);
                 break;
             case 2:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, m_bIsRegularMode? SPELL_BLIZZARD : SPELL_BLIZZARD_H);
                 break;
             }

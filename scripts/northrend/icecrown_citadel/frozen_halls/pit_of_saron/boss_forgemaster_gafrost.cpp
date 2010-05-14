@@ -349,7 +349,7 @@ struct MANGOS_DLL_DECL boss_GarfrostAI : public ScriptedAI
         if (m_uiThrowSaroniteTimer < uiDiff)
         {
             DoScriptText(EMOTE_SARONITE, m_creature);
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_THROW_SARONITE);
             m_uiThrowSaroniteTimer = 35000;
         }
@@ -358,7 +358,7 @@ struct MANGOS_DLL_DECL boss_GarfrostAI : public ScriptedAI
 
         if (m_uiThunderingStompTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_THUNDERING_STOMP);
             m_uiThunderingStompTimer = 20000;
         }
@@ -367,7 +367,7 @@ struct MANGOS_DLL_DECL boss_GarfrostAI : public ScriptedAI
 
         if (m_uiDeepFreezeTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_DEEP_FREEZE : SPELL_DEEP_FREEZE_H);
             m_uiDeepFreezeTimer = 35000;
         }

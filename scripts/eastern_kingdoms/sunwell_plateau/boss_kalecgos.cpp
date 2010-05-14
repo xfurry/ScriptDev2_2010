@@ -398,7 +398,7 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
                 }
                 else
                 {
-                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
+                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
                         if ( pTarget == (*i))
                             return; 
 
@@ -573,7 +573,7 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
                 m_creature->AI()->AttackStart(pKalec);
                 m_creature->AddThreat(pKalec, 100000.0f);
             }
-            else if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1))
+            else if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
             {
                 m_creature->AddThreat(pTarget, 100000.0f);
                 m_creature->AI()->AttackStart(pTarget);

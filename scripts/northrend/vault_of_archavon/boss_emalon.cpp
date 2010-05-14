@@ -160,7 +160,7 @@ struct MANGOS_DLL_DECL npc_tempest_minionAI : public ScriptedAI
                 m_creature->MonsterTextEmote("%s appears to defend Emalon!", 0, true);
                 m_creature->SetInCombatWithZone();
                 DoResetThreat();
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     m_creature->GetMotionMaster()->MoveChase(pTarget);
 
             }
@@ -309,7 +309,7 @@ struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
 
         if (m_uiChainLightningTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_CHAIN_LIGHTNING_N : SPELL_CHAIN_LIGHTNING_H);
             m_uiChainLightningTimer = 10000 + rand()%15000;
         }

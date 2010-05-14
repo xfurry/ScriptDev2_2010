@@ -380,7 +380,7 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
 
                 if(CosmicSmash_Timer < uiDiff)
                 {
-                    DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_COSMIC_SMASH : SPELL_COSMIC_SMASH_H, true);
+                    DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_COSMIC_SMASH : SPELL_COSMIC_SMASH_H, true);
                     CosmicSmash_Timer = urand(30000, 60000);
                 }else CosmicSmash_Timer -= uiDiff;
 
@@ -444,7 +444,7 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
                 {
                     for(uint8 i = 0; i < urand (1, 3); i++)
                     {
-                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                             m_creature->SummonCreature(CREATURE_LIVING_CONSTELLATION, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
                     }
                     LivingConstellationTimer = 30000;
@@ -659,7 +659,7 @@ struct MANGOS_DLL_DECL mob_living_constellationAI : public ScriptedAI
 
         if (ArcaneBarrageTimer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0)){
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
                 DoCast(target, m_bIsRegularMode ? SPELL_ARCANE_BARRAGE : SPELL_ARCANE_BARRAGE_H);
             }
             ArcaneBarrageTimer = 15000;

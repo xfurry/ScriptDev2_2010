@@ -263,7 +263,7 @@ index 178782a..5a32d38 100644
 +
 +        if(m_uiImpaleTimer < uiDiff)
 +        {
-+            if(Unit* pPlayer = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit* pPlayer = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                m_creature->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_IMPALE : SPELL_IMPALE_H, false);
 +            m_uiImpaleTimer = urand(15000,25000);
 +        }else m_uiImpaleTimer -= uiDiff;
@@ -1237,7 +1237,7 @@ index 0e5a0a5..4063c60 100644
 +        if(m_uiSacrificeTimer < uiDiff)
 +        {
 +            m_uiPlayerGUID = 0;
-+            if(Unit* pPlayer = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit* pPlayer = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                m_uiPlayerGUID = pPlayer->GetGUID();
 +                DoTeleportPlayer(pPlayer, fCoord[0][0], fCoord[0][1], fCoord[0][2], pPlayer->GetOrientation());

@@ -440,14 +440,14 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
 
 		if (Fireball_Timer < diff && airphase && !grounded)
         {
-			if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+			if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				DoCast(target, m_bIsRegularMode ? SPELL_FIREBALL : SPELL_FIREBALL_H);
             Fireball_Timer = 2000;
         }else Fireball_Timer -= diff;   
 
 		if (Devouring_Flame_Timer < diff && !grounded)
         {
-			if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+			if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				DoCast(target, DEVOURING_FLAME_VISUAL);
             Devouring_Flame_Timer = 12000;
         }else Devouring_Flame_Timer -= diff;  
@@ -455,13 +455,13 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
 		if (wave1_spawn < diff && airphase && !grounded)
         {
 			if (Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_WATCHER, RazorscaleAddX[3], RazorscaleAddY[3], RazorscaleAddZ[3], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     pTemp->AddThreat(pTarget,0.0f);
                     pTemp->AI()->AttackStart(pTarget);
                 }
 			if (Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_GUARDIAN, RazorscaleAddX[3] + 5, RazorscaleAddY[3] + 5, RazorscaleAddZ[3], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     pTemp->AddThreat(pTarget,0.0f);
                     pTemp->AI()->AttackStart(pTarget);
@@ -472,13 +472,13 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
 		if (wave2_spawn < diff && airphase && !grounded)
         {
 			if (Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_WATCHER, RazorscaleAddX[1], RazorscaleAddY[1], RazorscaleAddZ[1], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     pTemp->AddThreat(pTarget,0.0f);
                     pTemp->AI()->AttackStart(pTarget);
                 }
 			if (Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_GUARDIAN, RazorscaleAddX[1] + 5, RazorscaleAddY[1] + 5, RazorscaleAddZ[1], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     pTemp->AddThreat(pTarget,0.0f);
                     pTemp->AI()->AttackStart(pTarget);
@@ -494,7 +494,7 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
 				break;
 				case 1:
 					if (Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_SENTINEL, RazorscaleAddX[2], RazorscaleAddY[2], RazorscaleAddZ[2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-						if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+						if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 						{
 							pTemp->AddThreat(pTarget,0.0f);
 							pTemp->AI()->AttackStart(pTarget);

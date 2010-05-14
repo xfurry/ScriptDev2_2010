@@ -131,7 +131,7 @@ struct MANGOS_DLL_DECL npc_YmirjarWrathbringerAI : public ScriptedAI
 
         if (m_uiBlightTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_BLIGHT : SPELL_BLIGHT_H);
             m_uiBlightTimer = 8000;
         }
@@ -220,7 +220,7 @@ struct MANGOS_DLL_DECL npc_YmirjarFlamebearerAI: public ScriptedAI
 
         if (m_uiFireballTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_FIREBALL : SPELL_FIREBALL_H);
             m_uiFireballTimer = 5000;
         }
@@ -229,7 +229,7 @@ struct MANGOS_DLL_DECL npc_YmirjarFlamebearerAI: public ScriptedAI
 
         if (m_uiTacticalBlinkTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_TACTICAL_BLINK);
             m_uiTacticalBlinkTimer = 12000;
         }
@@ -238,7 +238,7 @@ struct MANGOS_DLL_DECL npc_YmirjarFlamebearerAI: public ScriptedAI
 
         if (m_uiHellfireTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_HELLFIRE : SPELL_HELLFIRE_H);
             m_uiHellfireTimer = 10000;
         }
@@ -276,7 +276,7 @@ struct MANGOS_DLL_DECL npc_YmirjarDeathbringerAI: public ScriptedAI
 
         if (m_uiEmpoweredShadowBoltTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_EMPOWERED_SHADOW_BOLT : SPELL_EMPOWERED_SHADOW_BOLT_H);
             m_uiEmpoweredShadowBoltTimer = 8000;
         }
@@ -318,7 +318,7 @@ struct MANGOS_DLL_DECL npc_WrathboneLaborerAI: public ScriptedAI
 
         if (m_uiBlindingDirtTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_BLINDING_DIRT);
             m_uiBlindingDirtTimer = 10000;
         }
@@ -335,7 +335,7 @@ struct MANGOS_DLL_DECL npc_WrathboneLaborerAI: public ScriptedAI
 
         if (m_uiShovelledTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHOVELLED : SPELL_SHOVELLED_H);
             m_uiShovelledTimer = 7000;
         }
@@ -375,7 +375,7 @@ struct MANGOS_DLL_DECL npc_WrathboneColdwraithAI: public ScriptedAI
 
         if (m_uiFreezingCircleTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_FREEZING_CIRCLE : SPELL_FREEZING_CIRCLE_H);
             m_uiFreezingCircleTimer = 9000;
         }
@@ -384,7 +384,7 @@ struct MANGOS_DLL_DECL npc_WrathboneColdwraithAI: public ScriptedAI
 
         if (m_uiFrostboltTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_FROSTBOLT : SPELL_FROSTBOLT_H);
             m_uiFrostboltTimer = 5000;
         }
@@ -424,7 +424,7 @@ struct MANGOS_DLL_DECL npc_StonespineGargoyleAI: public ScriptedAI
 
         if (m_uiGargoyleStrikeTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_GARGOYLE_STRIKE : SPELL_GARGOYLE_STRIKE_H);
             m_uiGargoyleStrikeTimer = 6000;
         }
@@ -472,7 +472,7 @@ struct MANGOS_DLL_DECL npc_PlaguebornHorrorAI: public ScriptedAI
 
         if (m_uiPustulantFleshTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_PUSTULANT_FLESH : SPELL_PUSTULANT_FLESH_H);
             m_uiPustulantFleshTimer = 10000;
         }
@@ -657,7 +657,7 @@ struct MANGOS_DLL_DECL npc_DeathwhisperTorturerAI: public ScriptedAI
 
         if (m_uiBlackBrandTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_BLACK_BRAND);
             m_uiBlackBrandTimer = 10000;
         }
@@ -666,7 +666,7 @@ struct MANGOS_DLL_DECL npc_DeathwhisperTorturerAI: public ScriptedAI
 
         if (m_uiCurseOfAgonyTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_CURSE_OF_AGONY);
             m_uiCurseOfAgonyTimer = 13000;
         }
@@ -704,7 +704,7 @@ struct MANGOS_DLL_DECL npc_DeathwhisperShadowcasterAI: public ScriptedAI
 
         if (m_uiShadowBoltTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT_H);
             m_uiShadowBoltTimer = 5000;
         }
@@ -744,7 +744,7 @@ struct MANGOS_DLL_DECL npc_DeathwhisperNecrolyteAI: public ScriptedAI
 
         if (m_uiConversionBeamTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_CONVERSION_BEAM : SPELL_CONVERSION_BEAM_H);
             m_uiConversionBeamTimer = 12000;
         }
@@ -754,7 +754,7 @@ struct MANGOS_DLL_DECL npc_DeathwhisperNecrolyteAI: public ScriptedAI
 
         if (m_uiShadowBoltTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_BOLT_2 : SPELL_SHADOW_BOLT_2_H);
             m_uiShadowBoltTimer = 5000;
         }
@@ -792,7 +792,7 @@ struct MANGOS_DLL_DECL npc_WrathboneSorcererAI: public ScriptedAI
 
         if (m_uiShadowBoltTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_BOLT_3 : SPELL_SHADOW_BOLT_3_H);
             m_uiShadowBoltTimer = 5000;
         }
@@ -830,7 +830,7 @@ struct MANGOS_DLL_DECL npc_GeistAmbusherAI: public ScriptedAI
 
         if (m_uiLeapingFaceMaulTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_LEAPING_FACE_MAUL : SPELL_LEAPING_FACE_MAUL_H);
             m_uiLeapingFaceMaulTimer = 5000;
         }
@@ -868,7 +868,7 @@ struct MANGOS_DLL_DECL npc_disturbedGlacialRevenantAI: public ScriptedAI
 
         if (m_uiAvalancheTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_AVALANCHE);
             m_uiAvalancheTimer = 5000;
         }

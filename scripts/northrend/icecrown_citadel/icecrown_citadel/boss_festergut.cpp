@@ -209,7 +209,7 @@ struct MANGOS_DLL_DECL boss_festergutAI : public ScriptedAI
                 m_uiMaxPlayers = 3;
             for(uint8 i = 0; i < m_uiMaxPlayers; i++)
             {
-                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(target,SPELL_GAS_SPORE);
             }
             m_uiGasSporeTimer = 25000;
@@ -225,7 +225,7 @@ struct MANGOS_DLL_DECL boss_festergutAI : public ScriptedAI
 
         if (m_uiGastricBloatTimer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(target, SPELL_GASTRIC_BLOAT_10);
@@ -242,7 +242,7 @@ struct MANGOS_DLL_DECL boss_festergutAI : public ScriptedAI
 
         if (m_uiVileGasTimer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(target, SPELL_VILE_GAS_10);

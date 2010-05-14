@@ -429,7 +429,7 @@ struct MANGOS_DLL_DECL boss_majordomoAI : public ScriptedAI
             if(rand()%2 == 1)
                 m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(), 80);
             else
-                pTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
+                pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 
             if (pTarget)
             {

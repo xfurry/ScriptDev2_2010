@@ -4143,7 +4143,7 @@ index d1c3d6d..52db7f5 100644
  +
 ++    void JustSummoned(Creature* pSummoned)
 ++    {
-++        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+++        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 ++            pSummoned->AI()->AttackStart(pTarget);
 ++    }
 ++
@@ -5204,7 +5204,7 @@ index 1e43052..fa7e61c 100644
 +
 +    void JustSummoned(Creature* pSummoned)
 +    {
-+        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            pSummoned->AI()->AttackStart(pTarget);
 +    }
 +

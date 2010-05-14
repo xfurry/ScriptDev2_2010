@@ -328,7 +328,7 @@ struct MANGOS_DLL_DECL boss_leviathan_mkAI : public ScriptedAI
 
             if(plasmaBlastTimer < diff && !isPhase4)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, m_bIsRegularMode ? SPELL_PLASMA_BLAST : SPELL_PLASMA_BLAST_H);
                 plasmaBlastTimer = 35000;
             }
@@ -336,7 +336,7 @@ struct MANGOS_DLL_DECL boss_leviathan_mkAI : public ScriptedAI
 
             if(napalmTimer < diff && !isPhase4)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     if(!m_creature->IsWithinDistInMap(pTarget, 15))
                         DoCast(pTarget, m_bIsRegularMode ? SPELL_NAPALM_SHELL : SPELL_NAPALM_SHELL_H);
                 napalmTimer = urand (5000, 10000);
@@ -531,7 +531,7 @@ struct MANGOS_DLL_DECL boss_vx001AI : public ScriptedAI
 
         if(rapidBurstTimer < diff && !isPhase4)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_RAPID_BURST : SPELL_RAPID_BURST_H);
             rapidBurstTimer = 1000;
         }
@@ -546,7 +546,7 @@ struct MANGOS_DLL_DECL boss_vx001AI : public ScriptedAI
 
         if(rocketStrikeTimer < diff && !isEventFinished)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_ROCKET_STRIKE);
             rocketStrikeTimer = urand(25000, 30000);
         }
@@ -561,7 +561,7 @@ struct MANGOS_DLL_DECL boss_vx001AI : public ScriptedAI
 
         if(handPulseTimer < diff && isPhase4 && !isEventFinished)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_HAND_PULSE : SPELL_HAND_PULSE_H);
             handPulseTimer = 1000;
         }
@@ -726,7 +726,7 @@ struct MANGOS_DLL_DECL boss_aerial_command_unitAI : public ScriptedAI
 
         if(plasmaBallTimer < diff && !isEventFinished)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_PLASMA_BALL : SPELL_PLASMA_BALL_H);
             plasmaBallTimer = 3000;
         }
@@ -767,7 +767,7 @@ struct MANGOS_DLL_DECL boss_aerial_command_unitAI : public ScriptedAI
                 i = urand(0, 8);
                 if(Creature *pTemp = m_creature->SummonCreature(MOB_BOMB_BOT, m_creature->GetPositionX(), m_creature->GetPositionY(), CENTER_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
                 {
-                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
                         pTemp->AddThreat(pTarget,0.0f);
                         pTemp->AI()->AttackStart(pTarget);
@@ -778,7 +778,7 @@ struct MANGOS_DLL_DECL boss_aerial_command_unitAI : public ScriptedAI
                 i = urand(0, 8);
                 if(Creature *pTemp = m_creature->SummonCreature(MOB_JUNK_BOT, SummonLoc[i].x, SummonLoc[i].y, CENTER_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
                 {
-                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
                         pTemp->AddThreat(pTarget,0.0f);
                         pTemp->AI()->AttackStart(pTarget);
@@ -789,7 +789,7 @@ struct MANGOS_DLL_DECL boss_aerial_command_unitAI : public ScriptedAI
                 i = urand(0, 8);
                 if(Creature *pTemp = m_creature->SummonCreature(MOB_ASSALT_BOT, SummonLoc[i].x, SummonLoc[i].y, CENTER_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
                 {
-                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     {
                         pTemp->AddThreat(pTarget,0.0f);
                         pTemp->AI()->AttackStart(pTarget);
@@ -1390,7 +1390,7 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
             // TODO: implement hard mode
             if (fireTimer <= diff)
             {
-                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 
                     fireTimer = 5000;
             } 
@@ -1443,7 +1443,7 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                     for(uint8 i = 0; i < 3; i++)
                         if(Creature *pTemp = m_creature->SummonCreature(MOB_EMERGENCY_FIRE_BOT, SummonLoc[i].x, SummonLoc[i].y, CENTER_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
                         {
-                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                             {
                                 pTemp->AddThreat(pTarget,0.0f);
                                 pTemp->AI()->AttackStart(pTarget);

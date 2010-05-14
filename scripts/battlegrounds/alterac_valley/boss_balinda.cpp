@@ -126,7 +126,7 @@ struct MANGOS_DLL_DECL boss_balindaAI : public ScriptedAI
     void JustSummoned(Creature* summoned)
     {
         ((mob_water_elementalAI*)summoned->AI())->uiBalindaGUID = m_creature->GetGUID();
-        summoned->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM,0));
+        summoned->AI()->AttackStart(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0));
         summoned->setFaction(m_creature->getFaction());
         Summons.push_back(summoned->GetGUID());
     }

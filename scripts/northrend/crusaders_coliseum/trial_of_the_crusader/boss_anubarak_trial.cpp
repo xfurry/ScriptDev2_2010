@@ -226,7 +226,7 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
             // spells
             if (m_uiFreezingSlashTimer < uiDiff && !m_bIsPhase3)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_FREEZING_SLASH);
 
                 m_uiFreezingSlashTimer = 20000 + rand()%5000;
@@ -270,7 +270,7 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
 
             if (m_uiFrostSphereTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     m_creature->SummonCreature(NPC_FROST_SPHERE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_DEAD_DESPAWN, 30000);
                 m_uiFrostSphereTimer = 20000;
             }
@@ -365,7 +365,7 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
 
             if (m_uiPursuingSpikesTimer < uiDiff)
             {
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     DoCast(pTarget, SPELL_PURSUED_BY_ANUB);
                     //DoCast(pTarget, SPELL_PURSUING_SPIKES);
@@ -525,7 +525,7 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
 
         if (spellTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_EXPOSE_WEAKNESS);
             spellTimer = 10000;
         }else spellTimer -= uiDiff;
@@ -593,7 +593,7 @@ struct MANGOS_DLL_DECL mob_swarm_scarabAI : public ScriptedAI
                 DoCast(m_creature, SPELL_DETERMINATION);
                 break;
             case 1:
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_ACIC_MANDIBLES);
                 break;
             }

@@ -189,7 +189,7 @@ struct MANGOS_DLL_DECL boss_muruAI : public ScriptedAI
             {
                 for(uint8 i=0; i<2; ++i)
                 {
-                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         m_creature->CastSpell(target, SPELL_NEGATIVE, false);
                 }
                 NegativeEnergyTimer = 1000;
@@ -221,7 +221,7 @@ struct MANGOS_DLL_DECL boss_muruAI : public ScriptedAI
 
                         Creature* sTrash = m_creature->SummonCreature(ID, Trash[i][0], Trash[i][1], m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
                         
-                        if(Unit* sTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                        if(Unit* sTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                             if(sTrash)
                                 sTrash->AI()->AttackStart(sTarget);
                     }
@@ -242,7 +242,7 @@ struct MANGOS_DLL_DECL boss_muruAI : public ScriptedAI
             {
                 for(uint8 i=0; i<TargetsCount; ++i)
                 {
-                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         m_creature->CastSpell(target, SPELL_NEGATIVE, false);
                 }
 
@@ -252,7 +252,7 @@ struct MANGOS_DLL_DECL boss_muruAI : public ScriptedAI
             //Summon Singularity
             if(SingularityTimer < diff)
             {
-                if(Unit* sTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if(Unit* sTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     Creature* Singularity = m_creature->SummonCreature(ID_SINGULARITY, sTarget->GetPositionX(), sTarget->GetPositionY(), sTarget->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 20000);
                     if(Singularity)
@@ -291,7 +291,7 @@ struct MANGOS_DLL_DECL boss_muruAI : public ScriptedAI
                     m_pInstance->SetData(TYPE_MURU, NOT_STARTED);
 
                 Creature* sTrash = m_creature->SummonCreature(ID_DARK_FIEND, m_fDarkPosX, m_fDarkPosY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-                if(Unit* sTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if(Unit* sTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     if(sTrash)
                         sTrash->AI()->AttackStart(sTarget);
             }
@@ -391,7 +391,7 @@ struct MANGOS_DLL_DECL mob_voidsentinelAI : public ScriptedAI
         for(uint8 i=0; i<8; ++i)
         {
             Creature* sTrash = m_creature->SummonCreature(ID_SPAWN, m_creature->GetPositionX()+rand()%2, m_creature->GetPositionY()+rand()%2, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
-            if(Unit* sTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if(Unit* sTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 if(sTrash)
                     sTrash->AI()->AttackStart(sTarget);
         }
@@ -448,7 +448,7 @@ struct MANGOS_DLL_DECL mob_singularityAI : public ScriptedAI
 
         if(ChangeTargetTimer < diff)
         {
-            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 m_creature->Attack(target, true);
             ChangeTargetTimer = 5000;
         }else ChangeTargetTimer -= diff;

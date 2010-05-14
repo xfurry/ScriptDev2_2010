@@ -265,7 +265,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
         if (m_uiDespair_Timer < uiDiff) 
         {
             DoScriptText(SAY_IMPENDING_DESPAIR, m_creature);
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_IMPENDING_DESPAIR);
             m_uiDespair_Timer= m_bIsRegularMode ? 40000 : 30000;
         } 
@@ -283,7 +283,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
         if (m_uiHorror_Timer < uiDiff) 
         {
             DoScriptText(SAY_DEFILING_HORROR, m_creature);
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_DEFILING_HORROR : SPELL_DEFILING_HORROR_H);
             m_uiHorror_Timer=urand(25000,35000);
         } 
@@ -292,21 +292,21 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 
         if(m_creature->GetHealthPercent() <= 66.0f && !m_bIsPhase1)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_HOPELESSNESS);
             m_bIsPhase1 = true;
         }
 
         if(m_creature->GetHealthPercent() <= 33.0f && !m_bIsPhase2)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_HOPELESSNESS);
             m_bIsPhase2 = true;
         }
 
         if(m_creature->GetHealthPercent() <= 10.0f && !m_bIsPhase3)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_HOPELESSNESS);
             m_bIsPhase3 = true;
         }

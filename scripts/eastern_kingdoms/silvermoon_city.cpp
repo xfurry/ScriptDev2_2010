@@ -120,7 +120,7 @@ struct MANGOS_DLL_DECL boss_lorthemar_theronAI : public ScriptedAI
 
         if (m_uiArcaneShockTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_ARCANE_SHOCK);
             m_uiArcaneShockTimer = urand(9000, 11000);
         }
@@ -137,7 +137,7 @@ struct MANGOS_DLL_DECL boss_lorthemar_theronAI : public ScriptedAI
 
         if (m_uiManaBurnTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_MANA_BURN);
             m_uiManaBurnTimer = urand(12000, 15000);
         }

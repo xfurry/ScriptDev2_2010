@@ -123,7 +123,7 @@ index 87693a1..4afc781 100644
  
      void JustSummoned(Creature *pSummoned)
      {
--        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+-        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -            pSummoned->AI()->AttackStart(pTarget);
 -
 -        ++m_uiSummonCount;

@@ -92,7 +92,7 @@ index 8d81583..3c87283 100644
 +
 +        //Summoned Crypt Guard will target random player
 +        guidCryptGuards[CryptGuard_count++] = temp->GetGUID();
-+        if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++        if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +        {
 +            temp->AddThreat(target);
 +            m_creature->SetInCombatWithZone();
@@ -121,7 +121,7 @@ index 8d81583..3c87283 100644
 -            //Do NOT cast it when we are afflicted by locust swarm
 -            if (!m_creature->HasAura(SPELL_LOCUSTSWARM) || !m_creature->HasAura(SPELL_LOCUSTSWARM_H))
 -            {
--                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+-                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -                    DoCastSpellIfCan(target, m_bIsRegularMode ? SPELL_IMPALE : SPELL_IMPALE_H);
 -            }
 +            if (CryptGuard_count < MAX_CRYPT_GUARDS)
@@ -174,7 +174,7 @@ index 8d81583..3c87283 100644
 +                //Cast Impale on a random target
 +                //Do NOT cast it when we are afflicted by locust swarm
 +                if (!m_creature->HasAura(m_bIsRegularMode ? SPELL_LOCUSTSWARM : SPELL_LOCUSTSWARM_H, EFFECT_INDEX_1))
-+                    if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1))
++                    if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 +                        DoCast(target,m_bIsRegularMode ? SPELL_IMPALE : SPELL_IMPALE_H);
 +                m_uiImpaleTimer = 15000;
 +            }else m_uiImpaleTimer -= uiDiff;
@@ -1227,7 +1227,7 @@ index 155043d..58374cb 100644
  
 +    void JustSummoned(Creature* pSummoned)
 +    {
-+        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            pSummoned->AI()->AttackStart(pTarget);
 +    }
 +
@@ -1387,7 +1387,7 @@ index 5270203..ac8516e 100644
 +        if(spell->Id == SPELL_SLIME_SPRAY || spell->Id == H_SPELL_SLIME_SPRAY)
 +        {
 +            if (Creature* pTemp = m_creature->SummonCreature(MOB_FALLOUT_SLIME, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 1000))
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    pTemp->AddThreat(pTarget,0.0f);
 +                    pTemp->AI()->AttackStart(pTarget);
@@ -1403,14 +1403,14 @@ index 5270203..ac8516e 100644
 +        if (PoisonCloud_Timer < diff)
 +        {
 +            //DoCast(m_creature, SPELL_POISON_CLOUD);
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    m_creature->SummonCreature(MOB_GROBBOLUS_CLOUD, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 75000);
 +            PoisonCloud_Timer = 15000;
 +        }else PoisonCloud_Timer -= diff;
 +
 +        if (MutatingInjection_Timer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target, SPELL_MUTATING_INJECTION);
 +
 +            MutatingInjection_Timer = 20000;
@@ -1703,7 +1703,7 @@ index 514d3d7..ee4e3cf 100644
 +            pSummonedSpores = m_creature->SummonCreature(16286,ADD_3X,ADD_3Y,ADD_3Z,0,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,80000);
 +            if (pSummonedSpores)
 +            {
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    pSummonedSpores->AddThreat(pTarget);
 +            }
 +            */
@@ -1810,7 +1810,7 @@ index eb9a525..2fc827d 100644
 +        float x,y,z;
 +        for(uint8 i = 0; number >= i; i++)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                m_creature->GetRandomPoint(m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ(),7.0f,x,y,z);
 +                if(Creature* spiderling = m_creature->SummonCreature(NPC_SPIDERLING, x, y, z,0, TEMPSUMMON_DEAD_DESPAWN, 0))
@@ -2257,7 +2257,7 @@ index 27dd989..606d5f4 100644
 @@ -112,7 +196,7 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
              if (LifeDrain_Timer < uiDiff)
              {
-                 if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                 if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -                    DoCastSpellIfCan(target,SPELL_LIFE_DRAIN);
 +                    DoCastSpellIfCan(target,m_bIsRegularMode ? SPELL_LIFE_DRAIN : SPELL_LIFE_DRAIN_H);
  
@@ -3045,7 +3045,7 @@ index 3c31172..d6d2e9b 100644
 +        // ChainLightning
 +        if (m_uiChainLightningTimer < uiDiff)
 +        {
-+            Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
++            Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 +            if (pTarget && DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_CHAIN_LIGHTNING : SPELL_CHAIN_LIGHTNING_H) == CAST_OK)
 +                m_uiChainLightningTimer = 15*IN_MILLISECONDS;
 +        }

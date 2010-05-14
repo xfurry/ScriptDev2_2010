@@ -269,7 +269,7 @@ struct MANGOS_DLL_DECL boss_ingvarAI : public ScriptedAI
                 if(!wait_Timer)
                 {
                     // Spawn target for Axe
-                    Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 1);
+                    Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 1);
                     if(target)
                     {
                         Creature* temp = m_creature->SummonCreature(NPC_THROW_TARGET,target->GetPositionX(),target->GetPositionY(),target->GetPositionZ(),0,TEMPSUMMON_TIMED_DESPAWN,2000);

@@ -584,7 +584,7 @@ struct MANGOS_DLL_DECL boss_alarAI : public ScriptedAI
         if (RainOfFire_Timer < diff)
         {
             Unit* target = NULL;
-            target = SelectUnit(SELECT_TARGET_RANDOM,0);
+            target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
             if (target) DoCast(target,SPELL_RAINOFFIRE);
             RainOfFire_Timer = 28000;
         } else RainOfFire_Timer -= diff;
@@ -599,7 +599,7 @@ struct MANGOS_DLL_DECL boss_alarAI : public ScriptedAI
 
         if (fire_breath_timer < diff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target,SPELL_FLAME_BREATH);
             fire_breath_timer = 8000;
         }else fire_breath_timer -=diff;

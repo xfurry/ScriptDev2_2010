@@ -274,7 +274,7 @@ struct MANGOS_DLL_DECL boss_gortokAI : public ScriptedAI
 
         if(m_uiImpaleTimer < uiDiff)
         {
-            if(Unit* pPlayer = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if(Unit* pPlayer = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 m_creature->CastSpell(pPlayer, m_bIsRegularMode ? SPELL_IMPALE : SPELL_IMPALE_H, false);
             m_uiImpaleTimer = urand(15000,25000);
         }else m_uiImpaleTimer -= uiDiff;
@@ -347,7 +347,7 @@ struct MANGOS_DLL_DECL mob_massive_jormungarAI : public ScriptedAI
         // Acid Spit
         if(AcidSpit_timer < uiDiff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_ACID_SPIT);
+            DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), SPELL_ACID_SPIT);
             AcidSpit_timer = 2000 + rand()%2000;
         }else AcidSpit_timer -= uiDiff;
 
@@ -363,7 +363,7 @@ struct MANGOS_DLL_DECL mob_massive_jormungarAI : public ScriptedAI
             {
                 Creature* pJormungarWorm = m_creature->SummonCreature(NPC_JORMUNGAR_WORM, x+rand()%10, y+rand()%10, z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 360000);
 
-                Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
                 if (pTarget && pJormungarWorm) {
                     pJormungarWorm->AddThreat(pTarget, 0.0f);
                     pJormungarWorm->AI()->AttackStart(pTarget);
@@ -376,7 +376,7 @@ struct MANGOS_DLL_DECL mob_massive_jormungarAI : public ScriptedAI
         // Poison Breath
         if(PoisonBreath_timer < uiDiff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_POISON_BREATH_N : SPELL_POISON_BREATH_H);
+            DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_POISON_BREATH_N : SPELL_POISON_BREATH_H);
             PoisonBreath_timer = 8000 + rand()%4000;
         }else PoisonBreath_timer -= uiDiff;
 
@@ -456,7 +456,7 @@ struct MANGOS_DLL_DECL mob_ferocious_rhinoAI : public ScriptedAI
         // Grievous Wound
         if(GrievousWound_timer < uiDiff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_GRIEVOUS_WOUND_N : SPELL_GRIEVOUS_WOUND_H);
+            DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_GRIEVOUS_WOUND_N : SPELL_GRIEVOUS_WOUND_H);
             GrievousWound_timer = 18000 + rand()%4000;
         }else GrievousWound_timer -= uiDiff;
 

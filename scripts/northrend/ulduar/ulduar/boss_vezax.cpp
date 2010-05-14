@@ -241,7 +241,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         // mark of faceless
         if(MarkTimer < diff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_MARK_OF_FACELESS);
 
             hasMark = true;
@@ -284,7 +284,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         // shadow crash
         if(CrashTimer < diff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_SHADOW_CRASH);
             CrashTimer = 10000;
         }

@@ -496,7 +496,7 @@ struct MANGOS_DLL_DECL boss_jedogaAI : public ScriptedAI
             //Lightning Bolt
             if(m_uiLightningBoltTimer <= uiDiff)
             {
-                if(Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, m_bIsRegularMode ? SPELL_LIGHTNING_BOLT : SPELL_LIGHTNING_BOLT_H);
                 m_uiLightningBoltTimer = 3000 + rand()%2000;
             }else m_uiLightningBoltTimer -= uiDiff;
@@ -504,7 +504,7 @@ struct MANGOS_DLL_DECL boss_jedogaAI : public ScriptedAI
             //Thundershock
             if(m_uiThundershockTimer <= uiDiff)
             {
-                if(Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, m_bIsRegularMode ? SPELL_THUNDERSHOCK : SPELL_THUNDERSHOCK_H);
                 m_uiThundershockTimer = 20000 + rand()%10000;
             }else m_uiThundershockTimer -= uiDiff;

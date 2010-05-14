@@ -433,7 +433,7 @@ index 76a6cbb..04b7129 100644
          if (m_uiVolatileInfection_Timer < uiDiff)
          {
 -            DoCastSpellIfCan(m_creature->getVictim(), SPELL_VOLATILEINFECTION);
-+            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, SPELL_VOLATILEINFECTION);
              m_uiVolatileInfection_Timer = urand(7000, 12000);
          }
@@ -579,7 +579,7 @@ index a524dc8..13045dd 100644
 +        //Tailsweep every 2 seconds
 +        if (m_uiTailSweep_Timer < uiDiff)
 +        {
-+            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                if (m_creature->HasInArc(3.1415f, pTarget))
 +                {
 +                    DoCast(pTarget, SPELL_TAILSWEEP);
@@ -797,7 +797,7 @@ index 9ae0758..5dda977 100644
          {
 -            DoCastSpellIfCan(m_creature, SPELL_TAILSWEEP);
 -            m_uiTailSweep_Timer = 2000;
-+            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                if (m_creature->HasInArc(3.1415f, pTarget))
 +                {
 +                    DoCast(pTarget, SPELL_TAILSWEEP);

@@ -256,7 +256,7 @@ struct MANGOS_DLL_DECL boss_volazjAI : public ScriptedAI
             //Shiver
             if(m_uiShiverTimer <= uiDiff)
             {
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_SHIVER : SPELL_SHIVER_H);
+                DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_SHIVER : SPELL_SHIVER_H);
                 m_uiShiverTimer = 30000;
             }else m_uiShiverTimer -= uiDiff;
  
@@ -496,7 +496,7 @@ struct MANGOS_DLL_DECL mob_ancient_voidAI : public ScriptedAI
  
         if(m_uiPhysicScreamTimer <= uiDiff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0),SPELL_PSYCHIC_SCREAM);
+            DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0),SPELL_PSYCHIC_SCREAM);
             SetPhysicScreamTimer();
         }else m_uiPhysicScreamTimer -= uiDiff;
  

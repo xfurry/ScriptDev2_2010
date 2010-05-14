@@ -541,7 +541,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 
         if (m_uiOverlordsBrandTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_OVERLORDS_BRAND);
             m_uiOverlordsBrandTimer = 45000;
         }
@@ -561,7 +561,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
         if (m_uiMarkOfRimefangTimer < uiDiff)
         {
             DoScriptText(SAY_MARK_OF_RIMEFANG, m_creature);
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_MARK_OF_RIMEFANG);
             m_uiMarkOfRimefangTimer = 55000;
         }
@@ -636,7 +636,7 @@ struct MANGOS_DLL_DECL boss_RimefangAI : public ScriptedAI
 
         if (m_uiHoarfrostTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_HOARFROST);
             m_uiHoarfrostTimer = 20000;
         }
@@ -645,7 +645,7 @@ struct MANGOS_DLL_DECL boss_RimefangAI : public ScriptedAI
 
         if (m_uiIcyBlastTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_ICY_BLAST : SPELL_ICY_BLAST_H);
             m_uiIcyBlastTimer = 35000;
         }
@@ -654,7 +654,7 @@ struct MANGOS_DLL_DECL boss_RimefangAI : public ScriptedAI
 
         if (m_uiIcyBlastSlowTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_ICY_BLAST_SLOW : SPELL_ICY_BLAST_SLOW_H);
             m_uiIcyBlastSlowTimer = 40000;
         }

@@ -127,7 +127,7 @@ struct MANGOS_DLL_DECL boss_hadronoxAI : public ScriptedAI
 
         if (acidtimer <= uiDiff)
         {
-             if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if (DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_ACID_CLOUD : SPELL_ACID_CLOUD_H) == CAST_OK)
                     acidtimer = urand(20000,30000);
@@ -137,7 +137,7 @@ struct MANGOS_DLL_DECL boss_hadronoxAI : public ScriptedAI
 
         if (leechtimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if (DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_LEECH_POISON : SPELL_LEECH_POISON_H) == CAST_OK)
                     leechtimer = urand(11000,14000);

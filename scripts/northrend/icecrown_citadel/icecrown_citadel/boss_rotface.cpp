@@ -154,7 +154,7 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
                 case 1: DoScriptText(SAY_SLIME_FLOW2, pPutricide); break;
                 }
             }
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(target, SPELL_OOZE_FLOOD_10);
@@ -173,7 +173,7 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
         if (m_uiSlimeSprayTimer < uiDiff)
         {
             DoScriptText(SAY_SLIME_SPRAY, m_creature);
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_SLIME_SPRAY);
             m_uiSlimeSprayTimer = 20000;
         }
@@ -193,7 +193,7 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
 
         if (m_uiMutatedInfectionTimer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 m_uiOozeTargetGUID = target->GetGUID();
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
@@ -293,7 +293,7 @@ struct MANGOS_DLL_DECL mob_small_oozeAI : public ScriptedAI
 
         if (m_uiStickyOozeTimer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_STICKY_OOZE_SUMM);
             m_uiStickyOozeTimer = 30000;
         }
@@ -344,7 +344,7 @@ struct MANGOS_DLL_DECL mob_big_oozeAI : public ScriptedAI
 
         if (m_uiStickyOozeTimer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_STICKY_OOZE_SUMM);
             m_uiStickyOozeTimer = 30000;
         }

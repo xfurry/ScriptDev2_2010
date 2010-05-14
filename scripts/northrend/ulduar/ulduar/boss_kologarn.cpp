@@ -297,7 +297,7 @@ struct MANGOS_DLL_DECL boss_right_armAI : public ScriptedAI
         {
             DoScriptText(SAY_GRAB, m_creature);
             //stone grip emote
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0)){
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
                 //DoCast(target, m_bIsRegularMode ? SPELL_STONE_GRIP : SPELL_STONE_GRIP_H);
                 GripTarget = target->GetGUID();
                 grip = true;
@@ -458,7 +458,7 @@ struct MANGOS_DLL_DECL boss_kologarnAI : public ScriptedAI
         /* to be fixed!
         if (Eyebeah_Timer < diff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(target, SPELL_FOCUSED_EYEBEAN_VISUAL);
                 DoCast(target, m_bIsRegularMode ? SPELL_FOCUSED_EYEBEAN : SPELL_FOCUSED_EYEBEAN_H, true);
@@ -507,7 +507,7 @@ struct MANGOS_DLL_DECL boss_kologarnAI : public ScriptedAI
                         {
                             pRubble->GetMotionMaster()->MovePoint(0, KoloFront[0], KoloFront[1], KoloFront[2]);
 
-                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                             {
                                 pRubble->AddThreat(pTarget,0.0f);
                                 pRubble->AI()->AttackStart(pTarget);
@@ -535,7 +535,7 @@ struct MANGOS_DLL_DECL boss_kologarnAI : public ScriptedAI
                         {
                             pRubble->GetMotionMaster()->MovePoint(0, KoloFront[0], KoloFront[1], KoloFront[2]);
 
-                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                             {
                                 pRubble->AddThreat(pTarget,0.0f);
                                 pRubble->AI()->AttackStart(pTarget);

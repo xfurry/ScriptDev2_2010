@@ -201,7 +201,7 @@ struct MANGOS_DLL_DECL boss_tharonjaAI : public ScriptedAI
 
             if (PoisonCloud_Timer < uiDiff)
             {
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_POISON_CLOUD : H_SPELL_POSION_CLOUD);
+                DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_POISON_CLOUD : H_SPELL_POSION_CLOUD);
                 PoisonCloud_Timer = 10000;
             }else PoisonCloud_Timer -= uiDiff;
 
@@ -212,9 +212,9 @@ struct MANGOS_DLL_DECL boss_tharonjaAI : public ScriptedAI
                     case 0:
                     case 1:
                     case 2:
-                        DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_LIGHTNING_BREATH : H_SPELL_LIGHTNING_BREATH);
+                        DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_LIGHTNING_BREATH : H_SPELL_LIGHTNING_BREATH);
                     case 3: 
-                        DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_EYE_BEAM : SPELL_EYE_BEAM);
+                        DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0),  m_bIsRegularMode ? SPELL_EYE_BEAM : SPELL_EYE_BEAM);
                 }
                 FleshSpells_Timer = 1500;
             }else FleshSpells_Timer -= uiDiff;

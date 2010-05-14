@@ -279,7 +279,7 @@ struct MANGOS_DLL_DECL boss_king_varian_wrynnAI : public ScriptedAI
 
         if (m_uiHeroicLeapTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_HEROIC_LEAP);
             m_uiHeroicLeapTimer = urand(6000, 9000);
         }

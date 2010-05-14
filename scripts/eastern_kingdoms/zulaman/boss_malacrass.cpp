@@ -368,7 +368,7 @@ struct MANGOS_DLL_DECL boss_malacrassAI : public ScriptedAI
 
         if(SiphonSoul_Timer < uiDiff)
         {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+            Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
             Unit *trigger = DoSpawnCreature(MOB_TEMP_TRIGGER, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
             if(!target || !trigger) EnterEvadeMode();
             else
@@ -418,7 +418,7 @@ struct MANGOS_DLL_DECL boss_malacrassAI : public ScriptedAI
             break;
         case ABILITY_TARGET_ENEMY:
         default:
-            target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+            target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
             break;
         case ABILITY_TARGET_HEAL:
             target = DoSelectLowestHpFriendly(50, 0);

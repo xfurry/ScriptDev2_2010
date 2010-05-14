@@ -236,21 +236,21 @@ index 0000000..7c501bc
 +        //Venom bolt volley
 +        if(m_uiVenomBoltTimer <= uiDiff)
 +        {
-+            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_VENOM_BOLT);
++            DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), SPELL_VENOM_BOLT);
 +            m_uiVenomBoltTimer = 15000 + rand()%5000;
 +        }else m_uiVenomBoltTimer -= uiDiff;
 +
 +        //Entangling Roots
 +        if(m_uiRootsTimer <= uiDiff)
 +        {
-+            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_ENTANGLING_ROOTS);
++            DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), SPELL_ENTANGLING_ROOTS);
 +            m_uiRootsTimer = 18000 + rand()%5000;
 +        }else m_uiRootsTimer -= uiDiff;
 +
 +        //Mini
 +        if(m_uiMiniTimer <= uiDiff)
 +        {
-+            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_MINI);
++            DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), SPELL_MINI);
 +            m_uiMiniTimer = 30000;
 +        }else m_uiMiniTimer -= uiDiff;
 +
@@ -843,7 +843,7 @@ index 9870291..b06f75b 100644
 +            //Lightning Bolt
 +            if(m_uiLightningBoltTimer <= uiDiff)
 +            {
-+                if(Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, m_bIsRegularMode ? SPELL_LIGHTNING_BOLT : SPELL_LIGHTNING_BOLT_H);
 +                m_uiLightningBoltTimer = 3000 + rand()%2000;
 +            }else m_uiLightningBoltTimer -= uiDiff;
@@ -851,7 +851,7 @@ index 9870291..b06f75b 100644
 +            //Thundershock
 +            if(m_uiThundershockTimer <= uiDiff)
 +            {
-+                if(Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, m_bIsRegularMode ? SPELL_THUNDERSHOCK : SPELL_THUNDERSHOCK_H);
 +                m_uiThundershockTimer = 20000 + rand()%10000;
 +            }else m_uiThundershockTimer -= uiDiff;
@@ -1231,7 +1231,7 @@ index 2b2c6b5..1bc3a5a 100644
 +            bool stop = false;
 +            while(!stop)
 +            {
-+                m_uEmbraceTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
++                m_uEmbraceTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
 +                if(m_uEmbraceTarget && m_uEmbraceTarget->isAlive() && m_uEmbraceTarget->GetTypeId() == TYPEID_PLAYER)
 +                    stop = true;
 +                else

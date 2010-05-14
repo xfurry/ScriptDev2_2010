@@ -120,7 +120,7 @@ struct MANGOS_DLL_DECL boss_toravonAI : public ScriptedAI
 
         if(m_uiFreezingGroundTimer < diff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, Regular ? SPELL_FREEZING_GROUND : SPELL_FREEZING_GROUND_H);
             m_uiFreezingGroundTimer = 20000;
         }

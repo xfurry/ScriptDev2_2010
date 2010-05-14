@@ -344,7 +344,7 @@ struct MANGOS_DLL_DECL mob_feral_defenderAI : public ScriptedAI
 
         if (Pounce_Timer < diff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0)){
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
                 DoCast(target, m_bIsRegularMode ? SPELL_FERAL_POUNCE : SPELL_FERAL_POUNCE_H);
                 m_creature->AddThreat(target,0.0f);
                 m_creature->AI()->AttackStart(target);
@@ -354,7 +354,7 @@ struct MANGOS_DLL_DECL mob_feral_defenderAI : public ScriptedAI
 
         if (Rush_Start_Timer < diff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0)){
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
                 DoCast(target, m_bIsRegularMode ? SPELL_FERAL_RUSH : SPELL_FERAL_RUSH_H);
                 m_creature->AddThreat(target,0.0f);
                 m_creature->AI()->AttackStart(target);
@@ -366,7 +366,7 @@ struct MANGOS_DLL_DECL mob_feral_defenderAI : public ScriptedAI
 
         if (Rush_Delay < diff && rush)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0)){
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
                 DoCast(target, m_bIsRegularMode ? SPELL_FERAL_RUSH : SPELL_FERAL_RUSH_H);
                 m_creature->AddThreat(target,0.0f);
                 m_creature->AI()->AttackStart(target);
@@ -541,7 +541,7 @@ struct MANGOS_DLL_DECL boss_auriayaAI : public ScriptedAI
         if (Summon_Timer < diff && !summoned)
         {
             if (Creature* pTemp = m_creature->SummonCreature(MOB_FERAL_DEFENDER, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     pTemp->AddThreat(pTarget,0.0f);
                     pTemp->AI()->AttackStart(pTarget);
@@ -557,7 +557,7 @@ struct MANGOS_DLL_DECL boss_auriayaAI : public ScriptedAI
 
         if (Swarm_Timer < diff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(pTarget, SPELL_GUARDIAN_SWARM);
                 for (uint8 i = 0; i < Swarmcount; i++)

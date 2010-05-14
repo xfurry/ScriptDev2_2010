@@ -157,7 +157,7 @@ struct MANGOS_DLL_DECL boss_maiden_of_griefAI : public ScriptedAI
 
         if (m_uiPartingSorrowTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_PARTING_SORROW);
             m_uiPartingSorrowTimer = 12000 + rand()%5000;
         }

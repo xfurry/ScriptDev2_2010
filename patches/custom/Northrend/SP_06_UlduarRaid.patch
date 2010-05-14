@@ -553,7 +553,7 @@ index 0000000..bb2c67c
 +                {
 +                    for(uint8 i = 0; i < urand (1, 3); i++)
 +                    {
-+                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                            m_creature->SummonCreature(CREATURE_LIVING_CONSTELLATION, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
 +                    }
 +                    LivingConstellationTimer = 30000;
@@ -764,7 +764,7 @@ index 0000000..bb2c67c
 +
 +        if (ArcaneBarrageTimer < uiDiff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0)){
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
 +                DoCast(target, m_bIsRegularMode ? SPELL_ARCANE_BARRAGE : SPELL_ARCANE_BARRAGE_H);
 +            }
 +            ArcaneBarrageTimer = 15000;
@@ -1221,7 +1221,7 @@ index 0000000..3d0694b
 +
 +        if (Pounce_Timer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0)){
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
 +                DoCast(target, m_bIsRegularMode ? SPELL_FERAL_POUNCE : SPELL_FERAL_POUNCE_H);
 +                m_creature->AddThreat(target,0.0f);
 +                m_creature->AI()->AttackStart(target);
@@ -1231,7 +1231,7 @@ index 0000000..3d0694b
 +
 +        if (Rush_Start_Timer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0)){
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
 +                DoCast(target, m_bIsRegularMode ? SPELL_FERAL_RUSH : SPELL_FERAL_RUSH_H);
 +                m_creature->AddThreat(target,0.0f);
 +                m_creature->AI()->AttackStart(target);
@@ -1243,7 +1243,7 @@ index 0000000..3d0694b
 +
 +        if (Rush_Delay < diff && rush)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0)){
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
 +                DoCast(target, m_bIsRegularMode ? SPELL_FERAL_RUSH : SPELL_FERAL_RUSH_H);
 +                m_creature->AddThreat(target,0.0f);
 +                m_creature->AI()->AttackStart(target);
@@ -1418,7 +1418,7 @@ index 0000000..3d0694b
 +        if (Summon_Timer < diff && !summoned)
 +        {
 +            if (Creature* pTemp = m_creature->SummonCreature(MOB_FERAL_DEFENDER, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    pTemp->AddThreat(pTarget,0.0f);
 +                    pTemp->AI()->AttackStart(pTarget);
@@ -1434,7 +1434,7 @@ index 0000000..3d0694b
 +
 +        if (Swarm_Timer < diff)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                DoCast(pTarget, SPELL_GUARDIAN_SWARM);
 +                for (uint8 i = 0; i < Swarmcount; i++)
@@ -1815,7 +1815,7 @@ index 0000000..d394d72
 +
 +        if(ImpaleTimer < diff)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, m_bIsRegularMode ? SPELL_IMPALE : SPELL_IMPALE_H);
 +            ImpaleTimer = 10000 + urand (1000, 5000);
 +        }
@@ -1824,7 +1824,7 @@ index 0000000..d394d72
 +        if(IronrootsTimer < diff)
 +        {
 +            DoCast(m_creature, m_bIsRegularMode ? SPELL_IRON_ROOTS : SPELL_IRON_ROOTS_H);
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                m_creature->SummonCreature(MOB_IRON_ROOTS, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
 +            IronrootsTimer = 20000 + urand (1000, 7000);
 +        }
@@ -2268,7 +2268,7 @@ index 0000000..d394d72
 +                {
 +                    for(uint8 i = 0; i < 7; i++)
 +                    {
-+                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                            m_creature->SummonCreature(MOB_NATURE_BOMB, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 6000);
 +                    }
 +                    NatureBombTimer = 7000;
@@ -2423,7 +2423,7 @@ index 0000000..d394d72
 +    {
 +        if(rootTimer < diff)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                DoCast(pTarget, SPELL_STUN);
 +                m_creature->DealDamage(pTarget, m_bIsRegularMode ? urand(6013, 6987) : urand(7863, 9137), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NATURE, NULL, false);
@@ -2854,7 +2854,7 @@ index 0000000..32d1454
 +            // icicles
 +            if(IcicleTimer < diff)
 +            {
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    DoCast(pTarget, SPELL_ICICLE);
 +                    DoCast(pTarget, SPELL_ICE_SHARDS); // not working
@@ -3567,7 +3567,7 @@ index 0000000..01f1a82
 +                m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
 +                m_creature->GetMotionMaster()->MovePoint(0, pTemp->GetPositionX(), pTemp->GetPositionY(), pTemp->GetPositionZ());
 +
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    m_creature->AddThreat(pTarget,0.0f);
 +                    m_creature->AI()->AttackStart(pTarget);
@@ -3801,7 +3801,7 @@ index 0000000..01f1a82
 +        {
 +            //slag pot yell
 +            DoScriptText(SAY_SLAGPOT, m_creature);
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1)){
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1)){
 +                DoCast(target, m_bIsRegularMode ? SPELL_SLAG_POT : SPELL_SLAG_POT_H);
 +                m_uiPotTarget = target->GetGUID();
 +            }
@@ -3830,7 +3830,7 @@ index 0000000..01f1a82
 +
 +            /*
 +            if (Creature* pTemp = m_creature->SummonCreature(MOB_IRON_CONSTRUCT, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    pTemp->AddThreat(pTarget,0.0f);
 +                    pTemp->AI()->AttackStart(pTarget);
@@ -4355,7 +4355,7 @@ index 0000000..183a859
 +				//tendrils emote (?)
 +				m_creature->CastStop();
 +				DoCast(m_creature, LIGHTNING_TENDRILS_VISUAL);
-+				if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++				if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +				{
 +					m_creature->AddThreat(pTarget,0.0f);
 +					m_creature->AI()->AttackStart(pTarget);
@@ -4374,7 +4374,7 @@ index 0000000..183a859
 +
 +		if (Tendrils_Change < diff && tendrils)
 +        {
-+			if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +			{
 +				m_creature->AddThreat(pTarget,0.0f);
 +				m_creature->AI()->AttackStart(pTarget);
@@ -4671,7 +4671,7 @@ index 0000000..183a859
 +		if (Rune_Death_Timer < diff && supercharge1)
 +		{
 +            DoScriptText(SAY_MOLGEIM_DEATH_RUNE, m_creature);
-+			if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +				DoCast(pTarget, m_bIsRegularMode ? SPELL_RUNE_OF_DEATH : SPELL_RUNE_OF_DEATH_H);
 +			Rune_Death_Timer = 60000;
 +		}else Rune_Death_Timer -= diff;
@@ -4680,7 +4680,7 @@ index 0000000..183a859
 +		{
 +            DoScriptText(SAY_MOLGEIM_SUMMON, m_creature);
 +			m_creature->CastStop();
-+			if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +				DoCast(pTarget, SPELL_RUNE_OF_SUMMONING);
 +			Rune_Summon_Timer = 30000;
 +		}else Rune_Summon_Timer -= diff;
@@ -4941,7 +4941,7 @@ index 0000000..183a859
 +
 +		if (Static_Disruption_Timer < diff && supercharge1)
 +		{
-+			if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,1))
++			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 +				DoCast(pTarget, m_bIsRegularMode ? SPELL_STATIC_DISRUPTION : SPELL_STATIC_DISRUPTION_H);
 +			Static_Disruption_Timer = 60000;
 +		}else Static_Disruption_Timer -= diff;
@@ -5367,7 +5367,7 @@ index 0000000..e3c54ee
 +        {
 +            DoScriptText(SAY_GRAB, m_creature);
 +            //stone grip emote
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0)){
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
 +                //DoCast(target, m_bIsRegularMode ? SPELL_STONE_GRIP : SPELL_STONE_GRIP_H);
 +                GripTarget = target->GetGUID();
 +                grip = true;
@@ -5528,7 +5528,7 @@ index 0000000..e3c54ee
 +        /* to be fixed!
 +        if (Eyebeah_Timer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                DoCast(target, SPELL_FOCUSED_EYEBEAN_VISUAL);
 +                DoCast(target, m_bIsRegularMode ? SPELL_FOCUSED_EYEBEAN : SPELL_FOCUSED_EYEBEAN_H, true);
@@ -5577,7 +5577,7 @@ index 0000000..e3c54ee
 +                        {
 +                            pRubble->GetMotionMaster()->MovePoint(0, KoloFront[0], KoloFront[1], KoloFront[2]);
 +
-+                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                            {
 +                                pRubble->AddThreat(pTarget,0.0f);
 +                                pRubble->AI()->AttackStart(pTarget);
@@ -5605,7 +5605,7 @@ index 0000000..e3c54ee
 +                        {
 +                            pRubble->GetMotionMaster()->MovePoint(0, KoloFront[0], KoloFront[1], KoloFront[2]);
 +
-+                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                            {
 +                                pRubble->AddThreat(pTarget,0.0f);
 +                                pRubble->AI()->AttackStart(pTarget);
@@ -5903,7 +5903,7 @@ index 0000000..af62822
 +                case 1: DoScriptText(SAY_CHANGE2, m_creature); break;
 +                case 2: DoScriptText(SAY_CHANGE3, m_creature); break;
 +            }
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, SPELL_PURSUED);
 +
 +            PursueTimer = 30000;
@@ -6403,7 +6403,7 @@ index 0000000..6a8c67f
 +
 +            if(plasmaBlastTimer < diff && !isPhase4)
 +            {
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, m_bIsRegularMode ? SPELL_PLASMA_BLAST : SPELL_PLASMA_BLAST_H);
 +                plasmaBlastTimer = 35000;
 +            }
@@ -6411,7 +6411,7 @@ index 0000000..6a8c67f
 +
 +            if(napalmTimer < diff && !isPhase4)
 +            {
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    if(!m_creature->IsWithinDistInMap(pTarget, 15))
 +                        DoCast(pTarget, m_bIsRegularMode ? SPELL_NAPALM_SHELL : SPELL_NAPALM_SHELL_H);
 +                napalmTimer = urand (5000, 10000);
@@ -6614,7 +6614,7 @@ index 0000000..6a8c67f
 +
 +        if(rapidBurstTimer < diff && !isPhase4)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, m_bIsRegularMode ? SPELL_RAPID_BURST : SPELL_RAPID_BURST_H);
 +            rapidBurstTimer = 1000;
 +        }
@@ -6629,7 +6629,7 @@ index 0000000..6a8c67f
 +
 +        if(rocketStrikeTimer < diff && !isEventFinished)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, SPELL_ROCKET_STRIKE);
 +            rocketStrikeTimer = urand(25000, 30000);
 +        }
@@ -6644,7 +6644,7 @@ index 0000000..6a8c67f
 +
 +        if(handPulseTimer < diff && isPhase4 && !isEventFinished)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, m_bIsRegularMode ? SPELL_HAND_PULSE : SPELL_HAND_PULSE_H);
 +            handPulseTimer = 1000;
 +        }
@@ -6816,7 +6816,7 @@ index 0000000..6a8c67f
 +
 +        if(plasmaBallTimer < diff && !isEventFinished)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, m_bIsRegularMode ? SPELL_PLASMA_BALL : SPELL_PLASMA_BALL_H);
 +            plasmaBallTimer = 3000;
 +        }
@@ -6857,7 +6857,7 @@ index 0000000..6a8c67f
 +                i = urand(0, 8);
 +                if(Creature *pTemp = m_creature->SummonCreature(MOB_BOMB_BOT, m_creature->GetPositionX(), m_creature->GetPositionY(), CENTER_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
 +                {
-+                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    {
 +                        pTemp->AddThreat(pTarget,0.0f);
 +                        pTemp->AI()->AttackStart(pTarget);
@@ -6868,7 +6868,7 @@ index 0000000..6a8c67f
 +                i = urand(0, 8);
 +                if(Creature *pTemp = m_creature->SummonCreature(MOB_JUNK_BOT, SummonLoc[i].x, SummonLoc[i].y, CENTER_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
 +                {
-+                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    {
 +                        pTemp->AddThreat(pTarget,0.0f);
 +                        pTemp->AI()->AttackStart(pTarget);
@@ -6879,7 +6879,7 @@ index 0000000..6a8c67f
 +                i = urand(0, 8);
 +                if(Creature *pTemp = m_creature->SummonCreature(MOB_ASSALT_BOT, SummonLoc[i].x, SummonLoc[i].y, CENTER_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
 +                {
-+                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    {
 +                        pTemp->AddThreat(pTarget,0.0f);
 +                        pTemp->AI()->AttackStart(pTarget);
@@ -7429,7 +7429,7 @@ index 0000000..6a8c67f
 +            // TODO: implement hard mode
 +            if (fireTimer <= diff)
 +            {
-+                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +
 +                    fireTimer = 5000;
 +            } 
@@ -7482,7 +7482,7 @@ index 0000000..6a8c67f
 +                    for(uint8 i = 0; i < 3; i++)
 +                        if(Creature *pTemp = m_creature->SummonCreature(MOB_EMERGENCY_FIRE_BOT, SummonLoc[i].x, SummonLoc[i].y, CENTER_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
 +                        {
-+                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                            {
 +                                pTemp->AddThreat(pTarget,0.0f);
 +                                pTemp->AI()->AttackStart(pTarget);
@@ -8249,14 +8249,14 @@ index 0000000..0cd754e
 +
 +		if (Fireball_Timer < diff && airphase && !grounded)
 +        {
-+			if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++			if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +				DoCast(target, m_bIsRegularMode ? SPELL_FIREBALL : SPELL_FIREBALL_H);
 +            Fireball_Timer = 2000;
 +        }else Fireball_Timer -= diff;   
 +
 +		if (Devouring_Flame_Timer < diff && !grounded)
 +        {
-+			if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++			if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +				DoCast(target, DEVOURING_FLAME_VISUAL);
 +            Devouring_Flame_Timer = 12000;
 +        }else Devouring_Flame_Timer -= diff;  
@@ -8264,13 +8264,13 @@ index 0000000..0cd754e
 +		if (wave1_spawn < diff && airphase && !grounded)
 +        {
 +			if (Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_WATCHER, RazorscaleAddX[3], RazorscaleAddY[3], RazorscaleAddZ[3], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    pTemp->AddThreat(pTarget,0.0f);
 +                    pTemp->AI()->AttackStart(pTarget);
 +                }
 +			if (Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_GUARDIAN, RazorscaleAddX[3] + 5, RazorscaleAddY[3] + 5, RazorscaleAddZ[3], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    pTemp->AddThreat(pTarget,0.0f);
 +                    pTemp->AI()->AttackStart(pTarget);
@@ -8281,13 +8281,13 @@ index 0000000..0cd754e
 +		if (wave2_spawn < diff && airphase && !grounded)
 +        {
 +			if (Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_WATCHER, RazorscaleAddX[1], RazorscaleAddY[1], RazorscaleAddZ[1], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    pTemp->AddThreat(pTarget,0.0f);
 +                    pTemp->AI()->AttackStart(pTarget);
 +                }
 +			if (Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_GUARDIAN, RazorscaleAddX[1] + 5, RazorscaleAddY[1] + 5, RazorscaleAddZ[1], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    pTemp->AddThreat(pTarget,0.0f);
 +                    pTemp->AI()->AttackStart(pTarget);
@@ -8303,7 +8303,7 @@ index 0000000..0cd754e
 +				break;
 +				case 1:
 +					if (Creature* pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_SENTINEL, RazorscaleAddX[2], RazorscaleAddY[2], RazorscaleAddZ[2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-+						if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++						if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +						{
 +							pTemp->AddThreat(pTarget,0.0f);
 +							pTemp->AI()->AttackStart(pTarget);
@@ -8867,7 +8867,7 @@ index 0000000..9dd1b7e
 +                        i = urand(0, 5);
 +                        if(Creature *pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_CHAMPION, ArenaLoc[i].x, ArenaLoc[i].y, LOC_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
 +                        {
-+                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                            {
 +                                pTemp->AddThreat(pTarget,0.0f);
 +                                pTemp->AI()->AttackStart(pTarget);
@@ -8879,7 +8879,7 @@ index 0000000..9dd1b7e
 +                        i = urand(0, 5);
 +                        if(Creature *pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_EVOKER, ArenaLoc[i].x, ArenaLoc[i].y, LOC_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
 +                        {
-+                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                            {
 +                                pTemp->AddThreat(pTarget,0.0f);
 +                                pTemp->AI()->AttackStart(pTarget);
@@ -8893,7 +8893,7 @@ index 0000000..9dd1b7e
 +                        {
 +                            if(Creature *pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_COMMONER, ArenaLoc[j].x, ArenaLoc[j].y, LOC_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
 +                            {
-+                                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                                {
 +                                    pTemp->AddThreat(pTarget,0.0f);
 +                                    pTemp->AI()->AttackStart(pTarget);
@@ -8909,7 +8909,7 @@ index 0000000..9dd1b7e
 +                        {
 +                            if(Creature *pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_WARBRINGER, ArenaLoc[j].x, ArenaLoc[j].y, LOC_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
 +                            {
-+                                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                                {
 +                                    pTemp->AddThreat(pTarget,0.0f);
 +                                    pTemp->AI()->AttackStart(pTarget);
@@ -8922,7 +8922,7 @@ index 0000000..9dd1b7e
 +                        i = urand(0, 5);
 +                        if(Creature *pTemp = m_creature->SummonCreature(MOB_DARK_RUNE_ACOLYTE, ArenaLoc[i].x, ArenaLoc[i].y, LOC_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
 +                        {
-+                            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                            {
 +                                pTemp->AddThreat(pTarget,0.0f);
 +                                pTemp->AI()->AttackStart(pTarget);
@@ -8940,7 +8940,7 @@ index 0000000..9dd1b7e
 +                if(chargeOrbTimer < diff)
 +                {
 +                    // missing orbs from DB :(
-+                    //if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    //if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    //DoCast(pTarget, SPELL_CHARGE_ORB);
 +                    chargeOrbTimer = 10000;
 +                }
@@ -8949,7 +8949,7 @@ index 0000000..9dd1b7e
 +                // storm hammer
 +                if(stormHammerTimer < diff)
 +                {
-+                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        DoCast(pTarget, SPELL_STORMHAMMER);
 +                    stormHammerTimer = 15000;
 +                    deafeningThunderTimer = 3000;
@@ -8959,7 +8959,7 @@ index 0000000..9dd1b7e
 +                // deafening thunder
 +                if(deafeningThunderTimer < diff)
 +                {
-+                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        DoCast(pTarget, SPELL_DEAFENING_THUNDER);
 +                    deafeningThunderTimer = 20000;
 +                }
@@ -9253,7 +9253,7 @@ index 0000000..9dd1b7e
 +                DoCast(m_creature->getVictim(), SPELL_SMASH);
 +                break;
 +            case 1:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, m_bIsRegularMode ? SPELL_CHARGE : SPELL_CHARGE_H);
 +                break;
 +            }
@@ -9325,7 +9325,7 @@ index 0000000..9dd1b7e
 +                DoCast(m_creature->getVictim(), m_bIsRegularMode? SPELL_STOMP : SPELL_STOMP_H);
 +                break;
 +            case 1:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_RUNE_DETONATION);
 +                break;
 +            }
@@ -9378,7 +9378,7 @@ index 0000000..9dd1b7e
 +                DoCast(m_creature, m_bIsRegularMode? SPELL_FROST_NOVA : SPELL_FROST_NOVA_H);
 +                break;
 +            case 2:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, m_bIsRegularMode? SPELL_BLIZZARD : SPELL_BLIZZARD_H);
 +                break;
 +            }
@@ -9664,7 +9664,7 @@ index 0000000..7fb3674
 +        // mark of faceless
 +        if(MarkTimer < diff)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, SPELL_MARK_OF_FACELESS);
 +
 +            hasMark = true;
@@ -9707,7 +9707,7 @@ index 0000000..7fb3674
 +        // shadow crash
 +        if(CrashTimer < diff)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, SPELL_SHADOW_CRASH);
 +            CrashTimer = 10000;
 +        }
@@ -10492,7 +10492,7 @@ index 0000000..d967726
 +
 +        if (Light_Bomb_Timer < diff && !phase2)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                // fix spell range
 +                //DoCast(pTarget, m_bIsRegularMode ? SPELL_LIGHT_BOMB : SPELL_LIGHT_BOMB_H);
@@ -10507,7 +10507,7 @@ index 0000000..d967726
 +
 +        if (Gravity_Bomb_Timer < diff && !phase2)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                // fix spell range
 +                //DoCast(pTarget, m_bIsRegularMode ? SPELL_GRAVITY_BOMB : SPELL_GRAVITY_BOMB_H);
@@ -10599,7 +10599,7 @@ index 0000000..d967726
 +            {
 +                //TODO: fix the target -> should be the same with the light bomb
 +                //if (Unit* pTarget = Unit::GetUnit(*m_creature, pLightBombTarGUID))
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                {
 +                    Creature * LifeSpark = m_creature->SummonCreature(NPC_LIFESPARK, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
 +                    if(m_bIsRegularMode)
@@ -10612,7 +10612,7 @@ index 0000000..d967726
 +            {
 +                //TODO: fix the target -> should be the same with the gravity bomb
 +                //if (Unit* pTarget = Unit::GetUnit(*m_creature, pGravityBombTarGUID))
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    m_creature->SummonCreature(NPC_VOIDZONE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 180000);         
 +                VoidZoneTimer = 60000;
 +            }else VoidZoneTimer -= diff;
@@ -10787,7 +10787,7 @@ index 0000000..d967726
 +                if (!add4 && add3 && add2 && add1)
 +                {
 +                    if (Creature* pTemp = m_creature->SummonCreature(NPC_PUMMELER, XtAddX[3], XtAddY[3], XtAddZ[3], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-+                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        {
 +                            pTemp->AddThreat(pTarget,0.0f);
 +                            pTemp->AI()->AttackStart(pTarget);
@@ -11366,7 +11366,7 @@ index 0000000..6c16f2f
 +                uint8 i = urand(0, 11);
 +                if(Creature *pTemp = m_creature->SummonCreature(MOB_IMMORTAL_GUARDIAN, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
 +                {
-+                    if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    {
 +                        pTemp->AddThreat(pTarget,0.0f);
 +                        pTemp->AI()->AttackStart(pTarget);
@@ -12596,21 +12596,21 @@ index 0000000..6c16f2f
 +
 +            if (psychosisTimer < uiDiff)
 +            {
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, m_bIsRegularMode ? SPELL_PHYCHOSIS : SPELL_PHYCHOSIS_H);
 +                psychosisTimer = urand(15000, 20000);
 +            }else psychosisTimer -= uiDiff;
 +
 +            if (maladyTimer < uiDiff)
 +            {
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_MALADY_OF_THE_MIND);
 +                maladyTimer = urand(20000, 25000);
 +            }else maladyTimer -= uiDiff;
 +
 +            if (brainLinkTimer < uiDiff)
 +            {
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_BRAIN_LINK);
 +                brainLinkTimer = urand(25000, 30000);
 +            }else brainLinkTimer -= uiDiff;
@@ -12661,7 +12661,7 @@ index 0000000..6c16f2f
 +                case 0:
 +                    if(Creature *pTemp = m_creature->SummonCreature(MOB_CONSTRICTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
 +                    {
-+                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        {
 +                            pTemp->AddThreat(pTarget,0.0f);
 +                            pTemp->AI()->AttackStart(pTarget);
@@ -12672,7 +12672,7 @@ index 0000000..6c16f2f
 +                case 1:
 +                    if(Creature *pTemp = m_creature->SummonCreature(MOB_CRUSHER_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
 +                    {
-+                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        {
 +                            pTemp->AddThreat(pTarget,0.0f);
 +                            pTemp->AI()->AttackStart(pTarget);
@@ -12683,7 +12683,7 @@ index 0000000..6c16f2f
 +                case 2:
 +                    if(Creature *pTemp = m_creature->SummonCreature(MOB_CORRUPTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
 +                    {
-+                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        {
 +                            pTemp->AddThreat(pTarget,0.0f);
 +                            pTemp->AI()->AttackStart(pTarget);
@@ -13352,7 +13352,7 @@ index 0000000..6c16f2f
 +    {
 +        if(spell->Id == SPELL_SARAS_ANGER)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                if(pTarget->GetTypeId() == TYPEID_PLAYER)
 +                {
@@ -13389,7 +13389,7 @@ index 0000000..6c16f2f
 +
 +        if (dominateMindTimer < uiDiff)
 +        {
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(pTarget, SPELL_DOMINATE_MIND);
 +            dominateMindTimer = 30000;
 +        }else dominateMindTimer -= uiDiff;
@@ -13447,19 +13447,19 @@ index 0000000..6c16f2f
 +            switch(urand(0, 3))
 +            {
 +            case 0:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_BLACK_PLAGUE);
 +                break;
 +            case 1:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_APATHY);
 +                break;
 +            case 2:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_CURSE_OF_DOOM);
 +                break;
 +            case 3:
-+                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(pTarget, SPELL_DRAINING_POISON);
 +                break;
 +            }
@@ -13498,7 +13498,7 @@ index 0000000..6c16f2f
 +        if (squeezeTimer < uiDiff)
 +        {
 +            // broken spell
-+            //if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            //if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            //DoCast(pTarget, m_bIsRegularMode ? SPELL_SQUEEZE : SPELL_SQUEEZE_H);
 +            squeezeTimer = 15000;
 +        }else squeezeTimer -= uiDiff;

@@ -235,7 +235,7 @@ struct MANGOS_DLL_DECL boss_deathwhisperAI : public ScriptedAI
 
     void JustSummoned(Creature* pSummoned)
     {
-        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             pSummoned->AI()->AttackStart(pTarget);
     }
 
@@ -433,7 +433,7 @@ struct MANGOS_DLL_DECL boss_deathwhisperAI : public ScriptedAI
 
             if (m_uiShadowBolt_Timer < uiDiff)
             {
-                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(target, SPELL_SHADOW_BOLT_10);
@@ -461,7 +461,7 @@ struct MANGOS_DLL_DECL boss_deathwhisperAI : public ScriptedAI
 
             if (m_uiFrostboltVolley_Timer < uiDiff)
             {
-                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(target, SPELL_FROSTBOLT_VOLLEY_10);
@@ -490,7 +490,7 @@ struct MANGOS_DLL_DECL boss_deathwhisperAI : public ScriptedAI
 
             if (m_uiFrostbolt_Timer < uiDiff)
             {
-                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(target, SPELL_FROSTBOLT_10);
@@ -555,7 +555,7 @@ struct MANGOS_DLL_DECL boss_deathwhisperAI : public ScriptedAI
 
         if (m_uiDeathAndDecay_Timer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(target, SPELL_DEATH_AND_DECAY_10);
@@ -582,7 +582,7 @@ struct MANGOS_DLL_DECL boss_deathwhisperAI : public ScriptedAI
                 DoScriptText(SAY_DOMINATEMIND, m_creature);
                 for(uint8 i = 0; i < m_uiMaxPlayers; i++)
                 {
-                    if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                    if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         DoCast(target, SPELL_DOMINATE_MIND);
                 }
                 m_uiDominateTimer = 30000;
@@ -702,7 +702,7 @@ struct MANGOS_DLL_DECL mob_cult_adherentAI : public ScriptedAI
 
         if (m_uiFrostFeverTimer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(target, SPELL_FROST_FEVER_10);
@@ -720,7 +720,7 @@ struct MANGOS_DLL_DECL mob_cult_adherentAI : public ScriptedAI
 
         if (m_uiDeathchillBoltTimer < uiDiff)
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(target, SPELL_DEATHCHILL_BOLT_10);
@@ -768,7 +768,7 @@ struct MANGOS_DLL_DECL mob_cult_adherentAI : public ScriptedAI
 
         if (m_uiTorporTimer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_CURSE_OF_TORPOR);
             m_uiTorporTimer = 15000;
         }

@@ -118,7 +118,7 @@ index d94f6a0..d16e9f2 100644
          
 -        m_uiPhase = PHASE_AIR;
 +        if (pSummoned->GetEntry() == NPC_HIVEZARA_SWARMER)
-+            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                pSummoned->AI()->AttackStart(pTarget);
      }
  
@@ -172,7 +172,7 @@ index d94f6a0..d16e9f2 100644
          {
 -            // Start ground phase at 70% of HP
 -            if (m_creature->GetHealthPercent() <= 70.0f)
-+            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
              {
 -                m_uiPhase = PHASE_GROUND;
 -                DoResetThreat();
@@ -619,7 +619,7 @@ index e6b65c3..bc57ce6 100644
 +        //Summon our trap and wait 5 seconds
 +        if (!m_bHasSummonedTrap && m_uiSandTrap_Timer < 10000)
 +         {
-+            if (Unit* pUnit = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pUnit = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                pUnit->CastSpell(pUnit,SPELL_SUMMON_SANDTRAP,false);
 +                m_bHasSummonedTrap = true;
@@ -630,7 +630,7 @@ index e6b65c3..bc57ce6 100644
 +        if (m_uiSandTrap_Timer < 5000)
 +         {
 +
-+            if (Unit* pUnit = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* pUnit = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                if (GameObject *pTrap = GetClosestGameObjectWithEntry(pUnit,GO_TRAP,ATTACK_DISTANCE))
 +                {
 +                    DoCast(pUnit, SPELL_SANDTRAP_EFFECT);

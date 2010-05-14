@@ -69,7 +69,7 @@ struct MANGOS_DLL_DECL boss_moamAI : public ScriptedAI
 
     void JustSummoned(Creature* pSummoned)
     {
-        if (Unit* pTarget = SelectUnit(SELECT_TARGET_TOPAGGRO,0))
+        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
             pSummoned->AI()->AttackStart(pTarget);
 
         if (pSummoned->GetEntry() == NPC_MANA_FIEND)

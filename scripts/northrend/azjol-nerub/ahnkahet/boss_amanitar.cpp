@@ -172,21 +172,21 @@ struct MANGOS_DLL_DECL boss_amanitarAI : public ScriptedAI
         //Venom bolt volley
         if(m_uiVenomBoltTimer <= uiDiff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_VENOM_BOLT);
+            DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), SPELL_VENOM_BOLT);
             m_uiVenomBoltTimer = 15000 + rand()%5000;
         }else m_uiVenomBoltTimer -= uiDiff;
 
         //Entangling Roots
         if(m_uiRootsTimer <= uiDiff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_ENTANGLING_ROOTS);
+            DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), SPELL_ENTANGLING_ROOTS);
             m_uiRootsTimer = 18000 + rand()%5000;
         }else m_uiRootsTimer -= uiDiff;
 
         //Mini
         if(m_uiMiniTimer <= uiDiff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_MINI);
+            DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), SPELL_MINI);
             m_uiMiniTimer = 30000;
         }else m_uiMiniTimer -= uiDiff;
 

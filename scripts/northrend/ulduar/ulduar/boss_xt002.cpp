@@ -499,7 +499,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
 
         if (Light_Bomb_Timer < diff && !phase2)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 // fix spell range
                 //DoCast(pTarget, m_bIsRegularMode ? SPELL_LIGHT_BOMB : SPELL_LIGHT_BOMB_H);
@@ -514,7 +514,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
 
         if (Gravity_Bomb_Timer < diff && !phase2)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 // fix spell range
                 //DoCast(pTarget, m_bIsRegularMode ? SPELL_GRAVITY_BOMB : SPELL_GRAVITY_BOMB_H);
@@ -606,7 +606,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
             {
                 //TODO: fix the target -> should be the same with the light bomb
                 //if (Unit* pTarget = Unit::GetUnit(*m_creature, pLightBombTarGUID))
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
                     Creature * LifeSpark = m_creature->SummonCreature(NPC_LIFESPARK, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
                     if(m_bIsRegularMode)
@@ -619,7 +619,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
             {
                 //TODO: fix the target -> should be the same with the gravity bomb
                 //if (Unit* pTarget = Unit::GetUnit(*m_creature, pGravityBombTarGUID))
-                if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     m_creature->SummonCreature(NPC_VOIDZONE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 180000);         
                 VoidZoneTimer = 60000;
             }else VoidZoneTimer -= diff;
@@ -794,7 +794,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
                 if (!add4 && add3 && add2 && add1)
                 {
                     if (Creature* pTemp = m_creature->SummonCreature(NPC_PUMMELER, XtAddX[3], XtAddY[3], XtAddZ[3], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                         {
                             pTemp->AddThreat(pTarget,0.0f);
                             pTemp->AI()->AttackStart(pTarget);

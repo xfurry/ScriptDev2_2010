@@ -219,7 +219,7 @@ index 0000000..7fad022
 +
 +		if (Course_Timer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target, SPELL_COURSE);
 +
 +            Course_Timer = 9300;
@@ -239,7 +239,7 @@ index 0000000..7fad022
 +
 +		if (Stop_Timer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target, SPELL_TIME_STOP);
 +
 +			Stop_Timer = 21300;
@@ -249,7 +249,7 @@ index 0000000..7fad022
 +
 +		if (Warp_Timer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +               DoCast(target, SPELL_TIME_WARP);
 +			
 +			switch(rand()%3)
@@ -462,7 +462,7 @@ index 0000000..f837c42
 +
 +			if (Swamp_Timer < diff)
 +			{
-+				if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++				if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +					DoCast(target, m_bIsRegularMode ? SPELL_SWAMP : SPELL_SWAMP_H);
 +
 +				Swamp_Timer = 7300;
@@ -472,7 +472,7 @@ index 0000000..f837c42
 +
 +			if (MindBlast_Timer < diff)
 +			{
-+				if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++				if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +					DoCast(target, m_bIsRegularMode ? SPELL_MIND_BLAST : SPELL_MIND_BLAST_H);
 +
 +				MindBlast_Timer = 11300;
@@ -490,7 +490,7 @@ index 0000000..f837c42
 +
 +				if (Sleep_Timer < diff)
 +				{
-+					if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++					if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +						DoCast(target, m_bIsRegularMode ? SPELL_SLEEP : SPELL_SLEEP_H);
 +                        switch(rand()%2)
 +                        {
@@ -786,7 +786,7 @@ index 0000000..c1242b1
 +
 +		if (Chain_Timer < diff)
 +        {
-+			if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++			if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +				DoCast(target, m_bIsRegularMode ? SPELL_CHAIN : SPELL_CHAIN_H);
 +
 +            Chain_Timer = 6300;
@@ -796,7 +796,7 @@ index 0000000..c1242b1
 +
 +		if (Exploded_Timer < diff)
 +        {
-+			if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++			if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +				DoCast(target, m_bIsRegularMode ? SPELL_EXPLODED : SPELL_EXPLODED_H);
 +
 +            Exploded_Timer = 9300;
@@ -981,7 +981,7 @@ index 0000000..5f6dda8
 +		
 +		if (ShadowBolt_Timer < diff)
 +		{
-+			if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++			if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +				DoCast(target, m_bIsRegularMode ? SPELL_SB : SPELL_SB_H);
 +
 +            ShadowBolt_Timer = 5300;
@@ -991,7 +991,7 @@ index 0000000..5f6dda8
 +
 +		if (Flesh_Timer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target,SPELL_FLESH);
 +
 +            Flesh_Timer = 7300;
@@ -1001,7 +1001,7 @@ index 0000000..5f6dda8
 +
 +		if (Steal_Timer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target,SPELL_STEAL);
 +			
 +			switch(rand()%3)
@@ -1470,7 +1470,7 @@ index 0000000..c4cd3da
 +
 +            if (Exorcism_Timer < diff)
 +            {
-+                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    DoCast(target, m_bIsRegularMode ? SPELL_EXORCISM : SPELL_EXORCISM_H);
 +
 +                Exorcism_Timer = 7300;
@@ -2277,7 +2277,7 @@ index 0000000..c4cd3da
 +
 +        if (corruptingBlightTimer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target, SPELL_CORRUPTING_BLIGHT);
 +            corruptingBlightTimer = 30000;
 +        }
@@ -2286,7 +2286,7 @@ index 0000000..c4cd3da
 +
 +        if (voidStrikeTimer < diff)
 +        {
-+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target, SPELL_VOID_STRIKE);
 +            voidStrikeTimer = 10000 + urand(1000, 4000);
 +        }

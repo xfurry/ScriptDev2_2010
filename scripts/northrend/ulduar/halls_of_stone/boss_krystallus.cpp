@@ -107,7 +107,7 @@ struct MANGOS_DLL_DECL boss_krystallusAI : public ScriptedAI
 
         if (m_uiToss_Timer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, !m_bIsRegularMode ? SPELL_BOULDER_TOSS_H : SPELL_BOULDER_TOSS);
             m_uiToss_Timer = 9000 + rand()%6000;
         }
@@ -116,7 +116,7 @@ struct MANGOS_DLL_DECL boss_krystallusAI : public ScriptedAI
 
         if (m_uiSpike_Timer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_GROUND_SPIKE);
             m_uiSpike_Timer = 12000 + rand()%5000;
         }

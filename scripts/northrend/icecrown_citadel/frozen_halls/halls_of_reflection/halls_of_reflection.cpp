@@ -221,7 +221,7 @@ struct MANGOS_DLL_DECL mob_lichKing_minionAI : public ScriptedAI
         //Curse of doom
         if (m_uiCurseOfDoomTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_CURSE_OF_DOOM : SPELL_CURSE_OF_DOOM_H);
             m_uiCurseOfDoomTimer = 10000;
         }else m_uiCurseOfDoomTimer -= uiDiff;
@@ -229,7 +229,7 @@ struct MANGOS_DLL_DECL mob_lichKing_minionAI : public ScriptedAI
         //Shadowbolt
         if (m_uiShadowBoltTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOWBOLT : SPELL_SHADOWBOLT_H);
             m_uiShadowBoltTimer = 5000;
         }else m_uiShadowBoltTimer -= uiDiff;
@@ -361,7 +361,7 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
         m_creature->SetInCombatWithZone();
         m_creature->GetMotionMaster()->MovePoint(0, 5305.374f, 1997.526f, 709.341f);
 
-        if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
         {
             m_creature->AddThreat(pTarget,0.0f);
             m_creature->AI()->AttackStart(pTarget);
@@ -472,14 +472,14 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
     {
         if (m_uiDeadlyPoisonTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_DEADLY_POISON : SPELL_DEADLY_POISON_H);
             m_uiDeadlyPoisonTimer = 8000;
         }else m_uiDeadlyPoisonTimer -= uiDiff;
 
         if (m_uiDaggerThrowTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_ENVENOMED_DAGGER_THROW : SPELL_ENVENOMED_DAGGER_THROW_H);
             m_uiDaggerThrowTimer = 10000;
         }else m_uiDaggerThrowTimer -= uiDiff;
@@ -502,28 +502,28 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
     {
         if (m_uiChainsOfIceTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_CHAINS_OF_ICE);
             m_uiChainsOfIceTimer = 10000;
         }else m_uiChainsOfIceTimer -= uiDiff;
 
         if (m_uiFireballTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_FIREBALL : SPELL_FIREBALL_H);
             m_uiFireballTimer = 8000;
         }else m_uiFireballTimer -= uiDiff;
 
         if (m_uiFlameStrikeTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_FLAMESTRIKE : SPELL_FLAMESTRIKE_H);
             m_uiFlameStrikeTimer = 15000;
         }else m_uiFlameStrikeTimer -= uiDiff;
 
         if (m_uiFrostboltTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_FROSTBOLT : SPELL_FROSTBOLT_H);
             m_uiFrostboltTimer = 7000;
         }else m_uiFrostboltTimer -= uiDiff;
@@ -540,28 +540,28 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
     {
         if (m_uiChainsOfIceTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_CHAINS_OF_ICE);
             m_uiChainsOfIceTimer = 10000;
         }else m_uiChainsOfIceTimer -= uiDiff;
 
         if (m_uiFireballTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_FIREBALL : SPELL_FIREBALL_H);
             m_uiFireballTimer = 8000;
         }else m_uiFireballTimer -= uiDiff;
 
         if (m_uiFlameStrikeTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_FLAMESTRIKE : SPELL_FLAMESTRIKE_H);
             m_uiFlameStrikeTimer = 15000;
         }else m_uiFlameStrikeTimer -= uiDiff;
 
         if (m_uiFrostboltTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_FROSTBOLT : SPELL_FROSTBOLT_H);
             m_uiFrostboltTimer = 7000;
         }else m_uiFrostboltTimer -= uiDiff;
@@ -578,14 +578,14 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
     {
         if (m_uiCircleOfDestructionTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_CIRCLE_OF_DESTRUCTION : SPELL_CIRCLE_OF_DESTRUCTION_H);
             m_uiCircleOfDestructionTimer = 10000;
         }else m_uiCircleOfDestructionTimer -= uiDiff;
 
         if (m_uiCowerInFearTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_COWER_IN_FEAR);
             m_uiCowerInFearTimer = 12000;
         }else m_uiCowerInFearTimer -= uiDiff;
@@ -601,7 +601,7 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
 
         if (m_uiShadowWordPainTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_WORD_PAIN : SPELL_SHADOW_WORD_PAIN_H);
             m_uiShadowWordPainTimer = 5000;
         }else m_uiShadowWordPainTimer -= uiDiff;
@@ -612,28 +612,28 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
     {
         if (m_uiCursedArrowTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_CURSED_ARROW);
             m_uiCursedArrowTimer = 8000;
         }else m_uiCursedArrowTimer -= uiDiff;
 
         if (m_uiFrostTrapTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_FROST_TRAP);
             m_uiFrostTrapTimer = 12000;
         }else m_uiFrostTrapTimer -= uiDiff;
 
         if (m_uiIceShotTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_ICE_SHOT : SPELL_ICE_SHOT_H);
             m_uiIceShotTimer = 10000;
         }else m_uiIceShotTimer -= uiDiff;
 
         if (m_uiShootTimer <= uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHOOT : SPELL_SHOOT_H);
             m_uiShootTimer = 5000;
         }else m_uiShootTimer -= uiDiff;

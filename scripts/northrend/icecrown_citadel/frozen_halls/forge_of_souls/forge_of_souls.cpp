@@ -147,7 +147,7 @@ struct MANGOS_DLL_DECL npc_SpectralWardenAI: public ScriptedAI
 
         if (m_uiWailOfSoulsTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_WAIL_OF_SOULS : SPELL_WAIL_OF_SOULS_H);
             m_uiWailOfSoulsTimer = 5000;
         }
@@ -242,7 +242,7 @@ struct MANGOS_DLL_DECL npc_SoulguardReaperAI: public ScriptedAI
 
         if (m_uiShadowLanceTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_SHADOW_LANCE);
             m_uiShadowLanceTimer = 8000;
         }
@@ -351,7 +351,7 @@ struct MANGOS_DLL_DECL npc_SoulguardAnimatorAI: public ScriptedAI
 
         if (m_uiShadowBoltTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT_H);
             m_uiShadowBoltTimer = 5000;
         }
@@ -360,7 +360,7 @@ struct MANGOS_DLL_DECL npc_SoulguardAnimatorAI: public ScriptedAI
 
         if (m_uiSoulSicknessTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_SOUL_SICKNESS);
             m_uiSoulSicknessTimer = 10000;
         }
@@ -369,7 +369,7 @@ struct MANGOS_DLL_DECL npc_SoulguardAnimatorAI: public ScriptedAI
 
         if (m_uiSoulSiphonTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_SOUL_SIPHON);
             m_uiSoulSiphonTimer = 8000;
         }
@@ -421,7 +421,7 @@ struct MANGOS_DLL_DECL npc_SoulguardAdeptAI: public ScriptedAI
 
         if (m_uiShadowBoltTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT_H);
             m_uiShadowBoltTimer = 4000;
         }
@@ -430,7 +430,7 @@ struct MANGOS_DLL_DECL npc_SoulguardAdeptAI: public ScriptedAI
 
         if (m_uiDrainLifeTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_DRAIN_LIFE : SPELL_DRAIN_LIFE_H);
             m_uiDrainLifeTimer = 9000;
         }

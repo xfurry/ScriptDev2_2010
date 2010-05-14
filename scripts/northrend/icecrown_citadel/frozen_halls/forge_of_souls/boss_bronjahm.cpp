@@ -125,7 +125,7 @@ struct MANGOS_DLL_DECL boss_BronjahnAI : public ScriptedAI
         if (m_uiCorruptSoulTimer < uiDiff && !m_bIsSoulStorm)
         {
             DoScriptText(SAY_CORRUPT_SOUL, m_creature);
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(pTarget, SPELL_CORRUPT_SOUL);
                 /*if(Creature *pTemp = m_creature->SummonCreature(NPC_CORRUPT_SOUL_FRAGMENT, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
@@ -149,7 +149,7 @@ struct MANGOS_DLL_DECL boss_BronjahnAI : public ScriptedAI
 
         if (m_uiShadowBoltTimer < uiDiff)
         {
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT_H);
             
             if(m_bIsSoulStorm)
@@ -163,7 +163,7 @@ struct MANGOS_DLL_DECL boss_BronjahnAI : public ScriptedAI
         if (m_uiFearTimer < uiDiff && m_bIsSoulStorm)
         {
             m_creature->CastStop();
-            if (Unit *pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(m_creature, SPELL_FEAR);
             m_uiFearTimer = urand(8000, 12000);
         }

@@ -104,7 +104,7 @@ struct MANGOS_DLL_DECL boss_eckAI : public ScriptedAI
 
         if (uiSpringTimer <= uiDiff)
         {
-            Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM,1);
+            Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1);
             if(pTarget && pTarget->GetTypeId() == TYPEID_PLAYER)
             {
                 switch(urand(0, 1))

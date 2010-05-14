@@ -253,7 +253,7 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
 
         if (m_uiSharedSuffering_Timer < uiDiff)
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHARED_SUFFERING : SPELL_SHARED_SUFFERING_H);
             m_uiSharedSuffering_Timer= 20000;
         } 
@@ -262,7 +262,7 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
 
         if (m_uiWell_Timer < uiDiff) 
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_WELL_OF_CORRUPTION);
             m_uiWell_Timer= 30000;
         } 
@@ -271,7 +271,7 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
 
         /*if (m_uiTouch_Timer < uiDiff) 
         {
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_WELL_OF_CORRUPTION);
             m_uiTouch_Timer= 30000;
         } 
@@ -285,7 +285,7 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
             case 0: DoScriptText(SAY_CORRUPTED_FLESH1, m_creature); break;
             case 1: DoScriptText(SAY_CORRUPTED_FLESH2, m_creature); break;
             }
-            if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_CORRUPTED_FLESH : SPELL_CORRUPTED_FLESH_H);
             m_uiFlesh_Timer= 10000;
         } 

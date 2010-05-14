@@ -654,7 +654,7 @@ index 0000000..2fe9e06
 +        if(m_uiShadowNovaTimer < diff)
 +        {
 +            DoScriptText(SAY_SACROLASH_SHADOW_NOVA, m_creature);
-+            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                DoCast(target, SPELL_SHADOW_NOVA);
 +            m_uiShadowNovaTimer = urand(30000,40000);
 +        }else m_uiShadowNovaTimer -= diff;
@@ -678,7 +678,7 @@ index 0000000..2fe9e06
 +                    image->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 +                    image->setFaction(14); 
 +
-+                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        image->AI()->AttackStart(target);
 +			    }
 +            }
@@ -731,7 +731,7 @@ index 0000000..2fe9e06
 +		
 +		if(m_uiShadowfuryTimer < diff)
 +        {
-+            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                m_creature->CastSpell(target, SPELL_SHADOWFURY, false);
 +			m_uiShadowfuryTimer = 8000;	
 +        }else m_uiShadowfuryTimer -= diff;
@@ -1274,7 +1274,7 @@ index 0000000..86c0de1
 +				{
 +					if(!cImage->isDead())
 +					{
-+						if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++						if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +							cImage->CastSpell(target, m_uiImageGUID[i][1], true);
 +					}
 +				}
@@ -2575,7 +2575,7 @@ index 0000000..a5b294c
 +				{
 +					if(!Sinister->isDead())
 +					{
-+						if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++						if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +							Sinister->CastSpell(target, m_uiSinisterGUID[i][1], true);
 +					}
 +				}
@@ -2594,7 +2594,7 @@ index 0000000..a5b294c
 +            
 +            for(uint8 i=0; i<h; ++i)
 +            {
-+                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    Creature* Armagedon = m_creature->SummonCreature(ID_ARMAGEDON, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
 +            }
 +            m_uiAramageddonTimer = 14000;
@@ -2602,7 +2602,7 @@ index 0000000..a5b294c
 +
 +        if((m_uiShadowSpikeEndsTimer < diff) && m_bShadowSpikeEnds && m_bPhase3)
 +        {
-+            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +            {
 +                if(Creature* cShadowSpike = m_creature->SummonCreature(ID_SHADOWSPIKE, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 6000))
 +                {
@@ -2652,7 +2652,7 @@ index 0000000..a5b294c
 +        if(((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) <= 85) && !m_bPhase3)
 +        {      
 +            DoScriptText(SAY_KJ_DENINE, m_creature);
-+            if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM,0)) 
++            if(Unit* victim = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)) 
 +                if (victim && (victim->GetTypeId() == TYPEID_PLAYER))
 +                    Sinister(((Player*)victim),0,4);
 +
@@ -2672,7 +2672,7 @@ index 0000000..a5b294c
 +        if(((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) <= 55) && !m_bPhase4)
 +        {
 +            DoScriptText(SAY_KJ_CANNOT_WIN, m_creature);
-+            if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM,0)) 
++            if(Unit* victim = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)) 
 +                if (victim && (victim->GetTypeId() == TYPEID_PLAYER))
 +                    Sinister(((Player*)victim),4,8);
 +
@@ -2688,7 +2688,7 @@ index 0000000..a5b294c
 +        if(((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) <= 25) && !m_bPhase5)
 +        {
 +            DoScriptText(SAY_KJ_LOST_POWER, m_creature);
-+            if(Unit* victim = SelectUnit(SELECT_TARGET_RANDOM,0)) 
++            if(Unit* victim = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)) 
 +                if (victim && (victim->GetTypeId() == TYPEID_PLAYER))
 +                    Sinister(((Player*)victim),8,12);
 +            //Start Timerow  Dochodzacych w 5 Fazie
@@ -2858,7 +2858,7 @@ index 0000000..a5b294c
 +            {
 +                Creature* Imp = m_creature->SummonCreature(ID_IMP, m_fxx, m_fyy, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
 +                if(Imp)
-+                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        Imp->AI()->AttackStart(target);  
 +            }
 +            m_uiImpTimer = 5000;
@@ -2904,7 +2904,7 @@ index 0000000..a5b294c
 +        {
 +            for(uint8 i=0; i<3; ++i)
 +            {
-+                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                    m_creature->CastSpell(target, SPELL_ORB_BOLT, true);
 +            }
 +            m_uiSpellTimer = 1000;
@@ -3138,7 +3138,7 @@ index 0000000..a5b294c
 +        {
 +            Creature* Deveiver = m_creature->SummonCreature(ID_DECIVER, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 10000);
 +                if(Deveiver)
-+                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                        Deveiver->AI()->AttackStart(target);
 +        }*/
 +    }
@@ -3852,7 +3852,7 @@ index 0000000..6390404
 +
 +        if(ChangeTargetTimer < diff)
 +        {
-+            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
++            if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 +                m_creature->Attack(target, true);
 +            ChangeTargetTimer = 5000;
 +        }else ChangeTargetTimer -= diff;
