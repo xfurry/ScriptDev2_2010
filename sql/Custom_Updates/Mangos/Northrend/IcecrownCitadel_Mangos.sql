@@ -20,9 +20,25 @@ UPDATE creature_template SET ScriptName='mob_big_ooze' WHERE entry = 36899;
 UPDATE creature_template SET ScriptName='mob_sticky_ooze' WHERE entry = 37006;
 -- Putricide
 UPDATE creature_template SET ScriptName='boss_professor_putricide' WHERE entry = 36678;
+UPDATE creature_template SET ScriptName='mob_icc_volatile_ooze' WHERE entry = 37697;
+UPDATE creature_template SET ScriptName='mob_icc_gas_cloud' WHERE entry = 37562;
+UPDATE creature_template SET ScriptName='mob_icc_gas_bomb' WHERE entry = 38159;
+UPDATE creature_template SET ScriptName='mob_malleable_ooze' WHERE entry = 38556;
+UPDATE creature_template SET ScriptName='mob_slime_puddle' WHERE entry = 38234;
+-- Blood prince council
+UPDATE creature_template SET ScriptName='boss_prince_taldaram' WHERE entry = 37973;
+UPDATE creature_template SET ScriptName='boss_prince_keleseth' WHERE entry = 37972;
+UPDATE creature_template SET ScriptName='boss_prince_valanar' WHERE entry = 37970;
+-- Blood queen Lanathel
+UPDATE creature_template SET ScriptName='boss_blood_queen_lanathel' WHERE entry = 37955;
+-- Valithria Dreamwalker
+-- Sindragosa
+-- Lich King
 -- Minibossed: Stinky, Precious, Svalna
 UPDATE creature_template SET ScriptName='miniboss_stinky' WHERE entry = 37025;
 UPDATE creature_template SET ScriptName='miniboss_precious' WHERE entry = 37217;
+UPDATE creature_template SET ScriptName='mob_spire_frostwyrm' WHERE entry = 37230;
+UPDATE creature_template SET ScriptName='mob_rotting_frost_giant' WHERE entry in (38494, 38490);
 -- Instance
 UPDATE instance_template SET script='instance_icecrown_citadel' WHERE map = 631;
 -- Instance teleporters: light's hammer, oratory of dammed, rampart of skulls, deathbringers rise, sindragosa, central spire, upper spire;

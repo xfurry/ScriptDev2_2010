@@ -7,7 +7,7 @@
 
 enum
 {
-    MAX_ENCOUNTER               = 12,
+    MAX_ENCOUNTER               = 13,
 
     TYPE_MARROWGAR              = 1,
     TYPE_DEATHWHISPER           = 2,
@@ -22,12 +22,18 @@ enum
     TYPE_SINDRAGOSA             = 11,
     TYPE_LICH_KING              = 12,
 
+    TYPE_ATTEMPTS               = 13,
+
     NPC_MARROWGAR               = 36612,
     NPC_DEATHWHISPER            = 36855,
     NPC_SAURFANG                = 37813,
     NPC_FESTERGUT               = 36626,
     NPC_ROTFACE                 = 36627,
     NPC_PUTRICIDE               = 36678,
+    NPC_VALANAR                 = 37970,
+    NPC_KELESETH                = 37972,
+    NPC_TALDARAM                = 37973,
+    NPC_LANATHEL                = 37955,
 
     // Outer citadel
     GO_RAID_EXIT                = 201583,
@@ -66,6 +72,10 @@ enum
     GO_FROSTWING_DOOR           = 201919,
     GO_GREEN_DRAGON_ENTRANCE    = 201375,
     GO_GREEN_DRAGON_EXIT        = 201374,
+    GO_ROOST_PORTCULLIS1        = 201380,
+    GO_ROOST_PORTCULLIS2        = 201381,
+    GO_ROOST_PORTCULLIS3        = 201382,
+    GO_ROOST_PORTCULLIS4        = 201383,
 
     // Sigils
     GO_BLOODWING_SIGIL          = 202183,

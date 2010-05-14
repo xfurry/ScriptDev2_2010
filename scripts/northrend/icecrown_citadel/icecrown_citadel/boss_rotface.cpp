@@ -322,10 +322,12 @@ struct MANGOS_DLL_DECL mob_big_oozeAI : public ScriptedAI
     uint32 Difficulty;
 
     uint32 m_uiStickyOozeTimer;
+    uint32 m_uiDieTimer;
 
     void Reset()
     {
         m_uiStickyOozeTimer = 10000;
+        m_uiDieTimer        = 600000;
 
         if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
             DoCast(m_creature, SPELL_RADIATING_OOZE_10);
@@ -351,6 +353,12 @@ struct MANGOS_DLL_DECL mob_big_oozeAI : public ScriptedAI
         else
             m_uiStickyOozeTimer -= uiDiff;
 
+        if(m_uiDieTimer < uiDiff)
+        {
+            m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        }
+        else m_uiDieTimer -= uiDiff;
+
         if(m_creature->HasAura(SPELL_UNSTABLE_OOZE, EFFECT_INDEX_0))
         {
             if(m_creature->GetAura(SPELL_UNSTABLE_OOZE, EFFECT_INDEX_0)->GetStackAmount() == 5)
@@ -369,8 +377,7 @@ struct MANGOS_DLL_DECL mob_big_oozeAI : public ScriptedAI
                     DoScriptText(SAY_OOZE_EXPLODE, pRotface);
                     ((boss_rotfaceAI*)pRotface->AI())->m_uiOozeCount = 0;
                 }
-
-                m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                m_uiDieTimer = 4200;
             }
         }
 

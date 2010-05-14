@@ -262,7 +262,7 @@ INSERT INTO script_waypoint VALUES
    (37554, 8, 5342.130371, 1770.953613, 766.681885, 0, 'last wall'),
    (37554, 9, 5277.262207, 1697.252563, 785.987793, 0, 'last stand');
 
-delete from script_texts where entry between -1609500 and -1609392;
+delete from script_texts where entry between -1609600 and -1609392;
 /* ICECROWN CITADEL TODO:*/
 -- Lord Marrowgar
 INSERT INTO `script_texts` VALUES ('-1609392', 'This is the beginning AND the end, mortals. None may enter the master\'s sanctum!', '', '', '', '', '', '', '', '', '16950', '1', '0', '0', 'intro');
@@ -385,17 +385,118 @@ INSERT INTO `script_texts` VALUES
 ('-1609486','Hmm... Interesting...','', '', '', '', '', '', '', '','17115','1','0','0','putricide kill1'),
 ('-1609487','That was unexpected!','', '', '', '', '', '', '', '','17116', '1','0','0','putricide kill2'),
 ('-1609488','Great news, everyone!','', '', '', '', '', '', '', '','17118','1','0','0','putricide berserk'),
-('-1609489','Bad news, everyone! I don\'t think I\'m going to make it','', '', '', '', '', '', '', '', '17117','1','0','0','putricide death');
+('-1609489','Bad news, everyone! I don\'t think I\'m going to make it','', '', '', '', '', '', '', '', '17117','1','0','0','putricide death'),
 
--- TODO:
 -- Prince council
+-- Intro:
+('-1609490','Foolish mortals. You thought us defeated so easily? The San\'layn are the Lich King\'s immortal soldiers! Now you shall face their might combined!', '', '', '', '', '', '', '', '','16795','1','0','0','intro01'),
+('-1609509','Rise up, brothers, and destroy our enemies', '', '', '', '', '', '', '', '','16796','1','0','0','intro02'),
+
+-- Prince Keleseth
+('-1609491','Such wondrous power! The Darkfallen Orb has made me INVINCIBLE!', '', '', '', '', '', '', '', '','16727','1','0','0','invocation of blood'),
+('-1609492','Blood will flow!', '', '', '', '', '', '', '', '','16728','1','0','0','special ability'),
+('-1609493','Were you ever a threat?', '', '', '', '', '', '', '', '','16723','1','0','0','kill player01'),
+('-1609494','Truth is found in death.', '', '', '', '', '', '', '', '','16724','1','0','0','kill player02'),
+('-1609495','Prince Keleseth cackles maniacally!', '', '', '', '', '', '', '', '','16726','1','0','0','berserk'),
+('-1609496','My queen... they come...', '', '', '', '', '', '', '', '','16725','1','0','0','death'),
+
+-- Prince Taldaram
+('-1609497','Tremble before Taldaram, mortals, for the power of the orb flows through me!', '', '', '', '', '', '', '', '','16857','1','0','0','invocation of blood'),
+('-1609498','Delight in the pain!', '', '', '', '', '', '', '', '','16858','1','0','0','special ability'),
+('-1609499','Worm food.', '', '', '', '', '', '', '', '','16853','1','0','0','kill player01'),
+('-1609500','Beg for mercy!', '', '', '', '', '', '', '', '','16854','1','0','0','kill player02'),
+('-1609501','Prince Taldaram laughs.', '', '', '', '', '', '', '', '','16856','1','0','0','berserk'),
+('-1609502','Prince Taldaram gurgles and dies.', '', '', '', '', '', '', '', '','16855','2','0','0','death'),
+
+-- Prince Valanar
+('-1609503','Naxxanar was merely a setback! With the power of the orb, Valanar will have his vengeance!', '', '', '', '', '', '', '', '','16685','1','0','0','invocation of blood'),
+('-1609504','My cup runneth over.', '', '', '', '', '', '', '', '','16686','1','0','0','special ability'),
+('-1609505','Dinner... is served.', '', '', '', '', '', '', '', '','16681','1','0','0','kill player01'),
+('-1609506','Dinner... is served.', '', '', '', '', '', '', '', '','16682','1','0','0','kill player02'),
+('-1609507','BOW DOWN BEFORE THE SAN\'LAYN!', '', '', '', '', '', '', '', '','16684','1','0','0','berserk'),
+('-1609508','...why...?', '', '', '', '', '', '', '', '','16683','1','0','0','death'),
 
 -- Blood Queen
+('-1609510','You have made an... unwise... decision.', '', '', '', '', '', '', '', '','16782','1','0','0','aggro'),
+('-1609511','Just a taste...', '', '', '', '', '', '', '', '','16783','1','0','0','vampiric bite1'),
+('-1609512','Know my hunger!', '', '', '', '', '', '', '', '','16784','1','0','0','vampiric bite2'),
+('-1609513','SUFFER!', '', '', '', '', '', '', '', '','16786','1','0','0','swarming shadows'),
+('-1609514','Can you handle this?', '', '', '', '', '', '', '', '','16787','1','0','0','pact of the darkfallen'),
+('-1609515','Yes... feed my precious one! You\'re mine now!', '', '', '', '', '', '', '', '','16790','1','0','0','player gets mindcontrolled'),
+('-1609516','Here it comes.', '', '', '', '', '', '', '', '','16788','1','0','0','air phase'),
+('-1609517','THIS ENDS NOW!', '', '', '', '', '', '', '', '','16793','1','0','0','berserk'),
+('-1609518','But... we were getting along... so well...', '', '', '', '', '', '', '', '','16794','1','0','0','death'),
 
 -- Sister Svalna
+('-1609520','Crok Scourgebane yells: Ready your arms, my Argent Brothers. The Vrykul will protect the Frost Queen with their lives.', '', '', '', '', '', '', '', '','16819','1','0','0','svalnaevent1'),
+('-1609521','Captain Arnath yells: Even dying here beats spending another day collecting reagents for that madman, Finklestein.', '', '', '', '', '', '', '', '','16585','1','0','0','svalnaevent2'),
+('-1609522','Crok Scourgebane yells: Enough idle banter! Our champions have arrived - support them as we push our way through the hall!', '', '', '', '', '', '', '', '','16820','1','0','0','svalnaevent3'),
+('-1609523','Sister Svalna yells: You may have once fought beside me, Crok, but now you are nothing more than a traitor. Come, your second death approaches!', '', '', '', '', '', '', '', '','17017','1','0','0','svalnaevent4'),
+('-1609524','Miserable creatures, Die!', '', '', '', '', '', '', '', '','17018','1','0','0','killing crusaders'),
+('-1609525','Foolish Crok, you brought my reinforcements with you! Arise Argent Champions and serve the Lich King in death!', '', '', '', '', '', '', '', '','17019','1','0','0','ressurecting killed crusaders'),
+('-1609526','Come Scourgebane, I\'ll show the Lich King which one of us is truly worthy of the title, champion!', '', '', '', '', '', '', '', '','17020','1','0','0','aggro'),
+('-1609527','What? They died so easily? No matter.', '', '', '', '', '', '', '', '','17022','1','0','0','killing a captain'),
+('-1609528','What a pitiful choice of an ally Crok.', '', '', '', '', '', '', '', '','17021','1','0','0','killing a player'),
+('-1609529','Perhaps... you were right... Crok,you must not approach the Frost Queen, quickly, stop them!', '', '', '', '', '', '', '', '','17023,17024','1','0','0','death'),
 
 -- Dreamwalker
+('-1609530','Heroes, lend me your aid! I... I cannot hold them off much longer! You must heal my wounds!', '', '', '', '', '', '', '', '','17064','1','0','0','aggro'),
+('-1609531','I have opened a portal into the Dream. Your salvation lies within, heroes.', '', '', '', '', '', '', '', '','17068','1','0','0','open portal'),
+('-1609532','My strength is returning! Press on, heroes!', '', '', '', '', '', '', '', '','17070','1','0','0','75% health'),
+('-1609533','I will not last much longer!', '', '', '', '', '', '', '', '','17070','1','0','0','25% health'),
+('-1609534','Forgive me for what I do! I... cannot... stop... ONLY NIGHTMARES REMAIN!', '', '', '', '', '', '', '', '','17072','1','0','0','0% health'),
+('-1609535','A tragic loss...', '', '', '', '', '', '', '', '','17066','1','0','0','a player dies'),
+('-1609536','FAILURES!', '', '', '', '', '', '', '', '','17067','1','0','0','berserk'),
+('-1609537','I am renewed! Ysera grants me the favor to lay these foul creatures to rest!', '', '', '', '', '', '', '', '','17071','1','0','0','victory'),
 
 -- Sindragosa
+('-1609540','You are fools who have come to this place! The icy winds of Northrend will consume your souls!', '', '', '', '', '', '', '', '','17007','1','0','0','aggro'),
+('-1609541','Suffer, mortals, as your pathetic magic betrays you!', '', '', '', '', '', '', '', '','17014','1','0','0','unchained magic'),
+('-1609542','Can you feel the cold hand of death upon your heart?', '', '', '', '', '', '', '', '','17013','1','0','0','blistering cold'),
+('-1609543','Aaah! It burns! What sorcery is this?!', '', '', '', '', '', '', '', '','17015','1','0','0','respire for a torment soul'),
+('-1609544','Your incursion ends here! None shall survive!', '', '', '', '', '', '', '', '','17012','1','0','0','air phase also known as takeoff'),
+('-1609545','Now feel my master\'s limitless power and despair!', '', '', '', '', '', '', '', '','17016','1','0','0','phase 3'),
+('-1609546','Perish!', '', '', '', '', '', '', '', '','17008','1','0','0','slay1'),
+('-1609547','A flaw of mortality...', '', '', '', '', '', '', '', '','17009','1','0','0','slay2'),
+('-1609548','Enough! I tire of these games!', '', '', '', '', '', '', '', '','17011','1','0','0','berserk'),
+('-1609549','Free...at last...', '', '', '', '', '', '', '', '','17010','1','0','0','death'),
 
 -- Lich King
+-- Intro
+('-1609550','The Lich King yells: So...the Light\'s vaunted justice has finally arrived. Shall I lay down Frostmourne and throw myself at your mercy, Fordring?', '', '', '', '', '', '', '', '','17349','1','0','0','lk intro01'),
+('-1609551','Highlord Tirion Fordring yells: We will grant you a swift death, Arthas. More than can be said for the thousands you\'ve tortured and slain.', '', '', '', '', '', '', '', '','17390','1','0','0','lk intro02'),
+('-1609552','The Lich King yells: You will learn of that first hand. When my work is complete, you will beg for mercy -- and I will deny you. Your anguished cries will be testament to my unbridled power.', '', '', '', '', '', '', '', '','17350','1','0','0','lk intro03'),
+('-1609553','Highlord Tirion Fordring yells: So be it. Champions, attack!', '', '', '', '', '', '', '', '','17391','1','0','0','lk intro04'),
+('-1609554','The Lich King yells: I\'ll keep you alive to witness the end, Fordring. I would not want the Light\'s greatest champion to miss seeing this wretched world remade in my image.', '', '', '', '', '', '', '', '','17351','1','0','0','lk intro05'),
+-- Intro End
+('-1609555','Come then champions, feed me your rage!', '', '', '', '', '', '', '', '','17352','1','0','0','aggro'),
+('-1609556','I will freeze you from within until all that remains is an icy husk!', '', '', '', '', '', '', '', '','17369','1','0','0','casting remorseless winter'),
+('-1609557','Watch as the world around you collapses!', '', '', '', '', '', '', '', '','17370','1','0','0','arena shatters'),
+('-1609558','Val\'kyr, your master calls!', '', '', '', '', '', '', '', '','17373','1','0','0','summon valkyr'),
+('-1609559','Frostmourne hungers...', '', '', '', '', '', '', '', '','17373','1','0','0','casting harvest soul'),
+-- Inside Frostmourne :     
+('-1609560','Terenas Menethil II yells: You have come to bring Arthas to justice? To see the Lich King destroyed?', '', '', '', '', '', '', '', '','17394','1','0','0','in FM 01'),
+('-1609561','Terenas Menethil II yells: First, you must escape Frostmourne\'s hold, or be damned as I am; trapped within this cursed blade for all eternity.', '', '', '', '', '', '', '', '','17395','1','0','0','in FM 02'),
+('-1609562','Terenas Menethil II yells: Aid me in destroying these tortured souls! Together we will loosen Frostmourne\'s hold and weaken the Lich King from within!', '', '', '', '', '', '', '', '','17396','1','0','0','in FM 03 this is not heard on 10/25 man hc '),
+('-1609563','Argh... Frostmourne, obey me!', '', '', '', '', '', '', '', '','17367','1','0','0','player escapes FM'),
+('-1609564','Frostmourne feeds on the soul of your fallen ally!', '', '', '', '', '', '', '', '','17368','1','0','0','player dies in FM'),
+('-1609565','Apocalypse!', '', '', '', '', '', '', '', '','17371','1','0','0','special01'),
+('-1609566','Bow down before your lord and master!', '', '', '', '', '', '', '', '','17372','1','0','0','special02'),
+('-1609567','You gnats actually hurt me! Perhaps I\'ve toyed with you long enough, now taste the vengeance of the grave!', '', '', '', '', '', '', '', '','17359','1','0','0','when LK reaches 10% HP'),
+('-1609568','Hope wanes!', '', '', '', '', '', '', '', '','17363','1','0','0','slay01'),
+('-1609569','The end has come!', '', '', '', '', '', '', '', '','17364','1','0','0','slay02'),
+('-1609570','Face now your tragic end!', '', '', '', '', '', '', '', '','17365','1','0','0','enrage'),
+-- Outro
+('-1609571','The Lich King yells: No question remains unanswered. No doubts linger. You are Azeroth\'s greatest champions! You overcame every challenge I laid before you. My mightiest servants have fallen before your relentless onslaught, your unbridled fury...', '', '', '', '', '', '', '', '','17353','1','0','0','outro01'),
+('-1609572','Is it truly righteousness that drives you? I wonder', '', '', '', '', '', '', '', '','17354','1','0','0','outro02'),
+('-1609573','The Lich King yells: You trained them well, Fordring. You delivered the greatest fighting force this world has ever known... right into my hands -- exactly as I intended. You shall be rewarded for your unwitting sacrifice.', '', '', '', '', '', '', '', '','17355','1','0','0','outro03'),
+('-1609574','The Lich King yells: Watch now as I raise them from the dead to become masters of the Scourge. They will shroud this world in chaos and destruction. Azeroth\'s fall will come at their hands -- and you will be the first to die.', '', '', '', '', '', '', '', '','17356','1','0','0','outro04'),
+('-1609575','The Lich King yells: I delight in the irony.', '', '', '', '', '', '', '', '','17357','1','0','0','outro05'),
+('-1609576','Highlord Tirion Fordring yells: LIGHT, GRANT ME ONE FINAL BLESSING. GIVE ME THE STRENGTH... TO SHATTER THESE BONDS!', '', '', '', '', '', '', '', '','17392','1','0','0','outro06'),
+('-1609577','The Lich King yells: Impossible...', '', '', '', '', '', '', '', '','17358','1','0','0','outro07'),
+('-1609578','Highlord Tirion Fordring yells: No more, Arthas! No more lives will be consumed by your hatred!', '', '', '', '', '', '', '', '','17393','1','0','0','outro08'),
+('-1609579','Terenas Menethil II yells: Free at last! It is over, my son. This is the moment of reckoning.', '', '', '', '', '', '', '', '','17397','1','0','0','outro09'),
+('-1609580','Terenas Menethil II yells: Rise up, champions of the Light!', '', '', '', '', '', '', '', '','17398','1','0','0','outro10'),
+('-1609581','The Lich King yells: Now I stand, the lion before the lambs... and they do not fear.', '', '', '', '', '', '', '', '','17361','1','0','0','outro11'),
+('-1609582','The Lich King yells: They cannot fear.', '', '', '', '', '', '', '', '','17362','1','0','0','outro12'),
+('-1609583','no text just emote of LK dying', '', '', '', '', '', '', '', '','17374','1','0','0','outro13');

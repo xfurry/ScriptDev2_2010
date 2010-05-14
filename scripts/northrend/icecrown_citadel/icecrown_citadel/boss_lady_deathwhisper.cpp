@@ -199,7 +199,7 @@ struct MANGOS_DLL_DECL boss_deathwhisperAI : public ScriptedAI
         if (m_pInstance)
         {
             m_pInstance->SetData(TYPE_DEATHWHISPER, DONE);
-            m_pInstance->SetData(TYPE_GUNSHIP_BATTLE, DONE);    // temp until event implemented
+            //m_pInstance->SetData(TYPE_GUNSHIP_BATTLE, DONE);    // temp until event implemented
         }
         DoScriptText(SAY_DEATH, m_creature);
     }

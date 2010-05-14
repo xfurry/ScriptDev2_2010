@@ -109,7 +109,10 @@ bool GoSelect_icecrown_citadel_teleporter( Player *pPlayer, GameObject *pGO, uin
         pPlayer->CLOSE_GOSSIP_MENU(); break;
     case UPPER_SPIRE:
         //pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_UPPER_SPIRE, false);
-        pPlayer->TeleportTo(631, 4199.149f, 2769.339f, 351.064f, 6.275f);
+        if(pInstance->GetData(TYPE_FESTERGUT) == DONE || pInstance->GetData(TYPE_ROTFACE) == DONE)
+            pPlayer->TeleportTo(631, 4199.149f, 2769.339f, 351.064f, 6.275f);
+        else
+            pPlayer->TeleportTo(631, 4199.149f, 2769.339f, 351.064f, 6.275f);
         pPlayer->CLOSE_GOSSIP_MENU(); break;
     case SINDRAGOSA:
         pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_SINDRAGOSAS_LAIR, false);
@@ -261,6 +264,170 @@ CreatureAI* GetAI_miniboss_precious(Creature* pCreature)
 ## sister svalna: TODO;
 ######*/
 
+/*######
+## trash mobs
+######*/
+enum
+{
+    // spire frostwyrm
+    SPELL_BERSERK                           = 47008,
+    SPELL_FROST_BREATH                      = 70116,
+    SPELL_FROST_BREATH_H                    = 72641,
+    SPELL_BLIZZARD                          = 70362,
+    SPELL_BLIZZARD_H                        = 71118,
+    SPELL_SOUL_FEAST                        = 71203,
+    SPELL_CLEAVE                            = 70361,
+
+    // rotting frost giant
+    SPELL_STOMP                             = 64652,
+    SPELL_DEATH_PLAGUE                      = 72865,
+};
+
+struct MANGOS_DLL_DECL mob_spire_frostwyrmAI : public ScriptedAI
+{
+    mob_spire_frostwyrmAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+    bool m_bIsRegularMode;
+
+    uint32 m_uiCleaveTimer;
+    uint32 m_uiBreathTimer;
+    uint32 m_uiBlizzardTimer;
+    bool m_bHasEnraged;
+
+    void Reset()
+    {
+        m_creature->SetRespawnDelay(DAY);
+        m_uiCleaveTimer     = 5000;
+        m_uiBreathTimer     = 12000;
+        m_uiBlizzardTimer   = 15000;
+        m_bHasEnraged       = false;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if(m_uiCleaveTimer < uiDiff)
+        {
+            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            m_uiCleaveTimer = urand(20000, 25000);
+        }
+        else m_uiCleaveTimer -= uiDiff;
+
+        if(m_uiBreathTimer < uiDiff)
+        {
+            DoCast(m_creature, m_bIsRegularMode ? SPELL_FROST_BREATH : SPELL_FROST_BREATH_H);
+            m_uiBreathTimer = urand(20000, 25000);
+        }
+        else m_uiBreathTimer -= uiDiff;
+
+        if(m_uiBlizzardTimer < uiDiff)
+        {
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                DoCast(target, m_bIsRegularMode ? SPELL_BLIZZARD : SPELL_BLIZZARD_H);
+            m_uiBlizzardTimer = urand(20000, 25000);
+        }
+        else m_uiBlizzardTimer -= uiDiff;
+
+        if(m_creature->GetHealthPercent() <= 2.0f && !m_bHasEnraged)
+        {
+            DoCast(m_creature, SPELL_BERSERK);
+            m_bHasEnraged = true;
+        }
+
+        DoMeleeAttackIfReady();
+
+    }
+};
+
+CreatureAI* GetAI_mob_spire_frostwyrm(Creature* pCreature)
+{
+    return new mob_spire_frostwyrmAI(pCreature);
+}
+
+struct MANGOS_DLL_DECL mob_rotting_frost_giantAI : public ScriptedAI
+{
+    mob_rotting_frost_giantAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+
+    uint32 m_uiStompTimer;
+    uint32 m_uiDeathPlagueTimer;
+    bool m_bHasEnraged;
+
+    void Reset()
+    {
+        m_creature->SetRespawnDelay(DAY);
+        m_uiStompTimer          = 10000;
+        m_uiDeathPlagueTimer    = 20000;
+        m_bHasEnraged           = false;
+    }
+
+    void Aggro(Unit *who)
+    {
+        if(m_pInstance) 
+            m_pInstance->SetData(TYPE_GUNSHIP_BATTLE, IN_PROGRESS);
+    }
+
+    void JustDied(Unit *killer)
+    {
+        if(m_pInstance) 
+            m_pInstance->SetData(TYPE_GUNSHIP_BATTLE, DONE);
+    }
+
+    void JustReachedHome()
+    {
+        if (m_pInstance) 
+            m_pInstance->SetData(TYPE_GUNSHIP_BATTLE, FAIL);
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if(m_uiStompTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_STOMP);
+            m_uiStompTimer = urand(10000, 15000);
+        }
+        else m_uiStompTimer -= uiDiff;
+
+        if(m_uiDeathPlagueTimer < uiDiff)
+        {
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                DoCast(target, SPELL_DEATH_PLAGUE);
+            m_uiDeathPlagueTimer = urand(20000, 25000);
+        }
+        else m_uiDeathPlagueTimer -= uiDiff;
+
+        if(m_creature->GetHealthPercent() <= 2.0f && !m_bHasEnraged)
+        {
+            DoCast(m_creature, SPELL_BERSERK);
+            m_bHasEnraged = true;
+        }
+
+        DoMeleeAttackIfReady();
+
+    }
+};
+
+CreatureAI* GetAI_mob_rotting_frost_giant(Creature* pCreature)
+{
+    return new mob_rotting_frost_giantAI(pCreature);
+}
+
 void AddSC_icecrown_citadel()
 {
     Script *newscript;
@@ -278,5 +445,15 @@ void AddSC_icecrown_citadel()
     newscript = new Script;
     newscript->Name = "miniboss_precious";
     newscript->GetAI = &GetAI_miniboss_precious;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_spire_frostwyrm";
+    newscript->GetAI = &GetAI_mob_spire_frostwyrm;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_rotting_frost_giant";
+    newscript->GetAI = &GetAI_mob_rotting_frost_giant;
     newscript->RegisterSelf();
 }

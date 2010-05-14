@@ -224,7 +224,8 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
                 m_uiMaxBloodbeasts = 5;
 
             for(uint8 i = 0; i < m_uiMaxBloodbeasts; i++)
-                DoCast(m_creature, SPELL_CALL_BLOOD_BEASTS);
+                //DoCast(m_creature, SPELL_CALL_BLOOD_BEASTS);
+                m_creature->SummonCreature(NPC_BLOOD_BEAST, m_creature->GetPositionX() + urand(0, 10), m_creature->GetPositionY() + urand(0, 3), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
 
             m_uiBloodBeast_Timer = 40000;
         }
@@ -353,6 +354,8 @@ struct MANGOS_DLL_DECL mob_blood_beastAI : public ScriptedAI
                 m_uiScentOfBloodTimer = 30000;
             }else m_uiScentOfBloodTimer -= uiDiff;
         }
+
+        DoMeleeAttackIfReady();
     }
 };
 

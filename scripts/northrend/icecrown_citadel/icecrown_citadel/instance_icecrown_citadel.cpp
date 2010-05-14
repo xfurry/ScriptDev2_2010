@@ -35,14 +35,27 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
     std::string strInstData;
     uint32 m_auiEncounter[MAX_ENCOUNTER];
     uint32 Difficulty;
+    bool m_bNeedSave;
 
+    // npcs
     uint64 m_uiMarrowgarGUID;
     uint64 m_uiDeathwhisperGUID;
     uint64 m_uiSaurfangGUID;
     uint64 m_uiFestergutGUID;
     uint64 m_uiRotfaceGUID;
     uint64 m_uiPutricideGUID;
+    uint64 m_uiValanarGUID;
+    uint64 m_uiKelesethGUID;
+    uint64 m_uiTaldaramGUID;
+    uint64 m_uiLanathelGUID;
+    uint64 m_uiSvalnaGUID;
+    uint64 m_uiCrokGUID;
+    uint64 m_uiArnathGUID;
+    uint64 m_uiValithriaGUID;
+    uint64 m_uiSindragosaGUID;
+    uint64 m_uiLichKingGUID;
 
+    // lower spire
     uint64 m_uiMarrowgarIce1GUID;
     uint64 m_uiMarrowgarIce2GUID;
     uint64 m_uiMarrowgarGateGUID;
@@ -50,6 +63,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
     uint64 m_uiDeathwhisperElevatorGUID;
     uint64 m_uiSaurfangDoorGUID;
 
+    // plagueworks
     uint64 m_uiFestergutDoorGUID;
     uint64 m_uiRotfaceDoorGUID;
     uint64 m_uiGasValveGUID;
@@ -62,6 +76,16 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
     uint64 m_uiScientistDoorColisionGUID;
     uint64 m_uiPlagueSigilGUID;
 
+    // crimson halls
+    uint64 m_uiBloodwingDoorGUID;
+    uint64 m_uiCrimsonHallDoorGUID;
+    uint64 m_uiCouncilDoorLeftGUID;
+    uint64 m_uiCouncilDoorRightGUID;
+    uint64 m_uiBloodQueedDoorGUID;
+    uint64 m_uiBloodOrbGUID;
+    uint64 m_uiBloodSigilGUID;
+
+    // loot
     uint64 m_uiDeathbringersCacheGUID;
     uint64 m_uiGunshipArmoryGUID;
     uint64 m_uiDreamwalkerCacheGUID;
@@ -70,6 +94,10 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
+        m_bNeedSave                     = false;
+        m_auiEncounter[12]              = 20;
+
+        // npcs
         m_uiMarrowgarGUID               = 0;
         m_uiDeathwhisperGUID            = 0;
         m_uiSaurfangGUID                = 0;
@@ -77,12 +105,14 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
         m_uiRotfaceGUID                 = 0;
         m_uiPutricideGUID               = 0;
 
+        // lower spire
         m_uiMarrowgarIce1GUID           = 0;
         m_uiMarrowgarIce2GUID           = 0;
         m_uiDeathwhisperGateGUID        = 0;
         m_uiDeathwhisperElevatorGUID    = 0;
         m_uiSaurfangDoorGUID            = 0;
 
+        // plagueworks
         m_uiFestergutDoorGUID           = 0;
         m_uiRotfaceDoorGUID             = 0;
         m_uiGasValveGUID                = 0;
@@ -95,6 +125,16 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
         m_uiScientistDoorColisionGUID   = 0;
         m_uiPlagueSigilGUID             = 0;
 
+        // crimsonhalls
+        m_uiBloodwingDoorGUID           = 0;
+        m_uiCrimsonHallDoorGUID         = 0;
+        m_uiCouncilDoorLeftGUID         = 0;
+        m_uiCouncilDoorRightGUID        = 0;
+        m_uiBloodQueedDoorGUID          = 0;
+        m_uiBloodOrbGUID                = 0;
+        m_uiBloodSigilGUID              = 0;
+
+        // loot
         m_uiDeathbringersCacheGUID      = 0;
         m_uiGunshipArmoryGUID           = 0;
         m_uiDreamwalkerCacheGUID        = 0;
@@ -110,6 +150,10 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             case NPC_FESTERGUT:     m_uiFestergutGUID       = pCreature->GetGUID(); break;
             case NPC_ROTFACE:       m_uiRotfaceGUID         = pCreature->GetGUID(); break;
             case NPC_PUTRICIDE:     m_uiPutricideGUID       = pCreature->GetGUID(); break;
+            case NPC_VALANAR:       m_uiValanarGUID         = pCreature->GetGUID(); break;
+            case NPC_KELESETH:      m_uiKelesethGUID        = pCreature->GetGUID(); break;
+            case NPC_TALDARAM:      m_uiTaldaramGUID        = pCreature->GetGUID(); break;
+            case NPC_LANATHEL:      m_uiLanathelGUID        = pCreature->GetGUID(); break;
         }
     }
 
@@ -164,7 +208,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 break;
             case GO_SCIENTIST_ENTRANCE:
                 m_uiScientistDoorGUID = pGo->GetGUID();
-                pGo->SetGoState(GO_STATE_READY);
+                pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_GAS_VALVE:
                 m_uiGasValveGUID = pGo->GetGUID();
@@ -210,6 +254,34 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                     pGo->SetGoState(GO_STATE_READY);
                 break;
                 // crimson halls
+            case GO_BLOODWING_DOOR:
+                m_uiBloodwingDoorGUID = pGo->GetGUID();
+                if(m_auiEncounter[6] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_CRIMSON_HALL_DOOR:
+                m_uiCrimsonHallDoorGUID = pGo->GetGUID();
+                pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_BLOOD_COUNCIL_DOOR_LEFT:
+                m_uiCouncilDoorLeftGUID = pGo->GetGUID();
+                if(m_auiEncounter[7] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_BLOOD_COUNCIL_DOOR_RIGHT:
+                m_uiCouncilDoorRightGUID = pGo->GetGUID();
+                if(m_auiEncounter[7] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
+                break;
+            case GO_BLOODQUEEN_DOOR:
+                m_uiBloodQueedDoorGUID = pGo->GetGUID();
+                break;
+            case GO_EMPOWERING_BLOOD_ORB:
+                m_uiBloodOrbGUID = pGo->GetGUID();
+                break;
+            case GO_BLOODWING_SIGIL:
+                m_uiBloodSigilGUID = pGo->GetGUID();
+                break;
                 // frostwyrm halls
                 // frozen throne
 
@@ -378,13 +450,28 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 m_auiEncounter[6] = uiData;
                 DoUseDoorOrButton(m_uiScientistDoorGUID);
                 if(uiData == DONE)
+                {
                     DoUseDoorOrButton(m_uiPlagueSigilGUID);
+                    DoUseDoorOrButton(m_uiBloodwingDoorGUID);
+                }
                 break;
             case TYPE_PRINCE_COUNCIL:
                 m_auiEncounter[7] = uiData;
+                DoUseDoorOrButton(m_uiCrimsonHallDoorGUID);
+                if(uiData == DONE)
+                {
+                    DoUseDoorOrButton(m_uiCouncilDoorLeftGUID);
+                    DoUseDoorOrButton(m_uiCouncilDoorRightGUID);
+                }
                 break;
             case TYPE_BLOOD_QUEEN:
                 m_auiEncounter[8] = uiData;
+                DoUseDoorOrButton(m_uiBloodQueedDoorGUID);
+                if(uiData == DONE)
+                {
+                    DoUseDoorOrButton(m_uiBloodSigilGUID);
+                    //DoUseDoorOrButton(m_uiBloodwingDoorGUID);
+                }
                 break;
             case TYPE_DREAMWALKER:
                 m_auiEncounter[9] = uiData;
@@ -397,9 +484,13 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             case TYPE_LICH_KING:
                 m_auiEncounter[11] = uiData;
                 break;
+            case TYPE_ATTEMPTS:
+                m_auiEncounter[12] = uiData;
+                m_bNeedSave = true;
+                break;
         }
 
-        if (uiData == DONE)
+        if (uiData == DONE || m_bNeedSave)
         {
             OUT_SAVE_INST_DATA;
 
@@ -407,12 +498,13 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
                 << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " "
                 << m_auiEncounter[6] << " " << m_auiEncounter[7] << " " << m_auiEncounter[8] << " "
-                << m_auiEncounter[9] << " " << m_auiEncounter[10] << " " << m_auiEncounter[11];
+                << m_auiEncounter[9] << " " << m_auiEncounter[10] << " " << m_auiEncounter[11] << " " << m_auiEncounter[12];
 
             strInstData = saveStream.str();
 
             SaveToDB();
             OUT_SAVE_INST_DATA_COMPLETE;
+            m_bNeedSave = false;
         }
     }
 
@@ -434,7 +526,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
         std::istringstream loadStream(chrIn);
         loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3] 
         >> m_auiEncounter[4] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7] 
-        >> m_auiEncounter[8] >> m_auiEncounter[9] >> m_auiEncounter[10] >> m_auiEncounter[11];
+        >> m_auiEncounter[8] >> m_auiEncounter[9] >> m_auiEncounter[10] >> m_auiEncounter[11] >> m_auiEncounter[12];
 
         for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
         {
@@ -473,6 +565,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 return m_auiEncounter[10];
             case TYPE_LICH_KING:
                 return m_auiEncounter[11];
+            case TYPE_ATTEMPTS:
+                return m_auiEncounter[12];
         }
         return 0;
     }
