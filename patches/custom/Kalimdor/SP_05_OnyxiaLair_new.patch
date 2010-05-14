@@ -1,5 +1,5 @@
 diff --git a/scripts/kalimdor/onyxias_lair/boss_onyxia.cpp b/scripts/kalimdor/onyxias_lair/boss_onyxia.cpp
-index 87693a1..4afc781 100644
+index f28134d..387bd53 100644
 --- a/scripts/kalimdor/onyxias_lair/boss_onyxia.cpp
 +++ b/scripts/kalimdor/onyxias_lair/boss_onyxia.cpp
 @@ -32,14 +32,19 @@ enum
@@ -24,16 +24,21 @@ index 87693a1..4afc781 100644
  
      //Not much choise about these. We have to make own defintion on the direction/start-end point
      //SPELL_BREATH_NORTH_TO_SOUTH = 17086,                  // 20x in "array"
-@@ -60,7 +65,7 @@ enum
+@@ -60,7 +65,12 @@ enum
  
      SPELL_SUMMONWHELP           = 17646,
      NPC_WHELP                   = 11262,
 -    MAX_WHELP                   = 16,
 +    NPC_GUARD                   = 36561,
++
++    ACHIEV_MORE_DOTS            = 4402,
++    ACHIEV_MORE_DOTS_H          = 4405,
++    ACHIEV_SHE_BREATHS_MORE     = 4404,
++    ACHIEV_SHE_BREATHS_MORE_H   = 4407,
  
      PHASE_START                 = 1,
      PHASE_BREATH                = 2,
-@@ -87,22 +92,33 @@ static sOnyxMove aMoveData[]=
+@@ -87,22 +97,33 @@ static sOnyxMove aMoveData[]=
      //{7, 6, SPELL_BREATH_NORTH_TO_SOUTH,  22.8763f, -217.152f, -60.0548f},//north
  };
  
@@ -56,11 +61,11 @@ index 87693a1..4afc781 100644
 -    boss_onyxiaAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 +    boss_onyxiaAI(Creature* pCreature) : ScriptedAI(pCreature)
 +    {
-+        Regular = pCreature->GetMap()->IsRegularDifficulty();
++        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
 +        Reset();
 +    }
  
-+    bool Regular;
++    bool m_bIsRegularMode;
      uint32 m_uiPhase;
  
      uint32 m_uiFlameBreathTimer;
@@ -71,7 +76,7 @@ index 87693a1..4afc781 100644
  
      uint32 m_uiMovePoint;
      uint32 m_uiMovementTimer;
-@@ -112,8 +128,15 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -112,10 +133,19 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
      uint32 m_uiSummonWhelpsTimer;
      uint32 m_uiBellowingRoarTimer;
      uint32 m_uiWhelpTimer;
@@ -86,8 +91,12 @@ index 87693a1..4afc781 100644
 +    uint8 m_uiMaxWhelpsPhase3;
      bool m_bIsSummoningWhelps;
  
++    uint32 m_uiMoreDotsTimer;
++
      void Reset()
-@@ -127,18 +150,30 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+     {
+         if (!IsCombatMovement())
+@@ -127,18 +157,32 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
          m_uiTailSweepTimer = urand(15000, 20000);
          m_uiCleaveTimer = urand(2000, 5000);
          m_uiWingBuffetTimer = urand(10000, 20000);
@@ -104,13 +113,15 @@ index 87693a1..4afc781 100644
          m_uiWhelpTimer = 1000;
 +        SummonGuardTimer = 35000;
 +        isSummoningGuards = false;
-+        MaxGuards = Regular ? 1 : 1;                // needs more research
++        MaxGuards = m_bIsRegularMode ? 1 : 1;                // needs more research
 +        GuardCount = 0;
 +        GuardTimer = 2000;
++
++        m_uiMoreDotsTimer   = 0;
  
          m_uiSummonCount = 0;
-+        m_uiMaxWhelps = Regular ? 10 : 20;			// original was (20 : 40) but produced server lag and low fps. Olso modified in Db to 2*hp and 2*dmg_multiplier
-+        m_uiMaxWhelpsPhase3 = Regular ? 5 : 10;		// it should be (10 : 20) but produced server lag and low fps. Olso modified in Db to 2*hp and 2*dmg_multiplier
++        m_uiMaxWhelps = m_bIsRegularMode ? 10 : 20;			// original was (20 : 40) but produced server lag and low fps. Olso modified in Db to 2*hp and 2*dmg_multiplier
++        m_uiMaxWhelpsPhase3 = m_bIsRegularMode ? 5 : 10;		// it should be (10 : 20) but produced server lag and low fps. Olso modified in Db to 2*hp and 2*dmg_multiplier
          m_bIsSummoningWhelps = false;
 +
 +        // reset the fly effect if wipe in phase 2
@@ -119,11 +130,11 @@ index 87693a1..4afc781 100644
      }
  
      void Aggro(Unit* pWho)
-@@ -149,10 +184,8 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -149,10 +193,8 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
  
      void JustSummoned(Creature *pSummoned)
      {
--        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+-        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
 -            pSummoned->AI()->AttackStart(pTarget);
 -
 -        ++m_uiSummonCount;
@@ -132,34 +143,69 @@ index 87693a1..4afc781 100644
      }
  
      void KilledUnit(Unit* pVictim)
-@@ -194,7 +227,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -194,7 +236,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
      {
          uint32 uiMaxCount = sizeof(aMoveData)/sizeof(sOnyxMove);
  
 -        uint32 iTemp = urand(0, uiMaxCount-1);
-+        int iTemp = rand()%(uiMaxCount-1);
++        uint32 iTemp = rand()%(uiMaxCount-1);
  
          if (iTemp >= m_uiMovePoint)
              ++iTemp;
-@@ -211,7 +244,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -202,16 +244,42 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+         m_uiMovePoint = iTemp;
+     }
+ 
++    void JustDied(Unit* pKiller)
++    {
++        //DoScriptText(SAY_DEATH, m_creature);
++
++        if (m_uiMoreDotsTimer < 300000)
++        {
++            Map* pMap = m_creature->GetMap();
++            AchievementEntry const *AchievYourSide = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_MORE_DOTS : ACHIEV_MORE_DOTS_H);
++            if(AchievYourSide && pMap)
++            {
++                Map::PlayerList const &lPlayers = pMap->GetPlayers();
++                if (!lPlayers.isEmpty())
++                {
++                    for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
++                    {
++                        if (Player* pPlayer = itr->getSource())
++                            pPlayer->CompletedAchievement(AchievYourSide);
++                    }
++                }
++            }
++        }
++    }
++
+     void UpdateAI(const uint32 uiDiff)
+     {
+         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+             return;
+ 
++        // More Dots timer
++        m_uiMoreDotsTimer += uiDiff;
++
+         if (m_uiPhase == PHASE_START || m_uiPhase == PHASE_END)
          {
              if (m_uiFlameBreathTimer < uiDiff)
              {
 -                DoCastSpellIfCan(m_creature->getVictim(), SPELL_FLAMEBREATH);
-+                DoCast(m_creature->getVictim(), Regular ? SPELL_FLAMEBREATH : H_SPELL_FLAMEBREATH);
++                DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_FLAMEBREATH : H_SPELL_FLAMEBREATH);
                  m_uiFlameBreathTimer = urand(10000, 20000);
              }
              else
-@@ -219,7 +252,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -219,7 +287,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
  
              if (m_uiTailSweepTimer < uiDiff)
              {
 -                DoCastSpellIfCan(m_creature, SPELL_TAILSWEEP);
-+                DoCast(m_creature, Regular ? SPELL_TAILSWEEP : H_SPELL_TAILSWEEP);
++                DoCast(m_creature, m_bIsRegularMode ? SPELL_TAILSWEEP : H_SPELL_TAILSWEEP);
                  m_uiTailSweepTimer = urand(15000, 20000);
              }
              else
-@@ -227,7 +260,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -227,7 +295,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
  
              if (m_uiCleaveTimer < uiDiff)
              {
@@ -168,16 +214,16 @@ index 87693a1..4afc781 100644
                  m_uiCleaveTimer = urand(2000, 5000);
              }
              else
-@@ -235,7 +268,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -235,7 +303,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
  
              if (m_uiWingBuffetTimer < uiDiff)
              {
 -                DoCastSpellIfCan(m_creature->getVictim(), SPELL_WINGBUFFET);
-+                DoCast(m_creature->getVictim(), Regular ? SPELL_WINGBUFFET : H_SPELL_WINGBUFFET);
++                DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_WINGBUFFET : H_SPELL_WINGBUFFET);
                  m_uiWingBuffetTimer = urand(15000, 30000);
              }
              else
-@@ -245,16 +278,59 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -245,16 +313,59 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
              {
                  if (m_uiBellowingRoarTimer < uiDiff)
                  {
@@ -239,7 +285,7 @@ index 87693a1..4afc781 100644
                      m_uiPhase = PHASE_BREATH;
  
                      SetCombatMovement(false);
-@@ -276,8 +352,11 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -276,8 +387,11 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
          }
          else
          {
@@ -252,7 +298,7 @@ index 87693a1..4afc781 100644
                  m_uiPhase = PHASE_END;
                  DoScriptText(SAY_PHASE_3_TRANS, m_creature);
  
-@@ -304,7 +383,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -304,7 +418,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
                          m_creature->InterruptNonMeleeSpells(false);
  
                      DoScriptText(EMOTE_BREATH, m_creature);
@@ -261,16 +307,16 @@ index 87693a1..4afc781 100644
                  }
                  else
                  {
-@@ -319,7 +398,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -319,7 +433,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
                  if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() != POINT_MOTION_TYPE)
                  {
-                     if (Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                     if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 -                        DoCastSpellIfCan(pTarget, SPELL_FIREBALL);
-+                        DoCast(pTarget, Regular ? SPELL_FIREBALL : H_SPELL_FIREBALL);
++                        DoCast(pTarget, m_bIsRegularMode ? SPELL_FIREBALL : H_SPELL_FIREBALL);
  
                      m_uiEngulfingFlamesTimer = 8000;
                  }
-@@ -327,15 +406,17 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -327,15 +441,17 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
              else
                  m_uiEngulfingFlamesTimer -= uiDiff;           //engulfingflames is supposed to be activated by a fireball but haven't come by
  
@@ -292,7 +338,7 @@ index 87693a1..4afc781 100644
                      }
                      else
                          m_uiWhelpTimer -= uiDiff;
-@@ -344,7 +425,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -344,7 +460,7 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
                  {
                      m_bIsSummoningWhelps = false;
                      m_uiSummonCount = 0;
@@ -301,7 +347,7 @@ index 87693a1..4afc781 100644
                  }
              }
              else
-@@ -354,7 +435,42 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
+@@ -354,7 +470,42 @@ struct MANGOS_DLL_DECL boss_onyxiaAI : public ScriptedAI
                  else
                      m_uiSummonWhelpsTimer -= uiDiff;
              }
@@ -315,7 +361,7 @@ index 87693a1..4afc781 100644
 +                    if (GuardTimer < uiDiff)
 +                    {
 +                        Creature* OnyGuard = m_creature->SummonCreature(NPC_GUARD, SpawnLocs[2][0], SpawnLocs[2][1], SpawnLocs[2][2], 0.0f, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
-+                        if(Regular)
++                        if(m_bIsRegularMode)
 +                            OnyGuard->SetMaxHealth(189000);
 +                        GuardCount += 1;
 +                        GuardTimer = 2000;
@@ -344,11 +390,11 @@ index 87693a1..4afc781 100644
      }
  };
  
-diff --git a/sql/Custom_Updates/Mangos/Kalimdor/Onyxia.sql b/sql/Custom_Updates/Mangos/Kalimdor/Onyxia.sql
+diff --git a/sql/Custom_Updates/Mangos/Kalimdor/Onyxia_Mangos.sql b/sql/Custom_Updates/Mangos/Kalimdor/Onyxia_Mangos.sql
 new file mode 100644
 index 0000000..1acc0c5
 --- /dev/null
-+++ b/sql/Custom_Updates/Mangos/Kalimdor/Onyxia.sql
++++ b/sql/Custom_Updates/Mangos/Kalimdor/Onyxia_Mangos.sql
 @@ -0,0 +1,116 @@
 +/* ONYXIA */
 +-- Onyxia wheps original: minhp= 63000; maxhp= 63000; dmg_mult= 1.4 -> this is for 10 player
