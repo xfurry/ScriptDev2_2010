@@ -1,5 +1,5 @@
 diff --git a/Makefile.am b/Makefile.am
-index 4f0e469..af32471 100644
+index 7f2eddf..a9ba45c 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -102,6 +102,7 @@ scripts/eastern_kingdoms/blackrock_spire/boss_rend_blackhand.cpp \
@@ -11,7 +11,7 @@ index 4f0e469..af32471 100644
  scripts/eastern_kingdoms/blackwing_lair/boss_chromaggus.cpp \
  scripts/eastern_kingdoms/blackwing_lair/boss_ebonroc.cpp \
 diff --git a/VC90/90ScriptDev2.vcproj b/VC90/90ScriptDev2.vcproj
-index 268ffe8..9112561 100644
+index bf00eb7..13fa9a6 100644
 --- a/VC90/90ScriptDev2.vcproj
 +++ b/VC90/90ScriptDev2.vcproj
 @@ -639,6 +639,10 @@
@@ -372,7 +372,7 @@ index da5fb00..36ba3fc 100644
  
      void UpdateAI(const uint32 diff)
 diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_razorgore.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_razorgore.cpp
-index f1bd1b8..c82405f 100644
+index 41e6645..61edcc3 100644
 --- a/scripts/eastern_kingdoms/blackwing_lair/boss_razorgore.cpp
 +++ b/scripts/eastern_kingdoms/blackwing_lair/boss_razorgore.cpp
 @@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
@@ -424,7 +424,7 @@ index f1bd1b8..c82405f 100644
  
      void UpdateAI(const uint32 uiDiff)
 diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_vaelastrasz.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_vaelastrasz.cpp
-index 9df1432..295679c 100644
+index b124466..59b05d6 100644
 --- a/scripts/eastern_kingdoms/blackwing_lair/boss_vaelastrasz.cpp
 +++ b/scripts/eastern_kingdoms/blackwing_lair/boss_vaelastrasz.cpp
 @@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
@@ -482,8 +482,17 @@ index 9df1432..295679c 100644
                          if (PlayerGUID && Unit::GetUnit((*m_creature),PlayerGUID))
                          {
                              AttackStart(Unit::GetUnit((*m_creature),PlayerGUID));
+@@ -171,7 +186,7 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
+             while (i < 3)                                   // max 3 tries to get a random target with power_mana
+             {
+                 ++i;
+-                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,1);//not aggro leader
++                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1);//not aggro leader
+                 if (target)
+                     if (target->getPowerType() == POWER_MANA)
+                         i=3;
 diff --git a/scripts/eastern_kingdoms/blackwing_lair/boss_victor_nefarius.cpp b/scripts/eastern_kingdoms/blackwing_lair/boss_victor_nefarius.cpp
-index 0946022..ef69a5e 100644
+index b3aa982..f4a3fcb 100644
 --- a/scripts/eastern_kingdoms/blackwing_lair/boss_victor_nefarius.cpp
 +++ b/scripts/eastern_kingdoms/blackwing_lair/boss_victor_nefarius.cpp
 @@ -22,6 +22,7 @@ SDCategory: Blackwing Lair
@@ -515,16 +524,54 @@ index 0946022..ef69a5e 100644
      }
  
      void MoveInLineOfSight(Unit *who)
-@@ -305,7 +311,8 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
+@@ -227,7 +233,7 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
+             if (ShadowBoltTimer < diff)
+             {
+                 Unit* target = NULL;
+-                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0);
++                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
+                 if (target)
+                     DoCastSpellIfCan(target,SPELL_SHADOWBOLT);
+ 
+@@ -238,7 +244,7 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
+             if (FearTimer < diff)
+             {
+                 Unit* target = NULL;
+-                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0);
++                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
+                 if (target)
+                     DoCastSpellIfCan(target,SPELL_FEAR);
+ 
+@@ -262,7 +268,7 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
+ 
+                 //Spawn creature and force it to start attacking a random target
+                 Spawned = m_creature->SummonCreature(CreatureID,ADD_X1,ADD_Y1,ADD_Z1,5.000f,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,5000);
+-                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0);
++                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
+                 if (target && Spawned)
+                 {
+                     Spawned->AI()->AttackStart(target);
+@@ -279,7 +285,7 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
+                 target = NULL;
+                 Spawned = NULL;
+                 Spawned = m_creature->SummonCreature(CreatureID,ADD_X2,ADD_Y2,ADD_Z2,5.000,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,5000);
+-                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0);
++                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
+                 if (target && Spawned)
+                 {
+                     Spawned->AI()->AttackStart(target);
+@@ -305,8 +311,9 @@ struct MANGOS_DLL_DECL boss_victor_nefariusAI : public ScriptedAI
                      m_creature->NearTeleportTo(HIDE_X, HIDE_Y, HIDE_Z, 0.0f);
  
                      //Spawn nef and have him attack a random target
 -                    Creature* Nefarian = m_creature->SummonCreature(CREATURE_NEFARIAN,NEF_X,NEF_Y,NEF_Z,0,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,120000);
+-                    target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0);
 +                    //Creature* Nefarian = m_creature->SummonCreature(CREATURE_NEFARIAN,NEF_X,NEF_Y,NEF_Z,0,TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,120000);
 +                    Creature* Nefarian = m_creature->SummonCreature(CREATURE_NEFARIAN,m_creature->GetPositionX(),m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,120000);
-                     target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
++                    target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
  
                      if (target && Nefarian)
+                     {
 diff --git a/scripts/eastern_kingdoms/blackwing_lair/instance_blackwing_lair.cpp b/scripts/eastern_kingdoms/blackwing_lair/instance_blackwing_lair.cpp
 index cdea07b..03354f3 100644
 --- a/scripts/eastern_kingdoms/blackwing_lair/instance_blackwing_lair.cpp
@@ -900,23 +947,3 @@ index 0000000..2ed7a4f
 +UPDATE `gameobject_template` SET `faction` = 114 WHERE `entry` in (176964, 176965, 176966, 179115, 179116, 179117, 179364, 179365);
 +update `instance_template` set `script` = 'instance_blackwing_lair' where `map` = 469;
 \ No newline at end of file
-diff --git a/system/ScriptLoader.cpp b/system/ScriptLoader.cpp
-index c38ab21..5af1f8d 100644
---- a/system/ScriptLoader.cpp
-+++ b/system/ScriptLoader.cpp
-@@ -66,6 +66,7 @@ extern void AddSC_boss_flamegor();
- extern void AddSC_boss_chromaggus();
- extern void AddSC_boss_nefarian();
- extern void AddSC_boss_victor_nefarius();
-+extern void AddSC_instance_blackwing_lair();
- extern void AddSC_deadmines();                              //deadmines
- extern void AddSC_instance_deadmines();
- extern void AddSC_boss_attumen();                           //karazhan
-@@ -529,6 +530,7 @@ void AddScripts()
-     AddSC_boss_chromaggus();
-     AddSC_boss_nefarian();
-     AddSC_boss_victor_nefarius();
-+    AddSC_instance_blackwing_lair();
-     AddSC_deadmines();                                      //deadmines
-     AddSC_instance_deadmines();
-     AddSC_boss_attumen();                                   //karazhan
