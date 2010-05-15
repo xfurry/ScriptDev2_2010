@@ -286,6 +286,9 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
             m_creature->SetInCombatWith(pWho);
             pWho->SetInCombatWith(m_creature);
             DoStartMovement(pWho);
+            SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_NETHER_POWER);
+            if(m_creature->AddAura(new NetherPowerAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
+                m_creature->GetAura(SPELL_NETHER_POWER, EFFECT_INDEX_0)->SetStackAmount(m_uiMaxNetherPower);
         }
     }
 
@@ -333,10 +336,6 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
     void Aggro(Unit* pWho)
     {
         m_creature->SetInCombatWithZone();
-
-        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_NETHER_POWER);
-        if(m_creature->AddAura(new NetherPowerAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
-            m_creature->GetAura(SPELL_NETHER_POWER, EFFECT_INDEX_0)->SetStackAmount(m_uiMaxNetherPower);
 
         if(pWho != GetClosestCreatureWithEntry(m_creature, NPC_WILFRED, 150.0f))
             DoScriptText(SAY_AGGRO, m_creature);

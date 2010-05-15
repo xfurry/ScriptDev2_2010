@@ -413,6 +413,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
     uint32 phaseStartTimer;
     uint32 phaseChangeTimer;
     uint32 m_uiSubmergeTimer;
+    uint32 m_uiMoveTimer;
 
     bool hasEnraged;
 
@@ -439,6 +440,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         phaseStartTimer     = 8000;
         phaseChangeTimer    = 45000;
         m_uiSubmergeTimer   = 60000;
+        m_uiMoveTimer       = 60000;
 
         hasEnraged          = false;
 
@@ -565,20 +567,31 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff)
             {
+                m_creature->RemoveAllAuras();
                 DoCast(m_creature, SPELL_SUBMERGE, false);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                m_creature->RemoveAllAuras();
-                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
-                {
-                    //m_creature->GetMotionMaster()->MovePoint(0, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ());
-                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
-                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
-                }
-                m_uiSubmergeTimer = 4000;
-                phaseChangeTimer = 45000;
+                m_uiMoveTimer       = 2000;
+                m_uiSubmergeTimer   = 4000;
+                phaseChangeTimer    = 45000;
             }
             else
                 phaseChangeTimer -= uiDiff;
+
+            if (m_uiMoveTimer < uiDiff && IsThereAnyTwin())
+            {
+                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
+                {
+                    float posX = m_creature->GetPositionX();
+                    float posY = m_creature->GetPositionY();
+                    float posZ = m_creature->GetPositionZ();
+                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
+                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                    pTwin->GetMap()->CreatureRelocation(pTwin, posX, posY, posZ, m_creature->GetOrientation());
+                    pTwin->SendMonsterMove(posX, posY, posZ, SPLINETYPE_NORMAL, pTwin->GetSplineFlags(), 1);
+                }
+                m_uiMoveTimer = 60000;
+            }
+            else m_uiMoveTimer -= uiDiff;
 
             if (m_uiSubmergeTimer < uiDiff)
             {
@@ -654,21 +667,32 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff && IsThereAnyTwin())
             {
+                m_creature->RemoveAllAuras();
                 DoCast(m_creature, SPELL_SUBMERGE, false);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 SetCombatMovement(false);
-                m_creature->RemoveAllAuras();
-                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
-                {
-                    //m_creature->GetMotionMaster()->MovePoint(0, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ());
-                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
-                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
-                }
-                m_uiSubmergeTimer = 4000;
-                phaseChangeTimer = 45000;
+                m_uiMoveTimer       = 2000;
+                m_uiSubmergeTimer   = 4000;
+                phaseChangeTimer    = 45000;
             }
             else
                 phaseChangeTimer -= uiDiff;
+
+            if (m_uiMoveTimer < uiDiff && IsThereAnyTwin())
+            {
+                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
+                {
+                    float posX = m_creature->GetPositionX();
+                    float posY = m_creature->GetPositionY();
+                    float posZ = m_creature->GetPositionZ();
+                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
+                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                    pTwin->GetMap()->CreatureRelocation(pTwin, posX, posY, posZ, m_creature->GetOrientation());
+                    pTwin->SendMonsterMove(posX, posY, posZ, SPLINETYPE_NORMAL, pTwin->GetSplineFlags(), 1);
+                }
+                m_uiMoveTimer = 60000;
+            }
+            else m_uiMoveTimer -= uiDiff;
 
             if (m_uiSubmergeTimer < uiDiff && IsThereAnyTwin())
             {
@@ -925,15 +949,9 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff)
             {
+                m_creature->RemoveAllAuras();
                 DoCast(m_creature, SPELL_SUBMERGE, false);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                m_creature->RemoveAllAuras();
-                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_ACIDMAW, 180.0f))
-                {
-                    //m_creature->GetMotionMaster()->MovePoint(0, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ());
-                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
-                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
-                }
                 m_uiSubmergeTimer = 4000;
                 phaseChangeTimer = 45000;
             }
@@ -1014,16 +1032,10 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff && IsThereAnyTwin())
             {
+                m_creature->RemoveAllAuras();
                 DoCast(m_creature, SPELL_SUBMERGE, false);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 SetCombatMovement(false);
-                m_creature->RemoveAllAuras();
-                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_ACIDMAW, 180.0f))
-                {
-                    //m_creature->GetMotionMaster()->MovePoint(0, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ());
-                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
-                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
-                }
                 m_uiSubmergeTimer = 4000;
                 phaseChangeTimer = 45000;
             }
