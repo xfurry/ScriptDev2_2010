@@ -220,8 +220,7 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 
         if(m_pInstance) 
         {
-            //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-            if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS)))
+            if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
                 if(pEydis->isAlive())
                     pEydis->DealDamage(pEydis, pEydis->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
@@ -257,8 +256,7 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         if(m_pInstance)
         {
             m_pInstance->SetData(TYPE_TWIN_VALKYR, IN_PROGRESS);
-            //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-            if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS)))
+            if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
             {
                 if(pEydis->isAlive())
                     pEydis->AI()->AttackStart(m_creature->getVictim());
@@ -290,12 +288,6 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         {
             if(m_pInstance->GetData(TYPE_TWIN_VALKYR) != NOT_STARTED)
             {
-                //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-                if(Creature *pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
-                {
-                    if(!pEydis->isAlive())
-                        pEydis->Respawn();
-                }
                 if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 {
                     m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
@@ -363,10 +355,15 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 
         if(uiDamage > 0)
         {
-            //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-            if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
+            if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
                 pEydis->DealDamage(pEydis, uiDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         }
+    }
+
+    void UpdateHealth()
+    {
+        if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
+            m_creature->SetHealth(pEydis->GetHealth());
     }
 
     void RemoveAllAuras()
@@ -384,8 +381,7 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-        if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
+        if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
         {
             if(m_creature->getVictim()->GetGUID() == pEydis->GetGUID()) 
                 EnterEvadeMode();
@@ -488,29 +484,32 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 
         if (m_uiTwinPactTimer < uiDiff)
         {
-            //if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
-            if(Creature* pEydis = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_EYDIS))) 
+            if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 150.0f))
             {
                 DoScriptText(SAY_PACT, m_creature);
                 m_creature->CastStop();
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                 {
-                    DoCast(pEydis, SPELL_TWIN_PACT_LIGHT_10);
+                    if(DoCastSpellIfCan(pEydis, SPELL_TWIN_PACT_LIGHT_10) == CAST_OK)
+                        UpdateHealth();
                     pEydis->CastSpell(pEydis, SPELL_POWER_TWINS_10,false);
                 }
                 if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
                 {
-                    DoCast(pEydis, SPELL_TWIN_PACT_LIGHT_25);
+                    if(DoCastSpellIfCan(pEydis, SPELL_TWIN_PACT_LIGHT_25) == CAST_OK)
+                        UpdateHealth();
                     pEydis->CastSpell(pEydis, SPELL_POWER_TWINS_25,false);
                 }
                 if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
                 {
-                    DoCast(pEydis, SPELL_TWIN_PACT_LIGHT_10HC);
+                    if(DoCastSpellIfCan(pEydis, SPELL_TWIN_PACT_LIGHT_10HC) == CAST_OK)
+                        UpdateHealth();
                     pEydis->CastSpell(pEydis, SPELL_POWER_TWINS_10HC,false);
                 }
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 {
-                    DoCast(pEydis, SPELL_TWIN_PACT_LIGHT_25HC);
+                    if(DoCastSpellIfCan(pEydis, SPELL_TWIN_PACT_LIGHT_25HC) == CAST_OK)
+                        UpdateHealth();
                     pEydis->CastSpell(pEydis, SPELL_POWER_TWINS_25HC,false);
                 }
             }
@@ -612,7 +611,6 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         if(m_pInstance)
         {
             if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
-            //if(Creature *pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA)))
             {
                 if(pFjola->isAlive())
                     pFjola->DealDamage(pFjola, pFjola->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
@@ -667,7 +665,6 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         {
             m_pInstance->SetData(TYPE_TWIN_VALKYR, IN_PROGRESS);
             if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
-            //if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA)))
             {
                 if(pFjola->isAlive())
                     pFjola->AI()->AttackStart(m_creature->getVictim());
@@ -699,12 +696,6 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         {
             if(m_pInstance->GetData(TYPE_TWIN_VALKYR) != NOT_STARTED)
             {
-                //if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
-                if(Creature *pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
-                {
-                    if(!pFjola->isAlive())
-                        pFjola->Respawn();
-                }
                 if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 {
                     m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
@@ -739,10 +730,15 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
 
         if(uiDamage > 0)
         {
-            //if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
-            if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
+            if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
                 pFjola->DealDamage(pFjola, uiDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         }
+    }
+
+    void UpdateHealth()
+    {
+        if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
+            m_creature->SetHealth(pFjola->GetHealth());
     }
 
     void DoCheckEssenceBuff()
@@ -787,7 +783,6 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
 
     void SummonOrbs()
     {
-        //srand ( (unsigned)time(NULL) );
         for(uint8 i = 0; i < m_uiMaxOrbs; i++)
         {
             // init random orb
@@ -819,8 +814,7 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         // achiev timer
         m_uiEncounterTimer += uiDiff;
 
-        //if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
-        if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
+        if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
         {
             if(m_creature->getVictim()->GetGUID() == pFjola->GetGUID()) 
                 EnterEvadeMode();
@@ -930,28 +924,31 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         if (m_uiTwinPactTimer < uiDiff)
         {
             DoScriptText(SAY_PACT, m_creature);
-            //if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f))
-            if(Creature* pFjola = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_FJOLA))) 
+            if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 150.0f)) 
             {
                 m_creature->CastStop();
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                 {
-                    DoCast(pFjola, SPELL_TWIN_PACT_DARK_10);
+                    if(DoCastSpellIfCan(pFjola, SPELL_TWIN_PACT_DARK_10) == CAST_OK)
+                        UpdateHealth();
                     pFjola->CastSpell(pFjola, SPELL_POWER_TWINS_10,false);
                 }
                 if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
                 {
-                    DoCast(pFjola, SPELL_TWIN_PACT_DARK_25);
+                    if(DoCastSpellIfCan(pFjola, SPELL_TWIN_PACT_DARK_25) == CAST_OK)
+                        UpdateHealth();
                     pFjola->CastSpell(pFjola, SPELL_POWER_TWINS_25,false);
                 }
                 if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
                 {
-                    DoCast(pFjola, SPELL_TWIN_PACT_DARK_10HC);
+                    if(DoCastSpellIfCan(pFjola, SPELL_TWIN_PACT_DARK_10HC) == CAST_OK)
+                        UpdateHealth();
                     pFjola->CastSpell(pFjola, SPELL_POWER_TWINS_10HC,false);
                 }
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 {
-                    DoCast(pFjola, SPELL_TWIN_PACT_DARK_25HC);
+                    if(DoCastSpellIfCan(pFjola, SPELL_TWIN_PACT_DARK_25HC) == CAST_OK)
+                        UpdateHealth();
                     pFjola->CastSpell(pFjola, SPELL_POWER_TWINS_25HC,false);
                 }
             }
@@ -1010,7 +1007,7 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
     {
         m_uiDieTimer    = 2000;
         m_bMustDie      = false;
-        m_uiCheckTimer  = 1000;
+        m_uiCheckTimer  = 500;
     }
 
     void CheckDistance()
@@ -1068,7 +1065,6 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
 
     void ChooseDirection()
     {       
-        //srand ( (unsigned)time(NULL) );
         angle=(double) rand()*360/RAND_MAX+1;
         destX=SpawnLoc[1].x+ROOM_RADIUS*cos(angle*(M_PI/180));
         destY=SpawnLoc[1].y+ROOM_RADIUS*sin(angle*(M_PI/180));
@@ -1130,6 +1126,7 @@ struct MANGOS_DLL_DECL mob_valkyr_essenceAI : public ScriptedAI
     {
         m_uiPlayerCheckTimer = 500;
         m_uiCreatureEntry = m_creature->GetEntry();
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void DoCastEssenceBuff()

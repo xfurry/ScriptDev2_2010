@@ -107,6 +107,9 @@ enum
     SAY_LICHKING_INTRO6         = -1605065,
     SAY_LICHKING_INTRO7         = -1605066,
     SAY_LICHKING_INTRO8         = -1605075,
+
+    ACHIEV_RESILIENCE_WILL_FIX      = 3798,
+    ACHIEV_RESILIENCE_WILL_FIX_H    = 3814,
 };
 
 struct TocMessages
@@ -119,13 +122,13 @@ struct TocMessages
 
 static TocMessages TocGossipMessage[]=
 { 
-    {"We are ready for the first challenge!",   GOSSIP_ACTION_INFO_DEF+1,   false,  TYPE_NORTHREND_BEASTS},     //  summon northernd beasts
-    {"We are ready for the next challenge!",    GOSSIP_ACTION_INFO_DEF+2,   false,  TYPE_JARAXXUS},             //  summon jarraxus
-    {"We are ready to fight the next challenge!",GOSSIP_ACTION_INFO_DEF+3,  false,  TYPE_FACTION_CHAMPIONS},    //  summon aly champs
-    {"We are ready to fight the next challenge!",GOSSIP_ACTION_INFO_DEF+4,  false,  TYPE_FACTION_CHAMPIONS},    //  summon horde champs
-    {"We are ready to face the next challenge!",GOSSIP_ACTION_INFO_DEF+5,   false,  TYPE_TWIN_VALKYR},          //  summon twin valkyrs
-    {"We are ready to face the next challenge!",GOSSIP_ACTION_INFO_DEF+6,   false,  TYPE_ANUBARAK},             //  summon lich king
-    {"Arena is closed",                         GOSSIP_ACTION_INFO_DEF+7,   true,   TYPE_ANUBARAK},             //  event finished
+    {"We are ready for the first challenge!",       GOSSIP_ACTION_INFO_DEF+1,   false,  TYPE_NORTHREND_BEASTS},     //  summon northernd beasts
+    {"We are ready for the next challenge!",        GOSSIP_ACTION_INFO_DEF+2,   false,  TYPE_JARAXXUS},             //  summon jarraxus
+    {"We are ready to fight the next challenge!",   GOSSIP_ACTION_INFO_DEF+3,   false,  TYPE_FACTION_CHAMPIONS},    //  summon aly champs
+    {"We are ready to fight the next challenge!",   GOSSIP_ACTION_INFO_DEF+4,   false,  TYPE_FACTION_CHAMPIONS},    //  summon horde champs
+    {"We are ready to face the next challenge!",    GOSSIP_ACTION_INFO_DEF+5,   false,  TYPE_TWIN_VALKYR},          //  summon twin valkyrs
+    {"We are ready to face the next challenge!",    GOSSIP_ACTION_INFO_DEF+6,   false,  TYPE_ANUBARAK},             //  summon lich king
+    {"Arena is closed",                             GOSSIP_ACTION_INFO_DEF+7,   true,   TYPE_ANUBARAK},             //  event finished
 };
 enum
 {
@@ -692,11 +695,13 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
     uint32 Difficulty;
+    bool m_bIsRegularMode;
 
     bool flag25;
 
@@ -704,6 +709,9 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
     bool isIntroDone;
     uint8 m_uiIntro_Phase;
     uint32 m_uiSpeech_Timer;
+
+    bool m_bIsAchiev;
+    uint32 m_uiResilienceAchievTimer;
 
     void Reset() 
     {
@@ -714,17 +722,23 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
         m_uiSpeech_Timer    = 1000;
         m_bIsIntro          = false;
         isIntroDone         = false;
+        m_bIsAchiev         = false;
+        m_uiResilienceAchievTimer   = 0;
     }
 
-    void MoveInLineOfSight(Unit* pWho)
+    /*void MoveInLineOfSight(Unit* pWho)
     {
         if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && m_pInstance->GetData(TYPE_INTRO) != DONE &&
             !m_bIsIntro && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 110) && !isIntroDone)
             m_bIsIntro = true;
-    }
+    }*/
 
     void UpdateAI(const uint32 uiDiff)
     {
+        // achiev timer
+        if(m_bIsAchiev)
+            m_uiResilienceAchievTimer += uiDiff;
+
         if (m_bIsIntro && !isIntroDone)
         {
             if(m_uiSpeech_Timer < uiDiff)
@@ -957,13 +971,23 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                             flag25 = true;
                         else 
                             flag25 = false;
+
+                        if (!pTemp7->isAlive() || !pTemp8->isAlive() || !pTemp9->isAlive() || !pTemp10->isAlive() || !pTemp11->isAlive() || !pTemp12->isAlive())
+                            m_bIsAchiev = true;
+                        // if neither of them is dead -> reset counter (in case of wipe)
+                        else
+                        {
+                            m_bIsAchiev = false;
+                            m_uiResilienceAchievTimer = 0;
+                        }
                     }
                 } 
                 else flag25 = true;
 
                 if (pTemp1 && pTemp2 && pTemp3 && pTemp4 && pTemp5 && pTemp6) 
                 {
-                    if (!pTemp1->isAlive() && !pTemp2->isAlive() && !pTemp3->isAlive() && !pTemp4->isAlive() && !pTemp5->isAlive() && !pTemp6->isAlive() && flag25) {
+                    if (!pTemp1->isAlive() && !pTemp2->isAlive() && !pTemp3->isAlive() && !pTemp4->isAlive() && !pTemp5->isAlive() && !pTemp6->isAlive() && flag25) 
+                    {
                         m_pInstance->SetData(TYPE_STAGE,0);
                         m_pInstance->SetData(TYPE_FACTION_CHAMPIONS,DONE);
                         m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
@@ -974,6 +998,22 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
 
                         if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
                             DoScriptText(SAY_OUTRO_TIRION, pTirion);
+
+                        if(m_uiResilienceAchievTimer <= 60000)
+                        {
+                            if(m_pInstance)
+                                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_RESILIENCE_WILL_FIX : ACHIEV_RESILIENCE_WILL_FIX_H);
+                        }
+                        m_bIsAchiev = false;
+                    }
+
+                    if (!pTemp1->isAlive() || !pTemp2->isAlive() || !pTemp3->isAlive() || !pTemp4->isAlive() || !pTemp5->isAlive() || !pTemp6->isAlive() || flag25)
+                        m_bIsAchiev = true;
+                    // if neither of them is dead -> reset counter (in case of wipe)
+                    else
+                    {
+                        m_bIsAchiev = false;
+                        m_uiResilienceAchievTimer = 0;
                     }
                 };
                 break;
@@ -1003,6 +1043,15 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                             flag25 = true;
                         else 
                             flag25 = false;
+
+                        if (!pTemp7->isAlive() || !pTemp8->isAlive() || !pTemp9->isAlive() || !pTemp10->isAlive() || !pTemp11->isAlive() || !pTemp12->isAlive())
+                            m_bIsAchiev = true;
+                        // if neither of them is dead -> reset counter (in case of wipe)
+                        else
+                        {
+                            m_bIsAchiev = false;
+                            m_uiResilienceAchievTimer = 0;
+                        }
                     }
                 } else flag25 = true;
 
@@ -1020,6 +1069,22 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
 
                         if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
                             DoScriptText(SAY_OUTRO_TIRION, pTirion);
+
+                        if(m_uiResilienceAchievTimer <= 60000)
+                        {
+                            if(m_pInstance)
+                                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_RESILIENCE_WILL_FIX : ACHIEV_RESILIENCE_WILL_FIX_H);
+                        }
+                        m_bIsAchiev = false;
+                    }
+
+                    if (!pTemp1->isAlive() || !pTemp2->isAlive() || !pTemp3->isAlive() || !pTemp4->isAlive() || !pTemp5->isAlive() || !pTemp6->isAlive() || flag25)
+                        m_bIsAchiev = true;
+                    // if neither of them is dead -> reset counter (in case of wipe)
+                    else
+                    {
+                        m_bIsAchiev = false;
+                        m_uiResilienceAchievTimer = 0;
                     }
                 };
                 break;
@@ -1216,10 +1281,13 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
             if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
                 m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
             // summon essences
-            for(uint8 i = 22; i < 24; i++)
-                pCreature->SummonCreature(NPC_DARK_ESSENCE, SpawnLoc[i].x, SpawnLoc[i].y, SpawnLoc[i].z, 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
-            for(uint8 i = 24; i < 26; i++)
-                pCreature->SummonCreature(NPC_LIGHT_ESSENCE, SpawnLoc[i].x, SpawnLoc[i].y, SpawnLoc[i].z, 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
+            if(!GetClosestCreatureWithEntry(pCreature, NPC_DARK_ESSENCE, 180.0f) || !GetClosestCreatureWithEntry(pCreature, NPC_LIGHT_ESSENCE, 180.0f))
+            {
+                for(uint8 i = 22; i < 24; i++)
+                    pCreature->SummonCreature(NPC_DARK_ESSENCE, SpawnLoc[i].x, SpawnLoc[i].y, SpawnLoc[i].z, 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
+                for(uint8 i = 24; i < 26; i++)
+                    pCreature->SummonCreature(NPC_LIGHT_ESSENCE, SpawnLoc[i].x, SpawnLoc[i].y, SpawnLoc[i].z, 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
+            }
 
             break;
         };

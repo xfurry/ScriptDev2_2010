@@ -88,6 +88,9 @@ static LocationsXY AnubLoc[]=
     {731.950f, 75.8964f},
 };
 
+bool m_bStartAchiev;
+uint8 m_uiAchievCounter;
+
 #define LOC_Z           142.12f
 
 #define HOME_X          786.746f
@@ -99,12 +102,14 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         m_bHasTaunted = false;
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
     uint32 Difficulty;
+    bool m_bIsRegularMode;
 
     bool m_bIsPhase3;
     bool m_bStopSummoning;
@@ -126,7 +131,7 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
     bool m_bHasTaunted;
 
     uint32 m_uiBerserkTimer;
-    uint32 m_uiWipeCheckTimer;
+    uint32 m_uiAchievTimer;
 
     std::list<Creature*> lSpheres;
 
@@ -148,6 +153,10 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
         m_uiBerserkTimer    = 600000;  // 10 min
 
         m_creature->SetVisibility(VISIBILITY_ON);
+
+        m_bStartAchiev      = false;
+        m_uiAchievCounter   = 0;
+        m_uiAchievTimer     = 0;
 
         lSpheres.clear();
     }
@@ -201,8 +210,6 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
         DoScriptText(SAY_AGGRO, m_creature);
         if (m_pInstance)
             m_pInstance->SetData(TYPE_ANUBARAK, IN_PROGRESS);
-
-        m_uiWipeCheckTimer = 30000;
     }
 
     void MoveInLineOfSight(Unit *who)
@@ -220,6 +227,26 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        if (m_bStartAchiev)
+            m_uiAchievTimer += uiDiff;
+
+        if (m_uiAchievTimer < 30000)
+        {
+            if(m_uiAchievCounter >= 40)
+            {
+                if(m_pInstance)
+                    m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TRAITOR_KING : ACHIEV_TRAITOR_KING_H);
+                m_bStartAchiev = false;
+            }
+        }
+
+        if (m_uiAchievTimer > 30000 && m_bStartAchiev)
+        {
+            m_bStartAchiev = false;
+            m_uiAchievCounter = 0;
+            m_uiAchievTimer = 0;
+        }
 
         if(m_uiPhase == 0)
         {
@@ -317,31 +344,31 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
                 m_bIsPhase3 = true;
                 // stop summoning in not on Hc
                 if(Difficulty != RAID_DIFFICULTY_10MAN_HEROIC || Difficulty != RAID_DIFFICULTY_25MAN_HEROIC)
-                    m_bStopSummoning = true;
-
-                // workaround for leeching swarm
-                /*if(SwarmTickTimer < uiDiff)
-                {
-                    SwarmDamageTotal = 0;
-                    Unit *plr = NULL;
-                    ThreatList const& tList = m_creature->getThreatManager().getThreatList();
-                    for(ThreatList::const_iterator i = tList.begin(); i!=tList.end(); ++i)
-                    {
-                        plr = Unit::GetUnit((*m_creature),(*i)->getUnitGuid());
-                        if(plr && plr->isAlive())
-                        {
-                            SwarmDamage = plr->GetHealth() / SwarmDamagePercent;
-                            if(SwarmDamage < 250) 
-                                SwarmDamage = 250;
-                            SwarmDamageTotal += SwarmDamage;
-                            m_creature->DealDamage(plr, SwarmDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                        }
-                    }
-                    m_creature->DealHeal(m_creature, SwarmDamageTotal, NULL);
-                    SwarmTickTimer = 1000;
-                }
-                else SwarmTickTimer -= uiDiff;*/
+                    m_bStopSummoning = true; 
             }
+
+            // workaround for leeching swarm
+            /*if(SwarmTickTimer < uiDiff && m_bIsPhase3)
+            {
+                SwarmDamageTotal = 0;
+                Unit *plr = NULL;
+                ThreatList const& tList = m_creature->getThreatManager().getThreatList();
+                for(ThreatList::const_iterator i = tList.begin(); i!=tList.end(); ++i)
+                {
+                    plr = Unit::GetUnit((*m_creature),(*i)->getUnitGuid());
+                    if(plr && plr->isAlive())
+                    {
+                        SwarmDamage = plr->GetHealth() / SwarmDamagePercent;
+                        if(SwarmDamage < 250) 
+                            SwarmDamage = 250;
+                        SwarmDamageTotal += SwarmDamage;
+                        m_creature->DealDamage(plr, SwarmDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                    }
+                }
+                m_creature->DealHeal(m_creature, SwarmDamageTotal, NULL);
+                SwarmTickTimer = 1000;
+            }
+            else SwarmTickTimer -= uiDiff;*/
 
             DoMeleeAttackIfReady();
         }
@@ -393,7 +420,8 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
                     pTemp->SetInCombatWithZone();
                 if(Creature *pTemp = m_creature->SummonCreature(NPC_SWARM_SCARAB, AnubLoc[i+1].x, AnubLoc[i+1].y, LOC_Z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
                     pTemp->SetInCombatWithZone();
-                m_uiScarabTimer = 40000;
+                //m_uiScarabTimer = 40000;
+                m_uiScarabTimer = urand(5000, 10000);   // remove this when spikes implemented
             }
             else
                 m_uiScarabTimer -= uiDiff;
@@ -574,6 +602,12 @@ struct MANGOS_DLL_DECL mob_swarm_scarabAI : public ScriptedAI
     void Reset()
     {
         spellTimer = 10000;
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        m_uiAchievCounter += 1;
+        m_bStartAchiev = true;
     }
 
     void UpdateAI(const uint32 uiDiff)

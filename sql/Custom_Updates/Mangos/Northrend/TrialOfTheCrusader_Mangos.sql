@@ -8,9 +8,10 @@ UPDATE creature_template SET scriptname='npc_tirion' WHERE `entry`=34996;
 delete from gameobject where id in (195485);
 insert into gameobject VALUES (110011,195485,649,15,65535,665.490,136.864,133.594,6.27,0,0,0,0,604800,0,1);
 update gameobject_template set faction = 114 where entry = 195485;
+update creature_template set flags_extra = 258, unit_flags = 2 where entry in (34994, 34992, 34816, 34996, 34995, 34990);
 -- beasts
 UPDATE creature_template SET scriptname='boss_gormok' WHERE `entry`=34796;
-UPDATE creature_template SET scriptname='mob_snobold_vassal' WHERE `entry`=34800;
+UPDATE creature_template SET scriptname='mob_snobold_vassal', flags_extra = 256 WHERE `entry`=34800;
 UPDATE creature_template SET scriptname='boss_icehowl' WHERE `entry`=34797;
 UPDATE creature_template SET scriptname='boss_acidmaw' WHERE `entry`=35144;
 UPDATE creature_template SET scriptname='boss_dreadscale' WHERE `entry`=34799;

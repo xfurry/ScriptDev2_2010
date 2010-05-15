@@ -58,11 +58,11 @@ enum jormungars
 
     // acidmaw
     // mobile
-    SPELL_ACID_SPEW_10          = 66819,
+    SPELL_ACID_SPEW_10          = 66819,    // on creature
     SPELL_ACID_SPEW_10HC        = 67609,
     SPELL_ACID_SPEW_25          = 67610,
     SPELL_ACID_SPEW_25HC        = 67611,
-    SPELL_PARALYTIC_BITE_10     = 66824,
+    SPELL_PARALYTIC_BITE_10     = 66824,    // on target
     SPELL_PARALYTIC_BITE_10HC   = 67613,
     SPELL_PARALYTIC_BITE_25     = 67612,
     SPELL_PARALYTIC_BITE_25HC   = 67614,
@@ -72,11 +72,11 @@ enum jormungars
     SPELL_SLIME_POOL_25HC       = 67643,
     NPC_SLIME_POOL              = 35176,
     // stationary
-    SPELL_ACID_SPIT_10          = 66880,
+    SPELL_ACID_SPIT_10          = 66880,    // on target
     SPELL_ACID_SPIT_10HC        = 67607,
     SPELL_ACID_SPIT_25          = 67606,
     SPELL_ACID_SPIT_25HC        = 67608,
-    SPELL_PARALYTIC_SPRAY_10    = 66901,
+    SPELL_PARALYTIC_SPRAY_10    = 66901,    // on target
     SPELL_PARALYTIC_SPRAY_10HC  = 67616,
     SPELL_PARALYTIC_SPRAY_25    = 67615,
     SPELL_PARALYTIC_SPRAY_25HC  = 67617,
@@ -91,27 +91,34 @@ enum jormungars
 
     // dreadscale
     // mobile
-    SPELL_BURNING_BITE_10       = 66879,
+    SPELL_BURNING_BITE_10       = 66879,    // on target
     SPELL_BURNING_BITE_10HC     = 67625,
     SPELL_BURNING_BITE_25       = 67624,
     SPELL_BURNING_BITE_25HC     = 67626,
-    SPELL_MOLTEN_SPEW_10        = 66820,
+    SPELL_MOLTEN_SPEW_10        = 66820,    // on creature
     SPELL_MOLTEN_SPEW_25        = 67635,
     SPELL_MOLTEN_SPEW_10HC      = 67636,
     SPELL_MOLTEN_SPEW_25HC      = 67637,  
     SPELL_MOLTEN_SPEW_TRIG      = 66821,
 
     // stationary
-    SPELL_FIRE_SPIT_10          = 66796,
+    SPELL_FIRE_SPIT_10          = 66796,    // on target
     SPELL_FIRE_SPIT_10HC        = 67633,
     SPELL_FIRE_SPIT_25          = 67632,
     SPELL_FIRE_SPIT_25HC        = 67634,
-    SPELL_BURNING_SPRAY_10      = 66902,
+    SPELL_BURNING_SPRAY_10      = 66902,    // on target
     SPELL_BURNING_SPRAY_10HC    = 67628,
     SPELL_BURNING_SPRAY_25      = 67627,
     SPELL_BURNING_SPRAY_25HC    = 67629,
 
     SPELL_BURNING_BILE          = 66869,
+
+    SPELL_SUBMERGE              = 53421,
+
+    DISPLAY_ACID_FIXED          = 29815,
+    DISPLAY_ACID_MOBILE         = 29816,
+    DISPLAY_DREAD_FIXED         = 26935,
+    DISPLAY_DREAD_MOBILE        = 24564,
 
     ACHIEV_TWO_JORMUNGARS       = 3936,
     ACHIEV_TWO_JORMUNGARS_H     = 3937,
@@ -260,9 +267,9 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
             pDreadscale->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
             pDreadscale->SetInCombatWithZone();
         }
-        if (Creature* pAcidmaw = m_creature->SummonCreature(NPC_ACIDMAW, SpawnLoc[28].x - 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
+        if (Creature* pAcidmaw = m_creature->SummonCreature(NPC_ACIDMAW,  552.773f, 171.971f, 394.671f, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
         {
-            pAcidmaw->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 10, SpawnLoc[1].y, SpawnLoc[1].z);
+            //pAcidmaw->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 10, SpawnLoc[1].y, SpawnLoc[1].z);
             pAcidmaw->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
             pAcidmaw->SetInCombatWithZone();
         }
@@ -380,6 +387,10 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        // starts submerged
+        SetCombatMovement(false);
+        DoCast(pCreature, SPELL_SUBMERGE, false);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
         Reset();
     }
 
@@ -401,6 +412,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
     bool startPhase;
     uint32 phaseStartTimer;
     uint32 phaseChangeTimer;
+    uint32 m_uiSubmergeTimer;
 
     bool hasEnraged;
 
@@ -425,7 +437,8 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         phase               = 0;    // not started yet
         startPhase          = false;
         phaseStartTimer     = 8000;
-        phaseChangeTimer    = 50000;
+        phaseChangeTimer    = 45000;
+        m_uiSubmergeTimer   = 60000;
 
         hasEnraged          = false;
 
@@ -476,50 +489,17 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
 
     void SummonIcehowl()
     {
-        if (Creature* pIcehowl = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_ICEHOWL)))
+        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
+
+        if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
         {
-            if (pIcehowl->isAlive()) 
-            {
-                pIcehowl->setFaction(14);
-                pIcehowl->SetVisibility(VISIBILITY_ON);
-                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                pIcehowl->SetInCombatWithZone();
-
-                if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
-
-                if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-                    m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-            }
-            else
-            {
-                pIcehowl->Respawn();
-                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                pIcehowl->SetInCombatWithZone();
-
-                if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
-
-                if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-                    m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-            }
+            pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+            pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+            pIcehowl->SetInCombatWithZone();
         }
-        else 
-        {
-            if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
-
-            if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
-            {
-                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                pIcehowl->SetInCombatWithZone();
-            }
-            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-        }
+        if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+            m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
     }
 
     void JustDied(Unit* pKiller)
@@ -543,10 +523,13 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
 
         if(!IsThereAnyTwin() && !hasEnraged)
         {
-                hasEnraged = true;
-                phase = 2;
-                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                DoCast(m_creature, SPELL_ENRAGE);
+            hasEnraged = true;
+            phase = 2;
+            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+            DoCast(m_creature, SPELL_ENRAGE);
+            m_creature->SetDisplayId(DISPLAY_ACID_MOBILE);
+            m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
         }
 
         if(hasEnraged)
@@ -569,6 +552,8 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
             m_creature->GetMotionMaster()->Clear();
             m_creature->GetMotionMaster()->MoveIdle();
             SetCombatMovement(false);
+            m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
             startPhase = true;
             phaseStartTimer = 30000;
         }
@@ -580,14 +565,37 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff)
             {
+                DoCast(m_creature, SPELL_SUBMERGE, false);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->RemoveAllAuras();
+                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
+                {
+                    //m_creature->GetMotionMaster()->MovePoint(0, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ());
+                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
+                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                }
+                m_uiSubmergeTimer = 4000;
+                phaseChangeTimer = 45000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiSubmergeTimer < uiDiff)
+            {
+                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->SetDisplayId(DISPLAY_ACID_MOBILE);
                 phase = 2;
                 m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                 m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
                 SetCombatMovement(true);
-                phaseChangeTimer = 50000;
+                m_uiSubmergeTimer = 60000;
             }
             else
-                phaseChangeTimer -= uiDiff;
+                m_uiSubmergeTimer -= uiDiff;
+
+            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
+                return;
 
             if (m_uiAcidSpitTimer < uiDiff)
             {
@@ -646,15 +654,39 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff && IsThereAnyTwin())
             {
+                DoCast(m_creature, SPELL_SUBMERGE, false);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                SetCombatMovement(false);
+                m_creature->RemoveAllAuras();
+                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
+                {
+                    //m_creature->GetMotionMaster()->MovePoint(0, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ());
+                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
+                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                }
+                m_uiSubmergeTimer = 4000;
+                phaseChangeTimer = 45000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiSubmergeTimer < uiDiff && IsThereAnyTwin())
+            {
+                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->SetDisplayId(DISPLAY_ACID_FIXED);
                 phase = 1;
                 m_creature->StopMoving();
                 m_creature->GetMotionMaster()->Clear();
                 m_creature->GetMotionMaster()->MoveIdle();
                 SetCombatMovement(false);
-                phaseChangeTimer = 50000;
+                m_uiSubmergeTimer = 60000;
             }
             else
-                phaseChangeTimer -= uiDiff;
+                m_uiSubmergeTimer -= uiDiff;
+
+            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
+                return;
 
             if (m_uiParaliticBiteTimer < uiDiff)
             {
@@ -751,6 +783,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
     bool startPhase;
     uint32 phaseStartTimer;
     uint32 phaseChangeTimer;
+    uint32 m_uiSubmergeTimer;
 
     bool hasEnraged;
 
@@ -775,7 +808,8 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         phase               = 0;    // not started yet
         startPhase          = false;
         phaseStartTimer     = 8000;
-        phaseChangeTimer    = 50000;
+        phaseChangeTimer    = 45000;
+        m_uiSubmergeTimer   = 60000;
 
         hasEnraged          = false;
 
@@ -829,50 +863,17 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
 
     void SummonIcehowl()
     {
-        if (Creature* pIcehowl = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_ICEHOWL)))
+        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
+
+        if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
         {
-            if (pIcehowl->isAlive()) 
-            {
-                pIcehowl->setFaction(14);
-                pIcehowl->SetVisibility(VISIBILITY_ON);
-                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                pIcehowl->SetInCombatWithZone();
-
-                if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
-
-                if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-                    m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-            }
-            else
-            {
-                pIcehowl->Respawn();
-                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                pIcehowl->SetInCombatWithZone();
-
-                if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
-
-                if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-                    m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-            }
+            pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+            pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+            pIcehowl->SetInCombatWithZone();
         }
-        else 
-        {
-            if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-                    DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
-
-            if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
-            {
-                pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                pIcehowl->SetInCombatWithZone();
-            }
-            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-        }
+        if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+            m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
     }
 
     void JustDied(Unit* pKiller)
@@ -896,10 +897,13 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
 
         if(!IsThereAnyTwin() && !hasEnraged)
         {
-                hasEnraged = true;
-                phase = 2;
-                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                DoCast(m_creature, SPELL_ENRAGE);
+            hasEnraged = true;
+            phase = 2;
+            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+            DoCast(m_creature, SPELL_ENRAGE);
+            m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+            m_creature->SetDisplayId(DISPLAY_DREAD_MOBILE);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
         }
 
         if(hasEnraged)
@@ -921,13 +925,37 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff)
             {
-                phase = 2;
-                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                SetCombatMovement(true);
-                phaseChangeTimer = 50000;
+                DoCast(m_creature, SPELL_SUBMERGE, false);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->RemoveAllAuras();
+                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_ACIDMAW, 180.0f))
+                {
+                    //m_creature->GetMotionMaster()->MovePoint(0, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ());
+                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
+                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                }
+                m_uiSubmergeTimer = 4000;
+                phaseChangeTimer = 45000;
             }
             else
                 phaseChangeTimer -= uiDiff;
+
+            if (m_uiSubmergeTimer < uiDiff)
+            {
+                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->SetDisplayId(DISPLAY_DREAD_MOBILE);
+                phase = 2;
+                m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                SetCombatMovement(true);
+                m_uiSubmergeTimer = 60000;
+            }
+            else
+                m_uiSubmergeTimer -= uiDiff;
+
+            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
+                return;
 
             if (m_uiFireSpitTimer < uiDiff)
             {
@@ -986,15 +1014,39 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff && IsThereAnyTwin())
             {
+                DoCast(m_creature, SPELL_SUBMERGE, false);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                SetCombatMovement(false);
+                m_creature->RemoveAllAuras();
+                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_ACIDMAW, 180.0f))
+                {
+                    //m_creature->GetMotionMaster()->MovePoint(0, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ());
+                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
+                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                }
+                m_uiSubmergeTimer = 4000;
+                phaseChangeTimer = 45000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiSubmergeTimer < uiDiff && IsThereAnyTwin())
+            {
+                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->SetDisplayId(DISPLAY_DREAD_FIXED);
                 phase = 1;
                 m_creature->StopMoving();
                 m_creature->GetMotionMaster()->Clear();
                 m_creature->GetMotionMaster()->MoveIdle();
                 SetCombatMovement(false);
-                phaseChangeTimer = 50000;
+                m_uiSubmergeTimer = 60000;
             }
             else
-                phaseChangeTimer -= uiDiff;
+                m_uiSubmergeTimer -= uiDiff;
+
+            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
+                return;
 
             if (m_uiBurningBiteTimer < uiDiff)
             {
@@ -1074,6 +1126,7 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        m_creature->SetRespawnDelay(DAY);
         Reset();
     }
 
@@ -1155,8 +1208,7 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
             pBarret->SetVisibility(VISIBILITY_ON);
         }
 
-        m_creature->SetVisibility(VISIBILITY_OFF);
-        m_creature->setFaction(35);
+        m_creature->ForcedDespawn();
     }
 
     void Aggro(Unit* pWho)
@@ -1308,9 +1360,9 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
                         pTarget->GetPosition(fPosX, fPosY, fPosZ);
                         DoScriptText(EMOTE_TRAMPLE, m_creature, pTarget);
                         m_bMovementStarted = true;
-                        //m_creature->SetSpeedRate(MOVE_RUN, 4.0f);
-                        m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                         m_creature->GetMotionMaster()->Clear();
+                        m_creature->SetSpeedRate(MOVE_RUN, 2.0f);
+                        m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                         m_creature->GetMotionMaster()->MovePoint(1, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ());
                         SetCombatMovement(false);
                         if(m_creature->HasAura(SPELL_SURGE_OF_ADRENALINE, EFFECT_INDEX_0))
@@ -1503,7 +1555,7 @@ struct MANGOS_DLL_DECL mob_snoboldAI : public ScriptedAI
 
         if(FireBombTimer < uiDiff)
         {
-            //DoCast(m_creature, SPELL_FIREBOMB);
+            DoCast(m_creature, SPELL_FIREBOMB);
             if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Creature *pBomb = m_creature->SummonCreature(NPC_FIREBOMB, 

@@ -186,6 +186,13 @@ CreatureAI* GetAI_npc_jaina(Creature* pCreature)
 ## boss_jaraxxus
 ######*/
 
+class MANGOS_DLL_DECL NetherPowerAura : public Aura
+{
+public:
+    NetherPowerAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
+    {}
+};
+
 struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 {
     boss_jaraxxusAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -208,6 +215,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
     uint32 m_uiLegionFlameTimer;
     uint32 m_uiInfernalEruptionTimer;
     uint32 m_uiNetherPortalTimer;
+    uint8 m_uiMaxNetherPower;
     uint32 m_uiNetherPowerTimer;
 
     uint32 m_uiBerserkTimer;
@@ -229,7 +237,8 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         m_uiLegionFlameTimer        = 30000;
         m_uiInfernalEruptionTimer   = 28000;
         m_uiNetherPortalTimer       = 40000;
-        m_uiNetherPowerTimer        = urand(1000,2000);
+        m_uiNetherPowerTimer        = 40000;
+        m_uiMaxNetherPower          = m_bIsRegularMode ? 5 : 10;
 
         m_uiBerserkTimer    = 600000;  // 10 min
         m_uiWipeCheckTimer  = 30000;
@@ -324,6 +333,10 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
     void Aggro(Unit* pWho)
     {
         m_creature->SetInCombatWithZone();
+
+        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_NETHER_POWER);
+        if(m_creature->AddAura(new NetherPowerAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
+            m_creature->GetAura(SPELL_NETHER_POWER, EFFECT_INDEX_0)->SetStackAmount(m_uiMaxNetherPower);
 
         if(pWho != GetClosestCreatureWithEntry(m_creature, NPC_WILFRED, 150.0f))
             DoScriptText(SAY_AGGRO, m_creature);
@@ -458,10 +471,9 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 
         if (m_uiNetherPowerTimer < uiDiff)
         {
-            //SpellEntry *spell = (SpellEntry *)GetSpellStore()->LookupEntry(SPELL_NETHER_POWER);
-            //if(m_creature->AddAura(new NetherPowerAura(spell, 0, NULL, m_creature, m_creature)))
-                //m_creature->GetAura(SPELL_NETHER_POWER, 0)->SetStackAmount(Heroic ? 10 : 5);
-            DoCast(m_creature, SPELL_NETHER_POWER);
+            SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_NETHER_POWER);
+            if(m_creature->AddAura(new NetherPowerAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
+                m_creature->GetAura(SPELL_NETHER_POWER, EFFECT_INDEX_0)->SetStackAmount(m_uiMaxNetherPower);
             m_uiNetherPowerTimer = 40000;
         }
         else
