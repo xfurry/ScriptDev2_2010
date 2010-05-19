@@ -325,6 +325,7 @@ extern void AddSC_boss_four_horsemen();
 extern void AddSC_boss_faerlina();
 extern void AddSC_boss_gluth();
 extern void AddSC_boss_gothik();
+extern void AddSC_boss_grobbulus();
 extern void AddSC_boss_kelthuzad();
 extern void AddSC_boss_loatheb();
 extern void AddSC_boss_maexxna();
@@ -333,6 +334,7 @@ extern void AddSC_boss_heigan();
 extern void AddSC_boss_patchwerk();
 extern void AddSC_boss_razuvious();
 extern void AddSC_boss_sapphiron();
+extern void AddSC_boss_thaddius();
 extern void AddSC_instance_naxxramas();
 extern void AddSC_boss_anomalus();                          //nexus
 extern void AddSC_boss_keristrasza();
@@ -797,6 +799,7 @@ void AddScripts()
     AddSC_boss_faerlina();
     AddSC_boss_gluth();
     AddSC_boss_gothik();
+	AddSC_boss_grobbulus();
     AddSC_boss_kelthuzad();
     AddSC_boss_loatheb();
     AddSC_boss_maexxna();
@@ -805,6 +808,7 @@ void AddScripts()
     AddSC_boss_patchwerk();
     AddSC_boss_razuvious();
     AddSC_boss_sapphiron();
+	AddSC_boss_thaddius();
     AddSC_instance_naxxramas();
     AddSC_boss_anomalus();                                  //nexus
     AddSC_boss_keristrasza();
