@@ -103,6 +103,7 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_bHasTaunted = false;
         Reset();
     }
@@ -126,7 +127,7 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
     uint32 SwarmDamage;
     uint32 SwarmDamageTotal;
     uint32 SwarmTickTimer;
-    uint32 SwarmDamagePercent;
+    double SwarmDamagePercent;
 
     bool m_bHasTaunted;
 
@@ -216,8 +217,12 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
     {
         if (!m_bHasTaunted)
         {
-            DoScriptText(SAY_INTRO, m_creature);
-            m_bHasTaunted = true;
+            if(m_pInstance->GetData(TYPE_TWIN_VALKYR) == DONE)
+            {
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                DoScriptText(SAY_INTRO, m_creature);
+                m_bHasTaunted = true;
+            }
         }
 
         ScriptedAI::MoveInLineOfSight(who);   
@@ -323,52 +328,60 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                 {
                     DoCast(m_creature, SPELL_LEECHING_SWARM_10);
-                    SwarmDamagePercent = 10;
+                    SwarmDamagePercent = 0.1;
                 }
                 if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
                 {
                     DoCast(m_creature, SPELL_LEECHING_SWARM_25);
-                    SwarmDamagePercent = 10;
+                    SwarmDamagePercent = 0.1;
                 }
                 if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
                 {
                     DoCast(m_creature, SPELL_LEECHING_SWARM_10HC);
-                    SwarmDamagePercent = 20;
+                    SwarmDamagePercent = 0.2;
                 }
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 {
                     DoCast(m_creature, SPELL_LEECHING_SWARM_25HC);
-                    SwarmDamagePercent = 30;
+                    SwarmDamagePercent = 0.3;
                 }
 
                 m_bIsPhase3 = true;
+                SwarmTickTimer = 3000;
                 // stop summoning in not on Hc
                 if(Difficulty != RAID_DIFFICULTY_10MAN_HEROIC || Difficulty != RAID_DIFFICULTY_25MAN_HEROIC)
                     m_bStopSummoning = true; 
             }
 
             // workaround for leeching swarm
-            /*if(SwarmTickTimer < uiDiff && m_bIsPhase3)
+            if(SwarmTickTimer < uiDiff && m_bIsPhase3)
             {
-                SwarmDamageTotal = 0;
-                Unit *plr = NULL;
-                ThreatList const& tList = m_creature->getThreatManager().getThreatList();
-                for(ThreatList::const_iterator i = tList.begin(); i!=tList.end(); ++i)
+                // check for players
+                uint32 m_uiSwarmDmgTotal = 0;
+                Map *map = m_creature->GetMap();
+                if (map->IsDungeon())
                 {
-                    plr = Unit::GetUnit((*m_creature),(*i)->getUnitGuid());
-                    if(plr && plr->isAlive())
+                    Map::PlayerList const &PlayerList = map->GetPlayers();
+
+                    if (PlayerList.isEmpty())
+                        return;
+
+                    for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                     {
-                        SwarmDamage = plr->GetHealth() / SwarmDamagePercent;
-                        if(SwarmDamage < 250) 
-                            SwarmDamage = 250;
-                        SwarmDamageTotal += SwarmDamage;
-                        m_creature->DealDamage(plr, SwarmDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                        if(i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()) < 180.0f)
+                        {
+                            uint32 m_uiSwarmDmg = i->getSource()->GetHealth()*SwarmDamagePercent;
+                            if(i->getSource()->GetHealth()*SwarmDamagePercent < 250)
+                                m_uiSwarmDmg = 250;
+                            m_uiSwarmDmgTotal += m_uiSwarmDmg;
+                            i->getSource()->DealDamage(i->getSource(), m_uiSwarmDmg, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                        }
                     }
+                    m_creature->DealHeal(m_creature, m_uiSwarmDmgTotal/2, NULL);
                 }
-                m_creature->DealHeal(m_creature, SwarmDamageTotal, NULL);
                 SwarmTickTimer = 1000;
             }
-            else SwarmTickTimer -= uiDiff;*/
+            else SwarmTickTimer -= uiDiff;
 
             DoMeleeAttackIfReady();
         }
@@ -502,6 +515,13 @@ CreatureAI* GetAI_mob_frost_sphere(Creature* pCreature)
     return new mob_frost_sphereAI (pCreature);
 }
 
+class MANGOS_DLL_DECL SpiderFrenzyAura : public Aura
+{
+public:
+    SpiderFrenzyAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
+    {}
+};
+
 struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
 {
     mob_nerubian_burrowerAI(Creature *pCreature) : ScriptedAI(pCreature)
@@ -522,11 +542,12 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
     void Reset()
     {
         spellTimer = 7000;
-        checkTimer = 1000;
+        checkTimer = 2000;
         isSubmerged = false;
         lBorrower.clear();
         m_uiBorrowerCount = 0;
         DoCast(m_creature, SPELL_SPIDER_FRENZY);
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -543,7 +564,6 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
             if(!m_creature->HasAura(SPELL_PERMAFROST, EFFECT_INDEX_0))
             {
                 DoCast(m_creature, SPELL_SUBMERGE_ANUB);
-                //m_creature->DeleteThreatList();
                 m_creature->SetHealth(m_creature->GetMaxHealth()/2);
                 submergeTimer = 10000;
                 isSubmerged = true;
@@ -553,21 +573,26 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
 
         if (spellTimer < uiDiff)
         {
-            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
                 DoCast(pTarget, SPELL_EXPOSE_WEAKNESS);
             spellTimer = 10000;
         }else spellTimer -= uiDiff;
 
-        /*if (checkTimer < uiDiff)
+        if (checkTimer < uiDiff)
         {
-            GetCreatureListWithEntryInGrid(lBorrower, m_creature, NPC_NERUBIAN_BURROWER, DEFAULT_VISIBILITY_INSTANCE);
+            lBorrower.clear();
+            GetCreatureListWithEntryInGrid(lBorrower, m_creature, NPC_NERUBIAN_BURROWER, 12.0f);
             if(!lBorrower.empty())
                 m_uiBorrowerCount = lBorrower.size();
-            
-            if(m_uiBorrowerCount > 0)
-                m_creature->GetAura(SPELL_SPIDER_FRENZY, EFFECT_INDEX_0)->SetStackAmount(m_uiBorrowerCount);
-            checkTimer = 1000;
-        }else checkTimer -= uiDiff;*/
+
+            if(m_uiBorrowerCount > 1)
+            {
+                SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_SPIDER_FRENZY);
+                if(m_creature->AddAura(new SpiderFrenzyAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
+                    m_creature->GetAura(SPELL_SPIDER_FRENZY, EFFECT_INDEX_0)->SetStackAmount(m_uiBorrowerCount - 1);
+            }
+            checkTimer = 2000;
+        }else checkTimer -= uiDiff;
 
         if (submergeTimer < uiDiff && isSubmerged)
         {
@@ -602,6 +627,7 @@ struct MANGOS_DLL_DECL mob_swarm_scarabAI : public ScriptedAI
     void Reset()
     {
         spellTimer = 10000;
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void JustDied(Unit* pKiller)

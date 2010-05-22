@@ -174,7 +174,6 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
     uint32 m_uiTwinSpikeTimer;
     uint32 m_uiSpecialSpellTimer;
     uint32 m_uiTwinPactTimer;
-    uint32 m_uiLightToutchTimer;
     uint32 m_uiCastTimeOut;
 
     uint32 m_uiDoorTimer;
@@ -189,7 +188,6 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         m_uiTwinSpikeTimer      = 7000;
         m_uiSpecialSpellTimer   = urand(55000, 60000); 
         m_uiTwinPactTimer       = 900000;
-        m_uiLightToutchTimer    = 12000;
         m_uiCastTimeOut         = 900000;
 
         m_uiDoorTimer       = 5000;
@@ -421,24 +419,6 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         else
             m_uiTwinSpikeTimer -= uiDiff;
 
-        if (m_uiLightToutchTimer < uiDiff)
-        {
-            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-            {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(pTarget, SPELL_TOUCH_OF_LIGHT_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(pTarget, SPELL_TOUCH_OF_LIGHT_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(pTarget, SPELL_TOUCH_OF_LIGHT_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(pTarget, SPELL_TOUCH_OF_LIGHT_25HC);
-            }
-            m_uiLightToutchTimer = 10000 + urand(1000, 4000);
-        }
-        else
-            m_uiLightToutchTimer -= uiDiff;
-
         if (m_uiSpecialSpellTimer < uiDiff)
         {
             if(m_pInstance->GetData(TYPE_TWINS_CASTING) != IN_PROGRESS)
@@ -558,7 +538,6 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
     uint32 m_uiTwinSpikeTimer;
     uint32 m_uiSpecialSpellTimer;
     uint32 m_uiTwinPactTimer;
-    uint32 m_uiDarkToutchTimer;
     uint32 m_uiOrbSummonTimer;
     uint32 m_uiCastTimeOut;
 
@@ -579,7 +558,6 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         m_uiTwinSpikeTimer     = 7000;
         m_uiSpecialSpellTimer  = urand(55000, 60000); 
         m_uiTwinPactTimer      = 900000;
-        m_uiDarkToutchTimer    = 12000;
         if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
             m_uiOrbSummonTimer = urand(30000, 35000);
         else
@@ -860,24 +838,6 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         else
             m_uiTwinSpikeTimer -= uiDiff;
 
-        if (m_uiDarkToutchTimer < uiDiff)
-        {
-            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-            {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(pTarget, SPELL_TOUCH_OF_DARKNESS_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(pTarget, SPELL_TOUCH_OF_DARKNESS_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(pTarget, SPELL_TOUCH_OF_DARKNESS_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(pTarget, SPELL_TOUCH_OF_DARKNESS_25HC);
-            }
-            m_uiDarkToutchTimer = 10000 + urand(1000, 4000);
-        }
-        else
-            m_uiDarkToutchTimer -= uiDiff;
-
         if (m_uiSpecialSpellTimer < uiDiff)
         {
             if(m_pInstance->GetData(TYPE_TWINS_CASTING) != IN_PROGRESS)
@@ -1012,6 +972,52 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
 
     void CheckDistance()
     {
+        // check for lightbane
+        if(Creature* pFjola = GetClosestCreatureWithEntry(m_creature, NPC_FJOLA, 3.0f))
+        {
+            if(m_uiCreatureEntry == NPC_CONCENTRATED_LIGHT)
+            {
+                if (Unit* pTarget = pFjola->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        pFjola->CastSpell(pTarget, SPELL_TOUCH_OF_LIGHT_10, true);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        pFjola->CastSpell(pTarget, SPELL_TOUCH_OF_LIGHT_25, true);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        pFjola->CastSpell(pTarget, SPELL_TOUCH_OF_LIGHT_10HC, true);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        pFjola->CastSpell(pTarget, SPELL_TOUCH_OF_LIGHT_25HC, true);
+
+                    m_uiDieTimer = 1000;
+                    m_bMustDie = true;
+                    return;
+                }
+            }
+        }
+        // check for darkbane
+        if(Creature* pEydis = GetClosestCreatureWithEntry(m_creature, NPC_EYDIS, 3.0f))
+        {
+            if(m_uiCreatureEntry == NPC_CONCENTRATED_DARKNESS)
+            {
+                if (Unit* pTarget = pEydis->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        pEydis->CastSpell(pTarget, SPELL_TOUCH_OF_DARKNESS_10, true);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        pEydis->CastSpell(pTarget, SPELL_TOUCH_OF_DARKNESS_25, true);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        pEydis->CastSpell(pTarget, SPELL_TOUCH_OF_DARKNESS_10HC, true);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        pEydis->CastSpell(pTarget, SPELL_TOUCH_OF_DARKNESS_25HC, true);
+
+                    m_uiDieTimer = 1000;
+                    m_bMustDie = true;
+                    return;
+                }
+            }
+        }
+
+        // check for players
         Map* pMap = m_creature->GetMap();
         if (pMap && pMap->IsDungeon())
         {
@@ -1057,6 +1063,7 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
                         }
                         m_uiDieTimer = 1000;
                         m_bMustDie = true;
+                        return;
                     }
                 }
             }
@@ -1085,7 +1092,7 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
         if (m_uiCheckTimer < uiDiff)
         {
             CheckDistance();
-            m_uiCheckTimer = 500;
+            m_uiCheckTimer = 300;
         }
         else
             m_uiCheckTimer -= uiDiff;
