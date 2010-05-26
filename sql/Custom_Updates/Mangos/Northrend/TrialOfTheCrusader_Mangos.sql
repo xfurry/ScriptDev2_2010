@@ -43,7 +43,7 @@ UPDATE creature_template SET scriptname='boss_fc_ret_pally' WHERE `entry` in (34
 UPDATE creature_template SET flags_extra = 1, scriptname='boss_fc_pet_zhaagrym' WHERE `entry` = 35465;
 UPDATE creature_template SET flags_extra = 1, scriptname='boss_fc_pet_cat' WHERE `entry` = 35610;
 -- Valkyr twins
-UPDATE creature_template SET scriptname='boss_fjola' WHERE `entry`=34497;
+UPDATE creature_template SET mechanic_immune_mask = 635387903, scriptname='boss_fjola' WHERE `entry`=34497;
 UPDATE creature_template SET scriptname='boss_eydis' WHERE `entry`=34496;
 UPDATE creature_template SET scriptname='mob_valkyr_orb' WHERE `entry` in (34630, 34628);
 UPDATE creature_template SET scriptname='mob_valkyr_essence' WHERE `entry` in (34567, 34568);
@@ -52,6 +52,7 @@ UPDATE creature_template SET scriptname='boss_anubarak_trial' WHERE `entry`=3456
 UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, scriptname='mob_frost_sphere' WHERE `entry`=34606;
 UPDATE creature_template SET scriptname='mob_nerubian_burrower' WHERE `entry`=34607;
 UPDATE creature_template SET scriptname='mob_swarm_scarab' WHERE `entry`=34605;
+UPDATE creature_template SET scriptname='mob_anub_spike' WHERE `entry`=34660;
 UPDATE creature_template SET npcFlag = 1, scriptname='npc_tirion_end' WHERE `entry`=36095;
 -- loot chests
 update `gameobject` set `position_x` = 679.531, `position_y` = 137.507, `position_z` = 142.129, `orientation` = 6.215 where `id` in (195665, 195666, 195667, 195668, 195669, 195670, 195671, 195672);

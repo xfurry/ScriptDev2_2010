@@ -56,6 +56,9 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1605018,"Insignificant gnat!","","","","","","","","",16145,1,0,0,"jaru kill1"),
 (-1605019,"Banished to the Nether!","","","","","","","","",16146,1,0,0,"jaru kill2"),
 (-1605025,"","","","","","","","","",16148,1,0,0,"jaru berserk"),
+(-1605138,"%s creates a Nether Portal!","","","","","","","","",0,3,0,0,'jaru portal'),
+(-1605140,"%s creates an Infernal Volcano!","","","","","","","","",0,3,0,0,'jaru volcano'),
+(-1605139,"$N has incinerate flesh! Heal him!","","","","","","","","",0,3,0,0,"jaru incinerate"),
 (-1605020,"Another will take my place. Your world is doomed.","","","","","","","","",16147,1,0,0,"jaru death"),
 (-1605021,"The loss of Wilfred Fizzlebang, while unfortunate, should be a lesson to those that dare dabble in dark magic. Alas, you are victorious and must now face the next challenge.","","","","","","","","",16045,1,0,0,"jaru outro1"),
 (-1605022,"Treacherous Alliance dogs! You summon a demon lord against warriors of the Horde!? Your deaths will be swift!","","","","","","","","",16021,1,0,0,"jaru outro2"),
@@ -94,6 +97,9 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1605059,"You are finished!","","","","","","","","",16273,1,0,0,"twins berserk"),
 (-1605080,"Do you still question the might of the Horde, paladin? We will take on all comers!","","","","","","","","",16025,1,0,0,"twins horde outro"),
 (-1605081,"Not even the Lich's King most powerfull minions can stand against the Alliance. All hail our victors!","","","","","","","","",16068,1,0,0,"twins aly outro"),
+(-1605133,"%s begins to cast Twin's pact","","","","","","","","",0,3,0,0,'twins pact'),
+(-1605134,"%s begins to cast Dark Vortex! Switch to Dark Essence!","","","","","","","","",0,3,0,0,'twins dark vortex'),
+(-1605135,"%s begins to cast Light Vortex! Switch to Light Essence!","","","","","","","","",0,3,0,0,'twins light vortex'),
 -- Anub
 (-1605060,"A mighty blow has been dealt to the Lich King! You have proven yourselves able bodied champions of the Argent Crusade. Together we will strike at Icecrown Citadel and destroy what remains of the Scourge! There is no challenge that we cannot face united!","","","","","","","","",16051,1,0,0,"anub intro1"),
 (-1605061,"You will have your challenge, Fordring.","","","","","","","","",16321,1,0,0,"anub intro2"),
@@ -111,4 +117,6 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1605071,"Another soul to sate the host.","","","","","","","","",16237,1,0,0,"anub kill2"),
 (-1605072,"I have failed you, master....","","","","","","","","",16238,1,0,0,"anub death"),
 (-1605073,"","","","","","","","","",16239,1,0,0,"anub berserk1"),
+(-1605136,"%s burrows into the ground!","","","","","","","","",0,3,0,0,'borrow emote'),
+(-1605137,"%s spikes pursue $N!","","","","","","","","",0,3,0,0,'pursue emote'),
 (-1605074,"Champions, you're alive! Not only have you defeated every challenge of the Trial of the Crusader, but thwarted Arthas directly! Your skill and cunning will prove to be a powerful weapon against the Scourge. Well done! Allow one of my mages to transport you back to the surface!","","","","","","","","",0,1,0,0,"anub outro"); -- fix id!

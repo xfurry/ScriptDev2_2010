@@ -36,7 +36,7 @@ enum
     DATA_TIRION             = 15, 
     DATA_VARIAN             = 16,
     DATA_GARROSH            = 17,
-    DATA_BARRET            = 18,
+    DATA_BARRET             = 18,
     DATA_JAINA              = 19,
     DATA_THRALL             = 20,
 

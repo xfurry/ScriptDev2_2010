@@ -35,6 +35,9 @@ enum
     SAY_SLAY2       = -1605019,
     SAY_DEATH       = -1605020,
     SAY_BERSERK     = -1605025,
+    EMOTE_PORTAL    = -1605138,
+    EMOTE_FLESH     = -1605139,
+    EMOTE_VOLCANO   = -1605140,
 
     SAY_TIRION_JARU_OUTRO1      = -1605021,
     SAY_GARROSH_JARU_OUTRO2     = -1605022,
@@ -233,7 +236,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
     {
         m_uiFelFireballTimer        = urand(15000, 25000);
         m_uiFelLightningTimer       = urand(10000, 15000);
-        m_uiIncinerateFleshTimer    = urand(40000, 50000);
+        m_uiIncinerateFleshTimer    = urand(15000, 25000);
         m_uiLegionFlameTimer        = 30000;
         m_uiInfernalEruptionTimer   = 28000;
         m_uiNetherPortalTimer       = 40000;
@@ -388,6 +391,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
+                DoScriptText(EMOTE_FLESH, m_creature, pTarget);
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_INCINERATE_FLESH_10);
                 if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
@@ -397,14 +401,14 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     DoCast(pTarget, SPELL_INCINERATE_FLESH_25HC);
             }
-            m_uiIncinerateFleshTimer = urand(60000, 85000);
+            m_uiIncinerateFleshTimer = urand(15000, 20000);
         }
         else
             m_uiIncinerateFleshTimer -= uiDiff;
 
         if (m_uiFelFireballTimer < uiDiff)
         {
-            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_FEL_FIREBALL_10);
@@ -440,21 +444,23 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 
         if (m_uiInfernalEruptionTimer < uiDiff)
         {
+            DoScriptText(EMOTE_VOLCANO, m_creature);
             m_creature->CastStop();
             DoCast(m_creature, SPELL_INFERNAL_ERUPTION);
-            m_uiInfernalEruptionTimer = 30000;
+            m_uiInfernalEruptionTimer = 90000;
         }
         else
             m_uiInfernalEruptionTimer -= uiDiff;
 
         if (m_uiNetherPortalTimer < uiDiff)
         {
+            DoScriptText(EMOTE_PORTAL, m_creature);
             m_creature->CastStop();
             if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
                 DoCast(m_creature, SPELL_NETHER_PORTAL_10);
             if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 DoCast(m_creature, SPELL_NETHER_PORTAL_25);
-            m_uiNetherPortalTimer = 90000;
+            m_uiNetherPortalTimer = 60000;
         }
         else
             m_uiNetherPortalTimer -= uiDiff;
