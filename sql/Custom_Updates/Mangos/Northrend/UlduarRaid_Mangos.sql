@@ -47,6 +47,8 @@ UPDATE creature_template SET mechanic_immune_mask=652951551, scriptname='boss_ri
 UPDATE creature_template SET mechanic_immune_mask=652951551, scriptname='boss_left_arm' WHERE entry=32933;
 UPDATE creature_template SET ScriptName = "mob_ulduar_rubble" WHERE entry in (33768, 33809, 33908, 33942);
 update `gameobject` set `position_y` = -35.6824, `position_x` = 1837.59 where `id` in (195047);
+UPDATE `creature_template` SET `RegenHealth` = 1 WHERE `entry` = 33910;
+UPDATE `creature_template` SET `RegenHealth` = 1 WHERE `entry` = 33911;
 
 -- Auriaya
 UPDATE creature_template SET mechanic_immune_mask=583745371, equipment_id = 103000, scriptname='boss_auriaya' WHERE entry=33515;
