@@ -16,8 +16,9 @@ UPDATE creature_template SET scriptname='boss_icehowl' WHERE `entry`=34797;
 UPDATE creature_template SET scriptname='boss_acidmaw' WHERE `entry`=35144;
 UPDATE creature_template SET scriptname='boss_dreadscale' WHERE `entry`=34799;
 UPDATE creature_template SET scriptname='mob_slime_pool' WHERE `entry`=35176;
+UPDATE creature_template SET scriptname='mob_toc_fire_bomb' WHERE `entry`=34854;
 -- Jaru
-UPDATE creature_template SET mechanic_immune_mask = 769605631, equipment_id = 104000, scriptname='boss_jaraxxus' WHERE `entry` in (34780, 12075, 12077, 12078);
+UPDATE creature_template SET mechanic_immune_mask = 752566015, equipment_id = 104000, scriptname='boss_jaraxxus' WHERE `entry` in (34780, 12075, 12077, 12078);
 delete from creature_equip_template where entry = 104000;
 insert into creature_equip_template values (104000, 42139, 0, 0);
 UPDATE creature_template SET `faction_A` = 35, `faction_H` = 35, scriptname='mob_legion_flame' WHERE `entry`=34784;

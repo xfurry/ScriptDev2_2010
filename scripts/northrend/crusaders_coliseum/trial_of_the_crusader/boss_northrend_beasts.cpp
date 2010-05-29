@@ -85,6 +85,11 @@ enum jormungars
     SPELL_SWEEP_25              = 67645,
     SPELL_SWEEP_25HC            = 67646,
 
+    SPELL_SLIME_POOL_TRIG       = 66882,
+    SPELL_SLIME_POOL_DMG_10     = 66881,
+    SPELL_SLIME_POOL_DMG_25     = 67638,
+    SPELL_SLIME_POOL_DMG_10HC   = 67639,
+    SPELL_SLIME_POOL_DMG_25HC   = 67640,
 
     SPELL_PARALYTIC_TOXIN       = 66823,
     SPELL_ENRAGE                = 68335,
@@ -155,981 +160,12 @@ enum icehowl
     ACHIEV_UPPER_BACK_PAIN_H    = 3813,
 };
 
-struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
+class MANGOS_DLL_DECL RisingAngerAura : public Aura
 {
-    boss_gormokAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = pCreature->GetMap()->GetDifficulty();
-        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-            pCreature->ApplySpellImmune(0, IMMUNITY_EFFECT, IMMUNE_TO_MOVEMENT_IMPAIRMENT_AND_LOSS_CONTROL_MASK, true); // check this!!!
-        Reset();
-    }
-
-    ScriptedInstance* m_pInstance;
-    uint32 Difficulty;
-
-    uint8 m_uiMaxSnobold;
-    uint8 m_uiSnoboldNo;
-    uint8 m_uiHealthPoint;
-
-    uint32 m_uiStompTimer;
-    uint32 m_uiImpaleTimer;
-
-    uint32 m_uiDoorTimer;
-    bool doorClosed;
-
-    uint32 TeamInInstance;
-
-    uint32 m_uiBerserkTimer;
-
-    void Reset() 
-    {
-        m_uiStompTimer      = urand(20000, 25000);
-        m_uiImpaleTimer     = 10000;
-        m_uiSnoboldNo           = 1;
-
-        m_uiDoorTimer       = 8000;
-        doorClosed          = false;
-
-        TeamInInstance = GetFaction();
-
-        m_uiBerserkTimer    = 300000;  // 5 min
-
-        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-        {
-            m_uiMaxSnobold = 5;
-            m_uiHealthPoint = 20;
-        }
-        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-        {
-            m_uiMaxSnobold = 6;
-            m_uiHealthPoint = 17;
-        }
-    }
-
-    void JustReachedHome()
-    {
-        if (m_pInstance)
-        {
-            m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
-            m_pInstance->SetData(TYPE_STAGE,0);
-            if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-            {
-                m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
-                m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
-            }
-        }
-
-        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-            DoScriptText(SAY_WIPE, pTirion);
-
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
-        {
-            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-            pBarret->SetVisibility(VISIBILITY_ON);
-        }
-
-        m_creature->ForcedDespawn();
-    }
-
-    void Aggro(Unit* pWho)
-    {
-        m_creature->SetInCombatWithZone();
-    }
-
-    uint32 GetFaction()
-    {
-        uint32 faction = 0;
-        Map *map = m_creature->GetMap();
-        if (map->IsDungeon())
-        {
-            Map::PlayerList const &PlayerList = map->GetPlayers();
-
-            if (!PlayerList.isEmpty())
-            {
-                if (Player* pPlayer = PlayerList.begin()->getSource())
-                    faction = pPlayer->GetTeam();
-            }
-        }
-        return faction;
-    }
-
-    void SummonJormungars()
-    {
-
-        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-            DoScriptText(SAY_SUMMON_JORMUNGARS, Tirion);
-
-        if (Creature* pDreadscale = m_creature->SummonCreature(NPC_DREADSCALE, SpawnLoc[28].x + 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
-        {
-            pDreadscale->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x + 10, SpawnLoc[1].y, SpawnLoc[1].z);
-            pDreadscale->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-            pDreadscale->SetInCombatWithZone();
-        }
-        if (Creature* pAcidmaw = m_creature->SummonCreature(NPC_ACIDMAW,  552.773f, 171.971f, 394.671f, 5, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, DESPAWN_TIME))
-        {
-            //pAcidmaw->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 10, SpawnLoc[1].y, SpawnLoc[1].z);
-            pAcidmaw->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-            pAcidmaw->SetInCombatWithZone();
-        }
-        
-        // open gate
-        if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-            m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-    }
-
-    void JustDied(Unit* pKiller)
-    {
-        SummonJormungars();
-    }
-
-    void DamageTaken(Unit *pDoneBy,uint32 &uiDamage)
-    {
-        if (m_uiSnoboldNo > m_uiMaxSnobold)
-            return;
-
-        if (m_creature->GetHealthPercent() <= (100-(m_uiHealthPoint*m_uiSnoboldNo)))
-        {
-            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-            {
-                DoCast(pTarget, SPELL_SNOBOLLED, true);
-                DoCast(m_creature, SPELL_RISING_ANGER); // broken
-                if(Creature *pSnobold = m_creature->SummonCreature(NPC_SNOBOLD_VASSAL, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                    pSnobold->AddThreat(pTarget,0.0f);
-            }
-            m_uiSnoboldNo++;
-        }
-    }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        if (m_uiDoorTimer < uiDiff && !doorClosed)
-        {
-            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-            if(TeamInInstance == ALLIANCE)
-            {
-                if(Creature *Varian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
-                    DoScriptText(SAY_VARIAN_BEASTS, Varian);
-            }
-            else if(TeamInInstance == HORDE)
-            {
-                if(Creature *Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
-                    DoScriptText(SAY_GARROSH_BEASTS, Garrosh);
-            }
-            doorClosed = true;
-            m_uiDoorTimer = 30000;
-        }
-        else
-            m_uiDoorTimer -= uiDiff;
-
-        // spells
-        if (m_uiStompTimer < uiDiff)
-        {
-            if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                DoCast(m_creature, SPELL_STOMP_10);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                DoCast(m_creature, SPELL_STOMP_25);
-            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                DoCast(m_creature, SPELL_STOMP_10HC);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                DoCast(m_creature, SPELL_STOMP_25HC);
-            m_uiStompTimer = urand(20000, 25000);
-        }
-        else
-            m_uiStompTimer -= uiDiff;
-
-        if (m_uiImpaleTimer < uiDiff)
-        {
-            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
-            {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(pTarget, SPELL_IMPALE_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(pTarget, SPELL_IMPALE_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(pTarget, SPELL_IMPALE_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(pTarget, SPELL_IMPALE_25HC);
-            }
-            m_uiImpaleTimer = 10000;
-        }
-        else
-            m_uiImpaleTimer -= uiDiff;
-
-        // berserk
-        if (m_uiBerserkTimer < uiDiff)
-        {
-            DoCast(m_creature, SPELL_BERSERK);
-            m_uiBerserkTimer = 60000;
-        }
-        else
-            m_uiBerserkTimer -= uiDiff;
-
-        DoMeleeAttackIfReady();
-    }
+public:
+    RisingAngerAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
+    {}
 };
-
-CreatureAI* GetAI_boss_gormok(Creature* pCreature)
-{
-    return new boss_gormokAI(pCreature);
-}
-
-struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
-{
-    boss_acidmawAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = pCreature->GetMap()->GetDifficulty();
-        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        // starts submerged
-        SetCombatMovement(false);
-        DoCast(pCreature, SPELL_SUBMERGE, false);
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-        Reset();
-    }
-
-    ScriptedInstance* m_pInstance;
-    uint32 Difficulty;
-    bool m_bIsRegularMode;
-
-    // mobile
-    uint32 m_uiAcidSpewTimer;
-    uint32 m_uiParaliticBiteTimer;
-    uint32 m_uiSlimePoolTimer;
-
-    // stationary
-    uint32 m_uiAcidSpitTimer;
-    uint32 m_uiParaliticSprayTimer;
-    uint32 m_uiSweepTimer;
-
-    uint8 phase;
-    bool startPhase;
-    uint32 phaseStartTimer;
-    uint32 phaseChangeTimer;
-    uint32 m_uiSubmergeTimer;
-    uint32 m_uiMoveTimer;
-
-    bool hasEnraged;
-
-    uint32 m_uiDoorTimer;
-    bool doorClosed;
-
-    uint32 m_uiBerserkTimer;
-    uint32 m_uiAchievTimer;
-
-    void Reset() 
-    {
-        // mobile
-        m_uiAcidSpewTimer       = 5000;
-        m_uiParaliticBiteTimer  = urand(5000,10000);
-        m_uiSlimePoolTimer      = urand(12000,15000);
-
-        // stationary
-        m_uiAcidSpitTimer       = 3000;
-        m_uiParaliticSprayTimer = urand(7000,13000);
-        m_uiSweepTimer          = urand(12000,15000);
-
-        phase               = 0;    // not started yet
-        startPhase          = false;
-        phaseStartTimer     = 8000;
-        phaseChangeTimer    = 45000;
-        m_uiSubmergeTimer   = 60000;
-        m_uiMoveTimer       = 60000;
-
-        hasEnraged          = false;
-
-        m_uiDoorTimer       = 5000;
-        doorClosed          = false;
-
-        m_uiBerserkTimer    = 300000;  // 5 min
-        m_uiAchievTimer     = 0;
-    }
-
-    void JustReachedHome()
-    {
-        if (m_pInstance)
-        {
-            m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
-            m_pInstance->SetData(TYPE_STAGE,0);
-            if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-            {
-                m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
-                m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
-            }
-        }
-
-        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-            DoScriptText(SAY_WIPE, pTirion);
-
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
-        {
-            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-            pBarret->SetVisibility(VISIBILITY_ON);
-        }
-
-        m_creature->ForcedDespawn();
-    }
-
-    void Aggro(Unit* pWho)
-    {
-        m_creature->SetInCombatWithZone();
-    }
-
-    bool IsThereAnyTwin()
-    {
-        if(GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
-            return true;
- 
-        return false;
-    }
-
-    void SummonIcehowl()
-    {
-        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-            DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
-
-        if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
-        {
-            pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-            pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-            pIcehowl->SetInCombatWithZone();
-        }
-        if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-            m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-    }
-
-    void JustDied(Unit* pKiller)
-    {
-        if(!IsThereAnyTwin())
-        {
-            SummonIcehowl();
-            if(m_uiAchievTimer <= 10000)
-            {
-                if(m_pInstance)
-                    m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWO_JORMUNGARS : ACHIEV_TWO_JORMUNGARS_H);
-            }
-        }
-    }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        if(!IsThereAnyTwin() && !hasEnraged)
-        {
-            hasEnraged = true;
-            phase = 2;
-            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-            DoCast(m_creature, SPELL_ENRAGE);
-            m_creature->SetDisplayId(DISPLAY_ACID_MOBILE);
-            m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-        }
-
-        if(hasEnraged)
-            m_uiAchievTimer += uiDiff;
-
-        if (m_uiDoorTimer < uiDiff && !doorClosed)
-        {
-            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-            doorClosed = true;
-            m_uiDoorTimer = 30000;
-        }
-        else
-            m_uiDoorTimer -= uiDiff;
-
-        if (phaseStartTimer < uiDiff && !startPhase)
-        {
-            phase = 1;
-            m_creature->StopMoving();
-            m_creature->GetMotionMaster()->Clear();
-            m_creature->GetMotionMaster()->MoveIdle();
-            SetCombatMovement(false);
-            m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-            startPhase = true;
-            phaseStartTimer = 30000;
-        }
-        else
-            phaseStartTimer -= uiDiff;
-
-        // stationary
-        if(phase == 1)
-        {
-            if (phaseChangeTimer < uiDiff)
-            {
-                m_creature->RemoveAllAuras();
-                DoCast(m_creature, SPELL_SUBMERGE, false);
-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                m_uiMoveTimer       = 2000;
-                m_uiSubmergeTimer   = 4000;
-                phaseChangeTimer    = 45000;
-            }
-            else
-                phaseChangeTimer -= uiDiff;
-
-            if (m_uiMoveTimer < uiDiff && IsThereAnyTwin())
-            {
-                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
-                {
-                    float posX = m_creature->GetPositionX();
-                    float posY = m_creature->GetPositionY();
-                    float posZ = m_creature->GetPositionZ();
-                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
-                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
-                    pTwin->GetMap()->CreatureRelocation(pTwin, posX, posY, posZ, m_creature->GetOrientation());
-                    pTwin->SendMonsterMove(posX, posY, posZ, SPLINETYPE_NORMAL, pTwin->GetSplineFlags(), 1);
-                }
-                m_uiMoveTimer = 60000;
-            }
-            else m_uiMoveTimer -= uiDiff;
-
-            if (m_uiSubmergeTimer < uiDiff)
-            {
-                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                m_creature->SetDisplayId(DISPLAY_ACID_MOBILE);
-                phase = 2;
-                m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                SetCombatMovement(true);
-                m_uiSubmergeTimer = 60000;
-            }
-            else
-                m_uiSubmergeTimer -= uiDiff;
-
-            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
-                return;
-
-            if (m_uiAcidSpitTimer < uiDiff)
-            {
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                {
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                        DoCast(pTarget, SPELL_ACID_SPIT_10);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                        DoCast(pTarget, SPELL_ACID_SPIT_25);
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                        DoCast(pTarget, SPELL_ACID_SPIT_10HC);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                        DoCast(pTarget, SPELL_ACID_SPIT_25HC);
-                }
-                m_uiAcidSpitTimer = 3000;
-            }
-            else
-                m_uiAcidSpitTimer -= uiDiff;
-
-            if (m_uiParaliticSprayTimer < uiDiff)
-            {
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                {
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_10);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_25);
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_10HC);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_25HC);
-                }
-                m_uiParaliticSprayTimer = urand(7000,13000);
-            }
-            else
-                m_uiParaliticSprayTimer -= uiDiff;
-
-            if (m_uiSweepTimer < uiDiff)
-            {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(m_creature, SPELL_SWEEP_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(m_creature, SPELL_SWEEP_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(m_creature, SPELL_SWEEP_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(m_creature, SPELL_SWEEP_25HC);
-                m_uiSweepTimer = urand(10000,15000);
-            }
-            else
-                m_uiSweepTimer -= uiDiff;
-        }
-
-        // mobile
-        if(phase == 2)
-        {
-            if (phaseChangeTimer < uiDiff && IsThereAnyTwin())
-            {
-                m_creature->RemoveAllAuras();
-                DoCast(m_creature, SPELL_SUBMERGE, false);
-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                SetCombatMovement(false);
-                m_uiMoveTimer       = 2000;
-                m_uiSubmergeTimer   = 4000;
-                phaseChangeTimer    = 45000;
-            }
-            else
-                phaseChangeTimer -= uiDiff;
-
-            if (m_uiMoveTimer < uiDiff && IsThereAnyTwin())
-            {
-                if(Creature* pTwin = GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
-                {
-                    float posX = m_creature->GetPositionX();
-                    float posY = m_creature->GetPositionY();
-                    float posZ = m_creature->GetPositionZ();
-                    m_creature->GetMap()->CreatureRelocation(m_creature, pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), pTwin->GetOrientation());
-                    m_creature->SendMonsterMove(pTwin->GetPositionX(), pTwin->GetPositionY(), pTwin->GetPositionZ(), SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
-                    pTwin->GetMap()->CreatureRelocation(pTwin, posX, posY, posZ, m_creature->GetOrientation());
-                    pTwin->SendMonsterMove(posX, posY, posZ, SPLINETYPE_NORMAL, pTwin->GetSplineFlags(), 1);
-                }
-                m_uiMoveTimer = 60000;
-            }
-            else m_uiMoveTimer -= uiDiff;
-
-            if (m_uiSubmergeTimer < uiDiff && IsThereAnyTwin())
-            {
-                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                m_creature->SetDisplayId(DISPLAY_ACID_FIXED);
-                phase = 1;
-                m_creature->StopMoving();
-                m_creature->GetMotionMaster()->Clear();
-                m_creature->GetMotionMaster()->MoveIdle();
-                SetCombatMovement(false);
-                m_uiSubmergeTimer = 60000;
-            }
-            else
-                m_uiSubmergeTimer -= uiDiff;
-
-            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
-                return;
-
-            if (m_uiParaliticBiteTimer < uiDiff)
-            {
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                {
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                        DoCast(pTarget, SPELL_PARALYTIC_BITE_10);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                        DoCast(pTarget, SPELL_PARALYTIC_BITE_25);
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                        DoCast(pTarget, SPELL_PARALYTIC_BITE_10HC);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                        DoCast(pTarget, SPELL_PARALYTIC_BITE_25HC);
-                }
-                m_uiParaliticBiteTimer = urand(5000,7000);
-            }
-            else
-                m_uiParaliticBiteTimer -= uiDiff;
-
-            if (m_uiSlimePoolTimer < uiDiff)
-            {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(m_creature, SPELL_SLIME_POOL_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(m_creature, SPELL_SLIME_POOL_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(m_creature, SPELL_SLIME_POOL_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(m_creature, SPELL_SLIME_POOL_25HC);
-                m_uiSlimePoolTimer = urand(13000,15000);
-            }
-            else
-                m_uiSlimePoolTimer -= uiDiff;
-
-            if (m_uiAcidSpewTimer < uiDiff)
-            {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(m_creature, SPELL_ACID_SPEW_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(m_creature, SPELL_ACID_SPEW_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(m_creature, SPELL_ACID_SPEW_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(m_creature, SPELL_ACID_SPEW_25HC);
-                m_uiAcidSpewTimer = 3000+rand()%2000;
-            }
-            else
-                m_uiAcidSpewTimer -= uiDiff;
-        }
-
-        // berserk
-        if (m_uiBerserkTimer < uiDiff)
-        {
-            DoCast(m_creature, SPELL_BERSERK);
-            m_uiBerserkTimer = 60000;
-        }
-        else
-            m_uiBerserkTimer -= uiDiff;
-
-        DoMeleeAttackIfReady();
-    }
-};
-
-CreatureAI* GetAI_boss_acidmaw(Creature* pCreature)
-{
-    return new boss_acidmawAI(pCreature);
-}
-
-struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
-{
-    boss_dreadscaleAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = pCreature->GetMap()->GetDifficulty();
-        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        Reset();
-    }
-
-    ScriptedInstance* m_pInstance;
-    uint32 Difficulty;
-    bool m_bIsRegularMode;
-
-    // mobile
-    uint32 m_uiBurningBiteTimer;
-    uint32 m_uiMoltenSpewTimer;
-    uint32 m_uiSlimePoolTimer;
-
-    // stationary
-    uint32 m_uiFireSpitTimer;
-    uint32 m_uiBurningSprayTimer;
-    uint32 m_uiSweepTimer;
-
-    uint8 phase;
-    bool startPhase;
-    uint32 phaseStartTimer;
-    uint32 phaseChangeTimer;
-    uint32 m_uiSubmergeTimer;
-
-    bool hasEnraged;
-
-    uint32 m_uiDoorTimer;
-    bool doorClosed;
-
-    uint32 m_uiBerserkTimer;
-    uint32 m_uiAchievTimer;
-
-    void Reset() 
-    {
-        // mobile
-        m_uiBurningBiteTimer    = urand(3000,5000);
-        m_uiMoltenSpewTimer     = urand(7000,13000);
-        m_uiSlimePoolTimer      = urand(13000,15000);
-
-        // stationary
-        m_uiFireSpitTimer       = 3000;
-        m_uiBurningSprayTimer   = urand(5000,7000);
-        m_uiSweepTimer          = urand(13000,15000);
-
-        phase               = 0;    // not started yet
-        startPhase          = false;
-        phaseStartTimer     = 8000;
-        phaseChangeTimer    = 45000;
-        m_uiSubmergeTimer   = 60000;
-
-        hasEnraged          = false;
-
-        m_uiDoorTimer       = 5000;
-        doorClosed          = false;
-
-        m_uiBerserkTimer    = 300000;  // 5 min
-        m_uiAchievTimer     = 0;
-    }
-
-    void JustReachedHome()
-    {
-        if (m_pInstance)
-        {
-            m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
-            m_pInstance->SetData(TYPE_STAGE,0);
-            if(!IsThereAnyTwin())
-            {
-                if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                {
-                    m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
-                    m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
-                }
-            }
-        }
-
-        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-            DoScriptText(SAY_WIPE, pTirion);
-
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
-        {
-            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-            pBarret->SetVisibility(VISIBILITY_ON);
-        }
-
-        m_creature->ForcedDespawn();
-    }
-
-    void Aggro(Unit* pWho)
-    {
-        m_creature->SetInCombatWithZone();
-    }
-
-    bool IsThereAnyTwin()
-    {
-        if(GetClosestCreatureWithEntry(m_creature, NPC_ACIDMAW, 180.0f))
-            return true;
- 
-        return false;
-    }
-
-    void SummonIcehowl()
-    {
-        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
-            DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
-
-        if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
-        {
-            pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-            pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-            pIcehowl->SetInCombatWithZone();
-        }
-        if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-            m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-    }
-
-    void JustDied(Unit* pKiller)
-    {
-        if(!IsThereAnyTwin())
-        {
-            SummonIcehowl();
-            if(m_uiAchievTimer <= 10000)
-            {
-                if(m_pInstance)
-                    m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWO_JORMUNGARS : ACHIEV_TWO_JORMUNGARS_H);
-            }
-        }
-    }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        if(!IsThereAnyTwin() && !hasEnraged)
-        {
-            hasEnraged = true;
-            phase = 2;
-            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-            DoCast(m_creature, SPELL_ENRAGE);
-            m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-            m_creature->SetDisplayId(DISPLAY_DREAD_MOBILE);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-        }
-
-        if(hasEnraged)
-            m_uiAchievTimer += uiDiff;
-
-        if (phaseStartTimer < uiDiff && !startPhase)
-        {
-            phase = 2;
-            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-            SetCombatMovement(true);
-            startPhase = true;
-            phaseStartTimer = 30000;
-        }
-        else
-            phaseStartTimer -= uiDiff;
-
-        // stationary
-        if(phase == 1)
-        {
-            if (phaseChangeTimer < uiDiff)
-            {
-                m_creature->RemoveAllAuras();
-                DoCast(m_creature, SPELL_SUBMERGE, false);
-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                m_uiSubmergeTimer = 4000;
-                phaseChangeTimer = 45000;
-            }
-            else
-                phaseChangeTimer -= uiDiff;
-
-            if (m_uiSubmergeTimer < uiDiff)
-            {
-                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                m_creature->SetDisplayId(DISPLAY_DREAD_MOBILE);
-                phase = 2;
-                m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                SetCombatMovement(true);
-                m_uiSubmergeTimer = 60000;
-            }
-            else
-                m_uiSubmergeTimer -= uiDiff;
-
-            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
-                return;
-
-            if (m_uiFireSpitTimer < uiDiff)
-            {
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                {
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                        DoCast(pTarget, SPELL_FIRE_SPIT_10);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                        DoCast(pTarget, SPELL_FIRE_SPIT_25);
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                        DoCast(pTarget, SPELL_FIRE_SPIT_10HC);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                        DoCast(pTarget, SPELL_FIRE_SPIT_25HC);
-                }
-                m_uiFireSpitTimer = urand(3000, 5000);
-            }
-            else
-                m_uiFireSpitTimer -= uiDiff;
-
-            if (m_uiBurningSprayTimer < uiDiff)
-            {
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                {
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                        DoCast(pTarget, SPELL_BURNING_SPRAY_10);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                        DoCast(pTarget, SPELL_BURNING_SPRAY_25);
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                        DoCast(pTarget, SPELL_BURNING_SPRAY_10HC);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                        DoCast(pTarget, SPELL_BURNING_SPRAY_25HC);
-                }
-                m_uiBurningSprayTimer = urand(7000,13000);
-            }
-            else
-                m_uiBurningSprayTimer -= uiDiff;
-
-            if (m_uiSweepTimer < uiDiff)
-            {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(m_creature, SPELL_SWEEP_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(m_creature, SPELL_SWEEP_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(m_creature, SPELL_SWEEP_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(m_creature, SPELL_SWEEP_25HC);
-                m_uiSweepTimer = urand(10000,15000);
-            }
-            else
-                m_uiSweepTimer -= uiDiff;
-        }
-
-        // mobile
-        if(phase == 2)
-        {
-            if (phaseChangeTimer < uiDiff && IsThereAnyTwin())
-            {
-                m_creature->RemoveAllAuras();
-                DoCast(m_creature, SPELL_SUBMERGE, false);
-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                SetCombatMovement(false);
-                m_uiSubmergeTimer = 4000;
-                phaseChangeTimer = 45000;
-            }
-            else
-                phaseChangeTimer -= uiDiff;
-
-            if (m_uiSubmergeTimer < uiDiff && IsThereAnyTwin())
-            {
-                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                m_creature->SetDisplayId(DISPLAY_DREAD_FIXED);
-                phase = 1;
-                m_creature->StopMoving();
-                m_creature->GetMotionMaster()->Clear();
-                m_creature->GetMotionMaster()->MoveIdle();
-                SetCombatMovement(false);
-                m_uiSubmergeTimer = 60000;
-            }
-            else
-                m_uiSubmergeTimer -= uiDiff;
-
-            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
-                return;
-
-            if (m_uiBurningBiteTimer < uiDiff)
-            {
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                {
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                        DoCast(pTarget, SPELL_BURNING_BITE_10);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                        DoCast(pTarget, SPELL_BURNING_BITE_25);
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                        DoCast(pTarget, SPELL_BURNING_BITE_10HC);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                        DoCast(pTarget, SPELL_BURNING_BITE_25HC);
-                }
-                m_uiBurningBiteTimer = urand(5000,7000);
-            }
-            else
-                m_uiBurningBiteTimer -= uiDiff;
-
-            if (m_uiSlimePoolTimer < uiDiff)
-            {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    //DoCast(m_creature, SPELL_SLIME_POOL_10);
-                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    //DoCast(m_creature, SPELL_SLIME_POOL_25);
-                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    //DoCast(m_creature, SPELL_SLIME_POOL_10HC);
-                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 45000);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    //DoCast(m_creature, SPELL_SLIME_POOL_25HC);
-                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-                m_uiSlimePoolTimer = urand(10000,15000);
-            }
-            else
-                m_uiSlimePoolTimer -= uiDiff;
-
-            if (m_uiMoltenSpewTimer < uiDiff)
-            {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(m_creature, SPELL_MOLTEN_SPEW_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(m_creature, SPELL_MOLTEN_SPEW_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(m_creature, SPELL_MOLTEN_SPEW_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(m_creature, SPELL_MOLTEN_SPEW_25HC);
-                m_uiMoltenSpewTimer = urand(7000,13000);
-            }
-            else
-                m_uiMoltenSpewTimer -= uiDiff;
-        }
-
-        // berserk
-        if (m_uiBerserkTimer < uiDiff)
-        {
-            DoCast(m_creature, SPELL_BERSERK);
-            m_uiBerserkTimer = 60000;
-        }
-        else
-            m_uiBerserkTimer -= uiDiff;
-
-        DoMeleeAttackIfReady();
-    }
-};
-
-CreatureAI* GetAI_boss_dreadscale(Creature* pCreature)
-{
-    return new boss_dreadscaleAI(pCreature);
-}
 
 struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
 {
@@ -1202,13 +238,13 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
     {
         if (m_pInstance)
         {
-            m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
-            m_pInstance->SetData(TYPE_STAGE,0);
-            if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+            if ((Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC) && m_pInstance->GetData(TYPE_NORTHREND_BEASTS) != NOT_STARTED)
             {
                 m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
                 m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
             }
+            m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
+            m_pInstance->SetData(TYPE_STAGE,0);
         }
 
         if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
@@ -1265,9 +301,6 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
     {
         if(!m_pInstance) 
             return;
-
-        //if(type != POINT_MOTION_TYPE) 
-            //return;
 
         if(id != 1 && m_bMovementStarted) 
             m_creature->GetMotionMaster()->MovePoint(1, fPosX, fPosY, fPosZ);
@@ -1332,13 +365,11 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
                 case 0:
                     m_creature->GetMap()->CreatureRelocation(m_creature, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z, 0);
                     m_creature->SendMonsterMove(SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
-                    //m_creature->GetMotionMaster()->MovePoint(0, SpawnLoc[1].y, SpawnLoc[1].z);
                     m_creature->GetMotionMaster()->MoveIdle();
                     SetCombatMovement(false);
                     m_creature->RemoveAllAuras();
                     m_creature->CombatStop(true);
                     m_creature->InterruptNonMeleeSpells(false);
-                    //m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     ++m_uiTrampleStage;
                     m_uiTrampleTimer = 3000;
                     break;
@@ -1421,7 +452,6 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
                     m_bAdrenalineCasted = false;
                     m_bTrampleCasted = false;
                     SetCombatMovement(true);
-                    //m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     m_creature->GetMotionMaster()->MovementExpired();
                     m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
                     SetCombatMovement(true);
@@ -1524,6 +554,1083 @@ CreatureAI* GetAI_boss_icehowl(Creature* pCreature)
     return new boss_icehowlAI(pCreature);
 }
 
+struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
+{
+    boss_acidmawAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        // starts submerged
+        SetCombatMovement(false);
+        DoCast(pCreature, SPELL_SUBMERGE, false);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+    uint32 Difficulty;
+    bool m_bIsRegularMode;
+
+    // mobile
+    uint32 m_uiAcidSpewTimer;
+    uint32 m_uiParaliticBiteTimer;
+    uint32 m_uiSlimePoolTimer;
+
+    // stationary
+    uint32 m_uiAcidSpitTimer;
+    uint32 m_uiParaliticSprayTimer;
+    uint32 m_uiSweepTimer;
+
+    uint8 phase;
+    bool startPhase;
+    uint32 phaseStartTimer;
+    uint32 phaseChangeTimer;
+    uint32 m_uiSubmergeTimer;
+    uint32 m_uiMoveTimer;
+
+    bool hasEnraged;
+
+    uint32 m_uiDoorTimer;
+    bool doorClosed;
+
+    uint32 m_uiBerserkTimer;
+    uint32 m_uiAchievTimer;
+
+    uint32 m_uiNextBossTimer;
+    bool m_bNextBoss;
+
+    void Reset() 
+    {
+        // mobile
+        m_uiAcidSpewTimer       = 5000;
+        m_uiParaliticBiteTimer  = urand(5000,10000);
+        m_uiSlimePoolTimer      = urand(12000,15000);
+
+        // stationary
+        m_uiAcidSpitTimer       = 3000;
+        m_uiParaliticSprayTimer = urand(7000,13000);
+        m_uiSweepTimer          = urand(12000,15000);
+
+        phase               = 0;    // not started yet
+        startPhase          = false;
+        phaseStartTimer     = 8000;
+        phaseChangeTimer    = 45000;
+        m_uiSubmergeTimer   = 60000;
+        m_uiMoveTimer       = 60000;
+
+        hasEnraged          = false;
+
+        m_uiDoorTimer       = 5000;
+        doorClosed          = false;
+
+        m_uiBerserkTimer    = 300000;  // 5 min
+        m_uiAchievTimer     = 0;
+
+        m_uiNextBossTimer       = 150000;  
+        m_bNextBoss             = true;
+
+        m_creature->SetRespawnDelay(DAY);
+    }
+
+    void JustReachedHome()
+    {
+        if (m_pInstance)
+        {
+            if ((Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC) && m_pInstance->GetData(TYPE_NORTHREND_BEASTS) != NOT_STARTED)
+            {
+                m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
+                m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
+            }
+            m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
+            m_pInstance->SetData(TYPE_STAGE,0);
+        }
+
+        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_WIPE, pTirion);
+
+        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        {
+            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        m_creature->ForcedDespawn();
+    }
+
+    void Aggro(Unit* pWho)
+    {
+        m_creature->SetInCombatWithZone();
+    }
+
+    bool IsThereAnyTwin()
+    {
+        if(GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
+            return true;
+ 
+        return false;
+    }
+
+    void SummonIcehowl()
+    {
+        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
+
+        if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+        {
+            pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+            pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+            pIcehowl->SetInCombatWithZone();
+            ((boss_icehowlAI*)pIcehowl->AI())->m_uiBerserkTimer = m_uiBerserkTimer;
+        }
+        if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+            m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        if(!IsThereAnyTwin())
+        {
+            if(m_bNextBoss)
+                SummonIcehowl();
+
+            if(m_uiAchievTimer <= 10000)
+            {
+                if(m_pInstance)
+                    m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWO_JORMUNGARS : ACHIEV_TWO_JORMUNGARS_H);
+            }
+        }
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if(!IsThereAnyTwin() && !hasEnraged)
+        {
+            m_creature->CastStop();
+            hasEnraged = true;
+            DoCast(m_creature, SPELL_ENRAGE);
+        }
+
+        if(hasEnraged)
+            m_uiAchievTimer += uiDiff;
+
+        // only for heroic
+        if(m_uiNextBossTimer < uiDiff && m_bNextBoss)
+        {
+            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+            {
+                SummonIcehowl();
+                m_bNextBoss = false;
+            }
+        }
+        else 
+            m_uiNextBossTimer -= uiDiff;
+
+        if (m_uiDoorTimer < uiDiff && !doorClosed)
+        {
+            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+            doorClosed = true;
+            m_uiDoorTimer = 30000;
+        }
+        else
+            m_uiDoorTimer -= uiDiff;
+
+        if (phaseStartTimer < uiDiff && !startPhase)
+        {
+            phase = 1;
+            m_creature->StopMoving();
+            m_creature->GetMotionMaster()->Clear();
+            m_creature->GetMotionMaster()->MoveIdle();
+            SetCombatMovement(false);
+            m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+            startPhase = true;
+            phaseStartTimer = 30000;
+        }
+        else
+            phaseStartTimer -= uiDiff;
+
+        // stationary
+        if(phase == 1)
+        {
+            if (phaseChangeTimer < uiDiff)
+            {
+                m_creature->RemoveAllAuras();
+                DoCast(m_creature, SPELL_SUBMERGE, false);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_uiMoveTimer       = 2000;
+                m_uiSubmergeTimer   = 4000;
+                phaseChangeTimer    = 45000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiMoveTimer < uiDiff)
+            {
+                float posZ = m_creature->GetPositionZ();
+                // init random location
+                float angle = (float) rand()*360/RAND_MAX + 1;
+                float posX = SpawnLoc[1].x + urand(0, 40)*cos(angle*(M_PI/180));
+                float posY = SpawnLoc[1].y + urand(0, 40)*sin(angle*(M_PI/180));
+                m_creature->GetMap()->CreatureRelocation(m_creature, posX, posY, posZ, m_creature->GetOrientation());
+                m_creature->SendMonsterMove(posX, posY, posZ, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                m_uiMoveTimer = 60000;
+            }
+            else m_uiMoveTimer -= uiDiff;
+
+            if (m_uiSubmergeTimer < uiDiff)
+            {
+                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->SetDisplayId(DISPLAY_ACID_MOBILE);
+                phase = 2;
+                m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                SetCombatMovement(true);
+                m_uiSubmergeTimer = 60000;
+            }
+            else
+                m_uiSubmergeTimer -= uiDiff;
+
+            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
+                return;
+
+            if (m_uiAcidSpitTimer < uiDiff)
+            {
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_ACID_SPIT_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_ACID_SPIT_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_ACID_SPIT_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_ACID_SPIT_25HC);
+                }
+                m_uiAcidSpitTimer = 3000;
+            }
+            else
+                m_uiAcidSpitTimer -= uiDiff;
+
+            if (m_uiParaliticSprayTimer < uiDiff)
+            {
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_PARALYTIC_SPRAY_25HC);
+                }
+                m_uiParaliticSprayTimer = urand(7000,13000);
+            }
+            else
+                m_uiParaliticSprayTimer -= uiDiff;
+
+            if (m_uiSweepTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(m_creature, SPELL_SWEEP_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(m_creature, SPELL_SWEEP_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(m_creature, SPELL_SWEEP_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(m_creature, SPELL_SWEEP_25HC);
+                m_uiSweepTimer = urand(10000,15000);
+            }
+            else
+                m_uiSweepTimer -= uiDiff;
+        }
+
+        // mobile
+        if(phase == 2)
+        {
+            if (phaseChangeTimer < uiDiff)
+            {
+                m_creature->RemoveAllAuras();
+                DoCast(m_creature, SPELL_SUBMERGE, false);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                SetCombatMovement(false);
+                m_uiMoveTimer       = 2000;
+                m_uiSubmergeTimer   = 4000;
+                phaseChangeTimer    = 45000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiMoveTimer < uiDiff)
+            {
+                float posZ = m_creature->GetPositionZ();
+                // init random location
+                float angle = (float) rand()*360/RAND_MAX + 1;
+                float posX = SpawnLoc[1].x + urand(0, 40)*cos(angle*(M_PI/180));
+                float posY = SpawnLoc[1].y + urand(0, 40)*sin(angle*(M_PI/180));
+                m_creature->GetMap()->CreatureRelocation(m_creature, posX, posY, posZ, m_creature->GetOrientation());
+                m_creature->SendMonsterMove(posX, posY, posZ, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                m_uiMoveTimer = 60000;
+            }
+            else m_uiMoveTimer -= uiDiff;
+
+            if (m_uiSubmergeTimer < uiDiff)
+            {
+                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->SetDisplayId(DISPLAY_ACID_FIXED);
+                phase = 1;
+                m_creature->StopMoving();
+                m_creature->GetMotionMaster()->Clear();
+                m_creature->GetMotionMaster()->MoveIdle();
+                SetCombatMovement(false);
+                m_uiSubmergeTimer = 60000;
+            }
+            else
+                m_uiSubmergeTimer -= uiDiff;
+
+            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
+                return;
+
+            if (m_uiParaliticBiteTimer < uiDiff)
+            {
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_PARALYTIC_BITE_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_PARALYTIC_BITE_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_PARALYTIC_BITE_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_PARALYTIC_BITE_25HC);
+                }
+                m_uiParaliticBiteTimer = urand(5000,7000);
+            }
+            else
+                m_uiParaliticBiteTimer -= uiDiff;
+
+            if (m_uiSlimePoolTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_10);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_25);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_10HC);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 45000);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_25HC);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+                m_uiSlimePoolTimer = urand(10000,15000);
+            }
+            else
+                m_uiSlimePoolTimer -= uiDiff;
+
+            if (m_uiAcidSpewTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(m_creature, SPELL_ACID_SPEW_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(m_creature, SPELL_ACID_SPEW_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(m_creature, SPELL_ACID_SPEW_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(m_creature, SPELL_ACID_SPEW_25HC);
+                m_uiAcidSpewTimer = 3000+rand()%2000;
+            }
+            else
+                m_uiAcidSpewTimer -= uiDiff;
+        }
+
+        // berserk
+        if (m_uiBerserkTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_BERSERK);
+            m_uiBerserkTimer = 60000;
+        }
+        else
+            m_uiBerserkTimer -= uiDiff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_boss_acidmaw(Creature* pCreature)
+{
+    return new boss_acidmawAI(pCreature);
+}
+
+struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
+{
+    boss_dreadscaleAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+    uint32 Difficulty;
+    bool m_bIsRegularMode;
+
+    // mobile
+    uint32 m_uiBurningBiteTimer;
+    uint32 m_uiMoltenSpewTimer;
+    uint32 m_uiSlimePoolTimer;
+
+    // stationary
+    uint32 m_uiFireSpitTimer;
+    uint32 m_uiBurningSprayTimer;
+    uint32 m_uiSweepTimer;
+
+    uint8 phase;
+    bool startPhase;
+    uint32 phaseStartTimer;
+    uint32 phaseChangeTimer;
+    uint32 m_uiSubmergeTimer;
+    uint32 m_uiMoveTimer;
+
+    bool hasEnraged;
+
+    uint32 m_uiDoorTimer;
+    bool doorClosed;
+
+    uint32 m_uiBerserkTimer;
+    uint32 m_uiAchievTimer;
+
+    uint32 m_uiNextBossTimer;
+    bool m_bNextBoss;
+
+    void Reset() 
+    {
+        // mobile
+        m_uiBurningBiteTimer    = urand(3000,5000);
+        m_uiMoltenSpewTimer     = urand(7000,13000);
+        m_uiSlimePoolTimer      = urand(13000,15000);
+
+        // stationary
+        m_uiFireSpitTimer       = 3000;
+        m_uiBurningSprayTimer   = urand(5000,7000);
+        m_uiSweepTimer          = urand(13000,15000);
+
+        phase               = 0;    // not started yet
+        startPhase          = false;
+        phaseStartTimer     = 8000;
+        phaseChangeTimer    = 45000;
+        m_uiSubmergeTimer   = 60000;
+        m_uiMoveTimer       = 60000;
+
+        hasEnraged          = false;
+
+        m_uiDoorTimer       = 5000;
+        doorClosed          = false;
+
+        m_uiBerserkTimer    = 300000;  // 5 min
+        m_uiAchievTimer     = 0;
+
+        m_uiNextBossTimer       = 150000;  
+        m_bNextBoss             = true;
+
+        m_creature->SetRespawnDelay(DAY);
+    }
+
+    void JustReachedHome()
+    {
+        if (m_pInstance)
+        {
+            if(!IsThereAnyTwin())
+            {
+                if ((Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC) && m_pInstance->GetData(TYPE_NORTHREND_BEASTS) != NOT_STARTED)
+                {
+                    m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
+                    m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
+                }
+            }
+            m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
+            m_pInstance->SetData(TYPE_STAGE,0);
+        }
+
+        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_WIPE, pTirion);
+
+        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        {
+            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        m_creature->ForcedDespawn();
+    }
+
+    void Aggro(Unit* pWho)
+    {
+        m_creature->SetInCombatWithZone();
+    }
+
+    bool IsThereAnyTwin()
+    {
+        if(GetClosestCreatureWithEntry(m_creature, NPC_ACIDMAW, 180.0f))
+            return true;
+ 
+        return false;
+    }
+
+    void SummonIcehowl()
+    {
+        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
+
+        if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+        {
+            pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
+            pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+            pIcehowl->SetInCombatWithZone();
+            ((boss_icehowlAI*)pIcehowl->AI())->m_uiBerserkTimer = m_uiBerserkTimer;
+        }
+        if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+            m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        if(!IsThereAnyTwin())
+        {
+            if(m_bNextBoss)
+                SummonIcehowl();
+
+            if(m_uiAchievTimer <= 10000)
+            {
+                if(m_pInstance)
+                    m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWO_JORMUNGARS : ACHIEV_TWO_JORMUNGARS_H);
+            }
+        }
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if(!IsThereAnyTwin() && !hasEnraged)
+        {
+            m_creature->CastStop();
+            hasEnraged = true;
+            DoCast(m_creature, SPELL_ENRAGE);
+        }
+
+        if(hasEnraged)
+            m_uiAchievTimer += uiDiff;
+
+        // only for heroic
+        if(m_uiNextBossTimer < uiDiff && m_bNextBoss && !IsThereAnyTwin())
+        {
+            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+            {
+                SummonIcehowl();
+                m_bNextBoss = false;
+            }
+        }
+        else 
+            m_uiNextBossTimer -= uiDiff;
+
+        if (phaseStartTimer < uiDiff && !startPhase)
+        {
+            phase = 2;
+            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+            SetCombatMovement(true);
+            startPhase = true;
+            phaseStartTimer = 30000;
+        }
+        else
+            phaseStartTimer -= uiDiff;
+
+        // stationary
+        if(phase == 1)
+        {
+            if (phaseChangeTimer < uiDiff)
+            {
+                m_creature->RemoveAllAuras();
+                DoCast(m_creature, SPELL_SUBMERGE, false);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_uiSubmergeTimer   = 4000;
+                m_uiMoveTimer       = 2000;
+                phaseChangeTimer    = 45000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiMoveTimer < uiDiff)
+            {
+                float posZ = m_creature->GetPositionZ();
+                // init random location
+                float angle = (float) rand()*360/RAND_MAX + 1;
+                float posX = SpawnLoc[1].x + urand(0, 40)*cos(angle*(M_PI/180));
+                float posY = SpawnLoc[1].y + urand(0, 40)*sin(angle*(M_PI/180));
+                m_creature->GetMap()->CreatureRelocation(m_creature, posX, posY, posZ, m_creature->GetOrientation());
+                m_creature->SendMonsterMove(posX, posY, posZ, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                m_uiMoveTimer = 60000;
+            }
+            else m_uiMoveTimer -= uiDiff;
+
+            if (m_uiSubmergeTimer < uiDiff)
+            {
+                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->SetDisplayId(DISPLAY_DREAD_MOBILE);
+                phase = 2;
+                m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                SetCombatMovement(true);
+                m_uiSubmergeTimer = 60000;
+            }
+            else
+                m_uiSubmergeTimer -= uiDiff;
+
+            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
+                return;
+
+            if (m_uiFireSpitTimer < uiDiff)
+            {
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_FIRE_SPIT_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_FIRE_SPIT_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_FIRE_SPIT_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_FIRE_SPIT_25HC);
+                }
+                m_uiFireSpitTimer = urand(3000, 5000);
+            }
+            else
+                m_uiFireSpitTimer -= uiDiff;
+
+            if (m_uiBurningSprayTimer < uiDiff)
+            {
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_BURNING_SPRAY_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_BURNING_SPRAY_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_BURNING_SPRAY_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_BURNING_SPRAY_25HC);
+                }
+                m_uiBurningSprayTimer = urand(7000,13000);
+            }
+            else
+                m_uiBurningSprayTimer -= uiDiff;
+
+            if (m_uiSweepTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(m_creature, SPELL_SWEEP_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(m_creature, SPELL_SWEEP_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(m_creature, SPELL_SWEEP_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(m_creature, SPELL_SWEEP_25HC);
+                m_uiSweepTimer = urand(10000,15000);
+            }
+            else
+                m_uiSweepTimer -= uiDiff;
+        }
+
+        // mobile
+        if(phase == 2)
+        {
+            if (phaseChangeTimer < uiDiff)
+            {
+                m_creature->RemoveAllAuras();
+                DoCast(m_creature, SPELL_SUBMERGE, false);
+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                SetCombatMovement(false);
+                m_uiSubmergeTimer   = 4000;
+                m_uiMoveTimer       = 2000;
+                phaseChangeTimer    = 45000;
+            }
+            else
+                phaseChangeTimer -= uiDiff;
+
+            if (m_uiMoveTimer < uiDiff)
+            {
+                float posZ = m_creature->GetPositionZ();
+                // init random location
+                float angle = (float) rand()*360/RAND_MAX + 1;
+                float posX = SpawnLoc[1].x + urand(0, 40)*cos(angle*(M_PI/180));
+                float posY = SpawnLoc[1].y + urand(0, 40)*sin(angle*(M_PI/180));
+                m_creature->GetMap()->CreatureRelocation(m_creature, posX, posY, posZ, m_creature->GetOrientation());
+                m_creature->SendMonsterMove(posX, posY, posZ, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+                m_uiMoveTimer = 60000;
+            }
+            else m_uiMoveTimer -= uiDiff;
+
+            if (m_uiSubmergeTimer < uiDiff)
+            {
+                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+                m_creature->SetDisplayId(DISPLAY_DREAD_FIXED);
+                phase = 1;
+                m_creature->StopMoving();
+                m_creature->GetMotionMaster()->Clear();
+                m_creature->GetMotionMaster()->MoveIdle();
+                SetCombatMovement(false);
+                m_uiSubmergeTimer = 60000;
+            }
+            else
+                m_uiSubmergeTimer -= uiDiff;
+
+            if (m_creature->HasAura(SPELL_SUBMERGE, EFFECT_INDEX_0))
+                return;
+
+            if (m_uiBurningBiteTimer < uiDiff)
+            {
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        DoCast(pTarget, SPELL_BURNING_BITE_10);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        DoCast(pTarget, SPELL_BURNING_BITE_25);
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                        DoCast(pTarget, SPELL_BURNING_BITE_10HC);
+                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                        DoCast(pTarget, SPELL_BURNING_BITE_25HC);
+                }
+                m_uiBurningBiteTimer = urand(5000,7000);
+            }
+            else
+                m_uiBurningBiteTimer -= uiDiff;
+
+            if (m_uiSlimePoolTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_10);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_25);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_10HC);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 45000);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    //DoCast(m_creature, SPELL_SLIME_POOL_25HC);
+                    m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+                m_uiSlimePoolTimer = urand(10000,15000);
+            }
+            else
+                m_uiSlimePoolTimer -= uiDiff;
+
+            if (m_uiMoltenSpewTimer < uiDiff)
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(m_creature, SPELL_MOLTEN_SPEW_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(m_creature, SPELL_MOLTEN_SPEW_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(m_creature, SPELL_MOLTEN_SPEW_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(m_creature, SPELL_MOLTEN_SPEW_25HC);
+                m_uiMoltenSpewTimer = urand(7000,13000);
+            }
+            else
+                m_uiMoltenSpewTimer -= uiDiff;
+        }
+
+        // berserk
+        if (m_uiBerserkTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_BERSERK);
+            m_uiBerserkTimer = 60000;
+        }
+        else
+            m_uiBerserkTimer -= uiDiff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_boss_dreadscale(Creature* pCreature)
+{
+    return new boss_dreadscaleAI(pCreature);
+}
+
+struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
+{
+    boss_gormokAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Difficulty = pCreature->GetMap()->GetDifficulty();
+        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+            pCreature->ApplySpellImmune(0, IMMUNITY_EFFECT, IMMUNE_TO_MOVEMENT_IMPAIRMENT_AND_LOSS_CONTROL_MASK, true); // check this!!!
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+    uint32 Difficulty;
+
+    uint8 m_uiMaxSnobold;
+    uint8 m_uiSnoboldNo;
+    uint8 m_uiHealthPoint;
+
+    uint32 m_uiStompTimer;
+    uint32 m_uiImpaleTimer;
+
+    uint32 m_uiDoorTimer;
+    bool doorClosed;
+
+    uint32 TeamInInstance;
+
+    uint32 m_uiBerserkTimer;
+
+    uint32 m_uiNextBossTimer;
+    bool m_bNextBoss;
+    uint32 m_uiIceholwTimer;
+
+    void Reset() 
+    {
+        m_uiStompTimer      = urand(20000, 25000);
+        m_uiImpaleTimer     = 10000;
+        m_uiSnoboldNo           = 1;
+
+        m_uiDoorTimer       = 8000;
+        doorClosed          = false;
+
+        TeamInInstance = GetFaction();
+
+        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+            m_uiBerserkTimer    = 900000;   // 15 min
+        else
+            m_uiBerserkTimer    = 522000;   // 8.7 min
+
+        m_uiNextBossTimer       = 150000;  
+        m_uiIceholwTimer        = 340000;
+        m_bNextBoss             = true;
+
+        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+        {
+            m_uiMaxSnobold  = 5;
+            m_uiHealthPoint = 20;
+        }
+        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+        {
+            m_uiMaxSnobold  = 6;
+            m_uiHealthPoint = 17;
+        }
+
+        m_creature->SetRespawnDelay(DAY);
+    }
+
+    void JustReachedHome()
+    {
+        if (m_pInstance)
+        {
+            if ((Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC) && m_pInstance->GetData(TYPE_NORTHREND_BEASTS) != NOT_STARTED)
+            {
+                m_pInstance->SetData(TYPE_COUNTER, m_pInstance->GetData(TYPE_COUNTER) - 1);
+                m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_COUNTER));
+            }
+            m_pInstance->SetData(TYPE_NORTHREND_BEASTS, NOT_STARTED);
+            m_pInstance->SetData(TYPE_STAGE,0);
+        }
+
+        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_WIPE, pTirion);
+
+        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        {
+            pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            pBarret->SetVisibility(VISIBILITY_ON);
+        }
+
+        m_creature->ForcedDespawn();
+    }
+
+    void Aggro(Unit* pWho)
+    {
+        m_creature->SetInCombatWithZone();
+    }
+
+    uint32 GetFaction()
+    {
+        uint32 faction = 0;
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (!PlayerList.isEmpty())
+            {
+                if (Player* pPlayer = PlayerList.begin()->getSource())
+                    faction = pPlayer->GetTeam();
+            }
+        }
+        return faction;
+    }
+
+    void SummonJormungars()
+    {
+
+        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            DoScriptText(SAY_SUMMON_JORMUNGARS, Tirion);
+
+        if (Creature* pDreadscale = m_creature->SummonCreature(NPC_DREADSCALE, SpawnLoc[28].x + 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
+        {
+            pDreadscale->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x + 10, SpawnLoc[1].y, SpawnLoc[1].z);
+            pDreadscale->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+            pDreadscale->SetInCombatWithZone();
+            ((boss_dreadscaleAI*)pDreadscale->AI())->m_uiBerserkTimer = m_uiBerserkTimer;
+            ((boss_dreadscaleAI*)pDreadscale->AI())->m_uiNextBossTimer = m_uiIceholwTimer;
+        }
+        if (Creature* pAcidmaw = m_creature->SummonCreature(NPC_ACIDMAW,  552.773f, 171.971f, 394.671f, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
+        {
+            //pAcidmaw->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 10, SpawnLoc[1].y, SpawnLoc[1].z);
+            pAcidmaw->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+            pAcidmaw->SetInCombatWithZone();
+            ((boss_acidmawAI*)pAcidmaw->AI())->m_uiBerserkTimer = m_uiBerserkTimer;
+            ((boss_acidmawAI*)pAcidmaw->AI())->m_uiNextBossTimer = m_uiIceholwTimer;
+        }
+        
+        // open gate
+        if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+            m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        if(m_bNextBoss)
+            SummonJormungars();
+    }
+
+    void DamageTaken(Unit *pDoneBy,uint32 &uiDamage)
+    {
+        if (m_uiSnoboldNo > m_uiMaxSnobold)
+            return;
+
+        if (m_creature->GetHealthPercent() <= (100-(m_uiHealthPoint*m_uiSnoboldNo)))
+        {
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            {
+                DoCast(pTarget, SPELL_SNOBOLLED, true);
+                SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_RISING_ANGER);
+                if(m_creature->AddAura(new RisingAngerAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
+                    m_creature->GetAura(SPELL_RISING_ANGER, EFFECT_INDEX_0)->SetStackAmount(m_uiSnoboldNo);
+                if(Creature *pSnobold = m_creature->SummonCreature(NPC_SNOBOLD_VASSAL, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                    pSnobold->AddThreat(pTarget,0.0f);
+            }
+            m_uiSnoboldNo += 1;
+        }
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        //Return since we have no target
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (m_uiDoorTimer < uiDiff && !doorClosed)
+        {
+            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+            if(TeamInInstance == ALLIANCE)
+            {
+                if(Creature *Varian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
+                    DoScriptText(SAY_VARIAN_BEASTS, Varian);
+            }
+            else if(TeamInInstance == HORDE)
+            {
+                if(Creature *Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                    DoScriptText(SAY_GARROSH_BEASTS, Garrosh);
+            }
+            doorClosed = true;
+            m_uiDoorTimer = 30000;
+        }
+        else
+            m_uiDoorTimer -= uiDiff;
+
+        // only for heroic
+        if(m_uiNextBossTimer < uiDiff && m_bNextBoss)
+        {
+            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+            {
+                SummonJormungars();
+                m_bNextBoss = false;
+            }
+        }
+        else 
+            m_uiNextBossTimer -= uiDiff;
+
+        // iceholwTimer for heroic
+        m_uiIceholwTimer -= uiDiff;
+
+        // spells
+        if (m_uiStompTimer < uiDiff)
+        {
+            if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                DoCast(m_creature, SPELL_STOMP_10);
+            if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                DoCast(m_creature, SPELL_STOMP_25);
+            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                DoCast(m_creature, SPELL_STOMP_10HC);
+            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                DoCast(m_creature, SPELL_STOMP_25HC);
+            m_uiStompTimer = urand(20000, 25000);
+        }
+        else
+            m_uiStompTimer -= uiDiff;
+
+        if (m_uiImpaleTimer < uiDiff)
+        {
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    DoCast(pTarget, SPELL_IMPALE_10);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    DoCast(pTarget, SPELL_IMPALE_25);
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+                    DoCast(pTarget, SPELL_IMPALE_10HC);
+                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+                    DoCast(pTarget, SPELL_IMPALE_25HC);
+            }
+            m_uiImpaleTimer = 10000;
+        }
+        else
+            m_uiImpaleTimer -= uiDiff;
+
+        // berserk
+        if (m_uiBerserkTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_BERSERK);
+            m_uiBerserkTimer = 60000;
+        }
+        else
+            m_uiBerserkTimer -= uiDiff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_boss_gormok(Creature* pCreature)
+{
+    return new boss_gormokAI(pCreature);
+}
+
 // snobold
 struct MANGOS_DLL_DECL mob_snoboldAI : public ScriptedAI
 {
@@ -1542,7 +1649,7 @@ struct MANGOS_DLL_DECL mob_snoboldAI : public ScriptedAI
     {
         m_uiBatterTimer     = 3000;
         m_uiHeadcrackTimer  = 5000 + rand()%2000;
-        FireBombTimer = 10000 + rand()%8000;
+        FireBombTimer = 10000 + rand()%5000;
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -1569,18 +1676,8 @@ struct MANGOS_DLL_DECL mob_snoboldAI : public ScriptedAI
         {
             DoCast(m_creature, SPELL_FIREBOMB);
             if(Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-            {
-                if(Creature *pBomb = m_creature->SummonCreature(NPC_FIREBOMB, 
-                    target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, 
-                    TEMPSUMMON_TIMED_DESPAWN, 30000))
-                {
-                    pBomb->CastSpell(pBomb, SPELL_FIREBOMB_DOT, false);
-                    pBomb->addUnitState(UNIT_STAT_ROOT);
-                    pBomb->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                    pBomb->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                }
-            }
-            FireBombTimer = 10000 + rand()%8000;
+                m_creature->SummonCreature(NPC_FIREBOMB, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
+            FireBombTimer = 10000;
         }
         else FireBombTimer -= uiDiff;
 
@@ -1598,50 +1695,70 @@ struct MANGOS_DLL_DECL mob_slime_poolAI : public ScriptedAI
 {
     mob_slime_poolAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
-        Reset();
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        Difficulty = pCreature->GetMap()->GetDifficulty();
+        pCreature->setFaction(14);
+        pCreature->SetDisplayId(15900);     // not correct but at least is visible
         SetCombatMovement(false);
+        Reset();
     }
-    ScriptedInstance *m_pInstance;
 
-    uint32 spellTimer;
+    uint32 Difficulty;
+    float m_fSize;
+    uint32 m_uiSizeTimer;
 
     void Reset()
     {
-        spellTimer = 1000;
+        DoCast(m_creature, SPELL_SLIME_POOL_TRIG);
+        m_fSize = 1.0f;
+        m_uiSizeTimer   = 5000;
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        if (spellTimer < uiDiff)
+        if(m_uiSizeTimer < uiDiff)
         {
-            Map *map = m_creature->GetMap();
-            if (map->IsDungeon())
-            {
-                Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                if (PlayerList.isEmpty())
-                    return;
-
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
-                        i->getSource()->DealDamage(i->getSource(), 2000, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NATURE, NULL, false);
-                }
-            } 
-            spellTimer = 1000;
-        }else spellTimer -= uiDiff;
+            m_fSize += 0.2f;
+            m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, m_fSize);
+            m_uiSizeTimer = 5000;
+        }
+        else
+            m_uiSizeTimer -= uiDiff;
     }
 };
 
 CreatureAI* GetAI_mob_slime_pool(Creature* pCreature)
 {
     return new mob_slime_poolAI (pCreature);
+}
+
+// fire bomb
+struct MANGOS_DLL_DECL mob_toc_fire_bombAI : public ScriptedAI
+{
+    mob_toc_fire_bombAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetDisplayId(11686);     // make invisible
+        pCreature->setFaction(14);
+        SetCombatMovement(false);
+        Reset();
+    }
+
+    void Reset()
+    {
+        DoCast(m_creature, SPELL_FIREBOMB_DOT);
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+    }
+};
+
+CreatureAI* GetAI_mob_toc_fire_bomb(Creature* pCreature)
+{
+    return new mob_toc_fire_bombAI (pCreature);
 }
 
 void AddSC_northrend_beasts()
@@ -1656,6 +1773,11 @@ void AddSC_northrend_beasts()
     newscript = new Script;
     newscript->Name = "mob_snobold_vassal";
     newscript->GetAI = &GetAI_mob_snobold;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_toc_fire_bomb";
+    newscript->GetAI = &GetAI_mob_toc_fire_bomb;
     newscript->RegisterSelf();
 
     newscript = new Script;

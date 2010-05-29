@@ -203,7 +203,7 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 
         TeamInInstance = GetFaction();
 
-        m_uiBerserkTimer    = 900000;  // 15 min
+        m_uiBerserkTimer    = 360000;  // 6 min
         if(m_pInstance)
             m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
 
@@ -599,21 +599,15 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         m_uiSpecialSpellTimer  = urand(55000, 60000); 
         m_uiTwinPactTimer      = 900000;
         if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-            m_uiOrbSummonTimer = urand(30000, 35000);
+            m_uiOrbSummonTimer  = urand(30000, 35000);
         else
-            m_uiOrbSummonTimer = urand(10000, 15000);
+            m_uiOrbSummonTimer  = urand(10000, 15000);
 
         m_bHasShield = false;
-        m_uiPactCastTimer = 60000;
-
-        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-            m_uiMaxOrbs = 10;
-        else
-            m_uiMaxOrbs = 25;
-        m_uiCastTimeOut        = 900000;
-
-        m_uiBerserkTimer    = 900000;  // 15 min
-        m_uiEncounterTimer  = 0;
+        m_uiPactCastTimer       = 60000;
+        m_uiCastTimeOut         = 900000;
+        m_uiBerserkTimer        = 360000;  // 6 min
+        m_uiEncounterTimer      = 0;
 
         if(m_pInstance)
             m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
@@ -807,6 +801,11 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
 
     void SummonOrbs()
     {
+        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+            m_uiMaxOrbs = urand(15, 20);
+        else
+            m_uiMaxOrbs = urand(40, 50);
+
         for(uint8 i = 0; i < m_uiMaxOrbs; i++)
         {
             // init random orb
@@ -1147,8 +1146,9 @@ struct MANGOS_DLL_DECL mob_valkyr_orbAI : public ScriptedAI
         destX=SpawnLoc[1].x+ROOM_RADIUS*cos(angle*(M_PI/180));
         destY=SpawnLoc[1].y+ROOM_RADIUS*sin(angle*(M_PI/180));
 
-        m_creature->SetSpeedRate(MOVE_RUN, 2.0f);
-        m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+        //m_creature->SetSpeedRate(MOVE_RUN, 2.0f);
+        //m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+        m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
         m_creature->GetMotionMaster()->MovePoint(0, destX, destY, LOC_Z);
     }
 
