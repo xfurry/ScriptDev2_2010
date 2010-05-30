@@ -1235,8 +1235,12 @@ struct MANGOS_DLL_DECL npc_crusade_persuadedAI : public ScriptedAI
                         uiCrusade_faction = 0;
                         uiSpeech_counter++;
                         AttackStart(pPlayer);
-                        if(((Player*)pPlayer)->GetQuestStatus(12720) == QUEST_STATUS_INCOMPLETE)
-                            ((Player*)pPlayer)->AreaExploredOrEventHappens(12720);
+                        if(Unit* pPlayer = Unit::GetUnit(*m_creature, uiPlayerGUID))
+                        {
+                            if(((Player*)pPlayer)->GetQuestStatus(12720) == QUEST_STATUS_INCOMPLETE)
+                                ((Player*)pPlayer)->AreaExploredOrEventHappens(12720);
+                                //((Player*)pPlayer)->CompleteQuest(12720);
+                        }
                         break;
                 }
             }else uiSpeech_timer -= diff;
