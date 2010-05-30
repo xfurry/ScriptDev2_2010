@@ -1193,7 +1193,7 @@ bool GossipHello_npc_chromi_middle(Player* pPlayer, Creature* pCreature)
     //if (pPlayer->GetQuestStatus(QUEST_ROYAL_ESCORT) == QUEST_STATUS_INCOMPLETE) return true;
 
     ScriptedInstance* pInstance = ((ScriptedInstance*)pCreature->GetInstanceData()); 
-    if(pInstance && pInstance->GetData(TYPE_INTRO) == NOT_STARTED && pInstance->GetData(TYPE_QUEST) == DONE) 
+    if(pInstance && pInstance->GetData(TYPE_INTRO) == NOT_STARTED /*&& pInstance->GetData(TYPE_QUEST) == DONE*/) 
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_CHROMI1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
     pPlayer->SEND_GOSSIP_MENU(GOSSIP_TEXTID_CHROMI1, pCreature->GetGUID()); 
