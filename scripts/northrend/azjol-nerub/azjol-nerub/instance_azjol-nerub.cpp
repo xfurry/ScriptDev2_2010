@@ -36,6 +36,13 @@ struct MANGOS_DLL_DECL instance_azjol_nerub : public ScriptedInstance
     uint64 m_uiDoor_Anubarak_2GUID;
     uint64 m_uiDoor_Anubarak_3GUID;
 
+    uint64 m_uiKrikthir;
+    uint64 m_uiHadronox;
+    uint64 m_uiAnubarak;
+    uint64 m_uiWatcherGashra;
+    uint64 m_uiWatcherSilthik;
+    uint64 m_uiWatcherNarjil;
+
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
@@ -44,6 +51,41 @@ struct MANGOS_DLL_DECL instance_azjol_nerub : public ScriptedInstance
         m_uiDoor_Anubarak_1GUID = 0;
         m_uiDoor_Anubarak_2GUID = 0;
         m_uiDoor_Anubarak_3GUID = 0;
+
+        m_uiKrikthir = 0;
+        m_uiHadronox = 0;
+        m_uiAnubarak = 0;
+        m_uiWatcherGashra = 0;
+        m_uiWatcherSilthik = 0;
+        m_uiWatcherNarjil = 0;
+    }
+
+    void OnCreatureCreate(Creature* pCreature)
+    {
+        switch(pCreature->GetEntry())
+        {
+            case 28684:    m_uiKrikthir = pCreature->GetGUID();        break;
+            case 28921:    m_uiHadronox = pCreature->GetGUID();        break;
+            case 29120:    m_uiAnubarak = pCreature->GetGUID();        break;
+            case 28730:    m_uiWatcherGashra = pCreature->GetGUID();   break;
+            case 28731:    m_uiWatcherSilthik = pCreature->GetGUID();  break;
+            case 28729:    m_uiWatcherNarjil = pCreature->GetGUID();   break;
+        }
+    }
+
+    uint64 GetData64(uint32 identifier)
+    {
+        switch(identifier)
+        {
+            case DATA_KRIKTHIR_THE_GATEWATCHER:     return m_uiKrikthir;
+            case DATA_HADRONOX:                     return m_uiHadronox;
+            case DATA_ANUBARAK:                     return m_uiAnubarak;
+            case DATA_WATCHER_GASHRA:               return m_uiWatcherGashra;
+            case DATA_WATCHER_SILTHIK:              return m_uiWatcherSilthik;
+            case DATA_WATCHER_NARJIL:               return m_uiWatcherNarjil;
+        }
+
+        return 0;
     }
 
     void OnObjectCreate(GameObject* pGo)
