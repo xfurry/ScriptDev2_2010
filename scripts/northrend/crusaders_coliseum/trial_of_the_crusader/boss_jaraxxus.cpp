@@ -45,31 +45,31 @@ enum
     SAY_TIRION_JARU_OUTRO4      = -1605024,
 
     SPELL_FEL_FIREBALL_10       = 66532,
-    SPELL_FEL_FIREBALL_10HC     = 66964,
-    SPELL_FEL_FIREBALL_25       = 66963,
+    SPELL_FEL_FIREBALL_10HC     = 66963,
+    SPELL_FEL_FIREBALL_25       = 66964,
     SPELL_FEL_FIREBALL_25HC     = 66965,
     SPELL_FEL_LIGHTNING_10      = 66528,
-    SPELL_FEL_LIGHTNING_25      = 67029,
-    SPELL_FEL_LIGHTNING_10HC    = 67030,
+    SPELL_FEL_LIGHTNING_25      = 67030,
+    SPELL_FEL_LIGHTNING_10HC    = 67029,
     SPELL_FEL_LIGHTNING_25HC    = 67031,
     SPELL_INCINERATE_FLESH_10   = 66237,
-    SPELL_INCINERATE_FLESH_10HC = 67050,
-    SPELL_INCINERATE_FLESH_25   = 67049,
+    SPELL_INCINERATE_FLESH_10HC = 67049,
+    SPELL_INCINERATE_FLESH_25   = 67050,
     SPELL_INCINERATE_FLESH_25HC = 67051,
     SPELL_BURNING_INFERNO_10    = 66242,
     SPELL_BURNING_INFERNO_25    = 67060,  
     SPELL_LEGION_FLAME          = 68124,
     SPELL_LEGION_FLAME_JAR_10   = 66199,
-    SPELL_LEGION_FLAME_JAR_25   = 68126,
-    SPELL_LEGION_FLAME_JAR_10HC = 68127,
+    SPELL_LEGION_FLAME_JAR_25   = 68127,
+    SPELL_LEGION_FLAME_JAR_10HC = 68126,
     SPELL_LEGION_FLAME_JAR_25HC = 68128,
     SPELL_LEGION_FLAME_SUMMON   = 66200,
     NPC_LEGIONS_FLAME           = 34784,
     SPELL_LEGION_FLAME_TRIG     = 66201,
 
     SPELL_LEGION_FLAME_10       = 66877,
-    SPELL_LEGION_FLAME_25       = 67070,
-    SPELL_LEGION_FLAME_10HC     = 67071,
+    SPELL_LEGION_FLAME_25       = 67071,
+    SPELL_LEGION_FLAME_10HC     = 67070,
     SPELL_LEGION_FLAME_25HC     = 67072,
 
     SPELL_INFERNAL_ERUPTION     = 66258,
@@ -78,15 +78,11 @@ enum
     SPELL_INFERNAL_ERUPTION_VOL = 66255,
     SPELL_FEL_INFERNO           = 67047,
     SPELL_FEL_STEAK_10          = 66519,
-    SPELL_FEL_STEAK_25          = 67042,
-    SPELL_FEL_STEAK_10HC        = 67043,
+    SPELL_FEL_STEAK_25          = 67043,
+    SPELL_FEL_STEAK_10HC        = 67042,
     SPELL_FEL_STEAK_25HC        = 67044,
 
-    SPELL_NETHER_PORTAL_10      = 66264,    // cast by nether portal
-    SPELL_NETHER_PORTAL_25      = 68404,
-    SPELL_NETHER_PORTAL_10HC    = 68405,
-    SPELL_NETHER_PORTAL_25HC    = 68406,
-    SPELL_NETHER_PORTAL_TRIG    = 66263,
+    SPELL_NETHER_PORTAL_TRIG    = 66263,  // cast by nether portal
     NPC_NETHER_PORTAL           = 34825,
     NPC_MISTRESS_OF_PAIN        = 34826,
     SPELL_SHIVAN_SLASH_10       = 66378,
@@ -246,7 +242,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 
     void Reset() 
     {
-        m_uiFelFireballTimer        = urand(15000, 25000);
+        m_uiFelFireballTimer        = urand(20000, 25000);
         m_uiFelLightningTimer       = urand(5000, 8000);
         m_uiIncinerateFleshTimer    = urand(15000, 20000);
         m_uiLegionFlameTimer        = 30000;
@@ -437,7 +433,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
             if(m_bVolcanoSummon)
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    m_creature->SummonCreature(NPC_NETHER_PORTAL, posX, posY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
+                    m_creature->SummonCreature(NPC_NETHER_PORTAL, posX, posY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 9000);
                 else
                     m_creature->SummonCreature(NPC_NETHER_PORTAL, posX, posY, m_creature->GetPositionZ(), 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000);
                 DoScriptText(EMOTE_PORTAL, m_creature);
@@ -518,41 +514,10 @@ struct MANGOS_DLL_DECL mob_legion_flameAI : public ScriptedAI
     void Reset()
     {
         DoCast(m_creature, SPELL_LEGION_FLAME_TRIG);
-        /*if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-            DoCast(m_creature, SPELL_LEGION_FLAME_10);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-            DoCast(m_creature, SPELL_LEGION_FLAME_25);
-        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-            DoCast(m_creature, SPELL_LEGION_FLAME_10HC);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-            DoCast(m_creature, SPELL_LEGION_FLAME_25HC);
-
-        m_uiSpellTimer  = 1000;
-        m_uiDieTimer    = 60000;*/
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        /*if(m_uiSpellTimer < uiDiff)
-        {
-            if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                DoCast(m_creature, SPELL_LEGION_FLAME_10);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                DoCast(m_creature, SPELL_LEGION_FLAME_25);
-            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                DoCast(m_creature, SPELL_LEGION_FLAME_10HC);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                DoCast(m_creature, SPELL_LEGION_FLAME_25HC);
-            m_uiSpellTimer = 1000;
-        }
-        else
-            m_uiSpellTimer -= uiDiff;
-
-        if (m_uiDieTimer < uiDiff)
-        {
-            m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-            m_uiDieTimer = 10000;
-        }else m_uiDieTimer -= uiDiff;*/
     }
 };
 
@@ -575,13 +540,11 @@ struct MANGOS_DLL_DECL mob_infernal_volcanoAI : public ScriptedAI
     }
     ScriptedInstance *m_pInstance;
     uint8 Difficulty;
-    uint32 spellTimer;
     uint32 dieTimer;
     bool m_bDespawn;
 
     void Reset()
     {
-        spellTimer = 5000;
         dieTimer = urand(16000, 22000);
         // don't despawn on heroic
         if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
@@ -607,16 +570,6 @@ struct MANGOS_DLL_DECL mob_infernal_volcanoAI : public ScriptedAI
     {
         if (m_pInstance && m_pInstance->GetData(TYPE_JARAXXUS) != IN_PROGRESS) 
             m_creature->ForcedDespawn();
-
-        if (spellTimer < uiDiff)
-        {
-            // choose pos
-            /*float angle = (float) rand()*360/RAND_MAX + 1;
-            float posX = m_creature->GetPositionX() + urand(10, 17)*cos(angle*(M_PI/180));
-            float posY = m_creature->GetPositionY() + urand(10, 17)*sin(angle*(M_PI/180));
-            m_creature->SummonCreature(NPC_FELFLAME_INFERNAL, posX, posY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
-            spellTimer = 5000;*/
-        }else spellTimer -= uiDiff;
 
         if (dieTimer < uiDiff && m_bDespawn)
         {
@@ -699,7 +652,8 @@ struct MANGOS_DLL_DECL mob_nether_portalAI : public ScriptedAI
         Difficulty = pCreature->GetMap()->GetDifficulty();
         if (Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
             pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        pCreature->SetDisplayId(15900);
+        pCreature->SetDisplayId(11686);     // make invisible
+        m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, 3.0f);
         pCreature->setFaction(14);
         SetCombatMovement(false);
         Reset();
@@ -711,8 +665,7 @@ struct MANGOS_DLL_DECL mob_nether_portalAI : public ScriptedAI
 
     void Reset()
     {
-        //DoCast(m_creature, 68424);
-        spellTimer = 7000;
+        spellTimer = 100;
         m_creature->SetRespawnDelay(DAY);
     }
 
@@ -729,16 +682,8 @@ struct MANGOS_DLL_DECL mob_nether_portalAI : public ScriptedAI
 
         if (spellTimer < uiDiff)
         {
-            //DoCast(m_creature, SPELL_NETHER_PORTAL_TRIG);
-            if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                DoCast(m_creature, SPELL_NETHER_PORTAL_10);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                DoCast(m_creature, SPELL_NETHER_PORTAL_25);
-            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                DoCast(m_creature, SPELL_NETHER_PORTAL_10HC);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                DoCast(m_creature, SPELL_NETHER_PORTAL_25HC);  
-            spellTimer = 7000;
+            DoCast(m_creature, SPELL_NETHER_PORTAL_TRIG);
+            spellTimer = 8000;
         }else spellTimer -= uiDiff;
     }
 };

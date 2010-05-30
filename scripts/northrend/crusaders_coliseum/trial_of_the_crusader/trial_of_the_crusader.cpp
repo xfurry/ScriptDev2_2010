@@ -528,9 +528,10 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
             case 5:
                 if(Creature* Wilfred = m_pInstance->instance->GetCreature(m_uiWilfredGUID))
                 {
-                    if(Creature* pPortal = m_creature->SummonCreature(NPC_PORTAL, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z, m_creature->GetOrientation(), TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
+                    if(Creature* pPortal = m_creature->SummonCreature(NPC_PORTAL, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z, m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 20000))
                     {
-                        pPortal->SetDisplayId(15900);
+                        pPortal->SetDisplayId(11686);
+                        pPortal->SetFloatValue(OBJECT_FIELD_SCALE_X, 3.0f);
                         m_uiJaruPortalGUID = pPortal->GetGUID();
                         pPortal->CastSpell(pPortal, SPELL_WILFRED_PORTAL, true);
                         DoScriptText(SAY_WILFRED_INTRO3, Wilfred);

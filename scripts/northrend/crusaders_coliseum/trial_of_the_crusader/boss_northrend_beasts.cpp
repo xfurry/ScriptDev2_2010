@@ -32,8 +32,8 @@ enum gormok
     SAY_SUMMON_JORMUNGARS       = -1605002,
 
     SPELL_IMPALE_10             = 66331,
-    SPELL_IMPALE_10HC           = 67478,
-    SPELL_IMPALE_25             = 67477,
+    SPELL_IMPALE_10HC           = 67477,
+    SPELL_IMPALE_25             = 67478,
     SPELL_IMPALE_25HC           = 67479,
     SPELL_STOMP_10              = 66330,
     SPELL_STOMP_10HC            = 67647,
@@ -62,9 +62,10 @@ enum jormungars
     SPELL_ACID_SPEW_10HC        = 67609,
     SPELL_ACID_SPEW_25          = 67610,
     SPELL_ACID_SPEW_25HC        = 67611,
+    SPELL_ACID_SPEW_TRIG        = 66818,    
     SPELL_PARALYTIC_BITE_10     = 66824,    // on target
-    SPELL_PARALYTIC_BITE_10HC   = 67613,
-    SPELL_PARALYTIC_BITE_25     = 67612,
+    SPELL_PARALYTIC_BITE_10HC   = 67612,
+    SPELL_PARALYTIC_BITE_25     = 67613,
     SPELL_PARALYTIC_BITE_25HC   = 67614,
     SPELL_SLIME_POOL_10         = 66883,
     SPELL_SLIME_POOL_10HC       = 67641,
@@ -73,12 +74,12 @@ enum jormungars
     NPC_SLIME_POOL              = 35176,
     // stationary
     SPELL_ACID_SPIT_10          = 66880,    // on target
-    SPELL_ACID_SPIT_10HC        = 67607,
-    SPELL_ACID_SPIT_25          = 67606,
+    SPELL_ACID_SPIT_10HC        = 67606,
+    SPELL_ACID_SPIT_25          = 67607,
     SPELL_ACID_SPIT_25HC        = 67608,
     SPELL_PARALYTIC_SPRAY_10    = 66901,    // on target
-    SPELL_PARALYTIC_SPRAY_10HC  = 67616,
-    SPELL_PARALYTIC_SPRAY_25    = 67615,
+    SPELL_PARALYTIC_SPRAY_10HC  = 67615,
+    SPELL_PARALYTIC_SPRAY_25    = 67616,
     SPELL_PARALYTIC_SPRAY_25HC  = 67617,
     SPELL_SWEEP_10              = 66794,
     SPELL_SWEEP_10HC            = 67644,
@@ -86,10 +87,6 @@ enum jormungars
     SPELL_SWEEP_25HC            = 67646,
 
     SPELL_SLIME_POOL_TRIG       = 66882,
-    SPELL_SLIME_POOL_DMG_10     = 66881,
-    SPELL_SLIME_POOL_DMG_25     = 67638,
-    SPELL_SLIME_POOL_DMG_10HC   = 67639,
-    SPELL_SLIME_POOL_DMG_25HC   = 67640,
 
     SPELL_PARALYTIC_TOXIN       = 66823,
     SPELL_ENRAGE                = 68335,
@@ -97,23 +94,24 @@ enum jormungars
     // dreadscale
     // mobile
     SPELL_BURNING_BITE_10       = 66879,    // on target
-    SPELL_BURNING_BITE_10HC     = 67625,
-    SPELL_BURNING_BITE_25       = 67624,
+    SPELL_BURNING_BITE_10HC     = 67624,
+    SPELL_BURNING_BITE_25       = 67625,
     SPELL_BURNING_BITE_25HC     = 67626,
+    SPELL_BURNING_BITE_TRIG     = 66879,
     SPELL_MOLTEN_SPEW_10        = 66820,    // on creature
-    SPELL_MOLTEN_SPEW_25        = 67635,
-    SPELL_MOLTEN_SPEW_10HC      = 67636,
+    SPELL_MOLTEN_SPEW_25        = 67636,
+    SPELL_MOLTEN_SPEW_10HC      = 67635,
     SPELL_MOLTEN_SPEW_25HC      = 67637,  
     SPELL_MOLTEN_SPEW_TRIG      = 66821,
 
     // stationary
     SPELL_FIRE_SPIT_10          = 66796,    // on target
-    SPELL_FIRE_SPIT_10HC        = 67633,
-    SPELL_FIRE_SPIT_25          = 67632,
+    SPELL_FIRE_SPIT_10HC        = 67632,
+    SPELL_FIRE_SPIT_25          = 67633,
     SPELL_FIRE_SPIT_25HC        = 67634,
     SPELL_BURNING_SPRAY_10      = 66902,    // on target
-    SPELL_BURNING_SPRAY_10HC    = 67628,
-    SPELL_BURNING_SPRAY_25      = 67627,
+    SPELL_BURNING_SPRAY_10HC    = 67627,
+    SPELL_BURNING_SPRAY_25      = 67628,
     SPELL_BURNING_SPRAY_25HC    = 67629,
 
     SPELL_BURNING_BILE          = 66869,
@@ -136,12 +134,12 @@ enum icehowl
     EMOTE_STUN                  = -1605132,
 
     SPELL_FEROCIOUS_BUTT_10     = 66770,
-    SPELL_FEROCIOUS_BUTT_10HC   = 67655,
-    SPELL_FEROCIOUS_BUTT_25     = 67654,
+    SPELL_FEROCIOUS_BUTT_10HC   = 67654,
+    SPELL_FEROCIOUS_BUTT_25     = 67655,
     SPELL_FEROCIOUS_BUTT_25HC   = 67656,
     SPELL_ARCTIC_BREATH_10      = 66689,
-    SPELL_ARCTIC_BREATH_10HC    = 67651,
-    SPELL_ARCTIC_BREATH_25      = 67650,
+    SPELL_ARCTIC_BREATH_10HC    = 67650,
+    SPELL_ARCTIC_BREATH_25      = 67651,
     SPELL_ARCTIC_BREATH_25HC    = 67652,
     SPELL_WHIRL_10              = 67345,
     SPELL_WHIRL_10HC            = 67663,
@@ -708,7 +706,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if(!IsThereAnyTwin() && !hasEnraged)
+        if(!IsThereAnyTwin() && !m_creature->HasAura(SPELL_ENRAGE, EFFECT_INDEX_0))
         {
             m_creature->CastStop();
             hasEnraged = true;
@@ -938,14 +936,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
 
             if (m_uiAcidSpewTimer < uiDiff)
             {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(m_creature, SPELL_ACID_SPEW_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(m_creature, SPELL_ACID_SPEW_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(m_creature, SPELL_ACID_SPEW_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(m_creature, SPELL_ACID_SPEW_25HC);
+                DoCast(m_creature, SPELL_ACID_SPEW_TRIG);
                 m_uiAcidSpewTimer = 3000+rand()%2000;
             }
             else
@@ -1123,7 +1114,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if(!IsThereAnyTwin() && !hasEnraged)
+        if(!IsThereAnyTwin() && !m_creature->HasAura(SPELL_ENRAGE, EFFECT_INDEX_0))
         {
             m_creature->CastStop();
             hasEnraged = true;
@@ -1304,14 +1295,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
             {
                 if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 {
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                        DoCast(pTarget, SPELL_BURNING_BITE_10);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                        DoCast(pTarget, SPELL_BURNING_BITE_25);
-                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                        DoCast(pTarget, SPELL_BURNING_BITE_10HC);
-                    if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                        DoCast(pTarget, SPELL_BURNING_BITE_25HC);
+                    DoCast(pTarget, SPELL_BURNING_BITE_TRIG);
                 }
                 m_uiBurningBiteTimer = urand(5000,7000);
             }
@@ -1339,14 +1323,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
 
             if (m_uiMoltenSpewTimer < uiDiff)
             {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(m_creature, SPELL_MOLTEN_SPEW_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(m_creature, SPELL_MOLTEN_SPEW_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(m_creature, SPELL_MOLTEN_SPEW_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(m_creature, SPELL_MOLTEN_SPEW_25HC);
+                DoCast(m_creature, SPELL_MOLTEN_SPEW_TRIG);
                 m_uiMoltenSpewTimer = urand(7000,13000);
             }
             else

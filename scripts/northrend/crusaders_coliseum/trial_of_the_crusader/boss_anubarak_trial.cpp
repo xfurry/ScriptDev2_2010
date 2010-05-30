@@ -860,6 +860,7 @@ struct MANGOS_DLL_DECL mob_anub_spikeAI : public ScriptedAI
                         if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                             DoCast(i->getSource(), SPELL_IMPALE_25); 
                         // make player jump into the air
+                        //DoCast(m_creature, 56090);
                         //i->getSource()->RemoveAurasDueToSpell(SPELL_PURSUED_BY_ANUB);
                         //i->getSource()->TeleportTo(i->getSource()->GetMapId(), i->getSource()->GetPositionX(), i->getSource()->GetPositionY(), i->getSource()->GetPositionZ() + 20, i->getSource()->GetOrientation());
                         m_uiDieTimer = 1000;
