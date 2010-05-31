@@ -396,6 +396,9 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
 
     bool SendRandomSoldierToCenter()
     {
+        if (m_lSoldierSet.empty())
+            return false;
+
         std::set<uint64>::iterator itr = m_lSoldierSet.begin();
 
         uint32 uiPosition = urand(0, m_lSoldierSet.size()-1);
@@ -420,6 +423,9 @@ struct MANGOS_DLL_DECL boss_kelthuzadAI : public ScriptedAI
 
     bool SendRandomUndeadToCenter()
     {
+        if (m_lUndeadSet.empty())
+            return false;
+
         std::set<uint64>::iterator itr = m_lUndeadSet.begin();
 
         uint32 uiPosition = urand(0, m_lUndeadSet.size()-1);
