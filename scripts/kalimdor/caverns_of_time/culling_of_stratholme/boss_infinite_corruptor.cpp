@@ -66,8 +66,13 @@ struct MANGOS_DLL_DECL boss_infinite_corruptorAI : public ScriptedAI
         DoScriptText(SAY_DEATH, m_creature);
         if(m_pInstance)
         {
-            m_pInstance->SetData(TYPE_BONUS, DONE);
-            m_pInstance->DoCompleteAchievement(ACHIEV_CULLING_TIME);
+            if(m_pInstance->GetData(TYPE_BONUS) == DONE)
+                m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+            else
+            {
+                m_pInstance->SetData(TYPE_BONUS, DONE);
+                m_pInstance->DoCompleteAchievement(ACHIEV_CULLING_TIME);
+            }
         }
     }
 

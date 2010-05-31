@@ -1,18 +1,18 @@
 /* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
 /* ScriptData
 SDName: Boss_Meathook
@@ -41,52 +41,59 @@ enum
 
 struct MANGOS_DLL_DECL boss_meathookAI : public ScriptedAI
 {
-   boss_meathookAI(Creature *pCreature) : ScriptedAI(pCreature)
-   {
+    boss_meathookAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsHeroic = pCreature->GetMap()->IsRaidOrHeroicDungeon();
         m_creature->SetActiveObjectState(true);
         Reset();
-   }
+    }
 
-   ScriptedInstance* m_pInstance;
-   bool m_bIsHeroic;
+    ScriptedInstance* m_pInstance;
+    bool m_bIsHeroic;
 
-   uint32 Chain_Timer;
-   uint32 Exploded_Timer;
-   uint32 Frenzy_Timer;
+    uint32 Chain_Timer;
+    uint32 Exploded_Timer;
+    uint32 Frenzy_Timer;
 
-   void Reset() 
-   {
-     Chain_Timer = 6300;
-     Exploded_Timer = 5000;
-     Frenzy_Timer = 22300;
-   }
-   
-   void Aggro(Unit* who)
-   {
-     DoScriptText(SAY_MEATHOOK_AGGRO, m_creature);
-   }
+    void Reset() 
+    {
+        Chain_Timer = 6300;
+        Exploded_Timer = 5000;
+        Frenzy_Timer = 22300;
+    }
 
-   void JustDied(Unit *killer)
-   {
-       DoScriptText(SAY_MEATHOOK_DEATH, m_creature);
-       if(m_pInstance)
-          m_pInstance->SetData(TYPE_PHASE, 3);
-   }
+    void Aggro(Unit* who)
+    {
+        DoScriptText(SAY_MEATHOOK_AGGRO, m_creature);
+    }
+
+    void JustDied(Unit *killer)
+    {
+        DoScriptText(SAY_MEATHOOK_DEATH, m_creature);
+        if(m_pInstance)
+        {
+            m_pInstance->SetData(TYPE_PHASE, 3);
+
+            if(m_pInstance->GetData(TYPE_MEATHOOK) == DONE)
+                m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+            else
+                m_pInstance->SetData(TYPE_MEATHOOK, DONE);
+        }
+    }
 
     void KilledUnit(Unit* pVictim)
     {
         switch(rand()%3)
         {
-            case 0: DoScriptText(SAY_MEATHOOK_SLAY01, m_creature); break;
-            case 1: DoScriptText(SAY_MEATHOOK_SLAY02, m_creature); break;
-            case 2: DoScriptText(SAY_MEATHOOK_SLAY03, m_creature); break;
+        case 0: DoScriptText(SAY_MEATHOOK_SLAY01, m_creature); break;
+        case 1: DoScriptText(SAY_MEATHOOK_SLAY02, m_creature); break;
+        case 2: DoScriptText(SAY_MEATHOOK_SLAY03, m_creature); break;
         }
     }
 
-   void UpdateAI(const uint32 diff)
-   {
+    void UpdateAI(const uint32 diff)
+    {
 
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -111,13 +118,13 @@ struct MANGOS_DLL_DECL boss_meathookAI : public ScriptedAI
 
         if (Frenzy_Timer < diff)
         {       
-                m_creature->InterruptNonMeleeSpells(false);
-                DoCast(m_creature,SPELL_FRENZY);
+            m_creature->InterruptNonMeleeSpells(false);
+            DoCast(m_creature,SPELL_FRENZY);
 
             Frenzy_Timer = 23300;
         }else Frenzy_Timer -= diff;
 
-  }
+    }
 };
 
 CreatureAI* GetAI_boss_meathook(Creature* pCreature)

@@ -218,7 +218,7 @@ struct MANGOS_DLL_DECL boss_malganisAI : public ScriptedAI
         if(m_creature->GetHealthPercent() < 5.0f)
         { 
             m_pInstance->SetData(TYPE_PHASE, 10);
-            m_pInstance->SetData(TYPE_MALGANIS, DONE);
+            //m_pInstance->SetData(TYPE_MALGANIS, DONE);
             EnterEvadeMode();
         }
 

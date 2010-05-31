@@ -25,6 +25,7 @@ EndScriptData */
 #include "culling_of_stratholme.h"
 #include "escort_ai.h"
 #include "WorldPacket.h"
+#include "Weather.h"
 
 /*###
 ## npc_arthas
@@ -935,10 +936,14 @@ struct MANGOS_DLL_DECL npc_arthasAI : public npc_escortAI
                 //pChest->SetUInt32Value(GAMEOBJECT_FACTION, 0);
             m_creature->SummonCreature(NPC_CHROMIE_DRAGON, 2296.665f, 1502.362f, 128.362f, 4.961f,TEMPSUMMON_TIMED_DESPAWN,900000);
             if(GameObject* pGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_EXIT)))
-                 pGate->SetGoState(GO_STATE_ACTIVE); 
-            if(GameObject* pChest = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(m_bIsHeroic ? GO_MALGANIS_CHEST_H : GO_MALGANIS_CHEST)))
-                m_pInstance->DoRespawnGameObject(pChest->GetGUID(), 30*MINUTE);
-            m_pInstance->DoCompleteAchievement(m_bIsHeroic ? ACHIEV_COS_H : ACHIEV_COS);
+                 pGate->SetGoState(GO_STATE_ACTIVE);
+            if(m_pInstance->GetData(TYPE_MALGANIS) != DONE)
+            {
+                if(GameObject* pChest = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(m_bIsHeroic ? GO_MALGANIS_CHEST_H : GO_MALGANIS_CHEST)))
+                    m_pInstance->DoRespawnGameObject(pChest->GetGUID(), 30*MINUTE);
+                m_pInstance->SetData(TYPE_MALGANIS, DONE);
+                m_pInstance->DoCompleteAchievement(m_bIsHeroic ? ACHIEV_COS_H : ACHIEV_COS);
+            }
             JumpNextStep(11000);
             break;
         case 7:
@@ -1105,6 +1110,7 @@ struct MANGOS_DLL_DECL npc_utherAI : public npc_escortAI
     void StartAI()
     {
         //m_pInstance->SetWeather(WEATHER_STATE_MEDIUM_RAIN, 0.9999f);
+        SetWeather(WEATHER_STATE_MEDIUM_RAIN, 0.9999f);
         StartEvent = true;
         m_creature->SetVisibility(VISIBILITY_ON);
         ((npc_utherAI*)m_creature->AI())->Start(false, true);
@@ -1129,6 +1135,15 @@ struct MANGOS_DLL_DECL npc_utherAI : public npc_escortAI
             Knight03->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
             Knight03->GetMotionMaster()->MoveFollow(m_creature,PET_FOLLOW_DIST,M_PI_F/3);
         }
+    }
+
+    void SetWeather(uint32 weather, float grade)
+    {
+        Map *map = m_creature->GetMap();
+        if (!map->IsDungeon()) return;
+        WorldPacket data(SMSG_WEATHER, (4+4+4));
+        data << uint32(weather) << (float)grade << uint8(0);
+        ((InstanceMap*)map)->SendToPlayers(&data);
     }
 
     void WaypointReached(uint32 uiPointId)

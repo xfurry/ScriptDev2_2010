@@ -52,9 +52,9 @@ bool GossipHello_npc_chromi_start(Player* pPlayer, Creature* pCreature)
     if(pPlayer->GetQuestStatus(QUEST_ILLUSION) == QUEST_STATUS_INCOMPLETE) return true;
 
     if(ScriptedInstance* m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData())) 
-    if(m_pInstance->GetData(TYPE_QUEST) != DONE && !pPlayer->HasItemCount(ITEM_ENTRY_ARCANE_DISRUPTOR,1)) 
-       pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_CHROMI1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
- 
+        if(m_pInstance->GetData(TYPE_QUEST) != DONE && !pPlayer->HasItemCount(ITEM_ENTRY_ARCANE_DISRUPTOR,1)) 
+            pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_CHROMI1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
     pPlayer->SEND_GOSSIP_MENU(GOSSIP_TEXTID_CHROMI1, pCreature->GetGUID()); 
 
     return true; 

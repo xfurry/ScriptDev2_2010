@@ -28,8 +28,10 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
 {
     instance_culling_of_stratholme(Map* pMap) : ScriptedInstance(pMap) {Initialize();};
 
+    std::string strInstData;
+
     uint8 m_uiCratesCount;
-    uint32 m_auiEncounter[7];
+    uint32 m_auiEncounter[10];
     uint32 m_uiHeroicTimer;
     uint32 m_uiLastTimer;
 
@@ -66,13 +68,16 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
     {
         m_uiHeroicTimer = 1500000;
         m_uiLastTimer = 1500000;
-        m_auiEncounter[0] = NOT_STARTED;
+        m_auiEncounter[0] = NOT_STARTED;    // crates
         m_auiEncounter[1] = NOT_STARTED;
         m_auiEncounter[2] = 0;
         m_auiEncounter[3] = NOT_STARTED;
         m_auiEncounter[4] = 0;
-        m_auiEncounter[5] = NOT_STARTED;
-        m_auiEncounter[6] = NOT_STARTED;
+        m_auiEncounter[5] = NOT_STARTED;    // corruptor
+        m_auiEncounter[6] = NOT_STARTED;    // malganis
+        m_auiEncounter[7] = NOT_STARTED;    // meathook
+        m_auiEncounter[8] = NOT_STARTED;    // salram
+        m_auiEncounter[9] = NOT_STARTED;    // epoch
 
         DoUpdateWorldState(WORLD_STATE_COS_CRATE_COUNT, 0);
         DoUpdateWorldState(WORLD_STATE_COS_CRATE_ON, 0);
@@ -108,6 +113,15 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
         m_uiMalGate2GUID = 0;
         m_uiMalChestGUID = 0;
         m_uiExitGUID = 0;
+    }
+
+    void OnPlayerEnter(Player *m_player)
+    {
+        if(m_auiEncounter[0] != DONE)
+        {
+            DoUpdateWorldState(WORLD_STATE_COS_CRATE_ON, 1);
+            DoUpdateWorldState(WORLD_STATE_COS_CRATE_COUNT, m_uiCratesCount);
+        }   
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -274,7 +288,52 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
         case TYPE_MALGANIS:
             m_auiEncounter[6] = uiData;
             break;
+        case TYPE_MEATHOOK:
+            m_auiEncounter[7] = uiData;
+            break;
+        case TYPE_SALRAMM:
+            m_auiEncounter[8] = uiData;
+            break;
+        case TYPE_EPOCH:
+            m_auiEncounter[9] = uiData;
+            break;
         }
+
+        if (uiData == DONE)
+        {
+            OUT_SAVE_INST_DATA;
+
+            std::ostringstream saveStream;
+            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[5] << " " << m_auiEncounter[6] << " "
+                << m_auiEncounter[7] << " " << m_auiEncounter[8] << " " << m_auiEncounter[9];
+
+            strInstData = saveStream.str();
+
+            SaveToDB();
+            OUT_SAVE_INST_DATA_COMPLETE;
+        }
+    }
+
+    const char* Save()
+    {
+        return strInstData.c_str();
+    }
+
+    void Load(const char* chrIn)
+    {
+        if (!chrIn)
+        {
+            OUT_LOAD_INST_DATA_FAIL;
+            return;
+        }
+
+        OUT_LOAD_INST_DATA(chrIn);
+
+        std::istringstream loadStream(chrIn);
+        loadStream >> m_auiEncounter[0] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7]
+        >> m_auiEncounter[8] >> m_auiEncounter[9];
+
+        OUT_LOAD_INST_DATA_COMPLETE;
     }
 
     void SetData64(uint32 uiData, uint64 uiGuid)
@@ -308,6 +367,12 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
             return m_auiEncounter[5];
         case TYPE_MALGANIS:
             return m_auiEncounter[6];
+        case TYPE_MEATHOOK:
+            return m_auiEncounter[7];
+        case TYPE_SALRAMM:
+            return m_auiEncounter[8];
+        case TYPE_EPOCH:
+            return m_auiEncounter[9];
         }
         return 0;
     }

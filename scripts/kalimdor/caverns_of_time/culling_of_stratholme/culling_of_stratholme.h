@@ -17,6 +17,11 @@ enum Data
     TYPE_BONUS           = 8,
     TYPE_MALGANIS        = 9,
 
+    // boss saves
+    TYPE_MEATHOOK        = 11,
+    TYPE_SALRAMM         = 12,
+    TYPE_EPOCH           = 13,
+
     DATA_TEMPSUMMON      = 10,
 
     NPC_CHROMI01            = 26527,
