@@ -1404,12 +1404,12 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
         m_uiIceholwTimer        = 340000;
         m_bNextBoss             = true;
 
-        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
         {
             m_uiMaxSnobold  = 5;
             m_uiHealthPoint = 20;
         }
-        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
         {
             m_uiMaxSnobold  = 6;
             m_uiHealthPoint = 17;
