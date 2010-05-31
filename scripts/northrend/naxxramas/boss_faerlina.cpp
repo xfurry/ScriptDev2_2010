@@ -142,7 +142,7 @@ struct MANGOS_DLL_DECL boss_faerlinaAI : public ScriptedAI
         if (m_pInstance)
             m_pInstance->SetData(TYPE_FAERLINA, DONE);
 
-        if(!m_bHasFrenzy)
+        if(m_bHasFrenzy)
         {
             if(m_pInstance)
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_KNOCK_YOU_OUT : ACHIEV_KNOCK_YOU_OUT_H);
