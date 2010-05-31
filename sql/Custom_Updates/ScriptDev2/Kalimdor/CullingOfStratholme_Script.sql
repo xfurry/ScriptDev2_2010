@@ -120,7 +120,7 @@ insert into `script_texts` (`entry`,`content_default`,`content_loc8`,`sound`,`ty
 (-1594125, 'It\'s time to end...', 'Пора заканчивать...',13412,1,0,0, '26499'),
 #Street
 (-1594158, 'This will take only a moment.', 'Это займет совсем не много времени.',14310,0,0,0, '26499'),
-(-1594159, 'I\' relieved that secret passage still works!', 'Слава свету, что потайной ход еще работает!',14311,0,0,0, '26499'),
+(-1594159, 'I\'m relieved that secret passage still works!', 'Слава свету, что потайной ход еще работает!',14311,0,0,0, '26499'),
 (-1594160, 'Let\'s go through this place as quick as possible. If the undead won\'t gonna kill us the fire might.', 'Давайте пройдем этот участок как можно быстрее. Если мы не погибнем от нежити, то можем погибнуть от этого огня.',14312,0,0,0, '26499'),
 (-1594161, 'Rest a moment here clean your luns, but be ready we must go soon again.', 'Отдышитесь немного, но имейте ввиду нам скоро снова в путь.',14313,0,0,0, '26499'),
 (-1594162, 'That\'s enough we have to move again , Mal\'Ganis awaits.', 'Отдых окончен надо идти, Малганис ждет.',14314,0,0,0, '26499'),
