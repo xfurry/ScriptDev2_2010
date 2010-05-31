@@ -475,11 +475,12 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
             m_uiNetherPowerTimer -= uiDiff;
 
         // berserk
-        if (m_uiBerserkTimer < uiDiff)
+        if (m_uiBerserkTimer < uiDiff && !m_creature->HasAura(SPELL_BERSERK, EFFECT_INDEX_0))
         {
+            m_creature->CastStop();
             DoCast(m_creature, SPELL_BERSERK);
             DoScriptText(SAY_BERSERK, m_creature);
-            m_uiBerserkTimer = 60000;
+            //m_uiBerserkTimer = 60000;
         }
         else
             m_uiBerserkTimer -= uiDiff;

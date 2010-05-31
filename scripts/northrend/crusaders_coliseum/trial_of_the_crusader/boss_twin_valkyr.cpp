@@ -181,6 +181,7 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 
     bool m_bHasShield;
     uint32 m_uiPactCastTimer;
+    bool m_bHasVortexCasted;
 
     uint32 m_uiDoorTimer;
     bool doorClosed;
@@ -204,8 +205,15 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         TeamInInstance = GetFaction();
 
         m_uiBerserkTimer    = 360000;  // 6 min
+
         if(m_pInstance)
             m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
+
+        switch(urand(0, 1))
+        {
+        case 0: m_bHasVortexCasted = true;  break;
+        case 1: m_bHasVortexCasted = false; break;
+        }
 
         m_creature->SetRespawnDelay(DAY);
     }
@@ -435,11 +443,12 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         {
             if(m_pInstance->GetData(TYPE_TWINS_CASTING) != IN_PROGRESS)
             {
-                switch (urand(0, 1))
+                if(!m_bHasVortexCasted)
                 {
-                case 0:
                     DoScriptText(SAY_LIGHT, m_creature);
+                    m_pInstance->SetData(TYPE_TWINS_CASTING, IN_PROGRESS);
                     DoScriptText(EMOTE_LIGHT_VORTEX, m_creature);
+
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(m_creature, SPELL_LIGHT_VORTEX_10);
                     if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
@@ -449,10 +458,13 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
                     if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                         DoCast(m_creature, SPELL_LIGHT_VORTEX_25HC);
 
-                    m_pInstance->SetData(TYPE_TWINS_CASTING, IN_PROGRESS);
+                    m_bHasVortexCasted = true;
                     m_uiCastTimeOut = 9000;
-                    break;
-                case 1:
+                }
+                else
+                {
+                    m_pInstance->SetData(TYPE_TWINS_CASTING, IN_PROGRESS);
+
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(m_creature, SPELL_SHIELD_OF_LIGHTS_10);
                     if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
@@ -462,13 +474,12 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
                     if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                         DoCast(m_creature, SPELL_SHIELD_OF_LIGHTS_25HC);
 
+                    m_bHasVortexCasted = false;
                     m_uiTwinPactTimer = 500;
-                    m_pInstance->SetData(TYPE_TWINS_CASTING, IN_PROGRESS);
                     m_uiCastTimeOut = 16000;
 
                     m_uiPactCastTimer = 15000;
                     m_bHasShield = true;
-                    break;
                 }
                 m_uiSpecialSpellTimer = urand(60000, 65000);
             }
@@ -536,11 +547,12 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
             m_uiTwinPactTimer -= uiDiff;
 
         // berserk
-        if (m_uiBerserkTimer < uiDiff)
+        if (m_uiBerserkTimer < uiDiff && !m_creature->HasAura(SPELL_BERSERK, EFFECT_INDEX_0))
         {
+            m_creature->CastStop();
             DoScriptText(SAY_BERSERK, m_creature);
             DoCast(m_creature, SPELL_BERSERK);
-            m_uiBerserkTimer = 60000;
+            //m_uiBerserkTimer = 60000;
         }
         else
             m_uiBerserkTimer -= uiDiff;
@@ -586,6 +598,7 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
 
     bool m_bHasShield;
     uint32 m_uiPactCastTimer;
+    bool m_bHasVortexCasted;
 
     float angle;
     float homeX, homeY;
@@ -611,6 +624,12 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
 
         if(m_pInstance)
             m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
+
+        switch(urand(0, 1))
+        {
+        case 0: m_bHasVortexCasted = true;  break;
+        case 1: m_bHasVortexCasted = false; break;
+        }
 
         m_uiEssenceBuffCheckTimer = 500;
         lEssences.clear();
@@ -887,11 +906,12 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         {
             if(m_pInstance->GetData(TYPE_TWINS_CASTING) != IN_PROGRESS)
             {
-                switch (urand(0, 1))
+                if(!m_bHasVortexCasted)
                 {
-                case 0:
                     DoScriptText(SAY_DARK, m_creature);
+                    m_pInstance->SetData(TYPE_TWINS_CASTING, IN_PROGRESS);
                     DoScriptText(EMOTE_DARK_VORTEX, m_creature);
+
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(m_creature, SPELL_DARK_VORTEX_10);
                     if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
@@ -901,10 +921,13 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
                     if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                         DoCast(m_creature, SPELL_DARK_VORTEX_25HC);
 
-                    m_pInstance->SetData(TYPE_TWINS_CASTING, IN_PROGRESS);
+                    m_bHasVortexCasted = true;
                     m_uiCastTimeOut = 9000;
-                    break;
-                case 1:
+                }
+                else
+                {
+                    m_pInstance->SetData(TYPE_TWINS_CASTING, IN_PROGRESS);
+
                     if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                         DoCast(m_creature, SPELL_SHIELD_OF_DARKNESS_10);
                     if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
@@ -914,13 +937,12 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
                     if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                         DoCast(m_creature, SPELL_SHIELD_OF_DARKNESS_25HC);
 
+                    m_bHasVortexCasted = false;
                     m_uiTwinPactTimer = 500;
-                    m_pInstance->SetData(TYPE_TWINS_CASTING, IN_PROGRESS);
                     m_uiCastTimeOut = 16000;
 
                     m_uiPactCastTimer = 15000;
                     m_bHasShield = true;
-                    break;
                 }
                 m_uiSpecialSpellTimer = urand(60000, 65000);
             }
@@ -988,11 +1010,12 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
             m_uiTwinPactTimer -= uiDiff;
 
         // berserk
-        if (m_uiBerserkTimer < uiDiff)
+        if (m_uiBerserkTimer < uiDiff && !m_creature->HasAura(SPELL_BERSERK, EFFECT_INDEX_0))
         {
+            m_creature->CastStop();
             DoScriptText(SAY_BERSERK, m_creature);
             DoCast(m_creature, SPELL_BERSERK);
-            m_uiBerserkTimer = 60000;
+            //m_uiBerserkTimer = 60000;
         }
         else
             m_uiBerserkTimer -= uiDiff;

@@ -110,6 +110,8 @@ enum
 
     ACHIEV_RESILIENCE_WILL_FIX      = 3798,
     ACHIEV_RESILIENCE_WILL_FIX_H    = 3814,
+
+    SPELL_BERSERK               = 26662,
 };
 
 struct TocMessages
@@ -713,6 +715,8 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
 
     bool m_bIsAchiev;
     uint32 m_uiResilienceAchievTimer;
+    uint32 m_uiBeastsBerserkTimer;
+    bool m_bHasBerserk;
 
     void Reset() 
     {
@@ -724,7 +728,9 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
         m_bIsIntro          = false;
         isIntroDone         = false;
         m_bIsAchiev         = false;
+        m_bHasBerserk       = false;
         m_uiResilienceAchievTimer   = 0;
+        m_uiBeastsBerserkTimer  = 6000000;
     }
 
     /*void MoveInLineOfSight(Unit* pWho)
@@ -733,6 +739,14 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
             !m_bIsIntro && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 110) && !isIntroDone)
             m_bIsIntro = true;
     }*/
+
+    void SetBeastsBerserk()
+    {
+        if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+            m_uiBeastsBerserkTimer = 900000;   // 15 min
+        else if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+            m_uiBeastsBerserkTimer = 522000;   // 8.7 min
+    }
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -940,8 +954,34 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
         case 0:
             break; 
 
-            // beasts -> code handeled in boss script
+            // beasts -> enrage timer
         case 1: 
+            if(m_uiBeastsBerserkTimer < uiDiff && !m_bHasBerserk)
+            {
+                if(Creature* pGormok = GetClosestCreatureWithEntry(m_creature, NPC_GORMOK, 200.0f))
+                {
+                    pGormok->CastStop();
+                    pGormok->CastSpell(pGormok, SPELL_BERSERK, false);
+                }
+                if(Creature* pAcidmaw = GetClosestCreatureWithEntry(m_creature, NPC_ACIDMAW, 200.0f))
+                {
+                    pAcidmaw->CastStop();
+                    pAcidmaw->CastSpell(pAcidmaw, SPELL_BERSERK, false);
+                }
+                if(Creature* pDreadscale = GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 200.0f))
+                {
+                    pDreadscale->CastStop();
+                    pDreadscale->CastSpell(pDreadscale, SPELL_BERSERK, false);
+                }
+                if(Creature* pIcehowl = GetClosestCreatureWithEntry(m_creature, NPC_ICEHOWL, 200.0f))
+                {
+                    pIcehowl->CastStop();
+                    pIcehowl->CastSpell(pIcehowl, SPELL_BERSERK, false);
+                }
+                m_bHasBerserk = true;
+            }
+            else
+                m_uiBeastsBerserkTimer -= uiDiff;
             break;
 
             // Jaraxxus -> code handeled in boss script
@@ -1156,6 +1196,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
         {
             if (m_pInstance->GetData(TYPE_NORTHREND_BEASTS) == NOT_STARTED || m_pInstance->GetData(TYPE_NORTHREND_BEASTS) == FAIL) 
             {
+                ((npc_crusader_anouncerAI*)pCreature->AI())->SetBeastsBerserk();
                 m_pInstance->SetData(TYPE_STAGE,1);
                 m_pInstance->SetData(TYPE_NORTHREND_BEASTS,IN_PROGRESS);
             }
@@ -1181,6 +1222,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
                 DoScriptText(SAY_SUMMON_GORMOK, Tirion);
             if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
                 m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+
             break;
         };
 

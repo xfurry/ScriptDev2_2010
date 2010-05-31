@@ -87,6 +87,7 @@ enum jormungars
     SPELL_SWEEP_25HC            = 67646,
 
     SPELL_SLIME_POOL_TRIG       = 66882,
+    SPELL_SLIME_POOL_VISUAL     = 63084,
 
     SPELL_PARALYTIC_TOXIN       = 66823,
     SPELL_ENRAGE                = 68335,
@@ -213,7 +214,7 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
         m_uiTrampleTimer        = 50000;
         m_uiFrothingRageTimer   = 30000;
 
-        m_uiBerserkTimer        = 300000;  // 5 min
+        //m_uiBerserkTimer        = 300000;  // 5 min
 
         m_uiDoorTimer       = 5000;
         doorClosed          = false;
@@ -474,10 +475,11 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
             m_uiFrothingRageTimer -= uiDiff;
 
         // berserk
-        if (m_uiBerserkTimer < uiDiff)
+        if (m_uiBerserkTimer < uiDiff && !m_creature->HasAura(SPELL_BERSERK, EFFECT_INDEX_0))
         {
+            m_creature->CastStop();
             DoCast(m_creature, SPELL_BERSERK);
-            m_uiBerserkTimer = 60000;
+            //m_uiBerserkTimer = 60000;
         }
         else
             m_uiBerserkTimer -= uiDiff;
@@ -622,7 +624,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         m_uiDoorTimer       = 5000;
         doorClosed          = false;
 
-        m_uiBerserkTimer    = 300000;  // 5 min
+        //m_uiBerserkTimer    = 300000;  // 5 min
         m_uiAchievTimer     = 0;
 
         m_uiNextBossTimer       = 150000;  
@@ -929,7 +931,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     //DoCast(m_creature, SPELL_SLIME_POOL_25HC);
                     m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-                m_uiSlimePoolTimer = urand(10000,15000);
+                m_uiSlimePoolTimer = urand(17000,23000);
             }
             else
                 m_uiSlimePoolTimer -= uiDiff;
@@ -944,10 +946,11 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         }
 
         // berserk
-        if (m_uiBerserkTimer < uiDiff)
+        if (m_uiBerserkTimer < uiDiff && !m_creature->HasAura(SPELL_BERSERK, EFFECT_INDEX_0))
         {
+            m_creature->CastStop();
             DoCast(m_creature, SPELL_BERSERK);
-            m_uiBerserkTimer = 60000;
+            //m_uiBerserkTimer = 60000;
         }
         else
             m_uiBerserkTimer -= uiDiff;
@@ -1027,7 +1030,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         m_uiDoorTimer       = 5000;
         doorClosed          = false;
 
-        m_uiBerserkTimer    = 300000;  // 5 min
+        //m_uiBerserkTimer    = 300000;  // 5 min
         m_uiAchievTimer     = 0;
 
         m_uiNextBossTimer       = 150000;  
@@ -1316,7 +1319,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     //DoCast(m_creature, SPELL_SLIME_POOL_25HC);
                     m_creature->SummonCreature(NPC_SLIME_POOL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-                m_uiSlimePoolTimer = urand(10000,15000);
+                m_uiSlimePoolTimer = urand(17000,23000);
             }
             else
                 m_uiSlimePoolTimer -= uiDiff;
@@ -1331,10 +1334,11 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         }
 
         // berserk
-        if (m_uiBerserkTimer < uiDiff)
+        if (m_uiBerserkTimer < uiDiff && !m_creature->HasAura(SPELL_BERSERK, EFFECT_INDEX_0))
         {
+            m_creature->CastStop();
             DoCast(m_creature, SPELL_BERSERK);
-            m_uiBerserkTimer = 60000;
+            //m_uiBerserkTimer = 60000;
         }
         else
             m_uiBerserkTimer -= uiDiff;
@@ -1591,10 +1595,11 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
             m_uiImpaleTimer -= uiDiff;
 
         // berserk
-        if (m_uiBerserkTimer < uiDiff)
+        if (m_uiBerserkTimer < uiDiff && !m_creature->HasAura(SPELL_BERSERK, EFFECT_INDEX_0))
         {
+            m_creature->CastStop();
             DoCast(m_creature, SPELL_BERSERK);
-            m_uiBerserkTimer = 60000;
+            //m_uiBerserkTimer = 60000;
         }
         else
             m_uiBerserkTimer -= uiDiff;
@@ -1676,7 +1681,6 @@ struct MANGOS_DLL_DECL mob_slime_poolAI : public ScriptedAI
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         Difficulty = pCreature->GetMap()->GetDifficulty();
         pCreature->setFaction(14);
-        pCreature->SetDisplayId(15900);     // not correct but at least is visible
         SetCombatMovement(false);
         Reset();
     }
@@ -1684,12 +1688,16 @@ struct MANGOS_DLL_DECL mob_slime_poolAI : public ScriptedAI
     uint32 Difficulty;
     float m_fSize;
     uint32 m_uiSizeTimer;
+    uint32 m_uiSpellTimer;
+    bool m_bHasSpell;
 
     void Reset()
     {
-        DoCast(m_creature, SPELL_SLIME_POOL_TRIG);
+        DoCast(m_creature, SPELL_SLIME_POOL_VISUAL);
         m_fSize = 1.0f;
         m_uiSizeTimer   = 5000;
+        m_uiSpellTimer  = 1000;
+        m_bHasSpell     = false;
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -1702,6 +1710,14 @@ struct MANGOS_DLL_DECL mob_slime_poolAI : public ScriptedAI
         }
         else
             m_uiSizeTimer -= uiDiff;
+
+        if(m_uiSpellTimer < uiDiff && !m_bHasSpell)
+        {
+            DoCast(m_creature, SPELL_SLIME_POOL_TRIG);
+            m_bHasSpell = true;
+        }
+        else
+            m_uiSpellTimer -= uiDiff;
     }
 };
 
