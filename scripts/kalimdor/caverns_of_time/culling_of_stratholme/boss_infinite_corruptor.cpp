@@ -58,7 +58,10 @@ struct MANGOS_DLL_DECL boss_infinite_corruptorAI : public ScriptedAI
     {
         DoScriptText(SAY_AGGRO, m_creature);
         if(m_pInstance)
+        {
             m_pInstance->SetData(TYPE_BONUS, SPECIAL);
+            m_pInstance->DoUpdateWorldState(WORLD_STATE_COS_TIME_ON, 0);
+        }
     }
 
     void JustDied(Unit *killer)

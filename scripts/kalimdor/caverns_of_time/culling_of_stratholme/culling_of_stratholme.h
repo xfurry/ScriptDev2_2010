@@ -80,6 +80,8 @@ enum Data
     GO_MALGANIS_CHEST_H    = 193597,
     GO_EXIT                = 191788,
 
+    SAY_INFINITE_DEPARTURE        = -1594190,
+
 
     WORLD_STATE_COS_TIME_ON       = 3932,
     WORLD_STATE_COS_TIME_COUNT    = 3931,

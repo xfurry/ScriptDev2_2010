@@ -88,6 +88,7 @@ struct MANGOS_DLL_DECL boss_salrammAI : public ScriptedAI
         if(m_pInstance)
         {
             m_pInstance->SetData(TYPE_ENCOUNTER, DONE);
+            m_pInstance->DoUpdateWorldState(WORLD_STATE_COS_WAVE_COUNT, 0);
 
             if(m_pInstance->GetData(TYPE_SALRAMM) == DONE)
                 m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);

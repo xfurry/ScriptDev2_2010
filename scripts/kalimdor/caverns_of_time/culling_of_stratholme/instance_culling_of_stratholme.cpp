@@ -434,7 +434,10 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
                 m_auiEncounter[5] = FAIL;
                 DoUpdateWorldState(WORLD_STATE_COS_TIME_ON, 0);
                 if(Creature* Corruptor = instance->GetCreature(m_uiCorruptorGUID))
+                {
                     Corruptor->SetPhaseMask(0, true);
+                    DoScriptText(SAY_INFINITE_DEPARTURE, Corruptor);
+                }
 
             }else m_uiHeroicTimer -= uiDiff;
 
