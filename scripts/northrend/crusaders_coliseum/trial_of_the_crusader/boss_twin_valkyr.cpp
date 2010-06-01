@@ -662,7 +662,12 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         if(m_uiEncounterTimer < 180000)
         {
             if(m_pInstance)
-                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_SALT_AND_PEPPER : ACHIEV_SALT_AND_PEPPER_H);
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    m_pInstance->DoCompleteAchievement(ACHIEV_SALT_AND_PEPPER);
+                else if (Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    m_pInstance->DoCompleteAchievement(ACHIEV_SALT_AND_PEPPER_H);
+            }
         }
     }
 

@@ -41,6 +41,7 @@ UPDATE `creature_template` SET `AIName`='', `Scriptname`='boss_lord_epoch' WHERE
 UPDATE `creature_template` SET `AIName`='', `Scriptname`='boss_malganis' WHERE `entry` IN (26533);
 UPDATE `creature_template` SET `AIName`='', `Scriptname`='npc_time_riftCS' WHERE `entry` IN (28409);
 UPDATE `creature_template` SET `AIName`='', `Scriptname`='boss_infinite_corruptor' WHERE `entry` IN (32273);
+UPDATE `creature_template` SET `AIName`='', `Scriptname`='mob_risen_zombie' WHERE `entry` IN (27737);
 delete from creature_loot_template where item = 43951 and entry = 32273;
 insert into creature_loot_template values (32273, 43951, 100, 0, 1, 1, 0, 0, 0);
 

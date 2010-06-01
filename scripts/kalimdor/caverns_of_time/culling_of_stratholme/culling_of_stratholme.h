@@ -22,6 +22,9 @@ enum Data
     TYPE_SALRAMM         = 12,
     TYPE_EPOCH           = 13,
 
+    TYPE_ZOMBIEFEST      = 14,
+    TYPE_ZOMBIE_COUNT    = 15,
+
     DATA_TEMPSUMMON      = 10,
 
     NPC_CHROMI01            = 26527,
@@ -76,6 +79,8 @@ enum Data
     GO_MALGANIS_CHEST      = 190663,
     GO_MALGANIS_CHEST_H    = 193597,
     GO_EXIT                = 191788,
+
+    SAY_INFINITE_DEPARTURE        = -1594190,
 
 
     WORLD_STATE_COS_TIME_ON       = 3932,

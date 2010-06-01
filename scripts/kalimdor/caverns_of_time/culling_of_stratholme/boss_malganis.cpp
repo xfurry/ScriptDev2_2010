@@ -109,6 +109,17 @@ struct MANGOS_DLL_DECL boss_malganisAI : public ScriptedAI
         }
     }
 
+    void DamageTaken(Unit *done_by, uint32 &uiDamage)
+    {
+        if(uiDamage > m_creature->GetHealth())
+        {
+            uiDamage = 0;
+            m_pInstance->SetData(TYPE_PHASE, 10);
+            //m_pInstance->SetData(TYPE_MALGANIS, DONE);
+            EnterEvadeMode();
+        }
+    }
+
     void EnterEvadeMode()
     {
         m_creature->RemoveAllAuras();

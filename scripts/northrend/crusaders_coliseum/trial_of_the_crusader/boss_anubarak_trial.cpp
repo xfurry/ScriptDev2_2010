@@ -249,7 +249,12 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
             if(m_uiAchievCounter >= 40)
             {
                 if(m_pInstance)
-                    m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TRAITOR_KING : ACHIEV_TRAITOR_KING_H);
+                {
+                    if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                        m_pInstance->DoCompleteAchievement(ACHIEV_TRAITOR_KING);
+                    else if (Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                        m_pInstance->DoCompleteAchievement(ACHIEV_TRAITOR_KING_H);
+                }
                 m_bStartAchiev = false;
             }
         }
