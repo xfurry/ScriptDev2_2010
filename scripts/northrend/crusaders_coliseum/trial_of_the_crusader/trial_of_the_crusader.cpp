@@ -1043,7 +1043,12 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                         if(m_uiResilienceAchievTimer <= 60000)
                         {
                             if(m_pInstance)
-                                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_RESILIENCE_WILL_FIX : ACHIEV_RESILIENCE_WILL_FIX_H);
+                            {
+                                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                                    m_pInstance->DoCompleteAchievement(ACHIEV_RESILIENCE_WILL_FIX);
+                                else if (Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                                    m_pInstance->DoCompleteAchievement(ACHIEV_RESILIENCE_WILL_FIX_H);
+                            }
                         }
                         m_bIsAchiev = false;
                     }
@@ -1114,7 +1119,12 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                         if(m_uiResilienceAchievTimer <= 60000)
                         {
                             if(m_pInstance)
-                                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_RESILIENCE_WILL_FIX : ACHIEV_RESILIENCE_WILL_FIX_H);
+                            {
+                                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                                    m_pInstance->DoCompleteAchievement(ACHIEV_RESILIENCE_WILL_FIX);
+                                else if (Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                                    m_pInstance->DoCompleteAchievement(ACHIEV_RESILIENCE_WILL_FIX_H);
+                            }
                         }
                         m_bIsAchiev = false;
                     }

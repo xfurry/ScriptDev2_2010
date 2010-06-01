@@ -340,7 +340,12 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         if(m_uiAchievCounter >= 2)
         {
             if(m_pInstance)
-                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_THREE_SIXTY_PAIN_SPIKE : ACHIEV_THREE_SIXTY_PAIN_SPIKE_H);
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    m_pInstance->DoCompleteAchievement(ACHIEV_THREE_SIXTY_PAIN_SPIKE);
+                else if (Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    m_pInstance->DoCompleteAchievement(ACHIEV_THREE_SIXTY_PAIN_SPIKE_H);
+            }
         }
     }
 

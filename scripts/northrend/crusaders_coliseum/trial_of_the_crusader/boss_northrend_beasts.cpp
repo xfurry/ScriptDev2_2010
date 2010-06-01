@@ -293,7 +293,12 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
         if(m_uiAchievCounter >= 2)
         {
             if(m_pInstance)
-                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_UPPER_BACK_PAIN : ACHIEV_UPPER_BACK_PAIN_H);
+            {
+                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+                    m_pInstance->DoCompleteAchievement(ACHIEV_UPPER_BACK_PAIN);
+                else if (Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+                    m_pInstance->DoCompleteAchievement(ACHIEV_UPPER_BACK_PAIN_H);
+            }
         }
     }
     void MovementInform(uint32 type, uint32 id)
