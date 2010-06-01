@@ -520,10 +520,13 @@ struct MANGOS_DLL_DECL mob_legion_flameAI : public ScriptedAI
     void Reset()
     {
         DoCast(m_creature, SPELL_LEGION_FLAME_TRIG);
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_pInstance && m_pInstance->GetData(TYPE_JARAXXUS) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
     }
 };
 
@@ -613,6 +616,9 @@ struct MANGOS_DLL_DECL mob_felflame_infernalAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_pInstance && m_pInstance->GetData(TYPE_JARAXXUS) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
