@@ -22,6 +22,9 @@ enum Data
     TYPE_SALRAMM         = 12,
     TYPE_EPOCH           = 13,
 
+    TYPE_ZOMBIEFEST      = 14,
+    TYPE_ZOMBIE_COUNT    = 15,
+
     DATA_TEMPSUMMON      = 10,
 
     NPC_CHROMI01            = 26527,

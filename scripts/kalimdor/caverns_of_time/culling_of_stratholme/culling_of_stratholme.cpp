@@ -1681,6 +1681,42 @@ struct MANGOS_DLL_DECL npc_dark_conversionAI : public ScriptedAI
     }
 };
 
+struct MANGOS_DLL_DECL mob_risen_zombieAI : public ScriptedAI
+{
+    mob_risen_zombieAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsHeroic = pCreature->GetMap()->IsRaidOrHeroicDungeon();
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+    bool m_bIsHeroic;
+
+    void Reset() 
+    {
+    }
+
+    void JustDied(Unit *killer)
+    {
+        if(m_pInstance && m_bIsHeroic)
+        {
+            if(m_pInstance->GetData(TYPE_ZOMBIEFEST) != IN_PROGRESS)
+                m_pInstance->SetData(TYPE_ZOMBIEFEST, IN_PROGRESS);
+            m_pInstance->SetData(TYPE_ZOMBIE_COUNT, 1);
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
 CreatureAI* GetAI_npc_uther(Creature* pCreature)
 {
     return new npc_utherAI(pCreature);
@@ -1704,6 +1740,11 @@ CreatureAI* GetAI_npc_arthas_marine(Creature* pCreature)
 CreatureAI* GetAI_npc_dark_conversion(Creature* pCreature)
 {
     return new npc_dark_conversionAI(pCreature);
+}
+
+CreatureAI* GetAI_mob_risen_zombie(Creature* pCreature)
+{
+    return new mob_risen_zombieAI(pCreature);
 }
 
 void AddSC_culling_of_stratholme()
@@ -1741,5 +1782,10 @@ void AddSC_culling_of_stratholme()
     newscript = new Script;
     newscript->Name = "npc_dark_conversion";
     newscript->GetAI = &GetAI_npc_dark_conversion;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_risen_zombie";
+    newscript->GetAI = &GetAI_mob_risen_zombie;
     newscript->RegisterSelf();
 }

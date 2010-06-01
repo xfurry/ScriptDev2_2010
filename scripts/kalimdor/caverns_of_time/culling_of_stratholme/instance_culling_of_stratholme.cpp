@@ -31,9 +31,11 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
     std::string strInstData;
 
     uint8 m_uiCratesCount;
-    uint32 m_auiEncounter[10];
+    uint32 m_auiEncounter[11];
     uint32 m_uiHeroicTimer;
     uint32 m_uiLastTimer;
+    uint32 m_uiZombieCount;
+    uint32 m_uiZombieTimer;
 
     uint64 m_uiChromi01GUID;
     uint64 m_uiChromi02GUID;
@@ -68,6 +70,7 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
     {
         m_uiHeroicTimer = 1500000;
         m_uiLastTimer = 1500000;
+        m_uiZombieTimer = 1500000;
         m_auiEncounter[0] = NOT_STARTED;    // crates
         m_auiEncounter[1] = NOT_STARTED;
         m_auiEncounter[2] = 0;
@@ -78,6 +81,7 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
         m_auiEncounter[7] = NOT_STARTED;    // meathook
         m_auiEncounter[8] = NOT_STARTED;    // salram
         m_auiEncounter[9] = NOT_STARTED;    // epoch
+        m_auiEncounter[10] = NOT_STARTED;   // zombiefest
 
         DoUpdateWorldState(WORLD_STATE_COS_CRATE_COUNT, 0);
         DoUpdateWorldState(WORLD_STATE_COS_CRATE_ON, 0);
@@ -86,6 +90,7 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
         DoUpdateWorldState(WORLD_STATE_COS_TIME_ON, 0);
 
         m_uiCratesCount = 0;
+        m_uiZombieCount = 0;
         m_uiMikeGUID = 0;
         m_uiChromi01GUID = 0;
         m_uiChromi02GUID = 0;
@@ -117,11 +122,11 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
 
     void OnPlayerEnter(Player *m_player)
     {
-        if(m_auiEncounter[0] != DONE)
+        /*if(m_auiEncounter[0] != DONE)
         {
             DoUpdateWorldState(WORLD_STATE_COS_CRATE_ON, 1);
             DoUpdateWorldState(WORLD_STATE_COS_CRATE_COUNT, m_uiCratesCount);
-        }   
+        }*/     
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -297,6 +302,14 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
         case TYPE_EPOCH:
             m_auiEncounter[9] = uiData;
             break;
+        case TYPE_ZOMBIEFEST:
+            m_auiEncounter[10] = uiData;
+            if(uiData == IN_PROGRESS)
+                m_uiZombieTimer = 0;
+            break;
+        case TYPE_ZOMBIE_COUNT:
+            m_uiZombieCount = m_uiZombieCount + uiData;
+            break;
         }
 
         if (uiData == DONE)
@@ -373,6 +386,8 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
             return m_auiEncounter[8];
         case TYPE_EPOCH:
             return m_auiEncounter[9];
+        case TYPE_ZOMBIEFEST:
+            return m_auiEncounter[10];
         }
         return 0;
     }
@@ -428,6 +443,24 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
                 m_uiLastTimer = m_uiHeroicTimer;
                 uint32 tMinutes = m_uiHeroicTimer / 60000;
                 DoUpdateWorldState(WORLD_STATE_COS_TIME_COUNT, tMinutes);
+            }
+        }
+
+        if(m_auiEncounter[10] == IN_PROGRESS)
+        {
+            m_uiZombieTimer += uiDiff;
+
+            if (m_uiZombieTimer > 60000)
+            {
+                m_uiZombieCount = 0;
+                m_uiZombieTimer = 1500000;
+                m_auiEncounter[10] = FAIL;
+            }
+            else if(m_uiZombieCount >= 100)
+            {
+                DoCompleteAchievement(ACHIEV_ZOMBIEFEST);
+                m_uiZombieCount = 0;
+                m_auiEncounter[10] = DONE;
             }
         }
 
