@@ -156,7 +156,7 @@ class MANGOS_DLL_DECL instance_naxxramas : public ScriptedInstance
 
         void Initialize();
 
-        bool IsEncounterInProgress();
+        bool IsEncounterInProgress() const;
 
         void OnCreatureCreate(Creature* pCreature);
         void OnObjectCreate(GameObject* pGo);
