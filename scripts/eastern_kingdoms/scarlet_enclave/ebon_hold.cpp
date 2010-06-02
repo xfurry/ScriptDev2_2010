@@ -1853,6 +1853,7 @@ struct MANGOS_DLL_DECL npc_highlord_darion_mograineAI : public npc_escortAI
 {
     npc_highlord_darion_mograineAI(Creature *pCreature) : npc_escortAI(pCreature)
     {
+        pCreature->SetPhaseMask(128, true);
         Reset();
     }
 
@@ -2029,6 +2030,16 @@ struct MANGOS_DLL_DECL npc_highlord_darion_mograineAI : public npc_escortAI
     void SetHoldState(bool bOnHold)
     {
         SetEscortPaused(bOnHold);
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        // set world states
+        //UpdateWorldState(m_creature->GetMap(), WORLD_STATE_COUNTDOWN, 1);
+        UpdateWorldState(m_creature->GetMap(), WORLD_STATE_EVENT_BEGIN, 0);
+        // respawn darion
+        m_creature->Respawn();
+        m_creature->SetPhaseMask(128, true);
     }
 
     void WaypointReached(uint32 i)
@@ -2865,6 +2876,7 @@ struct MANGOS_DLL_DECL npc_highlord_darion_mograineAI : public npc_escortAI
                         }
                         m_creature->SetVisibility(VISIBILITY_OFF); // respawns another Darion for quest turn in
                         m_creature->SummonCreature(NPC_HIGHLORD_DARION_MOGRAINE, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 180000);
+                        UpdateWorldState(m_creature->GetMap(), WORLD_STATE_EVENT_BEGIN, 0);
                         JumpToNextStep(1000);
                         break;
 
