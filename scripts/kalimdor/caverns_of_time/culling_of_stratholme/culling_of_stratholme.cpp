@@ -285,6 +285,27 @@ struct MANGOS_DLL_DECL npc_arthasAI : public npc_escortAI
         npc_escortAI::AttackStart(pWho);
     }
 
+    void JustDied(Unit* pKiller)
+    {
+        m_creature->Respawn();
+
+        // restart from intro
+        // the event is reseted to the previous waypoint phase after finishing intro
+        if(m_pInstance)
+        {
+            m_pInstance->SetData(TYPE_PHASE, 0);
+            m_pInstance->DoUpdateWorldState(WORLD_STATE_COS_WAVE_COUNT, 0);
+        }
+
+        // reset waves (bosses killed are unlootable)
+        // todo: reset event if arthas is killed after the waves are done
+        /*if(m_pInstance->GetData(TYPE_ENCOUNTER) == DONE)
+        {
+            if(Creature *pChromie = m_pInstance->instance->GetCreature(m_pInstance->GetData64(NPC_CHROMI02)))
+                pChromie->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+        }*/
+    }
+
     void MoveInLineOfSight(Unit* pWho)
     {
         if (!pWho)
@@ -692,7 +713,7 @@ struct MANGOS_DLL_DECL npc_arthasAI : public npc_escortAI
             LastX = m_creature->GetPositionX();
             LastY = m_creature->GetPositionY();
             LastZ = m_creature->GetPositionZ();
-            if(m_bIsHeroic)
+            if(m_bIsHeroic && m_pInstance->GetData(TYPE_BONUS) == NOT_STARTED)
                 m_pInstance->SetData(TYPE_BONUS, IN_PROGRESS);
             m_uiWaveCount = 0;
             SetRun(true);
@@ -737,11 +758,11 @@ struct MANGOS_DLL_DECL npc_arthasAI : public npc_escortAI
             break;
         case 5:
             m_pInstance->SetData(TYPE_PHASE, 4);
-            if(Creature* pMeathook = m_creature->SummonCreature(NPC_MEATHOOK,2272.773f, 1331.824f, 124.171f, 3.12f,TEMPSUMMON_CORPSE_TIMED_DESPAWN,29000))
+            if(Creature* pMeathook = m_creature->SummonCreature(NPC_MEATHOOK, 2340.058f, 1253.570f, 132.733f, 5.09f,TEMPSUMMON_CORPSE_TIMED_DESPAWN,29000))
             {
                 DoScriptText(SAY_MEATHOOK_SPAWN, pMeathook);
                 pMeathook->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                pMeathook->GetMotionMaster()->MovePoint(0, 2196.036f, 1328.818f, 129.997f);
+                pMeathook->GetMotionMaster()->MovePoint(0, 2351.9038f, 1201.3353f, 130.4317f);
             }
             break;
         case 6:
@@ -932,8 +953,6 @@ struct MANGOS_DLL_DECL npc_arthasAI : public npc_escortAI
             m_creature->GetMotionMaster()->MovePoint(0, 2298.298f,1500.362f,128.362f);
             DoScriptText(SAY_ARTHAS_OUTRO03, m_creature);
             // spawn chest & chronie
-            //if(GameObject* pChest = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_MALGANIS_CHEST)))
-                //pChest->SetUInt32Value(GAMEOBJECT_FACTION, 0);
             m_creature->SummonCreature(NPC_CHROMIE_DRAGON, 2296.665f, 1502.362f, 128.362f, 4.961f,TEMPSUMMON_TIMED_DESPAWN,900000);
             if(GameObject* pGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_EXIT)))
                  pGate->SetGoState(GO_STATE_ACTIVE);
@@ -1109,7 +1128,6 @@ struct MANGOS_DLL_DECL npc_utherAI : public npc_escortAI
 
     void StartAI()
     {
-        //m_pInstance->SetWeather(WEATHER_STATE_MEDIUM_RAIN, 0.9999f);
         SetWeather(WEATHER_STATE_MEDIUM_RAIN, 0.9999f);
         StartEvent = true;
         m_creature->SetVisibility(VISIBILITY_ON);
@@ -1309,6 +1327,7 @@ bool GossipSelect_npc_arthas(Player* pPlayer, Creature* pCreature, uint32 uiSend
 {
     ScriptedInstance* m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
 
+    // intro
     if(m_pInstance && m_pInstance->GetData(TYPE_PHASE) == 0)
     {
         m_pInstance->SetData(TYPE_PHASE, 1);
@@ -1317,18 +1336,21 @@ bool GossipSelect_npc_arthas(Player* pPlayer, Creature* pCreature, uint32 uiSend
         ((npc_arthasAI*)pCreature->AI())->culling_faction = pPlayer->getFaction();
     }
 
+    // enter townhall
     if(m_pInstance && m_pInstance->GetData(TYPE_PHASE) == 5)
     {
         ((npc_arthasAI*)pCreature->AI())->EnableEscort();
         ((npc_arthasAI*)pCreature->AI())->RemoveGossip();
     }
 
+    // after epoch
     if(m_pInstance && m_pInstance->GetData(TYPE_PHASE) == 8)
     {
         ((npc_arthasAI*)pCreature->AI())->EnableEscort();
         ((npc_arthasAI*)pCreature->AI())->RemoveGossip();
     }
 
+    // malganis
     if(m_pInstance && m_pInstance->GetData(TYPE_PHASE) == 9)
     {
         ((npc_arthasAI*)pCreature->AI())->EnableEscort();

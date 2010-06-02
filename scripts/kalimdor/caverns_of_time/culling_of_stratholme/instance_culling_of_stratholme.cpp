@@ -137,6 +137,10 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
             pCreature->SetActiveObjectState(true);
             m_uiChromi01GUID = pCreature->GetGUID();
             break;
+        case NPC_CHROMI02:
+            pCreature->SetActiveObjectState(true);
+            m_uiChromi02GUID = pCreature->GetGUID();
+            break;
         case NPC_MIKE: 
             m_uiMikeGUID = pCreature->GetGUID();
             break;
@@ -346,6 +350,12 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
         loadStream >> m_auiEncounter[0] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7]
         >> m_auiEncounter[8] >> m_auiEncounter[9];
 
+        for(uint8 i = 0; i < 11; ++i)
+        {
+            if (m_auiEncounter[i] == IN_PROGRESS)
+                m_auiEncounter[i] = NOT_STARTED;
+        }
+
         OUT_LOAD_INST_DATA_COMPLETE;
     }
 
@@ -414,6 +424,8 @@ struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
         case NPC_JAINA: return m_uiJainaGUID;
         case NPC_SALRAMM: return m_uiSalrammGUID;
         case NPC_MALGANIS: return m_uiMalganisGUID;
+        case NPC_CHROMI01: return m_uiChromi01GUID;
+        case NPC_CHROMI02: return m_uiChromi02GUID;
         case GO_SHKAF_GATE: return m_uiShkafGateGUID;
         case GO_MALGANIS_GATE1: return m_uiMalGate1GUID;
         case GO_MALGANIS_GATE2: return m_uiMalGate2GUID;
