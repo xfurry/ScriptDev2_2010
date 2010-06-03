@@ -1,0 +1,68 @@
+diff --git a/scripts/world/npcs_special.cpp b/scripts/world/npcs_special.cpp
+index 32a785f..c849df9 100644
+--- a/scripts/world/npcs_special.cpp
++++ b/scripts/world/npcs_special.cpp
+@@ -1716,6 +1716,44 @@ bool GossipSelect_npc_locksmith(Player* pPlayer, Creature* pCreature, uint32 uiS
+     return true;
+ }
+ 
++/*######
++## npc_experience_eliminator
++######*/
++
++#define GOSSIP_ITEM_STOP_XP_GAIN "I don't want to gain experience anymore."
++#define GOSSIP_CONFIRM_STOP_XP_GAIN "Are you sure you want to stop gaining experience?"
++#define GOSSIP_ITEM_START_XP_GAIN "I want to be able to gain experience again."
++#define GOSSIP_CONFIRM_START_XP_GAIN "Are you sure you want to be able to gain experience once again?"
++
++bool GossipHello_npc_experience_eliminator(Player* pPlayer, Creature* pCreature)
++{
++    pPlayer->ADD_GOSSIP_ITEM_EXTENDED(GOSSIP_ICON_CHAT, pPlayer->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED) ? GOSSIP_ITEM_START_XP_GAIN : GOSSIP_ITEM_STOP_XP_GAIN,
++                                      GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1,
++                                      pPlayer->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED) ? GOSSIP_CONFIRM_START_XP_GAIN : GOSSIP_CONFIRM_STOP_XP_GAIN, 100000, false);
++
++    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
++    return true;
++}
++
++bool GossipSelect_npc_experience_eliminator(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
++{
++    if(uiAction == GOSSIP_ACTION_INFO_DEF+1)
++    {
++        // cheater(?) passed through client limitations
++        if(pPlayer->GetMoney() < 100000)
++            return true;
++
++        pPlayer->ModifyMoney(-100000);
++
++        if(pPlayer->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED))
++            pPlayer->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED);
++        else
++            pPlayer->SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED);
++    }
++    pPlayer->CLOSE_GOSSIP_MENU();
++    return true;
++}
++
+ void AddSC_npcs_special()
+ {
+     Script* newscript;
+@@ -1805,4 +1843,10 @@ void AddSC_npcs_special()
+     newscript->pGossipHello =  &GossipHello_npc_locksmith;
+     newscript->pGossipSelect = &GossipSelect_npc_locksmith;
+     newscript->RegisterSelf();
++
++    newscript = new Script;
++    newscript->Name = "npc_experience_eliminator";
++    newscript->pGossipHello = &GossipHello_npc_experience_eliminator;
++    newscript->pGossipSelect = &GossipSelect_npc_experience_eliminator;
++    newscript->RegisterSelf();
+ }
+diff --git a/sql/Custom_Updates/Mangos/NpcSpecial_Mangos.sql b/sql/Custom_Updates/Mangos/NpcSpecial_Mangos.sql
+new file mode 100644
+index 0000000..1fb2bd2
+--- /dev/null
++++ b/sql/Custom_Updates/Mangos/NpcSpecial_Mangos.sql
+@@ -0,0 +1 @@
++UPDATE creature_template SET ScriptName="npc_experience_eliminator" WHERE entry IN ( 35365, 35364 );
+\ No newline at end of file
