@@ -125,7 +125,7 @@ enum
     DATA_CASTING_EYDIS          = 203,
     DATA_CASTING_FJOLA          = 204,
  
-    DESPAWN_TIME                = 300000, 
+    DESPAWN_TIME                = 600000, 
 
     DATA_ANNOUNCER              = 0,
     DATA_FLOOR                  = 1,
