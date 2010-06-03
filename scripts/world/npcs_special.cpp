@@ -1715,45 +1715,48 @@ bool GossipSelect_npc_locksmith(Player* pPlayer, Creature* pCreature, uint32 uiS
     }
     return true;
 }
-
 /*######
-## npc_experience_eliminator
+## npc_training_dummy
 ######*/
 
-#define GOSSIP_ITEM_STOP_XP_GAIN "I don't want to gain experience anymore."
-#define GOSSIP_CONFIRM_STOP_XP_GAIN "Are you sure you want to stop gaining experience?"
-#define GOSSIP_ITEM_START_XP_GAIN "I want to be able to gain experience again."
-#define GOSSIP_CONFIRM_START_XP_GAIN "Are you sure you want to be able to gain experience once again?"
+#define OUT_OF_COMBAT_TIME 5000
 
-bool GossipHello_npc_experience_eliminator(Player* pPlayer, Creature* pCreature)
+struct MANGOS_DLL_DECL npc_training_dummyAI : public Scripted_NoMovementAI
 {
-    pPlayer->ADD_GOSSIP_ITEM_EXTENDED(GOSSIP_ICON_CHAT, pPlayer->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED) ? GOSSIP_ITEM_START_XP_GAIN : GOSSIP_ITEM_STOP_XP_GAIN,
-                                      GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1,
-                                      pPlayer->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED) ? GOSSIP_CONFIRM_START_XP_GAIN : GOSSIP_CONFIRM_STOP_XP_GAIN, 100000, false);
+    uint32 combat_timer;
 
-    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
-    return true;
-}
-
-bool GossipSelect_npc_experience_eliminator(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
-{
-    if(uiAction == GOSSIP_ACTION_INFO_DEF+1)
+    npc_training_dummyAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
-        // cheater(?) passed through client limitations
-        if(pPlayer->GetMoney() < 100000)
-            return true;
-
-        pPlayer->ModifyMoney(-100000);
-
-        if(pPlayer->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED))
-            pPlayer->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED);
-        else
-            pPlayer->SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED);
+        Reset();
     }
-    pPlayer->CLOSE_GOSSIP_MENU();
-    return true;
-}
 
+    void Reset()
+    {
+        combat_timer = 0;
+    }
+
+    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+    {
+        combat_timer = 0;
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        m_creature->ModifyHealth(m_creature->GetMaxHealth());
+
+        combat_timer += diff;
+        if (combat_timer > OUT_OF_COMBAT_TIME)
+            EnterEvadeMode();
+    }
+};
+
+CreatureAI* GetAI_npc_training_dummy(Creature* pCreature)
+{
+    return new npc_training_dummyAI(pCreature);
+}
 void AddSC_npcs_special()
 {
     Script* newscript;
@@ -1843,10 +1846,9 @@ void AddSC_npcs_special()
     newscript->pGossipHello =  &GossipHello_npc_locksmith;
     newscript->pGossipSelect = &GossipSelect_npc_locksmith;
     newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "npc_experience_eliminator";
-    newscript->pGossipHello = &GossipHello_npc_experience_eliminator;
-    newscript->pGossipSelect = &GossipSelect_npc_experience_eliminator;
+	
+	newscript = new Script;
+    newscript->Name = "npc_training_dummy";
+    newscript->GetAI = &GetAI_npc_training_dummy;
     newscript->RegisterSelf();
 }
