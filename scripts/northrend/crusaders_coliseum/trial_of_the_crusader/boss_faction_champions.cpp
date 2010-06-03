@@ -31,15 +31,12 @@ enum
     SAY_SLAY2_HORDE         = -1605044,
     SAY_SLAY3_HORDE         = -1605045, 
     SAY_SLAY4_HORDE         = -1605046,
-    SAY_VICTORY_HORDE       = -1605042,
 
     // the slay are said by gorrash
     SAY_SLAY1_ALY           = -1605033,
     SAY_SLAY2_ALY           = -1605034,
     SAY_SLAY3_ALY           = -1605035,
     SAY_SLAY4_ALY           = -1605036,
-    SAY_VICTORY_ALY         = -1605032,
-
 
     // common spells
     SPELL_PVP_TRINKET           = 65547,
@@ -92,8 +89,8 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
     {
         CCTimer = rand()%10000;
         ThreatTimer = 15000;
-
         TeamInInstance = GetFaction();
+        m_creature->SetRespawnDelay(DAY);
     }
     
     float CalculateThreat(float distance, float armor, uint32 health)
@@ -190,12 +187,6 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
         //DoCast(m_creature, SP_PVP_TRINKET);
     }
     
-    void JustDied(Unit *killer)
-    {
-        if(m_pInstance) 
-            m_pInstance->SetData(TYPE_FACTION_CHAMPIONS, SPECIAL);
-    }
-    
     void Aggro(Unit *who)
     {
         DoCast(m_creature, SPELL_CHAMPIONS_AEGIS, true);
@@ -205,35 +196,50 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
         // call for help
         if(TeamInInstance == HORDE)
         {
+            if(m_pInstance)
+                m_pInstance->SetData(TYPE_STAGE,3);
+
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_1)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_2)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_3)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_4)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_5)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_6)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
 
             if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
@@ -242,65 +248,92 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
                 if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_8)))
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
                 if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_9)))
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
                 if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_10)))
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
                 if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1)))
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
                 if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2)))
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
             } 
         }
         else if(TeamInInstance == ALLIANCE)
         {
+            if(m_pInstance)
+                m_pInstance->SetData(TYPE_STAGE,4);
+
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_1)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_2)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_3)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_4)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_5)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
             if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_6)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
+                else
+                    pTemp->Respawn();
             }
 
             if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
@@ -309,31 +342,43 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
                 if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_8)))
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
                 if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_9)))
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
                 if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_10)))
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
                 if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1)))
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
                 if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2)))
                 {
                     if(pTemp->isAlive())
                         pTemp->AI()->AttackStart(m_creature->getVictim());
+                    else
+                        pTemp->Respawn();
                 }
             }
         }

@@ -81,7 +81,6 @@ enum
     SPELL_WILFRED_PORTAL        = 68424,
 
     //champions
-
     SAY_TIRION_CHAMP_INTRO1     = -1605027,
     SAY_TIRION_CHAMP_INTRO2     = -1605028,
     SAY_GARROSH_CHAMP1          = -1605030,
@@ -108,10 +107,10 @@ enum
     SAY_LICHKING_INTRO7         = -1605066,
     SAY_LICHKING_INTRO8         = -1605075,
 
+    SPELL_BERSERK               = 26662,
+
     ACHIEV_RESILIENCE_WILL_FIX      = 3798,
     ACHIEV_RESILIENCE_WILL_FIX_H    = 3814,
-
-    SPELL_BERSERK               = 26662,
 };
 
 struct TocMessages
@@ -197,150 +196,54 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
     {
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_1)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_2_1, SpawnLoc[3].x, SpawnLoc[3].y - 13, SpawnLoc[3].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_1))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_2)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_2_2, SpawnLoc[4].x, SpawnLoc[4].y - 13, SpawnLoc[4].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_2))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_3)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_2_3, SpawnLoc[5].x, SpawnLoc[5].y - 13, SpawnLoc[5].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_3))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_4)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_2_4, SpawnLoc[6].x, SpawnLoc[6].y - 13, SpawnLoc[6].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_4))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_5)))
             pTemp->Respawn();
         else 
-        {
             m_creature->SummonCreature(NPC_CRUSADER_2_5, SpawnLoc[7].x, SpawnLoc[7].y - 13, SpawnLoc[7].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_5))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_6)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_2_6, SpawnLoc[8].x, SpawnLoc[8].y - 13, SpawnLoc[8].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_6))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
         {
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_7)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_2_7, SpawnLoc[9].x, SpawnLoc[9].y - 13, SpawnLoc[9].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_7))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_8)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_2_8, SpawnLoc[10].x, SpawnLoc[10].y - 13, SpawnLoc[10].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_8))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_9)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_2_9, SpawnLoc[11].x, SpawnLoc[11].y - 13, SpawnLoc[11].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_9))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_10)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_2_10, SpawnLoc[12].x, SpawnLoc[12].y - 13, SpawnLoc[12].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_10))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_0_1, SpawnLoc[13].x, SpawnLoc[13].y - 13, SpawnLoc[13].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_0_2, SpawnLoc[14].x, SpawnLoc[14].y - 13, SpawnLoc[14].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2)))
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
         }
     }
 
@@ -348,150 +251,54 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
     {
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_1)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_1_1, SpawnLoc[3].x, SpawnLoc[3].y - 13, SpawnLoc[3].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_1))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_2)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_1_2, SpawnLoc[4].x, SpawnLoc[4].y - 13, SpawnLoc[4].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_2))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_3)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_1_3, SpawnLoc[5].x, SpawnLoc[5].y - 13, SpawnLoc[5].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_3)))
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_4)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_1_4, SpawnLoc[6].x, SpawnLoc[6].y - 13, SpawnLoc[6].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_4))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_5)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_1_5, SpawnLoc[7].x, SpawnLoc[7].y - 13, SpawnLoc[7].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_5))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_6)))
             pTemp->Respawn();
-        else 
-        {
+        else
             m_creature->SummonCreature(NPC_CRUSADER_1_6, SpawnLoc[8].x, SpawnLoc[8].y - 13, SpawnLoc[8].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_6))) 
-            {
-                pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                pTemp->SetInCombatWithZone();
-            }*/
-        }
         if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
         {
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_7)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_1_7, SpawnLoc[9].x, SpawnLoc[9].y - 13, SpawnLoc[9].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_7))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_8)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_1_8, SpawnLoc[10].x, SpawnLoc[10].y - 13, SpawnLoc[10].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_8))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_9)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_1_9, SpawnLoc[11].x, SpawnLoc[11].y - 13, SpawnLoc[11].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_9))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_10)))
                 pTemp->Respawn();
             else
-            {
                 m_creature->SummonCreature(NPC_CRUSADER_1_10, SpawnLoc[12].x, SpawnLoc[12].y - 13, SpawnLoc[12].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_10))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_0_1, SpawnLoc[13].x, SpawnLoc[13].y - 13, SpawnLoc[13].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
             if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2)))
                 pTemp->Respawn();
-            else 
-            {
+            else
                 m_creature->SummonCreature(NPC_CRUSADER_0_2, SpawnLoc[14].x, SpawnLoc[14].y - 13, SpawnLoc[14].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-                /*if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2))) 
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->AddSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }*/
-            }
         }
     }
 
