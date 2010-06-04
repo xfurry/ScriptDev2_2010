@@ -860,7 +860,7 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                         m_bIsAchiev = false;
                     }
 
-                    if (!pTemp1->isAlive() || !pTemp2->isAlive() || !pTemp3->isAlive() || !pTemp4->isAlive() || !pTemp5->isAlive() || !pTemp6->isAlive() || flag25)
+                    if (!pTemp1->isAlive() || !pTemp2->isAlive() || !pTemp3->isAlive() || !pTemp4->isAlive() || !pTemp5->isAlive() || !pTemp6->isAlive())
                         m_bIsAchiev = true;
                     // if neither of them is dead -> reset counter (in case of wipe)
                     else
@@ -936,7 +936,7 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                         m_bIsAchiev = false;
                     }
 
-                    if (!pTemp1->isAlive() || !pTemp2->isAlive() || !pTemp3->isAlive() || !pTemp4->isAlive() || !pTemp5->isAlive() || !pTemp6->isAlive() || flag25)
+                    if (!pTemp1->isAlive() || !pTemp2->isAlive() || !pTemp3->isAlive() || !pTemp4->isAlive() || !pTemp5->isAlive() || !pTemp6->isAlive())
                         m_bIsAchiev = true;
                     // if neither of them is dead -> reset counter (in case of wipe)
                     else

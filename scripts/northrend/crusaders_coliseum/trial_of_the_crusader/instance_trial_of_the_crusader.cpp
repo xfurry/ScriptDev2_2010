@@ -357,7 +357,7 @@ struct MANGOS_DLL_DECL instance_trial_of_the_crusader : public ScriptedInstance
         case TYPE_FACTION_CHAMPIONS:
             m_auiEncounter[2] = uiData;
             if (uiData == DONE)
-                DoRespawnGameObject(m_uiCrusadersCacheGUID, 30*MINUTE);
+                DoRespawnGameObject(m_uiCrusadersCacheGUID, 10*MINUTE);
             if(uiData == IN_PROGRESS)
                 CloseDoor(m_uiWestDoorGUID);
             else
