@@ -2215,6 +2215,34 @@
 					Name="violet_hold"
 					>
 					<File
+						RelativePath="..\scripts\northrend\violet_hold\boss_cyanigosa.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\violet_hold\boss_erekem.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\violet_hold\boss_ichoron.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\violet_hold\boss_lavanthor.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\violet_hold\boss_moragg.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\violet_hold\boss_xevozz.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\violet_hold\boss_zuramat.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\scripts\northrend\violet_hold\instance_violet_hold.cpp"
 						>
 					</File>

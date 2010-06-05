@@ -7,17 +7,35 @@
 
 enum
 {
-    MAX_ENCOUNTER               = 3,
+    MAX_ENCOUNTER               = 14,
 
     TYPE_MAIN                   = 1,
     TYPE_SEAL                   = 2,
     TYPE_PORTAL                 = 3,
+
+    TYPE_FIRST_BOSS             = 4,
+    TYPE_SECOND_BOSS            = 5,
+    TYPE_CYANIGOSA              = 6,
+    
+    TYPE_FIRST_BOSS_ID          = 7,
+    TYPE_SECOND_BOSS_ID         = 8,
+
+    TYPE_EREKEM                 = 9,
+    TYPE_MORAGG                 = 10,
+    TYPE_ICHORON                = 11,
+    TYPE_XEVOZZ                 = 12,
+    TYPE_LAVANTHOR              = 13,
+    TYPE_ZURAMAT                = 14,
+
+    TYPE_LASTBOSS               = 15,
+    TYPE_LASTBOSS_ID            = 16,
 
     WORLD_STATE_ID              = 3816,
     WORLD_STATE_SEAL            = 3815,
     WORLD_STATE_PORTALS         = 3810,
 
     GO_INTRO_CRYSTAL            = 193615,
+    GO_DEFENSE_CRYSTAL          = 193611,
     GO_PRISON_SEAL_DOOR         = 191723,
 
     GO_CELL_LAVANTHOR           = 191566,
@@ -81,6 +99,8 @@ enum
 
     SPELL_DEFENSE_SYSTEM_VISUAL = 57887,
     SPELL_DEFENSE_SYSTEM_SPAWN  = 57886,
+    SPELL_DEFENSE_SYSTEM_DMG    = 57912,                    // spell dmg
+    SPELL_DEFENSE_SYSTEM_INTRO  = 57930,                    // just visual, no dmg
 
     SPELL_DESTROY_DOOR_SEAL     = 58040,                    // spell periodic cast by misc
     SPELL_TELEPORTATION_PORTAL  = 57687,                    // visual aura, but possibly not used? creature_template model for portals are same
@@ -101,6 +121,8 @@ enum
     EMOTE_GUARDIAN_PORTAL       = -1608005,
     EMOTE_DRAGONFLIGHT_PORTAL   = -1608006,
     EMOTE_KEEPER_PORTAL         = -1608007,
+
+    ACHIEV_DEFENSELESS          = 1816,
 
     MAX_NORMAL_PORTAL           = 8
 };
@@ -133,6 +155,98 @@ static sPortalData afPortalLocation[]=
     {PORTAL_TYPE_BOSS, 1890.73f, 803.309f, 38.4001f, 2.4139f},  //center
 };
 
+struct Locations
+{
+    float x, y, z;
+    uint32 id;
+};
+struct WayPoints
+{
+    WayPoints(uint32 _id, float _x, float _y, float _z)
+    {
+        id = _id;
+        x = _x;
+        y = _y;
+        z = _z;
+    }
+    uint32 id;
+    float x, y, z;
+};
+
+static Locations PortalLoc[]=
+{
+    {1936.101f, 802.950f, 52.417f}, // 0 balcony
+    {1878.198f, 850.005f, 43.333f}, // 1 Portal in front of Erekem
+    {1892.737f, 744.589f, 47.666f}, // 2 Moragg
+    {1909.381f, 806.796f, 38.645f}, // 3 Portal outside of Ichoron
+    {1928.060f, 763.256f, 51.316f}, // 4 bridge
+    {1925.480f, 849.981f, 47.174f}, // 5 Zuramat
+    {1914.160f, 832.527f, 38.644f}, // 6 xevozz
+    {1857.125f, 763.295f, 38.654f}, // 7 Lavanthor
+    {1888.271f, 810.781f, 38.441f}, // 8 center
+};
+
+static Locations BossLoc[]=
+{
+    {0,0,0},
+    {0,0,0},
+    {0,0,0},
+    {0,0,0},
+    {0,0,0},
+    {0,0,0},
+    {0,0,0},
+    {0,0,0},
+    {1876.100f, 857.079f, 43.333f}, // Erekem
+    {1892.737f, 744.589f, 47.666f}, // Moragg
+    {1908.863f, 785.647f, 37.435f}, // Ichoron
+    {1905.364f, 840.607f, 38.670f}, // Xevozz
+    {1857.125f, 763.295f, 38.654f}, // Lavanthor
+    {1925.480f, 849.981f, 47.174f}, // Zuramat
+};
+
+static Locations DragonsWP[]=
+{
+    //center, ichoron
+    {1869.393f, 803.902f, 38.768f}, // 0 
+    {1859.843f, 804.222f, 44.008f}, // 1 
+    {1827.960f, 804.208f, 44.364f}, // 2 
+
+    //From left side (lavanthor)
+    {1861.016f, 789.717f, 38.908f}, // 3 
+    {1856.217f, 796.705f, 44.008f}, // 4 
+    {1827.960f, 804.208f, 44.364f}, // 5 
+
+    //From Zuramat
+    {1931.446f, 826.734f, 47.556f}, // 6 
+    {1913.049f, 823.930f, 38.792f}, // 7 
+    {1827.960f, 804.208f, 44.364f}, // 8 
+    {1869.393f, 803.902f, 38.768f}, // 9 
+    {1859.843f, 804.222f, 44.008f}, // 10 
+    {1827.960f, 804.208f, 44.364f}, // 11 
+
+    //From Morag & Bridge
+    {1892.737f, 744.589f, 47.666f}, // 12
+    {1887.500f, 763.096f, 47.666f}, // 13 
+    {1880.837f, 775.769f, 38.796f}, // 14 
+    {1861.016f, 789.717f, 38.908f}, // 15 
+    {1856.217f, 796.705f, 44.008f}, // 16 
+    {1827.960f, 804.208f, 44.364f}, // 17 
+
+    //From erekem
+    {1878.280f, 843.267f, 43.333f}, // 18 
+    {1872.311f, 835.531f, 38.780f}, // 19 
+    {1861.997f, 818.766f, 38.650f}, // 20 
+    {1857.348f, 811.230f, 44.008f}, // 21
+    {1827.960f, 804.208f, 44.364f}, // 22 
+
+    //From Highest platform
+    {1937.298f, 824.557f, 52.332f}, // 23
+    {1913.049f, 823.930f, 38.792f}, // 24
+    {1869.393f, 803.902f, 38.768f}, // 25
+    {1859.843f, 804.222f, 44.008f}, // 26
+    {1827.960f, 804.208f, 44.364f}, // 27
+};
+
 class MANGOS_DLL_DECL instance_violet_hold : public ScriptedInstance
 {
     public:
@@ -160,6 +274,8 @@ class MANGOS_DLL_DECL instance_violet_hold : public ScriptedInstance
         uint32 GetRandomMobForNormalPortal();
 
         uint32 GetCurrentPortalNumber() { return m_uiWorldStatePortalCount; }
+        uint8 GetCurrentPortalId() { return m_uiPortalId; }
+        uint32 GetCurrentSealCount() { return m_uiWorldStateSealCount; }
 
         sPortalData const* GetPortalData() { return &afPortalLocation[m_uiPortalId]; }
 
@@ -187,6 +303,10 @@ class MANGOS_DLL_DECL instance_violet_hold : public ScriptedInstance
 
         void SetData(uint32 uiType, uint32 uiData);
         uint64 GetData64(uint32 uiData);
+        uint32 GetData(uint32 uiType);
+
+        const char* Save();
+        void Load(const char* chrIn);
 
         void Update(uint32 uiDiff);
 
@@ -209,6 +329,7 @@ class MANGOS_DLL_DECL instance_violet_hold : public ScriptedInstance
         uint64 m_uiCellErekemGuard_LGUID;
         uint64 m_uiCellErekemGuard_RGUID;
         uint64 m_uiIntroCrystalGUID;
+        uint64 m_uiDefenseCrystalGUID;
         uint64 m_uiDoorSealGUID;
 
         uint32 m_uiWorldState;
@@ -218,6 +339,10 @@ class MANGOS_DLL_DECL instance_violet_hold : public ScriptedInstance
         uint8 m_uiPortalId;
         uint32 m_uiPortalTimer;
         uint32 m_uiMaxCountPortalLoc;
+
+        uint8 m_uiLastBossID;
+        uint8 m_uiLastBossIDConst;
+        bool m_bDefenseUsed;
 
         BossToCellMap m_mBossToCellMap;
 
