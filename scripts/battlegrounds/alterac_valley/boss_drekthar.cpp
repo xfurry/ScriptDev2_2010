@@ -72,25 +72,21 @@ struct MANGOS_DLL_DECL boss_drektharAI : public ScriptedAI
         ResetTimer		    = 5000;
         YellTimer           = (20+rand()%10)*1000; //20 to 30 seconds
 
-        if(Creature* pDrakan = GetClosestCreatureWithEntry(m_creature, NPC_DRAKAN, 50.0f))
+        if(Creature* pDrakan = GetClosestCreatureWithEntry(m_creature, NPC_DRAKAN, 150.0f))
         {
             if(!pDrakan->isAlive())
                 pDrakan->Respawn();
             else
                 pDrakan->CastSpell(pDrakan, SPELL_ENRAGE, false);
         }
-        else
-            m_creature->SummonCreature(NPC_DRAKAN, m_creature->GetPositionX() + 3, m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000);
 
-        if(Creature* pDuros = GetClosestCreatureWithEntry(m_creature, NPC_DUROS, 50.0f))
+        if(Creature* pDuros = GetClosestCreatureWithEntry(m_creature, NPC_DUROS, 150.0f))
         {
             if(!pDuros->isAlive())
                 pDuros->Respawn();
             else
                 pDuros->CastSpell(pDuros, SPELL_ENRAGE, false);
         }
-        else
-            m_creature->SummonCreature(NPC_DUROS, m_creature->GetPositionX() - 3, m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000);
     }
 
     void Aggro(Unit *who)
@@ -109,7 +105,6 @@ struct MANGOS_DLL_DECL boss_drektharAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
