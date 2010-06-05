@@ -59,7 +59,6 @@ enum
     SPELL_BOLT                  = 39252,
     SPELL_SINISTER_STRIKE       = 15667,
     SPELL_SINISTER_STRIKE_H     = 59409,
-    SPELL_KILL                  = 5,
 
     //channelers spells
     SPELL_PARALYZE              = 48278,
@@ -285,7 +284,7 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
                 {
                     Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiPlayerGUID);
                     if(pPlayer)
-                        m_creature->CastSpell(pPlayer, SPELL_KILL, false);
+                        m_creature->DealDamage(pPlayer, pPlayer->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
                     for(uint8 k=0; k<3; ++k)
                     {
