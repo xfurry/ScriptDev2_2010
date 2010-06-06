@@ -543,6 +543,8 @@ struct MANGOS_DLL_DECL mob_infernal_volcanoAI : public ScriptedAI
         Difficulty = (uint8)pCreature->GetMap()->GetDifficulty();
         if (Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
             pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+            pCreature->SetMaxHealth(189000);
         SetCombatMovement(false);
         pCreature->setFaction(14);
         Reset();
@@ -664,6 +666,8 @@ struct MANGOS_DLL_DECL mob_nether_portalAI : public ScriptedAI
         Difficulty = pCreature->GetMap()->GetDifficulty();
         if (Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
             pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+            pCreature->SetMaxHealth(189000);
         pCreature->SetDisplayId(11686);     // make invisible
         m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, 3.0f);
         pCreature->setFaction(14);
