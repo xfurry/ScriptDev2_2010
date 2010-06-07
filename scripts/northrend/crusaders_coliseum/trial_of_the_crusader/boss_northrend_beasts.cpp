@@ -371,7 +371,6 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
                     m_creature->SendMonsterMove(SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
                     m_creature->GetMotionMaster()->MoveIdle();
                     SetCombatMovement(false);
-                    m_creature->RemoveAllAuras();
                     m_creature->CombatStop(true);
                     m_creature->InterruptNonMeleeSpells(false);
                     ++m_uiTrampleStage;
