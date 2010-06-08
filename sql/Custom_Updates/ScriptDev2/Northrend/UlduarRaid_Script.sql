@@ -18,6 +18,7 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603214,"'Mimiron's Inferno' online. Acquiring target.","","","","","","","","",15513,1,0,0,"Flame Leviathan fire"),
 (-1603215,"'Thorim's Hammer' online. Acquiring target.","","","","","","","","",15515,1,0,0,"Flame Leviathan energy"),
 (-1603216,"'Freya's Ward' online. Acquiring target.","","","","","","","","",15514,1,0,0,"Flame Leviathan nature"),
+(-1603352,'PursueWarn' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_pursue'),
 
 -- Ignis:
 (-1603010, "Insolent whelps! Your blood will temper the weapons used to reclaim this world!", "","","","","","","","",15564, 1, 0, 0, 'IgnisAggro'),
@@ -32,13 +33,15 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603019, "I. Have. Failed.", "","","","","","","","",15572, 1, 0, 0, 'Ignis death'),
 
 -- razorscale
-(-1603020,'Welcome, champions! All of our attempts at grounding her have failed. We could use a hand in bring her down with these harpoon guns.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15647,'1',NULL,NULL,'razorscale intro - commander'),
-(-1603021,'Give us a moment to prepare to build the turrets.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15543,'1',NULL,NULL,'razor aggro 1 - eng'),
-(-1603022,'Be on the lookout! Mole machines will be surfacing soon with those nasty Iron dwarves aboard!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15544,'1',NULL,NULL,'razor aggro 2 - commander'),
-(-1603023,'Ready to move out, keep those dwarves off of our backs!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15545,'1',NULL,NULL,'razor aggro 3 - eng'),
-(-1603024,'Move! Quickly! She won’t remain grounded for long.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15648,'1',NULL,NULL,'razor ground - commander'),
-(-1603025,'Razorscale takes a deep breath...',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15547,'1',NULL,NULL,'razor deep breath'),
-(-1603026,'Fires out! Let\'s rebuild those turrets!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15548,'1',NULL,NULL,'razor extinguish fires'),
+(-1603020,'Welcome, champions! All of our attempts at grounding her have failed. We could use a hand in bring her down with these harpoon guns.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15647,'0',NULL,NULL,'razorscale intro - commander'),
+(-1603021,'Give us a moment to prepare to build the turrets.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'1',NULL,NULL,'razor aggro 1 - eng'),
+(-1603022,'Be on the lookout! Mole machines will be surfacing soon with those nasty Iron dwarves aboard!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'1',NULL,NULL,'razor aggro 2 - commander'),
+(-1603023,'Ready to move out, keep those dwarves off of our backs!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'1',NULL,NULL,'razor aggro 3 - eng'),
+(-1603024,'Move! Quickly! She won’t remain grounded for long.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'1',NULL,NULL,'razor ground - commander'),
+(-1603025,'Razorscale takes a deep breath...',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'3',NULL,NULL,'razor deep breath'),
+(-1603026,'Fires out! Let\'s rebuild those turrets!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,'1',NULL,NULL,'razor extinguish fires'),
+(-1603353,'Harpoon Turret is ready for use!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_harpoon'),
+(-1603354,'Razorscale grounded permanently!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_ground'),
 
 -- Xt002
 (-1603030,"You are bad... Toys... Very... Baaaaad!","","","","","","","","",15731,1,0,0,"XT-002 Death"),
@@ -50,6 +53,8 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603036,"I... I think I broke it.","","","","","","","","",15728,1,0,0,"XT-002 Slay 1"),
 (-1603037,"NO! NO! NO! NO! NO!","","","","","","","","",15727,1,0,0,"XT-002 Tympanic Tantrum"),
 (-1603038,"New toys? For me? I promise I won't break them this time!","","","","","","","","",15724,1,0,0,"XT-002 Aggro"),
+(-1603350,'XT-002 Deconstructor\'s heart is exposed and leaking energy!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_expose_heart'),
+(-1603351,'XT-002 Deconstructor consumes a scrapbot to repair himself.' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_repair'),
 
 -- Iron Council
 -- Molgeim

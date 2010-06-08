@@ -69,7 +69,7 @@ bool GoHello_ulduar_teleporter( Player *pPlayer, GameObject *pGO )
     pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Expedition Base Camp", GOSSIP_SENDER_MAIN, BASE_CAMP);
 
     // formation grounds & colossal forge
-    if(pInstance->GetData(TYPE_IGNIS) == DONE || pInstance->GetData(TYPE_RAZORSCALE) == DONE)
+    if(pInstance->GetData(TYPE_IGNIS) == DONE && pInstance->GetData(TYPE_RAZORSCALE) == DONE)
     {
         pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Formation Grounds", GOSSIP_SENDER_MAIN, GROUNDS);
         pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Colossal Forge", GOSSIP_SENDER_MAIN, FORGE);

@@ -35,11 +35,6 @@ enum
     TYPE_VISION3                = 21, 
     TYPE_YOGG_BRAIN             = 22,
 
-    DATA_LEVIATHAN              = 14,
-    DATA_IGNIS                  = 15,
-    DATA_RAZORSCALE             = 16,
-    DATA_XT002                  = 17,
-    DATA_HEART                  = 50,
     DATA_KOLOGARN               = 18,
     DATA_AURIAYA                = 19,
     DATA_STEELBREAKER           = 20,
@@ -100,11 +95,13 @@ enum
     TYPE_XT002_TP,
     TYPE_MIMIRON_TP,
 
+    // siege
     NPC_LEVIATHAN               = 33113,
     NPC_IGNIS                   = 33118,
     NPC_RAZORSCALE              = 33186,
+    NPC_COMMANDER               = 33210,
     NPC_XT002                   = 33293,
-    NPC_HEART				    = 33329,
+    // antechamber
     NPC_STEELBREAKER            = 32867,
     NPC_MOLGEIM                 = 32927,
     NPC_BRUNDIR                 = 32857,
@@ -178,6 +175,7 @@ enum
     GO_SHIELD_WALL              = 194416,
     GO_LEVIATHAN_GATE           = 194630,
     GO_XT002_GATE               = 194631,
+    GO_BROKEN_HARPOON           = 194565,
     // archivum
     GO_SHATTERED_DOOR           = 194553,
     GO_IRON_ENTRANCE_DOOR       = 194554,

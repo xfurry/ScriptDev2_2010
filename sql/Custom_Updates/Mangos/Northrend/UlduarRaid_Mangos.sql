@@ -11,6 +11,13 @@ UPDATE creature_template SET minlevel=80, maxlevel=80, faction_h=1925, faction_a
 
 -- Razorscale
 UPDATE creature_template SET mechanic_immune_mask=617299803, scriptname='boss_razorscale' WHERE entry=33186;
+-- original x=587.547, y= -174.927, z = 391.517;
+update creature set position_x = 590.346741, position_y = -226.947647, position_z = 442.897583 where id = 33186;
+UPDATE gameobject_template SET flags= 6553648, ScriptName="go_broken_harpoon" WHERE entry = 194565;
+-- only 2 harpoons for 10 man
+update gameobject set spawnMask = 2 where guid in (73595, 73592);
+-- mole machines
+UPDATE creature_template SET ScriptName = "mob_mole_machine" WHERE entry = 33245;
 UPDATE creature_template SET ScriptName = "mob_dark_rune_watcher" WHERE entry = 33453;
 UPDATE creature_template SET ScriptName = "mob_dark_rune_sentinel" WHERE entry = 33846;
 UPDATE creature_template SET ScriptName = "mob_dark_rune_guardian" WHERE entry = 33388;
@@ -227,8 +234,8 @@ REPLACE INTO spell_target_position VALUES
 
 -- Doors 
 UPDATE gameobject_template SET faction = 114 WHERE entry in (194553, 194554, 194556, 194555, 194148, 194634, 194635, 194905, 194441,
-194442, 194416, 194774, 194775, 194776, 194560, 194557, 194558, 194750, 194910, 194559, 194635, 194636, 194637);
-UPDATE gameobject_template SET faction = 0 WHERE entry in (194255, 194630, 194631);
+194442, 194416, 194774, 194775, 194776, 194560, 194557, 194558, 194750, 194910, 194559, 194635, 194636, 194637, 194631);
+UPDATE gameobject_template SET faction = 0 WHERE entry in (194255, 194630);
 -- Doors from the siege && descent into madness: to be added later
 #UPDATE gameobject_template SET faction = 114 WHERE entry in (194255, 194630, 194631);
 

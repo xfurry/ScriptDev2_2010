@@ -73,6 +73,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiLeviathanGUID;
     uint64 m_uiIgnisGUID;
     uint64 m_uiRazorscaleGUID;
+    uint64 m_uiCommanderGUID;
     uint64 m_uiXT002GUID;
     uint64 m_uiXTheartGUID;
     uint64 m_auiAssemblyGUIDs[3];
@@ -113,6 +114,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiShieldWallGUID;
     uint64 m_uiLeviathanGateGUID;
     uint64 m_uiXT002GateGUID;
+    uint64 m_uiBrokenHarpoonGUID;
     // Archivum
     uint64 m_uiIronCouncilDoorGUID;
     uint64 m_uiArchivumDoorGUID;
@@ -184,6 +186,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiLeviathanGUID       = 0;
         m_uiIgnisGUID           = 0;
         m_uiRazorscaleGUID      = 0;
+        m_uiCommanderGUID       = 0;
         m_uiXT002GUID           = 0;
         m_uiXTheartGUID         = 0;
         m_uiKologarnGUID        = 0;
@@ -236,6 +239,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiShieldWallGUID      = 0;
         m_uiLeviathanGateGUID   = 0;
         m_uiXT002GateGUID       = 0;
+        m_uiBrokenHarpoonGUID   = 0;
         // Archivum
         m_uiIronCouncilDoorGUID = 0;
         m_uiArchivumDoorGUID    = 0;
@@ -302,11 +306,11 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case NPC_RAZORSCALE:
             m_uiRazorscaleGUID = pCreature->GetGUID();
             break;
+        case NPC_COMMANDER:
+            m_uiCommanderGUID = pCreature->GetGUID();
+            break;
         case NPC_XT002:
             m_uiXT002GUID = pCreature->GetGUID();
-            break;
-        case NPC_HEART:
-            m_uiXTheartGUID = pCreature->GetGUID();
             break;
 
             // Assembly of Iron
@@ -426,12 +430,20 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case GO_LEVIATHAN_GATE:
             m_uiLeviathanGateGUID = pGo->GetGUID();
-            if(m_auiEncounter[0])
+            if(m_auiEncounter[0] == DONE)
                 pGo->SetGoState(GO_STATE_ACTIVE);
             break;
         case GO_XT002_GATE:
             pGo->SetGoState(GO_STATE_READY);
+            if(m_auiEncounter[3] == DONE)
+                pGo->SetGoState(GO_STATE_ACTIVE);
+            if(m_auiEncounter[1] == DONE && m_auiEncounter[2] == DONE)
+                pGo->SetGoState(GO_STATE_ACTIVE);
             m_uiXT002GateGUID = pGo->GetGUID();
+            break;
+        case GO_BROKEN_HARPOON:
+            m_uiBrokenHarpoonGUID = pGo->GetGUID();
+            pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
             break;
 
             // Archivum
@@ -680,15 +692,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         }
     }
 
-    /*void Update (uint32 diff)
-    {
-        if (m_uiDoorCheckTimer <= diff && !hasChecked)
-        {
-            OpenMadnessDoor();
-            m_uiDoorCheckTimer = 1000;//remove stress from core
-        } else m_uiDoorCheckTimer -= diff;
-    }*/
-
     void OpenDoor(uint64 guid)
     {
         if(!guid) return;
@@ -710,8 +713,13 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             if(Creature *pVezax = instance->GetCreature(m_uiVezaxGUID))
                 pVezax->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             OpenDoor(m_uiAncientGateGUID);
-            hasChecked = true;
         }
+    }
+
+    void OpenXtDoor()
+    {
+        if(m_auiEncounter[1] == DONE && m_auiEncounter[2] == DONE)
+            OpenDoor(m_uiXT002GateGUID);
     }
 
     void SetData(uint32 uiType, uint32 uiData)
@@ -732,9 +740,11 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case TYPE_IGNIS:
             m_auiEncounter[1] = uiData;
+            OpenXtDoor();
             break;
         case TYPE_RAZORSCALE:
             m_auiEncounter[2] = uiData;
+            OpenXtDoor();
             break;
         case TYPE_XT002:
             m_auiEncounter[3] = uiData;
@@ -1001,16 +1011,16 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     {
         switch(uiData)
         {
-        case DATA_LEVIATHAN:
+        case NPC_LEVIATHAN:
             return m_uiLeviathanGUID;
-        case DATA_IGNIS:
+        case NPC_IGNIS:
             return m_uiIgnisGUID;
-        case DATA_RAZORSCALE:
+        case NPC_RAZORSCALE:
             return m_uiRazorscaleGUID;
-        case DATA_XT002:
+        case NPC_COMMANDER:
+            return m_uiCommanderGUID;
+        case NPC_XT002:
             return m_uiXT002GUID;
-        case DATA_HEART:
-            return m_uiXTheartGUID;
         case DATA_KOLOGARN:
             return m_uiKologarnGUID;
         case DATA_LEFT_ARM:
@@ -1106,9 +1116,13 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         switch(uiType)
         {
         case TYPE_LEVIATHAN:
+            return m_auiEncounter[0];
         case TYPE_IGNIS:
+            return m_auiEncounter[1];
         case TYPE_RAZORSCALE:
+            return m_auiEncounter[2];
         case TYPE_XT002:
+            return m_auiEncounter[3];
         case TYPE_ASSEMBLY:
         case TYPE_KOLOGARN:
         case TYPE_AURIAYA:
