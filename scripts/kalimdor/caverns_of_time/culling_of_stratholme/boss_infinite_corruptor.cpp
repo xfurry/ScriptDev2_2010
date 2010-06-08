@@ -52,6 +52,7 @@ struct MANGOS_DLL_DECL boss_infinite_corruptorAI : public ScriptedAI
     {
         m_uiCourseTimer = 7000;
         m_uiStrikeTimer = 5000;
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void Aggro(Unit* who)
