@@ -68,6 +68,7 @@ extern void AddSC_boss_flamegor();
 extern void AddSC_boss_chromaggus();
 extern void AddSC_boss_nefarian();
 extern void AddSC_boss_victor_nefarius();
+extern void AddSC_instance_blackwing_lair();
 extern void AddSC_deadmines();                              //deadmines
 extern void AddSC_instance_deadmines();
 extern void AddSC_boss_attumen();                           //karazhan
@@ -558,6 +559,7 @@ void AddScripts()
     AddSC_boss_chromaggus();
     AddSC_boss_nefarian();
     AddSC_boss_victor_nefarius();
+    AddSC_instance_blackwing_lair();
     AddSC_deadmines();                                      //deadmines
     AddSC_instance_deadmines();
     AddSC_boss_attumen();                                   //karazhan
