@@ -430,6 +430,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case GO_LEVIATHAN_GATE:
             m_uiLeviathanGateGUID = pGo->GetGUID();
+            pGo->SetGoState(GO_STATE_ACTIVE);   // should be ready when leviathan is implemented
             if(m_auiEncounter[0] == DONE)
                 pGo->SetGoState(GO_STATE_ACTIVE);
             break;
@@ -477,10 +478,9 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             // Shattered Hallway
         case GO_KOLOGARN_BRIDGE:
             m_uiKologarnBridgeGUID = pGo->GetGUID();
+            pGo->SetGoState(GO_STATE_READY);
             if(m_auiEncounter[5] == DONE)
                 pGo->SetGoState(GO_STATE_ACTIVE);
-            else
-                pGo->SetGoState(GO_STATE_READY);
             break;
         case GO_SHATTERED_DOOR:
             m_uiShatteredHallsDoorGUID = pGo->GetGUID();
@@ -728,37 +728,28 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         {
         case TYPE_LEVIATHAN:
             m_auiEncounter[0] = uiData;
-            if (uiData == IN_PROGRESS)
-                CloseDoor(m_uiShieldWallGUID);
-            else
-                OpenDoor(m_uiShieldWallGUID);
+            DoUseDoorOrButton(m_uiShieldWallGUID);
             if (uiData == DONE)
             {
-                OpenDoor(m_uiXT002GateGUID);
+                DoUseDoorOrButton(m_uiXT002GateGUID);
                 DoUseDoorOrButton(m_uiLeviathanGateGUID);
             }
             break;
         case TYPE_IGNIS:
             m_auiEncounter[1] = uiData;
-            OpenXtDoor();
+            OpenXtDoor();       // remove when leviathan implemented
             break;
         case TYPE_RAZORSCALE:
             m_auiEncounter[2] = uiData;
-            OpenXtDoor();
+            OpenXtDoor();       // remove when leviathan implemented
             break;
         case TYPE_XT002:
             m_auiEncounter[3] = uiData;
-            if (uiData == IN_PROGRESS)
-                CloseDoor(m_uiXT002GateGUID);
-            else
-                OpenDoor(m_uiXT002GateGUID);
+            DoUseDoorOrButton(m_uiXT002GateGUID);
             break;
         case TYPE_ASSEMBLY:
             m_auiEncounter[4] = uiData;
-            if (uiData == IN_PROGRESS)
-                CloseDoor(m_uiIronCouncilDoorGUID);
-            else
-                OpenDoor(m_uiIronCouncilDoorGUID);
+            DoUseDoorOrButton(m_uiIronCouncilDoorGUID);
             if (uiData == DONE)
             {
                 DoUseDoorOrButton(m_uiArchivumDoorGUID);
@@ -767,10 +758,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case TYPE_KOLOGARN:
             m_auiEncounter[5] = uiData;
-            if (uiData == IN_PROGRESS)
-                CloseDoor(m_uiShatteredHallsDoorGUID);
-            else
-                OpenDoor(m_uiShatteredHallsDoorGUID);
             if (uiData == DONE)
             {
                 DoRespawnGameObject(m_uiKologarnLootGUID, 30*MINUTE);
@@ -788,33 +775,19 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             // Keepers
         case TYPE_MIMIRON:
             m_auiEncounter[7] = uiData;
-            if (uiData == IN_PROGRESS)
-            {
-                CloseDoor(m_uiMimironDoor1GUID);
-                CloseDoor(m_uiMimironDoor2GUID);
-                CloseDoor(m_uiMimironDoor3GUID);
-            }
-            else
-            {
-                OpenDoor(m_uiMimironDoor1GUID);
-                OpenDoor(m_uiMimironDoor2GUID);
-                OpenDoor(m_uiMimironDoor3GUID);
-            }
+            DoUseDoorOrButton(m_uiMimironDoor1GUID);
+            DoUseDoorOrButton(m_uiMimironDoor2GUID);
+            DoUseDoorOrButton(m_uiMimironDoor3GUID);
             if (uiData == DONE)
             {
                 DoRespawnGameObject(m_uiMimironLootGUID, 30*MINUTE);
                 OpenMadnessDoor();
                 CheckKeepers();
             }
-            if (uiData == NOT_STARTED)
-                OpenDoor(m_uiMimironButtonGUID);
             break;
         case TYPE_HODIR:
             m_auiEncounter[8] = uiData;
-            if (uiData == IN_PROGRESS)
-                CloseDoor(m_uiHodirEnterDoorGUID);
-            else
-                OpenDoor(m_uiHodirEnterDoorGUID);
+            DoUseDoorOrButton(m_uiHodirEnterDoorGUID);
             if (uiData == DONE)
             {
                 DoUseDoorOrButton(m_uiHodirWallGUID);
@@ -826,13 +799,9 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case TYPE_THORIM:
             m_auiEncounter[9] = uiData;   
+            DoUseDoorOrButton(m_uiArenaEnterDoorGUID);
             if (uiData == IN_PROGRESS)
-            {
-                CloseDoor(m_uiArenaEnterDoorGUID);
                 DoUseDoorOrButton(m_uiArenaExitDoorGUID);
-            }
-            else
-                OpenDoor(m_uiArenaEnterDoorGUID);
             if (uiData == DONE)
             {
                 if(mHardBoss[5] != DONE)
@@ -866,6 +835,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case TYPE_YOGGSARON:
             m_auiEncounter[12] = uiData;
+            DoUseDoorOrButton(m_uiYoggGateGUID);
             if (uiData == IN_PROGRESS)
                 CloseDoor(m_uiYoggGateGUID);
             else
@@ -909,7 +879,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 DoRespawnGameObject(m_uiHodirRareLootGUID, 30*MINUTE);
             break;
         case TYPE_ASSEMBLY_HARD:
-            mHardBoss[2] = uiData;  // todo: add extra loot
+            mHardBoss[2] = uiData;
             break;
         case TYPE_FREYA_HARD:
             mHardBoss[6] = uiData; 
@@ -1021,24 +991,14 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return m_uiCommanderGUID;
         case NPC_XT002:
             return m_uiXT002GUID;
-        case DATA_KOLOGARN:
+        case NPC_KOLOGARN:
             return m_uiKologarnGUID;
-        case DATA_LEFT_ARM:
+        case NPC_LEFT_ARM:
             return m_uiLeftArmGUID;
-        case DATA_RIGHT_ARM:
+        case NPC_RIGHT_ARM:
             return m_uiRightArmGUID;
-        case DATA_AURIAYA:
+        case NPC_AURIAYA:
             return m_uiAuriayaGUID;
-        case DATA_SENTRY_1:
-            return m_uiSentryGUID1;
-        case DATA_SENTRY_2:
-            return m_uiSentryGUID2;
-        case DATA_SENTRY_3:
-            return m_uiSentryGUID3;
-        case DATA_SENTRY_4:
-            return m_uiSentryGUID4;
-        case DATA_FERAL_DEFENDER:
-            return m_uiFeralDefenderGUID;
         case DATA_MIMIRON:
             return m_uiMimironGUID;
         case DATA_LEVIATHAN_MK:
@@ -1087,11 +1047,11 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return m_uiMimironImageGUID;
 
             // Assembly of Iron
-        case DATA_STEELBREAKER:
+        case NPC_STEELBREAKER:
             return m_auiAssemblyGUIDs[0];
-        case DATA_MOLGEIM:
+        case NPC_MOLGEIM:
             return m_auiAssemblyGUIDs[1];
-        case DATA_BRUNDIR:
+        case NPC_BRUNDIR:
             return m_auiAssemblyGUIDs[2];
             // mimiron hard  mode button
         case DATA_RED_BUTTON:

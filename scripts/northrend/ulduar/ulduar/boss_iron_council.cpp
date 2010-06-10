@@ -45,7 +45,6 @@ enum
     SAY_STEEL_BERSERK       = -1603056,
 
     SAY_BRUNDIR_AGGR0       = -1603060,
-    SAY_BRUNDIR_OVERLOAD    = -1603061,
     SAY_BRUNDIR_WHIRL       = -1603062,
     SAY_BRUNDIR_DEATH1      = -1603063,
     SAY_BRUNDIR_DEATH2      = -1603064,
@@ -111,15 +110,15 @@ struct MANGOS_DLL_DECL mob_rune_of_powerAI : public ScriptedAI
 {
     mob_rune_of_powerAI(Creature* pCreature) : ScriptedAI(pCreature) 
 	{
-		Reset();
 		SetCombatMovement(false);
+        Reset();
 	}
 
-	uint32 Death_Timer;
+	uint32 m_uiDeath_Timer;
 
     void Reset()
     {
-		Death_Timer = 60000;
+		m_uiDeath_Timer = 60000;
 		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 		DoCast(m_creature,  AURA_RUNE_OF_POWER);
@@ -127,10 +126,10 @@ struct MANGOS_DLL_DECL mob_rune_of_powerAI : public ScriptedAI
 
 	void UpdateAI(const uint32 diff)
     {
-		if (Death_Timer < diff)
+		if (m_uiDeath_Timer < diff)
         {
 			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }else Death_Timer -= diff;
+        }else m_uiDeath_Timer -= diff;
 	}
 };
 
@@ -144,21 +143,21 @@ struct MANGOS_DLL_DECL mob_ulduar_lightning_elementalAI : public ScriptedAI
 {
     mob_ulduar_lightning_elementalAI(Creature* pCreature) : ScriptedAI(pCreature)
 	{
-		Reset();
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();
 	}
 
 	ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
-	uint32 Death_Timer;
-	uint32 Check_Timer;
-	bool explode;
+	uint32 m_uiDeath_Timer;
+	uint32 m_uiCheck_Timer;
+	bool m_bWillExplode;
 
     void Reset()
     {
-		explode = false;
-		Check_Timer = 1000;
+		m_bWillExplode  = false;
+		m_uiCheck_Timer = 1000;
     }
 
 	void UpdateAI(const uint32 diff)
@@ -166,21 +165,22 @@ struct MANGOS_DLL_DECL mob_ulduar_lightning_elementalAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		if (Death_Timer < diff && explode)
+		if (m_uiDeath_Timer < diff && m_bWillExplode)
         {
 			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }else Death_Timer -= diff;
+        }else m_uiDeath_Timer -= diff;
 
-		if (Check_Timer < diff)
+		if (m_uiCheck_Timer < diff)
 		{
 			if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 15))
 			{
 				DoCast(m_creature, m_bIsRegularMode ? SPELL_LIGHTNING_BLAST : SPELL_LIGHTNING_BLAST_H);
-				explode = true;
-				Death_Timer = 1000;
+				m_bWillExplode  = true;
+				m_uiDeath_Timer = 500;
+                m_uiCheck_Timer = 5000;
 			}
-			Check_Timer = 1000;
-		}else Check_Timer -= diff;
+			m_uiCheck_Timer = 1000;
+		}else m_uiCheck_Timer -= diff;
 	}
 };
 
@@ -194,47 +194,46 @@ struct MANGOS_DLL_DECL mob_rune_of_summoningAI : public ScriptedAI
 {
     mob_rune_of_summoningAI(Creature* pCreature) : ScriptedAI(pCreature)
 	{
-		Reset();
-		SetCombatMovement(false);
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        SetCombatMovement(false);
+        Reset();
 	}
 
 	ScriptedInstance* m_pInstance;
 
-	uint32 Death_Timer;
-	uint32 Summon_Timer;
-	uint32 summon_delay;
-	uint32 summonnum;
-	bool summondone;
+	uint32 m_uiDeath_Timer;
+	uint32 m_uiSummon_Timer;
+	uint32 m_uiSummonNum;
 
     void Reset()
     {
-		summondone = false;
-		summon_delay = 3000;
-		summonnum = 0;
+		m_uiDeath_Timer     = 0;
+	    m_uiSummon_Timer    = 5000;
+	    m_uiSummonNum       = 0;
 		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 		DoCast(m_creature,  AURA_RUNE_OF_SUMMONING);
     }
 
+    void JustSummoned(Creature* pSummoned)
+    {
+        pSummoned->SetInCombatWithZone();
+        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            pSummoned->AddThreat(pTarget, 100.0f);
+    }
+
 	void UpdateAI(const uint32 diff)
     {
-		if (Death_Timer < diff && summondone)
-        {
-			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }else Death_Timer -= diff;
-
-		if (summon_delay < diff)
+		if (m_uiSummon_Timer < diff)
 		{
 			if (Creature* pTemp = m_creature->SummonCreature(MOB_LIGHTNING_ELEMENTAL, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000))
-				++summonnum;
-			summon_delay = 500;
-			if (summonnum > 9)
-			{
-				summondone = true;
-				Death_Timer = 400;
-			}
-		} else summon_delay -= diff;
+				++m_uiSummonNum;
+			
+			if (m_uiSummonNum > 9)
+			    m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+
+            m_uiSummon_Timer = 500;
+		} else m_uiSummon_Timer -= diff;
 	}
 };
 
@@ -256,123 +255,119 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
 	ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
-	uint32 Chain_Lightning_Timer;
-	uint32 Overload_Timer;
-	uint32 Whirl_Timer;
-	uint32 Tendrils_start_Timer;
-	uint32 Tendrils_Change;
-	uint32 Tendrils_end_Timer;
-	uint32 die_delay;
-	uint32 Enrage_Timer;
-	uint32 Check;
+	uint32 m_uiChain_Lightning_Timer;
+	uint32 m_uiOverload_Timer;
+	uint32 m_uiWhirl_Timer;
+	uint32 m_uiTendrils_start_Timer;
+	uint32 m_uiTendrils_Change;
+	uint32 m_uiTendrils_end_Timer;
+	uint32 m_uiDie_delay;
+	uint32 m_uiEnrage_Timer;
+	uint32 m_uiCheckTimer;
 
-	bool supercharge1;
-	bool supercharge2;
-	bool tendrils;
-	bool die;
-	bool steelbreaker;
-	bool molgeim;
-	bool enrage;
+	bool m_bHasSupercharge1;
+	bool m_bHasSupercharge2;
+	bool m_bIsTendrils;
+	bool m_bMustDie;
+	bool m_bIsSteelbreakerDead;
+	bool m_bIsMolgeimDead;
+	bool m_bIsEnrage;
 
     void Reset()
     {
 		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
-		Chain_Lightning_Timer = 0;
-		Overload_Timer = 35000;
-		Enrage_Timer = 900000;
-		Check = 1000;
-		enrage = false;
-		supercharge1 = false;
-		supercharge2 = false;
-		tendrils = false;
-		steelbreaker = false;
-		molgeim = false;
-		die = false;
+		m_uiChain_Lightning_Timer = 0;
+		m_uiOverload_Timer      = 35000;
+		m_uiEnrage_Timer        = 900000;
+		m_uiCheckTimer          = 1000;
+		m_bIsEnrage             = false;
+		m_bHasSupercharge1      = false;
+		m_bHasSupercharge2      = false;
+		m_bIsTendrils           = false;
+		m_bIsSteelbreakerDead   = false;
+		m_bIsMolgeimDead        = false;
+		m_bMustDie              = false;
 		if (m_creature->HasAura(SPELL_SUPERCHARGE))
 			m_creature->RemoveAurasDueToSpell(SPELL_SUPERCHARGE);
     }
 
 	void DamageTaken(Unit* pDoneBy, uint32& uiDamage)
     {
-		if (uiDamage > m_creature->GetHealth() && !die)
+		if (uiDamage > m_creature->GetHealth() && !m_bMustDie)
 		{
-			uiDamage = 0;
-			m_creature->CastStop();
-			m_creature->setFaction(1925);
-			if (supercharge1)
-			{
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
-					if (pTemp->isAlive() && pTemp->HasAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0))
-						pTemp->GetAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0)->modStackAmount(+1);
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
-					if (pTemp->isAlive() && pTemp->HasAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0))
-						pTemp->GetAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0)->modStackAmount(+1);
-			}else
-				DoCast(m_creature, SPELL_SUPERCHARGE);
-			die_delay = 500;
-			die = true;
+            uiDamage = 0;
+            m_creature->CastStop();
+            m_creature->RemoveAllAuras();
+            DoCast(m_creature, SPELL_SUPERCHARGE);
+            m_uiDie_delay   = 500;
+            m_bMustDie      = true;
 		}
+    }
+
+    void OnYourSide()
+    {
+        Map* pMap = m_creature->GetMap();
+        AchievementEntry const *AchievYourSide = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_ON_YOUR_SIDE : ACHIEV_ON_YOUR_SIDE_H);
+        if(AchievYourSide && pMap)
+        {
+            Map::PlayerList const &lPlayers = pMap->GetPlayers();
+            if (!lPlayers.isEmpty())
+            {
+                for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
+                {
+                    if (Player* pPlayer = itr->getSource())
+                    {
+                        if(pPlayer->HasAura(SPELL_IRON_BOOT_AURA, EFFECT_INDEX_0))
+                            pPlayer->CompletedAchievement(AchievYourSide);
+                    }
+                }
+            }
+        }
     }
 
 	void JustDied(Unit* pKiller)
     {
-		//death yell
-		m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-		m_creature->setFaction(14);
-		Map* pMap = m_creature->GetMap();
-		if (pMap && pMap->IsDungeon())
-		{
-			Map::PlayerList const &PlayerList = pMap->GetPlayers();
-			if (PlayerList.isEmpty())
-				return;
-			for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-			{
-				if (i->getSource()->isAlive() && i->getSource()->HasAura(SPELL_SUPERCHARGE))
-					i->getSource()->RemoveAurasDueToSpell(SPELL_SUPERCHARGE);
-			}
-		}
+        m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+        // if all of them are dead
         if (m_pInstance)
-		{
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
-				if (!pTemp->isAlive())
-					if (Creature* p2Temp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
+        {
+            // remove supercharge from players -> spell bug
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_SUPERCHARGE);
+            // if the others are dead then give loot
+            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+            {
+                if (!pTemp->isAlive())
+                {
+                    if (Creature* p2Temp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+                    {
                         if (!p2Temp->isAlive())
                         {
                             m_pInstance->SetData(TYPE_ASSEMBLY, DONE);
+                            // only the current one has loot, because loot modes are implemented in sql
                             m_creature->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-                            pTemp->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-                            p2Temp->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
 
                             // I'm on your side
-                            Map* pMap = m_creature->GetMap();
-                            AchievementEntry const *AchievYourSide = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_ON_YOUR_SIDE : ACHIEV_ON_YOUR_SIDE_H);
-                            if(AchievYourSide && pMap)
-                            {
-                                Map::PlayerList const &lPlayers = pMap->GetPlayers();
-                                if (!lPlayers.isEmpty())
-                                {
-                                    for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
-                                    {
-                                        if (Player* pPlayer = itr->getSource())
-                                        {
-                                            if(pPlayer->HasAura(SPELL_IRON_BOOT_AURA, EFFECT_INDEX_0))
-                                                pPlayer->CompletedAchievement(AchievYourSide);
-                                        }
-                                    }
-                                }
-                            }
+                            OnYourSide();
 
                             // ChooseBrundir
-                            if(m_pInstance)
-                                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_CHOOSE_BRUNDIR : ACHIEV_CHOOSE_BRUNDIR_H);
+                            m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_CHOOSE_BRUNDIR : ACHIEV_CHOOSE_BRUNDIR_H);
                         }
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
-				if (pTemp->isAlive())
-					pTemp->SetHealth(pTemp->GetMaxHealth());
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
-				if (pTemp->isAlive())
-					pTemp->SetHealth(pTemp->GetMaxHealth());
-		}
+                    }
+                }
+            }
+
+            // else make them full hp
+            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+            {
+                if (pTemp->isAlive())
+                    pTemp->SetHealth(pTemp->GetMaxHealth());
+            }
+            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+            {
+                if (pTemp->isAlive())
+                    pTemp->SetHealth(pTemp->GetMaxHealth());
+            }
+        }
 
         if(irand(0,1))
             DoScriptText(SAY_BRUNDIR_DEATH1, m_creature);
@@ -382,28 +377,42 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
 
 	void Aggro(Unit* pWho)
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+        {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
+        }
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+        {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
+        }
         if (m_pInstance)
-            m_pInstance->SetData(TYPE_ASSEMBLY, IN_PROGRESS);
+        {
+            if(m_pInstance->GetData(TYPE_ASSEMBLY) != IN_PROGRESS)
+                m_pInstance->SetData(TYPE_ASSEMBLY, IN_PROGRESS);
+        }
 
         DoScriptText(SAY_BRUNDIR_AGGR0, m_creature);
     }
 
 	void JustReachedHome()
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+        {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
+        }
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+        {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
+        }
         if (m_pInstance)
-            m_pInstance->SetData(TYPE_ASSEMBLY, FAIL);
+        {
+            if(m_pInstance->GetData(TYPE_ASSEMBLY) != FAIL)
+                m_pInstance->SetData(TYPE_ASSEMBLY, FAIL);
+        }
     }
 
     void KilledUnit(Unit *who)
@@ -414,38 +423,41 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
             DoScriptText(SAY_BRUNDIR_SLAY2, m_creature);
     }
 
-	void UpdateAI(const uint32 diff)
+	void UpdateAI(const uint32 uiDiff)
     {
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		if (Chain_Lightning_Timer < diff && !tendrils)
+        // level 1 spells
+		if (m_uiChain_Lightning_Timer < uiDiff && !m_bIsTendrils)
         {
-			DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_CHAIN_LIGHTNING : SPELL_CHAIN_LIGHTNING_H);
-            Chain_Lightning_Timer = 2000;
-        }else Chain_Lightning_Timer -= diff;   
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			    DoCast(target, m_bIsRegularMode ? SPELL_CHAIN_LIGHTNING : SPELL_CHAIN_LIGHTNING_H);
+            m_uiChain_Lightning_Timer = 2000;
+        }else m_uiChain_Lightning_Timer -= uiDiff;   
 
-		if (Overload_Timer < diff && !tendrils)
+		if (m_uiOverload_Timer < uiDiff && !m_bIsTendrils)
         {
-			DoScriptText(SAY_BRUNDIR_OVERLOAD, m_creature);
 			m_creature->CastStop();
 			DoCast(m_creature, SPELL_OVERLOAD);
-            Overload_Timer = 40000;
-        }else Overload_Timer -= diff;  
+            m_uiOverload_Timer = 40000;
+        }else m_uiOverload_Timer -= uiDiff;  
 
-		if (Whirl_Timer < diff && !tendrils && supercharge1)
+        // level 2 spells
+		if (m_uiWhirl_Timer < uiDiff && !m_bIsTendrils && m_bHasSupercharge1)
 		{
+            m_creature->CastStop();
             DoScriptText(SAY_BRUNDIR_WHIRL, m_creature);
-			m_creature->CastStop();
-            DoCastSpellIfCan(m_creature, m_bIsRegularMode ? SPELL_LIGHTNING_WHIRL : SPELL_LIGHTNING_WHIRL_H);
-			Whirl_Timer = 10000;
-		}else Whirl_Timer -= diff;
+            DoCast(m_creature, m_bIsRegularMode ? SPELL_LIGHTNING_WHIRL : SPELL_LIGHTNING_WHIRL_H);
+			m_uiWhirl_Timer = 15000;
+		}else m_uiWhirl_Timer -= uiDiff;
 
-		if (Tendrils_start_Timer < diff && supercharge2)
+        // level 3 spells
+		if (m_uiTendrils_start_Timer < uiDiff && m_bHasSupercharge2)
         {
-			if (!tendrils)
+			if (!m_bIsTendrils)
 			{
-				//tendrils emote (?)
+				DoScriptText(SAY_BRUNDIR_FLY, m_creature);
 				m_creature->CastStop();
 				DoCast(m_creature, LIGHTNING_TENDRILS_VISUAL);
 				if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
@@ -453,29 +465,30 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
 					m_creature->AddThreat(pTarget,0.0f);
 					m_creature->AI()->AttackStart(pTarget);
 				}
-				tendrils = true;
+				m_bIsTendrils = true;
 				m_creature->SetSpeedRate(MOVE_RUN, 0.8f);
-				Tendrils_start_Timer = 3000;
-				Tendrils_end_Timer = 40000;
-				Tendrils_Change = 5000;
-			} else
+				m_uiTendrils_start_Timer = 3000;
+				m_uiTendrils_end_Timer = 40000;
+				m_uiTendrils_Change = 5000;
+			} 
+            else
 			{
 				DoCast(m_creature, m_bIsRegularMode ? SPELL_LIGHTNING_TENDRILS : SPELL_LIGHTNING_TENDRILS_H);
-				Tendrils_start_Timer = 90000;
+				m_uiTendrils_start_Timer = 90000;
 			}
-		}else Tendrils_start_Timer -= diff;
+		}else m_uiTendrils_start_Timer -= uiDiff;
 
-		if (Tendrils_Change < diff && tendrils)
+		if (m_uiTendrils_Change < uiDiff && m_bIsTendrils)
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
 				m_creature->AddThreat(pTarget,0.0f);
 				m_creature->AI()->AttackStart(pTarget);
 			}
-			Tendrils_Change = 6000;
-        }else Tendrils_Change -= diff;
+			m_uiTendrils_Change = 6000;
+        }else m_uiTendrils_Change -= uiDiff;
 
-		if (Tendrils_end_Timer < diff && tendrils)
+		if (m_uiTendrils_end_Timer < uiDiff && m_bIsTendrils)
         {
 			if (m_creature->HasAura(SPELL_LIGHTNING_TENDRILS))
 				m_creature->RemoveAurasDueToSpell(SPELL_LIGHTNING_TENDRILS);
@@ -483,71 +496,78 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
 				m_creature->RemoveAurasDueToSpell(SPELL_LIGHTNING_TENDRILS_H);
 			if (m_creature->HasAura(LIGHTNING_TENDRILS_VISUAL))
 				m_creature->RemoveAurasDueToSpell(LIGHTNING_TENDRILS_VISUAL);
-            Tendrils_start_Timer = 90000;
+            m_uiTendrils_start_Timer = 90000;
 			m_creature->SetSpeedRate(MOVE_RUN, 1.8f);
-			tendrils = false;
-			Chain_Lightning_Timer = 5000;
-			Overload_Timer = 35000;
-			Whirl_Timer = 10000;
-        }else Tendrils_end_Timer -= diff;
+			m_bIsTendrils = false;
+			m_uiChain_Lightning_Timer = 5000;
+			m_uiOverload_Timer = 35000;
+			m_uiWhirl_Timer = 10000;
+        }else m_uiTendrils_end_Timer -= uiDiff;
 
-		if (die_delay < diff)
-		{
-			if (die)
-				m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-		}
-        else die_delay -= diff;
+        // die after casting supercharge
+		if (m_uiDie_delay < uiDiff && m_bMustDie)
+		    m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        else m_uiDie_delay -= uiDiff;
 
-		if (Enrage_Timer < diff && !enrage)
+		if (m_uiEnrage_Timer < uiDiff && !m_bIsEnrage)
 		{
             DoScriptText(SAY_BRUNDIR_BERSERK, m_creature);
 			m_creature->CastStop();
 			DoCast(m_creature, SPELL_BERSERK);
-			enrage = true;
-		}else Enrage_Timer -= diff;
+			m_bIsEnrage = true;
+		}else m_uiEnrage_Timer -= uiDiff;
 
-		if (Check < diff)
+        // check if the others are dead
+		if (m_uiCheckTimer < uiDiff && !m_bHasSupercharge2)
 		{
-			if (!steelbreaker)
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
+			if (!m_bIsSteelbreakerDead)
+            {
+				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+                {
 					if (!pTemp->isAlive())
 					{
-						steelbreaker = true;
-						if (!supercharge1)
+						m_bIsSteelbreakerDead = true;
+						if (!m_bHasSupercharge1)
 						{
-							supercharge1 = true;
-							Whirl_Timer = 10000;
+							m_bHasSupercharge1 = true;
+							m_uiWhirl_Timer = 10000;
 						}
 						else
 						{
-							supercharge2 = true;
-							Tendrils_start_Timer = 40000;
-							Tendrils_end_Timer = 60000;
-							Tendrils_Change = 6000;
+							m_bHasSupercharge2 = true;
+							m_uiTendrils_start_Timer = 40000;
+							m_uiTendrils_end_Timer = 60000;
+							m_uiTendrils_Change = 6000;
 						}
 					}
-			if (!molgeim)
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
+                }
+            }
+			if (!m_bIsMolgeimDead)
+            {
+				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+                {
 					if (!pTemp->isAlive())
 					{
-						molgeim = true;
-						if (!supercharge1)
+						m_bIsMolgeimDead = true;
+						if (!m_bHasSupercharge1)
 						{
-							supercharge1 = true;
-							Whirl_Timer = 10000;
+							m_bHasSupercharge1 = true;
+							m_uiWhirl_Timer = 10000;
 						}
 						else
 						{
-							supercharge2 = true;
-							Tendrils_start_Timer = 40000;
-							Tendrils_end_Timer = 60000;
-							Tendrils_Change = 6000;
+							m_bHasSupercharge2 = true;
+							m_uiTendrils_start_Timer = 40000;
+							m_uiTendrils_end_Timer = 60000;
+							m_uiTendrils_Change = 6000;
 						}
 					}
-			Check = 1000;
-		}else Check -= diff;
+                }
+            }
+			m_uiCheckTimer = 1000;
+		}else m_uiCheckTimer -= uiDiff;
 		
-		if (!tendrils && !die)
+		if (!m_bIsTendrils && !m_bMustDie)
 			DoMeleeAttackIfReady();
 	}
 };
@@ -564,125 +584,120 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
 	{
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-
 		Reset();
 	}
 
 	ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
-	uint32 Shield_Timer;
-	uint32 Rune_Power_Timer;
-	uint32 Rune_Death_Timer;
-	uint32 Rune_Summon_Timer;
-	uint32 die_delay;
-	uint32 Enrage_Timer;
-	uint32 Check;
+	uint32 m_uiShield_Timer;
+	uint32 m_uiRune_Power_Timer;
+	uint32 m_uiRune_Death_Timer;
+	uint32 m_uiRune_Summon_Timer;
+	uint32 m_uiDie_delay;
+	uint32 m_uiEnrage_Timer;
+	uint32 m_uiCheckTimer;
 
-	bool supercharge1;
-	bool supercharge2;
-	bool die;
-	bool brundir;
-	bool steelbreaker;
-	bool enrage;
+	bool m_bSupercharge1;
+	bool m_bSupercharge2;
+	bool m_bMustDie;
+	bool m_bBrundirDead;
+	bool m_bSteelbreakerDead;
+	bool m_bEnrage;
 
     void Reset()
     {
 		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
-		Shield_Timer = 20000;
-		Rune_Power_Timer = 10000;
-		Enrage_Timer = 900000;
-		Check = 1000;
-		enrage = false;
-		brundir = false;
-		steelbreaker = false;
-		supercharge1 = false;
-		supercharge2 = false;
-		die = false;
+		m_uiShield_Timer    = 20000;
+		m_uiRune_Power_Timer = 10000;
+		m_uiEnrage_Timer    = 900000;
+		m_uiCheckTimer      = 1000;
+		m_bEnrage           = false;
+		m_bBrundirDead      = false;
+		m_bSteelbreakerDead = false;
+		m_bSupercharge1     = false;
+		m_bSupercharge2     = false;
+		m_bMustDie          = false;
 		if (m_creature->HasAura(SPELL_SUPERCHARGE))
 			m_creature->RemoveAurasDueToSpell(SPELL_SUPERCHARGE);
     }
 
 	void DamageTaken(Unit* pDoneBy, uint32& uiDamage)
     {
-		if (uiDamage > m_creature->GetHealth() && !die)
+		if (uiDamage > m_creature->GetHealth() && !m_bMustDie)
 		{
-			uiDamage = 0;
-			m_creature->CastStop();
-			m_creature->setFaction(1925);
-			if (supercharge1)
-			{
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
-					if (pTemp->isAlive() && pTemp->HasAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0))
-						pTemp->GetAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0)->modStackAmount(+1);
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
-					if (pTemp->isAlive() && pTemp->HasAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0))
-						pTemp->GetAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0)->modStackAmount(+1);
-			}else
-				DoCast(m_creature, SPELL_SUPERCHARGE);
-			die_delay = 500;
-			die = true;
+            uiDamage = 0;
+            m_creature->RemoveAllAuras();
+            m_creature->CastStop();
+            DoCast(m_creature, SPELL_SUPERCHARGE);
+            m_uiDie_delay = 500;
+            m_bMustDie = true;
 		}
+    }
+
+    void OnYourSide()
+    {
+        Map* pMap = m_creature->GetMap();
+        AchievementEntry const *AchievYourSide = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_ON_YOUR_SIDE : ACHIEV_ON_YOUR_SIDE_H);
+        if(AchievYourSide && pMap)
+        {
+            Map::PlayerList const &lPlayers = pMap->GetPlayers();
+            if (!lPlayers.isEmpty())
+            {
+                for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
+                {
+                    if (Player* pPlayer = itr->getSource())
+                    {
+                        if(pPlayer->HasAura(SPELL_IRON_BOOT_AURA, EFFECT_INDEX_0))
+                            pPlayer->CompletedAchievement(AchievYourSide);
+                    }
+                }
+            }
+        }
     }
 
 	void JustDied(Unit* pKiller)
     {
 		//death yell
 		m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-		m_creature->setFaction(14);
-		Map* pMap = m_creature->GetMap();
-		if (pMap && pMap->IsDungeon())
-		{
-			Map::PlayerList const &PlayerList = pMap->GetPlayers();
-			if (PlayerList.isEmpty())
-				return;
-			for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-			{
-				if (i->getSource()->isAlive() && i->getSource()->HasAura(SPELL_SUPERCHARGE))
-					i->getSource()->RemoveAurasDueToSpell(SPELL_SUPERCHARGE);
-			}
-		}
         if (m_pInstance)
 		{
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
+            // remove supercharge from players -> spell bug
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_SUPERCHARGE);
+            // if the others are dead then give loot
+			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+            {
 				if (!pTemp->isAlive())
-					if (Creature* p2Temp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
+                {
+					if (Creature* p2Temp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+                    {
 						if (!p2Temp->isAlive())
 						{
 							m_pInstance->SetData(TYPE_ASSEMBLY, DONE);
+                            // only the current one has loot, because loot modes are implemented in sql
 							m_creature->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-							pTemp->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-							p2Temp->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
 
                             // I'm on your side
-                            Map* pMap = m_creature->GetMap();
-                            AchievementEntry const *AchievYourSide = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_ON_YOUR_SIDE : ACHIEV_ON_YOUR_SIDE_H);
-                            if(AchievYourSide && pMap)
-                            {
-                                Map::PlayerList const &lPlayers = pMap->GetPlayers();
-                                if (!lPlayers.isEmpty())
-                                {
-                                    for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
-                                    {
-                                        if (Player* pPlayer = itr->getSource())
-                                        {
-                                            if(pPlayer->HasAura(SPELL_IRON_BOOT_AURA, EFFECT_INDEX_0))
-                                                pPlayer->CompletedAchievement(AchievYourSide);
-                                        }
-                                    }
-                                }
-                            }
+                            OnYourSide();
 
                             // ChooseMolgeim
-                            if(m_pInstance)
-                                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_CHOOSE_MOLGEIM : ACHIEV_CHOOSE_MOLGEIM_H);
+                            m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_CHOOSE_MOLGEIM : ACHIEV_CHOOSE_MOLGEIM_H);
 						}
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
+                    }
+                }
+            }
+
+            // else make them full hp
+			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+            {
 				if (pTemp->isAlive())
 					pTemp->SetHealth(pTemp->GetMaxHealth());
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
+            }
+			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+            {
 				if (pTemp->isAlive())
 					pTemp->SetHealth(pTemp->GetMaxHealth());
+            }
 		}
 
         if(irand(0,1))
@@ -693,28 +708,42 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
 
 	void Aggro(Unit* pWho)
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+        {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
+        }
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+        {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
+        }
         if (m_pInstance)
-            m_pInstance->SetData(TYPE_ASSEMBLY, IN_PROGRESS);
+        {
+            if(m_pInstance->GetData(TYPE_ASSEMBLY) != IN_PROGRESS)
+                m_pInstance->SetData(TYPE_ASSEMBLY, IN_PROGRESS);
+        }
 
         DoScriptText(SAY_MOLGEIM_AGGRO, m_creature);
     }
 
 	void JustReachedHome()
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+        {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
+        }
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+        {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
+        }
         if (m_pInstance)
-            m_pInstance->SetData(TYPE_ASSEMBLY, FAIL);
+        {
+            if(m_pInstance->GetData(TYPE_ASSEMBLY) != FAIL)
+                m_pInstance->SetData(TYPE_ASSEMBLY, FAIL);
+        }
     }
 
     void KilledUnit(Unit *who)
@@ -725,112 +754,125 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
             DoScriptText(SAY_MOLGEIM_SLAY2, m_creature);
     }
 
-	void UpdateAI(const uint32 diff)
+	void UpdateAI(const uint32 uiDiff)
     {
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		if (Shield_Timer < diff)
+        // level 1 spells
+		if (m_uiShield_Timer < uiDiff)
         {
-			DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_SHIELD : SPELL_SHIELD_H);
-            Shield_Timer = 50000;
-        }else Shield_Timer -= diff;   
+			DoCast(m_creature, m_bIsRegularMode ? SPELL_SHIELD : SPELL_SHIELD_H);
+            m_uiShield_Timer = 50000;
+        }else m_uiShield_Timer -= uiDiff;   
 
-		if (Rune_Power_Timer < diff)
+		if (m_uiRune_Power_Timer < uiDiff)
 		{
-			switch(urand(0, 2))
+            switch(urand(0, 2))
             {
-                case 0:
-					if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
-						if (pTemp->isAlive())
-							DoCast(pTemp, SPELL_RUNE_OF_POWER);
-						else
-							DoCast(m_creature, SPELL_RUNE_OF_POWER);
+            case 0:
+                if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+                {
+                    if (pTemp->isAlive())
+                        DoCast(pTemp, SPELL_RUNE_OF_POWER);
+                    else
+                        DoCast(m_creature, SPELL_RUNE_OF_POWER);
+                }
                 break;
-				case 1:
-					if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
-						if (pTemp->isAlive())
-							DoCast(pTemp, SPELL_RUNE_OF_POWER);
-						else
-							DoCast(m_creature, SPELL_RUNE_OF_POWER);
+            case 1:
+                if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+                {
+                    if (pTemp->isAlive())
+                        DoCast(pTemp, SPELL_RUNE_OF_POWER);
+                    else
+                        DoCast(m_creature, SPELL_RUNE_OF_POWER);
+                }
                 break;
-				case 2:
-					DoCast(m_creature, SPELL_RUNE_OF_POWER);
+            case 2:
+                DoCast(m_creature, SPELL_RUNE_OF_POWER);
                 break;
-			}
-			Rune_Power_Timer = 55000;
-		}else Rune_Power_Timer -= diff;
+            }
+			m_uiRune_Power_Timer = 55000;
+		}else m_uiRune_Power_Timer -= uiDiff;
 
-		if (Rune_Death_Timer < diff && supercharge1)
+        // level2 spells
+		if (m_uiRune_Death_Timer < uiDiff && m_bSupercharge1)
 		{
             DoScriptText(SAY_MOLGEIM_DEATH_RUNE, m_creature);
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				DoCast(pTarget, m_bIsRegularMode ? SPELL_RUNE_OF_DEATH : SPELL_RUNE_OF_DEATH_H);
-			Rune_Death_Timer = 60000;
-		}else Rune_Death_Timer -= diff;
+			m_uiRune_Death_Timer = 60000;
+		}else m_uiRune_Death_Timer -= uiDiff;
 
-		if (Rune_Summon_Timer < diff && supercharge2)
+        // level 3 spells
+		if (m_uiRune_Summon_Timer < uiDiff && m_bSupercharge2)
 		{
             DoScriptText(SAY_MOLGEIM_SUMMON, m_creature);
 			m_creature->CastStop();
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				DoCast(pTarget, SPELL_RUNE_OF_SUMMONING);
-			Rune_Summon_Timer = 30000;
-		}else Rune_Summon_Timer -= diff;
+			m_uiRune_Summon_Timer = 30000;
+		}else m_uiRune_Summon_Timer -= uiDiff;
 
-		if (die_delay < diff)
-		{
-			if (die)
-				m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-		}
-        else die_delay -= diff;
+        // die after overloading
+		if (m_uiDie_delay < uiDiff && m_bMustDie)
+		    m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        else m_uiDie_delay -= uiDiff;
 
-		if (Enrage_Timer < diff && !enrage)
+		if (m_uiEnrage_Timer < uiDiff && !m_bEnrage)
 		{
             DoScriptText(SAY_MOLGEIM_BERSERK, m_creature);
 			m_creature->CastStop();
 			DoCast(m_creature, SPELL_BERSERK);
-			enrage = true;
-		}else Enrage_Timer -= diff;
+			m_bEnrage = true;
+		}else m_uiEnrage_Timer -= uiDiff;
 
-		if (Check < diff)
+		if (m_uiCheckTimer < uiDiff)
 		{
-			if (!steelbreaker)
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STEELBREAKER))))
+			if (!m_bSteelbreakerDead)
+            {
+				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+                {
 					if (!pTemp->isAlive())
 					{
-						steelbreaker = true;
-						if (!supercharge1)
+						m_bSteelbreakerDead = true;
+						if (!m_bSupercharge1)
 						{
-							supercharge1 = true;
-							Rune_Death_Timer = 10000;
+							m_bSupercharge1 = true;
+							m_uiRune_Death_Timer = 10000;
 						}
 						else
 						{
-							supercharge2 = true;
-							Rune_Summon_Timer = 20000;
+							m_bSupercharge2 = true;
+							m_uiRune_Summon_Timer = 20000;
 						}
 					}
-			if (!brundir)
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
+                }
+            }
+			if (!m_bBrundirDead)
+            {
+				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+                {
 					if (!pTemp->isAlive())
 					{
-						brundir = true;
-						if (!supercharge1)
+						m_bBrundirDead = true;
+						if (!m_bSupercharge1)
 						{
-							supercharge1 = true;
-							Rune_Death_Timer = 10000;
+							m_bSupercharge1 = true;
+							m_uiRune_Death_Timer = 10000;
 						}
 						else
 						{
-							supercharge2 = true;
-							Rune_Summon_Timer = 20000;
+							m_bSupercharge2 = true;
+							m_uiRune_Summon_Timer = 20000;
 						}
 					}
-			Check = 1000;
-		}else Check -= diff;
+                }
+            }
+			m_uiCheckTimer = 1000;
+		}else m_uiCheckTimer -= uiDiff;
 		
-		if (!die)
+		if (!m_bMustDie)
 			DoMeleeAttackIfReady();
 	}
 };
@@ -847,43 +889,38 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
 	{
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-
 		Reset();
 	}
 
 	ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
-	uint32 Fusion_Punch_Timer;
-	uint32 Static_Disruption_Timer;
-	uint32 Power_Timer;
-	uint32 Meltdown_Timer;
-	uint32 die_delay;
-	uint32 Enrage_Timer;
-	uint32 Check;
+	uint32 m_uiFusion_Punch_Timer;
+	uint32 m_uiStatic_Disruption_Timer;
+	uint32 m_uiPower_Timer;
+	uint32 m_uiDie_delay;
+	uint32 m_uiEnrage_Timer;
+	uint32 m_uiCheckTimer;
 
-	uint64 MeltTarget;
-
-	bool brundir;
-	bool molgeim;
-	bool supercharge1;
-	bool supercharge2;
-	bool die;
-	bool enrage;
+	bool m_bBrundirDead;
+	bool m_bMolgeimDead;
+	bool m_bSupercharge1;
+	bool m_bSupercharge2;
+	bool m_bMustDie;
+	bool m_bEnrage;
 
     void Reset()
     {
 		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
-		Fusion_Punch_Timer = 20000;
-		Enrage_Timer = 900000;
-		MeltTarget = 0;
-		Check = 1000;
-		enrage = false;
-		brundir = false;
-		molgeim = false;
-		supercharge1 = false;
-		supercharge2 = false;
-		die = false;
+		m_uiFusion_Punch_Timer = 20000;
+		m_uiEnrage_Timer    = 900000;
+		m_uiCheckTimer      = 1000;
+		m_bEnrage           = false;
+		m_bBrundirDead      = false;
+		m_bMolgeimDead      = false;
+		m_bSupercharge1     = false;
+		m_bSupercharge2     = false;
+		m_bMustDie          = false;
 		if (m_creature->HasAura(SPELL_SUPERCHARGE))
 			m_creature->RemoveAurasDueToSpell(SPELL_SUPERCHARGE);
 		if (m_creature->HasAura(SPELL_ELECTRICAL_CHARGE))
@@ -896,7 +933,7 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
 
 	void KilledUnit(Unit* pVictim)
     {
-		if (supercharge2)
+		if (m_bSupercharge2)
 			DoCast(m_creature, SPELL_ELECTRICAL_CHARGE);
 
         if(irand(0,1))
@@ -907,85 +944,80 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
 
 	void DamageTaken(Unit* pDoneBy, uint32& uiDamage)
     {
-		if (uiDamage > m_creature->GetHealth() && !die)
+		if (uiDamage > m_creature->GetHealth() && !m_bMustDie)
 		{
 			uiDamage = 0;
 			m_creature->CastStop();
-			m_creature->setFaction(1925);
-			if (supercharge1)
-			{
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
-					if (pTemp->isAlive() && pTemp->HasAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0))
-						pTemp->GetAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0)->modStackAmount(+1);
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
-					if (pTemp->isAlive() && pTemp->HasAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0))
-						pTemp->GetAura(SPELL_SUPERCHARGE, EFFECT_INDEX_0)->modStackAmount(+1);
-			}else
-				DoCast(m_creature, SPELL_SUPERCHARGE);
-			die_delay = 500;
-			die = true;
+            m_creature->RemoveAllAuras();
+            DoCast(m_creature, SPELL_SUPERCHARGE);
+			m_uiDie_delay   = 500;
+			m_bMustDie      = true;
 		}
+    }
+
+    void OnYourSide()
+    {
+        Map* pMap = m_creature->GetMap();
+        AchievementEntry const *AchievYourSide = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_ON_YOUR_SIDE : ACHIEV_ON_YOUR_SIDE_H);
+        if(AchievYourSide && pMap)
+        {
+            Map::PlayerList const &lPlayers = pMap->GetPlayers();
+            if (!lPlayers.isEmpty())
+            {
+                for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
+                {
+                    if (Player* pPlayer = itr->getSource())
+                    {
+                        if(pPlayer->HasAura(SPELL_IRON_BOOT_AURA, EFFECT_INDEX_0))
+                            pPlayer->CompletedAchievement(AchievYourSide);
+                    }
+                }
+            }
+        }
     }
 
 	void JustDied(Unit* pKiller)
     {
-		//death yell
 		m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-		m_creature->setFaction(14);
-		Map* pMap = m_creature->GetMap();
-		if (pMap && pMap->IsDungeon())
-		{
-			Map::PlayerList const &PlayerList = pMap->GetPlayers();
-			if (PlayerList.isEmpty())
-				return;
-			for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-			{
-				if (i->getSource()->isAlive() && i->getSource()->HasAura(SPELL_SUPERCHARGE))
-					i->getSource()->RemoveAurasDueToSpell(SPELL_SUPERCHARGE);
-			}
-		}
         if (m_pInstance)
 		{
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
+            // remove supercharge from players -> spell bug
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_SUPERCHARGE);
+            // if the others are dead then give loot
+			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+            {
 				if (!pTemp->isAlive())
-					if (Creature* p2Temp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
+                {
+					if (Creature* p2Temp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+                    {
 						if (!p2Temp->isAlive())
 						{
 							m_pInstance->SetData(TYPE_ASSEMBLY, DONE);
                             m_pInstance->SetData(TYPE_ASSEMBLY_HARD, DONE);
+                            // only the current one has loot, because loot modes are implemented in sql
 							m_creature->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-							pTemp->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-							p2Temp->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
 
                             // I'm on your side
-                            Map* pMap = m_creature->GetMap();
-                            AchievementEntry const *AchievYourSide = GetAchievementStore()->LookupEntry(m_bIsRegularMode ? ACHIEV_ON_YOUR_SIDE : ACHIEV_ON_YOUR_SIDE_H);
-                            if(AchievYourSide && pMap)
-                            {
-                                Map::PlayerList const &lPlayers = pMap->GetPlayers();
-                                if (!lPlayers.isEmpty())
-                                {
-                                    for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
-                                    {
-                                        if (Player* pPlayer = itr->getSource())
-                                        {
-                                            if(pPlayer->HasAura(SPELL_IRON_BOOT_AURA, EFFECT_INDEX_0))
-                                                pPlayer->CompletedAchievement(AchievYourSide);
-                                        }
-                                    }
-                                }
-                            }
+                            OnYourSide();
 
                             // ChooseSteelbreaker
-                            if(m_pInstance)
-                                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_CHOOSE_STEELBREAKER : ACHIEV_CHOOSE_STEELBREAKER_H);
+                            m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_CHOOSE_STEELBREAKER : ACHIEV_CHOOSE_STEELBREAKER_H);
 						}
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
+                    }
+                }
+            }
+
+            // else make them full hp
+			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+            {
 				if (pTemp->isAlive())
 					pTemp->SetHealth(pTemp->GetMaxHealth());
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
+            }
+			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+            {
 				if (pTemp->isAlive())
 					pTemp->SetHealth(pTemp->GetMaxHealth());
+            }
 		}
 
         if(irand(0,1))
@@ -996,121 +1028,133 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
 
 	void Aggro(Unit* pWho)
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+        {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
+        }
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+        {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
+        }
 		DoCast(m_creature, m_bIsRegularMode ? SPELL_HIGH_VOLTAGE : SPELL_HIGH_VOLTAGE_H);
         if (m_pInstance)
-            m_pInstance->SetData(TYPE_ASSEMBLY, IN_PROGRESS);
+        {
+            if(m_pInstance->GetData(TYPE_ASSEMBLY) != IN_PROGRESS)
+                m_pInstance->SetData(TYPE_ASSEMBLY, IN_PROGRESS);
+        }
 
         DoScriptText(SAY_STEEL_AGGRO, m_creature);
     }
 
 	void JustReachedHome()
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+        {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
+        }
+		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+        {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
+        }
         if (m_pInstance)
-            m_pInstance->SetData(TYPE_ASSEMBLY, FAIL);
+        {
+            if(m_pInstance->GetData(TYPE_ASSEMBLY) != FAIL)
+                m_pInstance->SetData(TYPE_ASSEMBLY, FAIL);
+        }
     }
 
-	void UpdateAI(const uint32 diff)
+	void UpdateAI(const uint32 uiDiff)
     {
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		if (Fusion_Punch_Timer < diff)
+        // level 1 spells
+		if (m_uiFusion_Punch_Timer < uiDiff)
         {
 			DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_FUSION_PUNCH : SPELL_FUSION_PUNCH_H);
-            Fusion_Punch_Timer = 20000;
-        }else Fusion_Punch_Timer -= diff;
+            m_uiFusion_Punch_Timer = 20000;
+        }else m_uiFusion_Punch_Timer -= uiDiff;
 
-		if (Static_Disruption_Timer < diff && supercharge1)
+        // level 2 spells
+		if (m_uiStatic_Disruption_Timer < uiDiff && m_bSupercharge1)
 		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 				DoCast(pTarget, m_bIsRegularMode ? SPELL_STATIC_DISRUPTION : SPELL_STATIC_DISRUPTION_H);
-			Static_Disruption_Timer = 60000;
-		}else Static_Disruption_Timer -= diff;
+			m_uiStatic_Disruption_Timer = 60000;
+		}else m_uiStatic_Disruption_Timer -= uiDiff;
 
-		if (Power_Timer < diff && supercharge2)
+        // level 3 spells
+		if (m_uiPower_Timer < uiDiff && m_bSupercharge2)
 		{
 			m_creature->CastStop();
             DoScriptText(SAY_STEEL_OVERWHELMING, m_creature);
-			DoCast(m_creature->getVictim(), SPELL_POWER);
-			MeltTarget = m_creature->getVictim()->GetGUID();
-			Power_Timer = m_bIsRegularMode ? 65000 : 35000;
-			Meltdown_Timer = m_bIsRegularMode ? 60500 : 30500;
-		}else Power_Timer -= diff;
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_POWER : SPELL_POWER_H);
+			m_uiPower_Timer = m_bIsRegularMode ? 65000 : 35000;
+		}else m_uiPower_Timer -= uiDiff;
 
-		if (Meltdown_Timer < diff && supercharge2)
-		{
-			if (Unit* pMeltTarget = Unit::GetUnit(*m_creature, MeltTarget))
-				m_creature->DealDamage(pMeltTarget, pMeltTarget->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-			Meltdown_Timer = 90000;
-		}else Meltdown_Timer -= diff;
+		if (m_uiDie_delay < uiDiff && m_bMustDie)
+		    m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        else m_uiDie_delay -= uiDiff;
 
-		if (die_delay < diff)
-		{
-			if (die)
-				m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-		}
-        else die_delay -= diff;
-
-		if (Enrage_Timer < diff && !enrage)
+		if (m_uiEnrage_Timer < uiDiff && !m_bEnrage)
 		{
             DoScriptText(SAY_STEEL_BERSERK, m_creature);
 			m_creature->CastStop();
 			DoCast(m_creature, SPELL_BERSERK);
-			enrage = true;
-		}else Enrage_Timer -= diff;
+			m_bEnrage = true;
+		}else m_uiEnrage_Timer -= uiDiff;
 
-		if (Check < diff)
+		if (m_uiCheckTimer < uiDiff)
 		{
-			if (!brundir)
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRUNDIR))))
+			if (!m_bBrundirDead)
+            {
+				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+                {
 					if (!pTemp->isAlive())
 					{
-						brundir = true;
-						if (!supercharge1)
+						m_bBrundirDead = true;
+						if (!m_bSupercharge1)
 						{
-							supercharge1 = true;
-							Static_Disruption_Timer = 12000;
+							m_bSupercharge1 = true;
+							m_uiStatic_Disruption_Timer = 12000;
 						}
 						else
 						{
-							supercharge2 = true;
-							Power_Timer = 5000;
-							Meltdown_Timer = m_bIsRegularMode ? 60000 : 30000;
+							m_bSupercharge2 = true;
+							m_uiPower_Timer = 5000;
 						}
 					}
-			if (!molgeim)
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MOLGEIM))))
+                }
+            }
+			if (!m_bMolgeimDead)
+            {
+				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+                {
 					if (!pTemp->isAlive())
 					{
-						molgeim = true;
-						if (!supercharge1)
+						m_bMolgeimDead = true;
+						if (!m_bSupercharge1)
 						{
-							supercharge1 = true;
-							Static_Disruption_Timer = 22000;
+							m_bSupercharge1 = true;
+							m_uiStatic_Disruption_Timer = 22000;
 						}
 						else
 						{
-							supercharge2 = true;
-							Power_Timer = 5000;
-							Meltdown_Timer = m_bIsRegularMode ? 60000 : 30000;
+							m_bSupercharge2 = true;
+							m_uiPower_Timer = 5000;
 						}
 					}
-			Check = 1000;
-		}else Check -= diff;
+                }
+            }
+			m_uiCheckTimer = 1000;
+		}else m_uiCheckTimer -= uiDiff;
 		
-		if (!die)
+		if (!m_bMustDie)
 			DoMeleeAttackIfReady();
 	}
 };

@@ -76,7 +76,6 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603056, "This meeting of the Assembly of Iron is adjourned!", "","","","","","","","",15680, 1, 0, 0, 'SteelBerserk'),
 -- Brudir
 (-1603060, "Whether the world\'s greatest gnats or the world\'s greatest heroes, you\'re still only mortal.", "","","","","","","","",15684, 1, 0, 0, 'BrundirAggro'),
-(-1603061, "Stormcaller Brundir begins to Overload!", "","","","","","","","",0, 3, 0, 0, 'Brundir Overload'),
 (-1603062, "Stand still and stare into the light!", "","","","","","","","",15687, 1, 0, 0, 'BrundirWhirl'),
 (-1603063, "The power of the storm lives on...", "","","","","","","","",15689, 1, 0, 0, 'BrundirDeath1'),
 (-1603064, "You rush headlong into the maw of madness!", "","","","","","","","",15690, 1, 0, 0, 'BrundirDeath2'),
@@ -95,6 +94,9 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603156, "YOU FAIL!", "","","","","","","","",15588, 1, 0, 0, 'KologarnSlay2'),
 (-1603157, "I am invincible!", "","","","","","","","",15594, 1, 0, 0, 'KologarnBerserk'),
 (-1603158, "Master, they come...", "","","","","","","","",15593, 1, 0, 0, 'Kologarndeath'),
+(-1603355,'The Right Arm has regrown!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_right hand'),
+(-1603356,'The Left Arm has regrown!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_left hand'),
+(-1603357,'Kologarn casts Stone Grip!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_stone grip'),
 
 -- Auriaya:
 (-1603070,"Some things are better left alone!","","","","","","","","",15473,1,0,0,"auriaya aggro"),
@@ -102,6 +104,8 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603072,"There is no escape!","","","","","","","","",15475,1,0,0,"auriaya Slay 1"),
 (-1603073,"You waste my time!","","","","","","","","",15477,1,0,0,"auriaya berserk"),
 (-1603074,"Auriaya screams in agony.","","","","","","","","",15476,2,0,0,"auriaya death"),
+(-1603358,'Auriaya begins to cast Terrifying Screech.' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_screech'),
+(-1603359,'Auriaya begins to activate the Feral Defender!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_defender'),
 
 -- Hodir
 (-1603080,"<Furious Roar>","","","","","","","","",15556,2,0,0,"Hodir Frozen Blows"),

@@ -62,6 +62,10 @@ enum
     NPC_HARPOONS_DUMMY          = 33282,    // used to cast spells for harpoons
     SPELL_SUMMON_MOLE_MACHINE   = 73071,
 
+    // harpoons
+    SPELL_HARPOON_SHOT          = 63659,
+    GO_HARPOON                  = 194543, // 41, 42, 194519
+
 	//dark rune watcher
 	SPELL_LIGHTNING_BOLT		= 63809,
 	SPELL_LIGHTNING_BOLT_H		= 64696,
