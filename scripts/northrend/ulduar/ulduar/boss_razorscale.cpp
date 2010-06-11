@@ -603,7 +603,7 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
                 if ((*iter))
                 {
                     (*iter)->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
-                    //(*iter)->SetUInt32Value(GAMEOBJECT_DISPLAYID, 8631);
+                    (*iter)->SetUInt32Value(GAMEOBJECT_DISPLAYID, 8631);
                 }
             }
         }
@@ -651,7 +651,7 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
             if(GameObject* pHarpoon = m_pInstance->instance->GetGameObject(m_uiHarpoonsGUID[m_uiHarpoonsRepaired]))
             {
                 pHarpoon->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
-                //pHarpoon->SetUInt32Value(GAMEOBJECT_DISPLAY, 8245);
+                pHarpoon->SetUInt32Value(GAMEOBJECT_DISPLAYID, 8245);
                 m_uiHarpoonsRepaired += 1;
             }
             DoScriptText(EMOTE_HARPOON, m_creature);
@@ -706,7 +706,7 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
             m_bIsGrounded       = true;
 			m_uiStun_Timer      = 2000;
 			m_uiGround_Cast     = 35000;
-			m_uiGrounded_Timer  = 50000;
+			m_uiGrounded_Timer  = 45000;
             // make boss land
             m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
             m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
@@ -720,6 +720,8 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
 
 		if (m_uiGround_Cast < uiDiff && m_bIsGrounded)
 		{
+            if (Creature* pCommander = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_COMMANDER))))
+                m_creature->SetUInt64Value(UNIT_FIELD_TARGET, pCommander->GetGUID());
 			m_creature->RemoveAurasDueToSpell(SPELL_STUN);
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
             DoCast(m_creature, m_bIsRegularMode ? SPELL_FLAME_BREATH : SPELL_FLAME_BREATH_H);

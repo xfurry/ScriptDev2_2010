@@ -293,6 +293,7 @@ struct MANGOS_DLL_DECL mob_xtheartAI : public ScriptedAI
 
     void JustDied(Unit* pKiller)
     {
+        // used for hard mode loot
         m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
         if(m_pInstance)
             m_pInstance->SetData(TYPE_XT002_HARD, IN_PROGRESS);
@@ -662,7 +663,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
             m_uiBoombotCount        = 0;   
             m_uiPummellerCount      = 0;
 
-            if(Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 600000))
+            if(Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 900000))
             {
                 m_uiXtHeartGUID = Heart->GetGUID();
                 if(!m_bIsRegularMode)

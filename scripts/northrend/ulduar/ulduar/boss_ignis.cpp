@@ -143,7 +143,7 @@ struct MANGOS_DLL_DECL mob_iron_constructAI : public ScriptedAI
         m_bIsBrittle        = false;
         m_bIsMolten         = false;
         m_bIsInCombat       = false;
-        m_uiWaterCheckTimer = 2000;
+        m_uiWaterCheckTimer = 1000;
         m_uiScorchTimer     = 5000;
         m_uiAura_Check_Timer = 1000;
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -254,27 +254,25 @@ struct MANGOS_DLL_DECL mob_iron_constructAI : public ScriptedAI
         //Water checks
         if(m_bIsMolten)
         {
-            //timed molten
-            if (m_uiMoltenTimer <= uiDiff)
-            {
-                DoCast(m_creature, SPELL_BRITTLE);
-                m_uiMoltenTimer = 30000;
-                m_uiBrittleTimer = 20000;
-                m_bIsBrittle = true;
-                m_bIsMolten = false;
-            }else m_uiMoltenTimer -= uiDiff;
-
             //TODO: implement water event when liquid maps are fixed
-            /*if (m_uiWaterCheckTimer <= uiDiff)
+            if (m_uiWaterCheckTimer <= uiDiff)
             {
-                if(m_creature->IsInWater())
+                /*if(m_creature->IsInWater())
                 {
                     DoCast(m_creature, SPELL_BRITTLE);
                     m_bIsBrittle = true;
                     m_bIsMolten = false;
+                }*/
+                // workaround
+                if( m_creature->GetDistance2d(524.15f, 277.0f) < 18 || m_creature->GetDistance2d(648.5f, 277.0f) < 18)
+                {
+                    DoCast(m_creature, SPELL_BRITTLE);
+                    m_creature->RemoveAurasDueToSpell(SPELL_MOLTEN);
+                    m_bIsBrittle = true;
+                    m_bIsMolten = false;
                 }
-                m_uiWaterCheckTimer = 2000;
-            }else m_uiWaterCheckTimer -= uiDiff;*/
+                m_uiWaterCheckTimer = 500;
+            }else m_uiWaterCheckTimer -= uiDiff;
         }
 
         DoMeleeAttackIfReady();
@@ -361,7 +359,13 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
         std::list<Creature* >::iterator iter = lConstructList.begin();
         advance(iter, urand(0, lConstructList.size()-1));
 
-        return *iter;
+        if((*iter)->isAlive())
+            return *iter;
+        else
+        {
+            m_uiSummon_Timer = 500;
+            return NULL;
+        }
     }
 
     void KilledUnit(Unit* pVictim)
@@ -456,7 +460,11 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
             DoScriptText(SAY_SUMMON, m_creature);
 
             if(Creature* pConstruct = SelectRandomConstruct(200.0f))
+            {
                 ((mob_iron_constructAI*)pConstruct->AI())->GetInCombat();
+                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                    pConstruct->AddThreat(target, 100.0f);
+            }
 
             m_uiSummon_Timer = 40000;
 
