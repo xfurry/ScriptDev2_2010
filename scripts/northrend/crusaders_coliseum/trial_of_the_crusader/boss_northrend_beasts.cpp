@@ -457,7 +457,6 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
                     SetCombatMovement(true);
                     m_creature->GetMotionMaster()->MovementExpired();
                     m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                    SetCombatMovement(true);
                     m_uiMassiveCrashTimer = urand(45000, 50000);
                     m_bIsTrample = false;
                     break;
@@ -764,7 +763,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff)
             {
-                m_creature->RemoveAllAuras();
+                m_creature->CastStop();
                 DoCast(m_creature, SPELL_SUBMERGE, false);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 m_uiMoveTimer       = 2000;
@@ -861,7 +860,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff)
             {
-                m_creature->RemoveAllAuras();
+                m_creature->CastStop();
                 DoCast(m_creature, SPELL_SUBMERGE, false);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 SetCombatMovement(false);
@@ -1159,7 +1158,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff)
             {
-                m_creature->RemoveAllAuras();
+                m_creature->CastStop();
                 DoCast(m_creature, SPELL_SUBMERGE, false);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 m_uiSubmergeTimer   = 4000;
@@ -1256,7 +1255,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         {
             if (phaseChangeTimer < uiDiff)
             {
-                m_creature->RemoveAllAuras();
+                m_creature->CastStop();
                 DoCast(m_creature, SPELL_SUBMERGE, false);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 SetCombatMovement(false);

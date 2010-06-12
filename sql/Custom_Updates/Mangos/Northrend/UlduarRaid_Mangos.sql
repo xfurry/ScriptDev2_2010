@@ -11,6 +11,13 @@ UPDATE creature_template SET minlevel=80, maxlevel=80, faction_h=1925, faction_a
 
 -- Razorscale
 UPDATE creature_template SET mechanic_immune_mask=617299803, scriptname='boss_razorscale' WHERE entry=33186;
+-- original x=587.547, y= -174.927, z = 391.517;
+update creature set position_x = 590.346741, position_y = -226.947647, position_z = 442.897583 where id = 33186;
+UPDATE gameobject_template SET flags= 6553648, ScriptName="go_broken_harpoon" WHERE entry = 194565;
+-- only 2 harpoons for 10 man
+update gameobject set spawnMask = 2 where guid in (73595, 73592);
+-- mole machines
+UPDATE creature_template SET ScriptName = "mob_mole_machine" WHERE entry = 33245;
 UPDATE creature_template SET ScriptName = "mob_dark_rune_watcher" WHERE entry = 33453;
 UPDATE creature_template SET ScriptName = "mob_dark_rune_sentinel" WHERE entry = 33846;
 UPDATE creature_template SET ScriptName = "mob_dark_rune_guardian" WHERE entry = 33388;
@@ -26,6 +33,44 @@ UPDATE creature_template SET mechanic_immune_mask=652951551, scriptname='mob_xth
 UPDATE creature_template SET ScriptName = "mob_voidzone" WHERE entry = 34001;
 UPDATE creature_template SET minhealth = 176400, maxhealth = 176400, minlevel = 80, maxlevel = 80, faction_a = 14, faction_h = 14, ScriptName = "mob_lifespark" WHERE entry = 34004;
 Update creature set spawnMask = 0 where id in (34004);
+-- hard loot for the heart
+update creature_template set lootid = 33329 where entry = 33329;
+update creature_template set lootid = 33995 where entry = 33995;
+-- rewrite loot for XT to support hard mode: moved hard mode loot to XT heart
+-- 10 man:
+-- first we delete the hard mode loot from xt: (bugged loot from 25 was on 10)
+DELETE FROM `creature_loot_template` WHERE (`entry`=33293);
+INSERT INTO `creature_loot_template` VALUES 
+(33293, 45091, 0.5, 0, 1, 1, 0, 0, 0),
+(33293, 45095, 0.5, 0, 1, 1, 0, 0, 0),
+(33293, 45675, 0, 1, 1, 1, 0, 0, 0),
+(33293, 45676, 0, 2, 1, 1, 0, 0, 0),
+(33293, 45677, 0, 2, 1, 1, 0, 0, 0),
+(33293, 45679, 0, 2, 1, 1, 0, 0, 0),
+(33293, 45680, 0, 2, 1, 1, 0, 0, 0),
+(33293, 45682, 0, 2, 1, 1, 0, 0, 0),
+(33293, 45685, 0, 1, 1, 1, 0, 0, 0),
+(33293, 45686, 0, 1, 1, 1, 0, 0, 0),
+(33293, 45687, 0, 1, 1, 1, 0, 0, 0),
+(33293, 45694, 0, 1, 1, 1, 0, 0, 0),
+(33293, 47241, 100, 0, 1, 1, 0, 0, 0);
+-- hard mode loot for the heart
+DELETE FROM `creature_loot_template` WHERE (`entry`=33329);
+INSERT INTO `creature_loot_template` VALUES 
+(33329, 45867, 0, 3, 1, 1, 0, 0, 0),
+(33329, 45868, 0, 3, 1, 1, 0, 0, 0),
+(33329, 45869, 0, 3, 1, 1, 0, 0, 0),
+(33329, 45870, 0, 3, 1, 1, 0, 0, 0),
+(33329, 45871, 0, 3, 1, 1, 0, 0, 0);
+-- 25 man:
+-- no hard loot on xt so moving to the heart
+DELETE FROM `creature_loot_template` WHERE (`entry`=33995);
+INSERT INTO `creature_loot_template` VALUES 
+(33995, 45445, 0, 4, 1, 1, 0, 0, 0),
+(33995, 45443, 0, 4, 1, 1, 0, 0, 0),
+(33995, 45444, 0, 4, 1, 1, 0, 0, 0),
+(33995, 45446, 0, 4, 1, 1, 0, 0, 0),
+(33995, 45442, 0, 4, 1, 1, 0, 0, 0);
 
 -- Iron council
 UPDATE creature_template SET mechanic_immune_mask=619395071, scriptname='boss_brundir' WHERE entry=32857;
@@ -34,15 +79,62 @@ UPDATE creature_template SET mechanic_immune_mask=617299803, scriptname='boss_st
 UPDATE creature_template SET ScriptName = "mob_rune_of_power" WHERE entry = 33705;
 UPDATE creature_template SET ScriptName = "mob_rune_of_summoning" WHERE entry = 33051;
 UPDATE creature_template SET ScriptName = "mob_ulduar_lightning_elemental" WHERE entry = 32958;
-#UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` in (32857, 33694);
-UPDATE `creature_template` SET `mechanic_immune_mask` = 0 WHERE `entry` in (32857, 33694);
+UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` in (32857, 33694);
+-- update loot id:
+-- brundir
+update creature_template set lootid = 32857 where entry = 32857;
+update creature_template set lootid = 33694 where entry = 33694;
+-- molgeim = steelbreaker (I dont know exactly which items are missing from molgeim's loot so i'm leaving it the same for now);
+update creature_template set lootid = 32867 where entry = 32927;
+update creature_template set lootid = 33693 where entry = 33692;
+-- Rewrite loot for council: this will allow us to use hard mode loot because only the last killed boss will be lootable
+-- 10 man version
+-- Brundir:
+DELETE FROM `creature_loot_template` WHERE (`entry`=32857);
+INSERT INTO `creature_loot_template` VALUES 
+(32857, 45322, 0, 2, 1, 1, 0, 0, 0),
+(32857, 45324, 0, 1, 1, 1, 0, 0, 0),
+(32857, 45329, 0, 2, 1, 1, 0, 0, 0),
+(32857, 45330, 0, 1, 1, 1, 0, 0, 0),
+(32857, 45331, 0, 2, 1, 1, 0, 0, 0),
+(32857, 45332, 0, 1, 1, 1, 0, 0, 0),
+(32857, 45333, 0, 2, 1, 1, 0, 0, 0),
+(32857, 45378, 0, 2, 1, 1, 0, 0, 0),
+(32857, 45418, 0, 1, 1, 1, 0, 0, 0),
+(32857, 45423, 0, 1, 1, 1, 0, 0, 0),
+-- emblem 100% drop
+(32857, 47241, 100, 0, 1, 1, 0, 0, 0);
+-- 25 man version
+-- Brundir:
+DELETE FROM `creature_loot_template` WHERE (`entry`=33694);
+INSERT INTO `creature_loot_template` VALUES 
+(33694, 45224, 0, 3, 1, 1, 0, 0, 0),
+(33694, 45228, 0, 3, 1, 1, 0, 0, 0),
+(33694, 45233, 0, 3, 1, 1, 0, 0, 0),
+(33694, 45234, 0, 3, 1, 1, 0, 0, 0),
+(33694, 45236, 0, 3, 1, 1, 0, 0, 0),
+(33694, 45226, 0, 2, 1, 1, 0, 0, 0),
+(33694, 45235, 0, 2, 1, 1, 0, 0, 0),
+(33694, 45237, 0, 2, 1, 1, 0, 0, 0),
+(33694, 45238, 0, 2, 1, 1, 0, 0, 0),
+(33694, 45239, 0, 2, 1, 1, 0, 0, 0),
+(33694, 45193, 0, 1, 1, 1, 0, 0, 0),
+(33694, 45225, 0, 1, 1, 1, 0, 0, 0),
+(33694, 45227, 0, 1, 1, 1, 0, 0, 0),
+(33694, 45232, 0, 1, 1, 1, 0, 0, 0),
+(33694, 45240, 0, 1, 1, 1, 0, 0, 0),
+(33694, 45038, 10, 0, 1, 1, 0, 0, 0),
+(33694, 45087, 33, 0, 1, 2, 0, 0, 0),
+(33694, 45089, 5, 0, -45089, 1, 0, 0, 0),
+-- emblem 100% drop
+(33694, 47241, 100, 0, 1, 1, 0, 0, 0);
 
 -- Kologarn
 DELETE FROM creature WHERE id IN (32933, 32934);
 INSERT INTO creature (id, map, spawnMask, phaseMask, modelid, equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, currentwaypoint, curhealth, curmana, DeathState, MovementType) VALUES (32933, 603, 3, 65535, 0, 0, 1799.68, -24.3599, 452.227, 3.14747, 604800, 0, 0, 543855, 0, 0, 0);
 INSERT INTO creature (id, map, spawnMask, phaseMask, modelid, equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, currentwaypoint, curhealth, curmana, DeathState, MovementType) VALUES (32934, 603, 3, 65535, 0, 0, 1799.68, -24.3599, 452.227, 3.14747, 604800, 0, 0, 543855, 0, 0, 0);
 UPDATE creature_model_info SET bounding_radius=15, combat_reach=15 WHERE modelid IN (28638, 28822, 28821);
-UPDATE creature_template SET mechanic_immune_mask=617299803, scriptname='boss_kologarn' WHERE entry=32930;
+UPDATE creature_template SET mechanic_immune_mask=617299803, unit_flags = 0, scriptname='boss_kologarn' WHERE entry=32930;
 UPDATE creature_template SET mechanic_immune_mask=652951551, scriptname='boss_right_arm' WHERE entry=32934;
 UPDATE creature_template SET mechanic_immune_mask=652951551, scriptname='boss_left_arm' WHERE entry=32933;
 UPDATE creature_template SET ScriptName = "mob_ulduar_rubble" WHERE entry in (33768, 33809, 33908, 33942);
@@ -58,6 +150,11 @@ UPDATE creature_template SET ScriptName = "mob_sanctum_sentry" WHERE entry = 340
 UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` in (33515, 34175);
 delete from creature_equip_template where entry = 103000;
 insert into creature_equip_template values (103000, 45315, 0, 0);
+-- 2 more defenders for 25 man
+delete from creature where guid in (800010, 800011);
+INSERT INTO `creature` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`modelid`,`equipment_id`,`position_x`,`position_y`,`position_z`,`orientation`,`spawntimesecs`,`spawndist`,`currentwaypoint`,`curhealth`,`curmana`,`DeathState`,`MovementType`) VALUES
+(800010, 34014, 603, 2, 65535, 0, 0, 1945.2, 37.2442, 411.356, 3.62107, 7200, 0, 0, 334680, 0, 0, 0),
+(800011, 34014, 603, 2, 65535, 0, 0, 1936.11, 49.8233, 411.352, 3.85276, 7200, 0, 0, 334680, 0, 0, 0);
 DELETE FROM `creature_movement` WHERE `id`=94378;
 INSERT INTO `creature_movement` (`id`,`point`,`position_x`,`position_y`,`position_z`,`waittime`,`textid1`,`textid2`,`textid3`,`textid4`,`textid5`,`emote`,`spell`,`wpguid`,`orientation`,`model1`,`model2`) VALUES
 
@@ -121,7 +218,7 @@ UPDATE creature_template SET `RegenHealth`= 0, ScriptName = "boss_vx001" WHERE e
 UPDATE creature_template SET `RegenHealth`= 0, ScriptName = "boss_aerial_command_unit" WHERE entry = 33670;
 update creature set position_x = 2784.35, position_y = 2578.03, orientation = 3.2 where id = 33350;
 update creature set position_x = 2794.86, position_y = 2597.83, orientation = 3.57, spawnMask = 3 where id = 33432;
-UPDATE gameobject_template SET ScriptName="go_red_button" WHERE entry = 194739;
+UPDATE gameobject_template SET  ScriptName="go_red_button" WHERE entry = 194739; -- also set data2 = 5000,
 UPDATE creature_template SET ScriptName = "mob_proximity_mine" WHERE entry = 34362;
 UPDATE creature_template SET ScriptName = "mob_bomb_bot" WHERE entry in (33836, 34192);
 UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, `minlevel` = 80, `maxlevel` = 80, ScriptName = "mob_emergency_bot" WHERE entry = 34147;
@@ -226,20 +323,16 @@ REPLACE INTO spell_target_position VALUES
 (65042, 603, 1854.73, -11.637, 334.575, 0);        /* Prison of Yogg-Saron */
 
 -- Doors 
-UPDATE gameobject_template SET faction = 114 WHERE entry in (194553, 194554, 194556, 194555, 194148, 194634, 194635, 194905, 194441,
-194442, 194416, 194774, 194775, 194776, 194560, 194557, 194558, 194750, 194910, 194559, 194635, 194636, 194637);
-UPDATE gameobject_template SET faction = 0 WHERE entry in (194255, 194630, 194631);
--- Doors from the siege && descent into madness: to be added later
-#UPDATE gameobject_template SET faction = 114 WHERE entry in (194255, 194630, 194631);
+UPDATE gameobject_template SET faction = 114 WHERE entry in (194553, 194554, 194556, 194148, 194634, 194635, 194905, 194441,
+194442, 194416, 194774, 194775, 194776, 194560, 194557, 194558, 194750, 194910, 194559, 194635, 194636, 194637, 194631, 194255, 194630, 194767);
+-- consoles
+UPDATE gameobject_template SET faction = 0 WHERE entry in (194555, 194628);
 
 -- loot chests
 UPDATE gameobject_template SET faction = 0, data15 = 1 WHERE entry in (195046, 195047, 194307, 194308, 194200, 194201, 194312, 194313, 194314, 194315, 194821,
 194822, 194823, 194324, 194325, 194326, 194327, 194328, 194329, 194330, 194331, 194789, 194956);
 update gameobject set spawntimesecs = -604800 where id in (195046, 195047, 194307, 194308, 194200, 194201, 194312, 194313, 194314, 194315, 194821,
 194822, 194823, 194324, 194325, 194326, 194327, 194328, 194329, 194330, 194331, 194789, 194956);
-
--- Iron council loot -->> event fixed. Loot ids removed; Only steelbreaker has loot
-update `creature_template` set `lootid` = 0 where `entry` in (32927, 32857);
 
 -- Mobs
 UPDATE creature_template SET ScriptName = "generic_creature" WHERE entry in (34086, 34085, 34069, 33237, 34234, 33236, 33264, 34164, 34196, 34199, 34198, 

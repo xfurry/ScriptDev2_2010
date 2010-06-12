@@ -36,9 +36,12 @@ enum
     SAY_ADDS				= -1603032,
     SAY_HEART_OPEN			= -1603034,
     SAY_HEART_CLOSE			= -1603033,
+    EMOTE_HEART             = -1603350,
+    EMOTE_REPAIR            = -1603351,
 
     //xt-002
     SPELL_TANCTRUM			= 62776,
+    SPELL_LIGHT_BOMB_TRIG   = 65598,
     SPELL_LIGHT_BOMB		= 63018,
     SPELL_LIGHT_BOMB_H		= 65121,
     SPELL_GRAVITY_BOMB		= 63024,
@@ -69,17 +72,37 @@ enum
     SPELL_UPPERCUT			= 10966,
 
     //NPC ids
-    //NPC_HEART				= 33329,
+    NPC_HEART				= 33329,
     NPC_SCRAPBOT			= 33343,
     NPC_BOOMBOT				= 33346,
     NPC_PUMMELER			= 33344, 
 
-
     // Achievs
-    ACHIEV_HEARTBREAKER     = 3058,
-    ACHIEV_HEARTBREAKER_H   = 3059,
-    ACHIEV_DECONSTRUCT_FAST = 2937,
-    ACHIEV_DECONSTRUCT_FAST_H = 2938,
+    ACHIEV_HEARTBREAKER         = 3058,
+    ACHIEV_HEARTBREAKER_H       = 3059,
+    ACHIEV_DECONSTRUCT_FAST     = 2937,
+    ACHIEV_DECONSTRUCT_FAST_H   = 2938,
+    ACHIEV_NERF_ENGINEERING     = 2931,
+    ACHIEV_NERF_ENGINEERING_H   = 2932,
+    ACHIEV_NERF_GRAVITY_BOMBS   = 2934,
+    ACHIEV_NERF_GRAVITY_BOMBS_H = 2936,
+    ACHIEV_NERF_SCRAPBOTS       = 2933,
+    ACHIEV_NERF_SCRAPBOTS_H     = 2935,
+};
+
+//Positional defines 
+struct LocationsXY
+{
+    float x, y, z, o;
+    uint32 id;
+};
+
+static LocationsXY SummonLoc[]=
+{
+    {792.706f, 64.033f, 409.632f},  // lower left
+    {879.750f, 64.815f, 409.804f},  // upper left
+    {896.488f, -93.018f, 409.731f}, // upper right
+    {791.016f, -83.516f, 409.804f}, // lower right
 };
 
 // void zone
@@ -90,18 +113,17 @@ struct MANGOS_DLL_DECL mob_voidzoneAI : public ScriptedAI
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->setFaction(14);
         SetCombatMovement(false);
         Reset();
     }
 
     uint32 Spell_Timer;
-    uint32 DespawnTimer;
     bool m_bIsRegularMode;
 
     void Reset()
     {
         Spell_Timer = 4000;
-        DespawnTimer = 180000;
     }
 
     void UpdateAI(const uint32 diff)
@@ -127,12 +149,6 @@ struct MANGOS_DLL_DECL mob_voidzoneAI : public ScriptedAI
             } 
             Spell_Timer = 4000;
         }else Spell_Timer -= diff;  
-
-        if (DespawnTimer < diff)
-            m_creature->ForcedDespawn();
-        else DespawnTimer -= diff; 
-
-        DoMeleeAttackIfReady();
     }
 };
 
@@ -146,41 +162,15 @@ struct MANGOS_DLL_DECL mob_lifesparkAI : public ScriptedAI
 {
     mob_lifesparkAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
-    uint32 Spell_Timer;
-
     void Reset()
     {  
-        Spell_Timer = 4000;
-        DoCast(m_creature, SPELL_STATIC_CHARGED, false);
+        DoCast(m_creature, SPELL_STATIC_CHARGED);
     }
 
     void UpdateAI(const uint32 diff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
-
-        if (Spell_Timer < diff)
-        {
-            Map *map = m_creature->GetMap();
-            if (map->IsDungeon())
-            {
-                Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                if (PlayerList.isEmpty())
-                    return;
-
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 80)
-                        i->getSource()->DealDamage(i->getSource(), 500, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NATURE, NULL, false);
-                }
-            } 
-            Spell_Timer = 3000;
-
-        }else Spell_Timer -= diff;  
-
-
-        DoMeleeAttackIfReady();
     }
 };
 
@@ -198,7 +188,7 @@ struct MANGOS_DLL_DECL mob_pummelerAI : public ScriptedAI
 
     void Reset()
     {
-        Spell_Timer = urand(15000, 25000);
+        Spell_Timer = urand(5000, 10000);
     }
 
     void UpdateAI(const uint32 diff)
@@ -220,7 +210,7 @@ struct MANGOS_DLL_DECL mob_pummelerAI : public ScriptedAI
                 DoCast(m_creature->getVictim(), SPELL_UPPERCUT);
                 break;
             }
-            Spell_Timer = urand(15000, 25000);
+            Spell_Timer = urand(5000, 10000);
         }else Spell_Timer -= diff;        
 
         DoMeleeAttackIfReady();
@@ -243,7 +233,8 @@ struct MANGOS_DLL_DECL mob_boombotAI : public ScriptedAI
 
     void DamageTaken(Unit* pDoneBy, uint32& uiDamage)
     {
-        if (uiDamage > m_creature->GetHealth()){
+        if (uiDamage > m_creature->GetHealth())
+        {
             uiDamage = 0;
             DoCast(m_creature, SPELL_BOOM);
         }
@@ -253,9 +244,7 @@ struct MANGOS_DLL_DECL mob_boombotAI : public ScriptedAI
     {
         //If we are within range melee the target
         if (m_creature->IsWithinDistInMap(m_creature->getVictim(), ATTACK_DISTANCE))
-        {
             DoCast(m_creature, SPELL_BOOM);
-        }
     }
 
     void UpdateAI(const uint32 diff)
@@ -277,62 +266,61 @@ struct MANGOS_DLL_DECL mob_xtheartAI : public ScriptedAI
 {
     mob_xtheartAI(Creature* pCreature) : ScriptedAI(pCreature) 
     {
-        SetCombatMovement(false);
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        SetCombatMovement(false);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
 
-    uint32 Exposed_Timer;
-    uint32 heartdamage;
+    uint32 m_uiDeathTimer;
+    uint32 m_uiTotalDamage;
 
     void Reset()
     {
-        Exposed_Timer = 30000;
         DoCast(m_creature, SPELL_EXPOSED_HEART);
-        heartdamage = 0;
+        m_creature->SetRespawnDelay(DAY);
+        m_uiTotalDamage = 0;
+        m_uiDeathTimer = 30000;
     }
 
     void DamageTaken(Unit* pDoneBy, uint32& uiDamage)
     {
-        heartdamage += uiDamage;
+        m_uiTotalDamage += uiDamage;
+        // double damage
+        uiDamage += uiDamage;
     }
 
     void JustDied(Unit* pKiller)
     {
-        if (heartdamage != 0)
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_XT002))))
-                if (pTemp->isAlive())
-                {
-                    pTemp->DealDamage(pTemp, heartdamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                    heartdamage = 0;
-                }
+        // used for hard mode loot
+        m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_XT002_HARD, IN_PROGRESS);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if (Exposed_Timer < diff)
+        // despawns the creature if not killed in 30 secs
+        if(m_uiDeathTimer < diff)
         {
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_XT002))))
+            // pass damage to boss
+            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_XT002))))
+            {
                 if (pTemp->isAlive())
-                    pTemp->DealDamage(pTemp, heartdamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-            heartdamage = 0;
-            m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }else Exposed_Timer -= diff;
-
+                    pTemp->DealDamage(pTemp, m_uiTotalDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            }
+            m_creature->ForcedDespawn();
+        }
+        else
+            m_uiDeathTimer -= diff;
     }
-
 };
 
 CreatureAI* GetAI_mob_xtheart(Creature* pCreature)
 {
     return new mob_xtheartAI(pCreature);
 }
-
-float XtAddX[4];
-float XtAddY[4];
-float XtAddZ[4];
 
 //XT-002 Deconstructor
 struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
@@ -341,10 +329,6 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        XtAddX[0] = 792.706f; XtAddY[0] = 64.033f; XtAddZ[0] = 413.632f;
-        XtAddX[1] = 879.750f; XtAddY[1] = 64.815f; XtAddZ[1] = 409.804f;
-        XtAddX[2] = 896.488f; XtAddY[2] = -93.018f; XtAddZ[2] = 411.731f;
-        XtAddX[3] = 791.016f; XtAddY[3] = -83.516f; XtAddZ[3] = 409.804f;
         Reset();
     }
 
@@ -355,72 +339,80 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
     std::list<uint64> m_lBoombotsGUIDList;
     std::list<uint64> m_lPummelerGUIDList;
 
-    uint32 Heart_Timer;
-    uint32 Light_Bomb_Timer;
-    uint32 Gravity_Bomb_Timer;
-    uint32 Tanctrum_Timer;
-    uint32 add_summon_delay;
-    uint32 Enrage_Timer;
-    uint32 Range_Check_Timer;
-    uint32 Addcount;
-    uint32 VoidZoneTimer;
-    uint32 LifeSparkTimer;
-    uint8 hp;
-    uint32 hpDelayTimer;
-    uint64 m_uiHeartGUID;
-    bool heart1;
-    bool heart2;
-    bool heart3;
-    bool enrage;
-    bool phase2;
-    bool add1;
-    bool add2;
-    bool add3;
-    bool add4;
+    // spell timers
+    uint32 m_uiHeart_Timer;
+    uint32 m_uiLight_Bomb_Timer;
+    uint32 m_uiGravity_Bomb_Timer;
+    uint32 m_uiTanctrum_Timer;
+    uint32 m_uiEnrage_Timer;
+    uint32 m_uiRange_Check_Timer;
+    uint32 m_uiVoidZoneTimer;
+    uint32 m_uiLifeSparkTimer;
+
+    // summon timers
+    uint32 m_uiScrapbotTimer;
+    uint32 m_uiBoombotTimer;
+    uint32 m_uiPummellerTimer;
+    uint32 m_uiScrapbotCount;
+    uint32 m_uiBoombotCount;
+    uint32 m_uiPummellerCount;
+    uint32 m_uiMaxScrapbot;
+    uint32 m_uiMaxBoombot;
+
+    // health timers
+    uint32 m_uiHealthPercent;
+    uint32 m_uiHpDelayTimer;
+    bool m_bIsEnrage;
+    bool m_bPhase2;
 
     uint64 pLightBombTarGUID;
     uint64 pGravityBombTarGUID;
+    uint64 m_uiXtHeartGUID;
 
-    bool isHardMode;
-    bool hasMoreHealth;
+    bool m_bIsHardMode;
+    bool m_bHasMoreHealth;
 
     uint32 uiEncounterTimer;
+    bool m_bIsEngineer;
 
     void Reset()
     {
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
-        Light_Bomb_Timer = 5000; //7 seconds the first 14 secs all after(7 secs in 25man)
-        Gravity_Bomb_Timer = 30000; //11 seconds first 18 secs all after(11 secs in 25man)
-        Tanctrum_Timer = 38000; // 38 seconds first 40 secs all after
-        add_summon_delay = 5000;
-        Enrage_Timer = 600000;
-        Range_Check_Timer = 1000;
-        VoidZoneTimer = 60000;
-        LifeSparkTimer = urand (5000, 10000);
-        hp = m_bIsRegularMode? 0.5 : 0.6;
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        Addcount = 0;
-        m_uiHeartGUID   = 0;
-        heart1 = false;
-        heart2 = false;
-        heart3 = false;
-        enrage = false;
-        phase2 = false;
-        add1 = false;
-        add2 = false;
-        add3 = false;
-        add4 = false;
-        isHardMode = false;
-        hasMoreHealth = false;
+
+        // spell timers
+        m_uiLight_Bomb_Timer    = 5000;     // 7 seconds the first 14 secs all after(7 secs in 25man)
+        m_uiGravity_Bomb_Timer  = 30000;    // 11 seconds first 18 secs all after(11 secs in 25man)
+        m_uiTanctrum_Timer      = 38000;    // 38 seconds first 40 secs all after
+        m_uiEnrage_Timer        = 600000;   // 10 min
+        m_uiRange_Check_Timer   = 1000;
+        m_uiVoidZoneTimer       = 60000;
+        m_uiLifeSparkTimer      = urand (5000, 10000);
+        // summon timers
+        m_uiScrapbotTimer       = 5000;
+        m_uiBoombotTimer        = 5000;
+        m_uiPummellerTimer      = 5000;
+        m_uiScrapbotCount       = 0;
+        m_uiBoombotCount        = 0;   
+        m_uiPummellerCount      = 0;
+        m_uiMaxScrapbot         = 0;
+        m_uiMaxBoombot          = 0;
+        // health timers
+        m_uiHealthPercent       = 75;
+        
+        m_bIsEnrage             = false;
+        m_bPhase2               = false;
+        m_bIsHardMode           = false;
+        m_bHasMoreHealth        = false;
         m_lScrapbotsGUIDList.clear();
         m_lBoombotsGUIDList.clear();
         m_lPummelerGUIDList.clear();
 
-        pLightBombTarGUID = 0;
-        pGravityBombTarGUID = 0;
+        pLightBombTarGUID       = 0;
+        pGravityBombTarGUID     = 0;
+        m_uiXtHeartGUID         = 0;
 
-        uiEncounterTimer = 0;
+        uiEncounterTimer        = 0;
+        m_bIsEngineer           = true;
     }
 
     void JustDied(Unit* pKiller)
@@ -428,11 +420,19 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
         if (m_pInstance)
         {
             m_pInstance->SetData(TYPE_XT002, DONE);
-            if(isHardMode)
+            if(m_bIsHardMode)
+            {
                 m_pInstance->SetData(TYPE_XT002_HARD, DONE);
+                // make the heart give the loot for hard mode
+                if(Creature* pHeart = m_pInstance->instance->GetCreature(m_uiXtHeartGUID))
+                    pHeart->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+            }
         }
 
         DoScriptText(SAY_DEATH, m_creature);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+
         if (!m_lScrapbotsGUIDList.empty())
         {
             for(std::list<uint64>::iterator itr = m_lScrapbotsGUIDList.begin(); itr != m_lScrapbotsGUIDList.end(); ++itr)
@@ -460,10 +460,17 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
         }
 
         // Heartbreaker
-        if (isHardMode)
+        if (m_bIsHardMode)
         {
             if(m_pInstance)
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_HEARTBREAKER : ACHIEV_HEARTBREAKER_H);
+        }
+
+        // Nerf Engineer
+        if(m_bIsEngineer)
+        {
+            if(m_pInstance)
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_NERF_ENGINEERING : ACHIEV_NERF_ENGINEERING_H);
         }
     }
 
@@ -471,13 +478,22 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_XT002, IN_PROGRESS);
+
         DoScriptText(SAY_AGGRO, m_creature);
     }
 
     void JustReachedHome()
     {
         if (m_pInstance)
+        {
             m_pInstance->SetData(TYPE_XT002, FAIL);
+            m_pInstance->SetData(TYPE_XT002_HARD, NOT_STARTED);
+        }
+
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->SetStandState(UNIT_STAND_STATE_STAND);
     }
 
     void KilledUnit(Unit* pVictim)
@@ -489,342 +505,243 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
         }
     }
 
-    void UpdateAI(const uint32 diff)
+    void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
         // Achiev timer
-        uiEncounterTimer += diff;
+        uiEncounterTimer += uiDiff;
 
-        if (Light_Bomb_Timer < diff && !phase2)
+        if (m_uiLight_Bomb_Timer < uiDiff && !m_bPhase2)
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 // fix spell range
-                //DoCast(pTarget, m_bIsRegularMode ? SPELL_LIGHT_BOMB : SPELL_LIGHT_BOMB_H);
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_LIGHT_BOMB : SPELL_LIGHT_BOMB_H);
                 pLightBombTarGUID = pTarget->GetGUID();
             }
 
-            if(isHardMode)
-                LifeSparkTimer = 9000;
+            if(m_bIsHardMode)
+                m_uiLifeSparkTimer = 9000;
 
-            Light_Bomb_Timer = urand(10000, 14000);//m_bIsRegularMode ? 14000 :7000;
-        }else Light_Bomb_Timer -= diff;   
+            m_uiLight_Bomb_Timer = urand(10000, 14000);
+        }else m_uiLight_Bomb_Timer -= uiDiff;   
 
-        if (Gravity_Bomb_Timer < diff && !phase2)
+        if (m_uiGravity_Bomb_Timer < uiDiff && !m_bPhase2)
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 // fix spell range
-                //DoCast(pTarget, m_bIsRegularMode ? SPELL_GRAVITY_BOMB : SPELL_GRAVITY_BOMB_H);
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_GRAVITY_BOMB : SPELL_GRAVITY_BOMB_H);
                 pGravityBombTarGUID = pTarget->GetGUID();
             }
 
-            if(isHardMode)
-                VoidZoneTimer = 9000;
+            if(m_bIsHardMode)
+                m_uiVoidZoneTimer = 9000;
 
-            Gravity_Bomb_Timer = urand(25000, 30000);//18000 :11000; 
-        }else Gravity_Bomb_Timer -= diff;  
+            m_uiGravity_Bomb_Timer = urand(25000, 30000); 
+        }else m_uiGravity_Bomb_Timer -= uiDiff;  
 
-        if (Tanctrum_Timer < diff && !phase2)
+        if (m_uiTanctrum_Timer < uiDiff && !m_bPhase2)
         {
             DoCast(m_creature, SPELL_TANCTRUM);
             DoScriptText(SAY_TANCTRUM, m_creature);
-            Tanctrum_Timer = 40000;
-        }else Tanctrum_Timer -= diff;
+            m_uiTanctrum_Timer = 40000;
+        }else m_uiTanctrum_Timer -= uiDiff;
 
-        if (Enrage_Timer < diff && !enrage && !phase2)
+        // enrage timer
+        if (m_uiEnrage_Timer < uiDiff && !m_bIsEnrage && !m_bPhase2)
         {
             DoCast(m_creature, SPELL_ENRAGE);
             if (m_creature->HasAura(SPELL_ENRAGE))
             {
-                enrage = true;
+                m_bIsEnrage = true;
                 DoScriptText(SAY_BERSERK, m_creature);
             }
             else
-                Enrage_Timer = 5000;
-        }else Enrage_Timer -= diff;
+                m_uiEnrage_Timer = 5000;
+        }else m_uiEnrage_Timer -= uiDiff;
 
-        if (Range_Check_Timer < diff)
+        if (m_uiRange_Check_Timer < uiDiff)
         {
             if (!m_lScrapbotsGUIDList.empty())
             {
                 for(std::list<uint64>::iterator itr = m_lScrapbotsGUIDList.begin(); itr != m_lScrapbotsGUIDList.end(); ++itr)
+                {
                     if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
+                    {
                         if (pTemp->isAlive() && m_creature->IsWithinDistInMap(pTemp, ATTACK_DISTANCE))
                         {
                             m_creature->SetHealth(m_creature->GetHealth() + m_creature->GetMaxHealth() * 0.01);
                             pTemp->DealDamage(pTemp, pTemp->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                            m_bIsEngineer = false;
+                            DoScriptText(EMOTE_REPAIR, m_creature);
                         }
+                    }
+                }
             }
             if (!m_lBoombotsGUIDList.empty())
             {
                 for(std::list<uint64>::iterator itr = m_lBoombotsGUIDList.begin(); itr != m_lBoombotsGUIDList.end(); ++itr)
-                    if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
-                        if (pTemp->isAlive() && m_creature->IsWithinDistInMap(pTemp, ATTACK_DISTANCE))
-                        {
-                            pTemp->DealDamage(pTemp, pTemp->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                        }
-            }
-            Range_Check_Timer = 1000;
-        }else Range_Check_Timer -= diff;
-
-        // Hard mode
-        
-        if (m_pInstance->GetData(TYPE_XT002) == SPECIAL && !isHardMode)
-        {
-            if (Creature* pTemp = m_pInstance->instance->GetCreature(m_uiHeartGUID))
-            {
-                if (!pTemp->isAlive())
                 {
-                    DoScriptText(SAY_HEART_CLOSE, m_creature);
-                    m_creature->RemoveAurasDueToSpell(SPELL_STUN);
-                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                    m_creature->AI()->AttackStart(m_creature->getVictim());
-
-                    DoCast(m_creature, m_bIsRegularMode ? SPELL_HEARTBREAK : SPELL_HEARTBREAK_H);
-                    hpDelayTimer = 1000;
-                    hasMoreHealth = true;
-                    isHardMode = true;
+                    if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
+                    {
+                        if (pTemp->isAlive() && m_creature->IsWithinDistInMap(pTemp, ATTACK_DISTANCE))
+                            pTemp->DealDamage(pTemp, pTemp->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                    }
                 }
             }
+            m_uiRange_Check_Timer = 1000;
+        }else m_uiRange_Check_Timer -= uiDiff;
+
+        // Hard mode
+        if (m_pInstance->GetData(TYPE_XT002_HARD) == IN_PROGRESS && !m_bIsHardMode)
+        {
+            DoScriptText(SAY_HEART_CLOSE, m_creature);
+            m_creature->SetStandState(UNIT_STAND_STATE_STAND);
+            m_creature->RemoveAurasDueToSpell(SPELL_STUN);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->AI()->AttackStart(m_creature->getVictim());
+
+            DoCast(m_creature, m_bIsRegularMode ? SPELL_HEARTBREAK : SPELL_HEARTBREAK_H);
+            m_uiHpDelayTimer = 500;
+            m_bHasMoreHealth = true;
+            m_bIsHardMode = true;
         }
         
-        if(isHardMode)
+        if(m_bIsHardMode)
         {
-            phase2 = false;
+            m_bPhase2 = false;
 
-            if(hpDelayTimer < diff && hasMoreHealth)
+            if(m_uiHpDelayTimer < uiDiff && m_bHasMoreHealth)
             {
-                m_creature->SetHealth(m_creature->GetMaxHealth()+ (m_creature->GetMaxHealth() * hp));
-                hasMoreHealth = false;
-            }else hpDelayTimer -= diff;
+                m_creature->SetHealth(m_creature->GetMaxHealth()+ (m_creature->GetMaxHealth() * m_bIsRegularMode ? 0.5 : 0.6));
+                m_bHasMoreHealth = false;
+            }else m_uiHpDelayTimer -= uiDiff;
 
-            if (LifeSparkTimer < diff)
+            if (m_uiLifeSparkTimer < uiDiff)
             {
-                //TODO: fix the target -> should be the same with the light bomb
-                //if (Unit* pTarget = Unit::GetUnit(*m_creature, pLightBombTarGUID))
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                if (Unit* pTarget = Unit::GetUnit(*m_creature, pLightBombTarGUID))
                 {
                     Creature * LifeSpark = m_creature->SummonCreature(NPC_LIFESPARK, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
                     if(m_bIsRegularMode)
                         LifeSpark->SetHealth(50400);
                 }
-                LifeSparkTimer = 60000;
-            }else LifeSparkTimer -= diff;
+                m_uiLifeSparkTimer = 60000;
+            }else m_uiLifeSparkTimer -= uiDiff;
 
-            if (VoidZoneTimer < diff)
+            if (m_uiVoidZoneTimer < uiDiff)
             {
-                //TODO: fix the target -> should be the same with the gravity bomb
-                //if (Unit* pTarget = Unit::GetUnit(*m_creature, pGravityBombTarGUID))
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                if (Unit* pTarget = Unit::GetUnit(*m_creature, pGravityBombTarGUID))
                     m_creature->SummonCreature(NPC_VOIDZONE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 180000);         
-                VoidZoneTimer = 60000;
-            }else VoidZoneTimer -= diff;
+                m_uiVoidZoneTimer = 60000;
+            }else m_uiVoidZoneTimer -= uiDiff;
         }
 
-        if (!phase2 && !heart1 && (m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 75)
+        if (!m_bPhase2 && m_creature->GetHealthPercent() < m_uiHealthPercent && !m_bIsHardMode)
         {
-            Heart_Timer = 30000;
-            heart1 = true;
-            phase2 = true;
-            add1 = false;
-            add2 = false;
-            add3 = false;
-            add4 = false;
-            add_summon_delay = 5000;
+            m_uiHeart_Timer = 30000;
+            m_creature->CastStop();
+            m_uiHealthPercent = m_uiHealthPercent - 25;
+            m_bPhase2 = true;
             DoScriptText(SAY_HEART_OPEN, m_creature);
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             DoCast(m_creature, SPELL_STUN);
+            DoScriptText(EMOTE_HEART, m_creature);
+            m_creature->SetStandState(UNIT_STAND_STATE_KNEEL);
+            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            if(Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+
+            // timers
+            m_uiScrapbotTimer       = urand(3000, 5000);
+            m_uiBoombotTimer        = urand(3000, 5000);
+            m_uiPummellerTimer      = 5000;
+            m_uiMaxScrapbot         = urand(7, 10) * 5;
+            m_uiMaxBoombot          = urand(3, 7);
+            m_uiScrapbotCount       = 0;
+            m_uiBoombotCount        = 0;   
+            m_uiPummellerCount      = 0;
+
+            if(Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 900000))
             {
-                m_uiHeartGUID = Heart->GetGUID();
+                m_uiXtHeartGUID = Heart->GetGUID();
                 if(!m_bIsRegularMode)
                     Heart->SetMaxHealth(7199999);
             }
-
-            if (m_pInstance)
-                m_pInstance->SetData(TYPE_XT002, SPECIAL);
         }
 
-        if (phase2 && Heart_Timer < diff)
+        if (m_bPhase2 && m_uiHeart_Timer < uiDiff)
         {
             DoScriptText(SAY_HEART_CLOSE, m_creature);
+            m_creature->SetStandState(UNIT_STAND_STATE_STAND);
             m_creature->RemoveAurasDueToSpell(SPELL_STUN);
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             m_creature->AI()->AttackStart(m_creature->getVictim());
-            phase2 = false;
-            Light_Bomb_Timer = 7000;
-            Gravity_Bomb_Timer = 11000;
-            Tanctrum_Timer = 38000;
+            m_bPhase2 = false;
+            m_uiLight_Bomb_Timer = 7000;
+            m_uiGravity_Bomb_Timer = 11000;
+            m_uiTanctrum_Timer = 38000;
+        }else m_uiHeart_Timer -= uiDiff;
 
-            if (m_pInstance)
-                m_pInstance->SetData(TYPE_XT002, IN_PROGRESS);
-
-        }else Heart_Timer -= diff;
-
-        if(!isHardMode)
+        //adds
+        if(m_bPhase2 && !m_bIsHardMode)
         {
-            if (!phase2 && heart1 && !heart2 && (m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 50)
+            // pummeller
+            if(m_uiPummellerTimer < uiDiff && m_uiPummellerCount < 2)
             {
-                Heart_Timer = 30000;
-                heart2 = true;
-                phase2 = true;
-                add1 = false;
-                add2 = false;
-                add3 = false;
-                add4 = false;
-                add_summon_delay = 5000;
-                DoScriptText(SAY_HEART_OPEN, m_creature);
-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                DoCast(m_creature, SPELL_STUN);
-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                if(Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                if(m_uiPummellerCount == 0)
+                    DoScriptText(SAY_ADDS, m_creature);
+                uint8 i = urand(0, 4);
+                if (Creature* pTemp = m_creature->SummonCreature(NPC_PUMMELER, SummonLoc[i].x + urand(0, 10), SummonLoc[i].y + urand(0, 10), SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                 {
-                    m_uiHeartGUID = Heart->GetGUID();
-                    if(!m_bIsRegularMode)
-                        Heart->SetMaxHealth(7199999);
+                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                    {
+                        pTemp->AddThreat(pTarget,0.0f);
+                        pTemp->AI()->AttackStart(pTarget);
+                        m_lPummelerGUIDList.push_back(pTemp->GetGUID());
+                    }
                 }
-
-                //if (m_pInstance)
-                    //m_pInstance->SetData(TYPE_XT002, SPECIAL);
+                m_uiPummellerCount += 1;
+                m_uiPummellerTimer = 4000;
             }
+            else m_uiPummellerTimer -= uiDiff;
 
-            if (!phase2 && heart1 && heart2 && !heart3 && (m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 25)
+            // boombot
+            if(m_uiBoombotTimer < uiDiff && m_uiBoombotCount < m_uiMaxBoombot)
             {
-                Heart_Timer = 30000;
-                heart3 = true;
-                phase2 = true;
-                add1 = false;
-                add2 = false;
-                add3 = false;
-                add4 = false;
-                add_summon_delay = 5000;
-                DoScriptText(SAY_HEART_OPEN, m_creature);
-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                DoCast(m_creature, SPELL_STUN);
-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                if(Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                uint8 i = urand(0, 4);
+                if (Creature* pTemp = m_creature->SummonCreature(NPC_BOOMBOT, SummonLoc[i].x + urand(0, 10), SummonLoc[i].y + urand(0, 10), SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                 {
-                    m_uiHeartGUID = Heart->GetGUID();
-                    if(!m_bIsRegularMode)
-                        Heart->SetMaxHealth(7199999);
+                    pTemp->AddThreat(m_creature->getVictim(),1000.0f);
+                    pTemp->AI()->AttackStart(m_creature->getVictim());
+                    m_lBoombotsGUIDList.push_back(pTemp->GetGUID());
                 }
-
-                //if (m_pInstance)
-                    //m_pInstance->SetData(TYPE_XT002, SPECIAL);
+                m_uiBoombotCount += 1;
+                m_uiBoombotTimer = 4000;
             }
+            else m_uiBoombotTimer -= uiDiff;
 
-            if (phase2 && add_summon_delay < diff)
+            // scrapbot
+            if(m_uiScrapbotTimer < uiDiff && m_uiScrapbotCount < m_uiMaxScrapbot)
             {
-                if (!add1)
+                uint8 i = urand(0, 4);
+                for(int j = 0; j < 5; j++)
                 {
-                    Addcount = 0;
-                    do{
-                        if (Creature* pTemp = m_creature->SummonCreature(NPC_SCRAPBOT, XtAddX[0], XtAddY[0], XtAddZ[0], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                        {
-                            pTemp->AddThreat(m_creature->getVictim(),1000.0f);
-                            pTemp->AI()->AttackStart(m_creature->getVictim());
-                            m_lScrapbotsGUIDList.push_back(pTemp->GetGUID());
-                            Addcount++;
-                        }} while(Addcount<3);
-                        Addcount = 0;
-                        do{
-                            if (Creature* pTemp = m_creature->SummonCreature(NPC_BOOMBOT, XtAddX[0], XtAddY[0], XtAddZ[0], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                            {
-                                pTemp->AddThreat(m_creature->getVictim(),1000.0f);
-                                pTemp->AI()->AttackStart(m_creature->getVictim());
-                                m_lBoombotsGUIDList.push_back(pTemp->GetGUID());
-                                Addcount++;
-                            }} while(Addcount<1);
-                            add1 = true;
-                            add_summon_delay = 4000;
+                    if (Creature* pTemp = m_creature->SummonCreature(NPC_SCRAPBOT, SummonLoc[i].x + urand(0, 10), SummonLoc[i].y + urand(0, 10), SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                    {
+                        pTemp->GetMotionMaster()->MoveFollow(m_creature, 0, 0);
+                        m_lScrapbotsGUIDList.push_back(pTemp->GetGUID());
+                        m_uiScrapbotCount += 1;
+                    }
                 }
-                if (!add2 && add1)
-                {
-                    Addcount = 0;
-                    do{
-                        if (Creature* pTemp = m_creature->SummonCreature(NPC_SCRAPBOT, XtAddX[1], XtAddY[1], XtAddZ[1], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                        {
-                            pTemp->AddThreat(m_creature->getVictim(),1000.0f);
-                            pTemp->AI()->AttackStart(m_creature->getVictim());
-                            m_lScrapbotsGUIDList.push_back(pTemp->GetGUID());
-                            Addcount++;
-                        }} while(Addcount<3);
-                        Addcount = 0;
-                        do{
-                            if (Creature* pTemp = m_creature->SummonCreature(NPC_BOOMBOT, XtAddX[1], XtAddY[1], XtAddZ[1], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                            {
-                                pTemp->AddThreat(m_creature->getVictim(),1000.0f);
-                                pTemp->AI()->AttackStart(m_creature->getVictim());
-                                m_lBoombotsGUIDList.push_back(pTemp->GetGUID());
-                                Addcount++;
-                            }} while(Addcount<1);
-                            add2 = true;
-                            DoScriptText(SAY_ADDS, m_creature);
-                            add_summon_delay = 1000;
-                }
-                if (!add3 && add2 && add1)
-                {
-                    Addcount = 0;
-                    do{
-                        if (Creature* pTemp = m_creature->SummonCreature(NPC_SCRAPBOT, XtAddX[2], XtAddY[2], XtAddZ[2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                        {
-                            pTemp->AddThreat(m_creature->getVictim(),1000.0f);
-                            pTemp->AI()->AttackStart(m_creature->getVictim());
-                            m_lScrapbotsGUIDList.push_back(pTemp->GetGUID());
-                            Addcount++;
-                        }} while(Addcount<3);
-                        Addcount = 0;
-                        do{
-                            if (Creature* pTemp = m_creature->SummonCreature(NPC_BOOMBOT, XtAddX[2], XtAddY[2], XtAddZ[2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                            {
-                                pTemp->AddThreat(m_creature->getVictim(),1000.0f);
-                                pTemp->AI()->AttackStart(m_creature->getVictim());
-                                m_lBoombotsGUIDList.push_back(pTemp->GetGUID());
-                                Addcount++;
-                            }} while(Addcount<1);
-                            add3 = true;
-                            add_summon_delay = 4000;
-                }
-                if (!add4 && add3 && add2 && add1)
-                {
-                    if (Creature* pTemp = m_creature->SummonCreature(NPC_PUMMELER, XtAddX[3], XtAddY[3], XtAddZ[3], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        {
-                            pTemp->AddThreat(pTarget,0.0f);
-                            pTemp->AI()->AttackStart(pTarget);
-                            m_lPummelerGUIDList.push_back(pTemp->GetGUID());
-                        }
-                        Addcount = 0;
-                        do{
-                            if (Creature* pTemp = m_creature->SummonCreature(NPC_SCRAPBOT, XtAddX[3], XtAddY[3], XtAddZ[3], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                            {
-                                pTemp->AddThreat(m_creature->getVictim(),1000.0f);
-                                pTemp->AI()->AttackStart(m_creature->getVictim());
-                                m_lScrapbotsGUIDList.push_back(pTemp->GetGUID());
-                                Addcount++;
-                            }} while(Addcount<3);
-                            Addcount = 0;
-                            do{
-                                if (Creature* pTemp = m_creature->SummonCreature(NPC_BOOMBOT, XtAddX[3], XtAddY[3], XtAddZ[3], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                                {
-                                    pTemp->AddThreat(m_creature->getVictim(),1000.0f);
-                                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                                    m_lBoombotsGUIDList.push_back(pTemp->GetGUID());
-                                    Addcount++;
-                                }} while(Addcount<1);
-                                add4 = true;
-                                add_summon_delay = 30000;
-                }
-            }else add_summon_delay -= diff;
+                m_uiScrapbotTimer = 3000;
+            }
+            else m_uiScrapbotTimer -= uiDiff;
         }
 
-        if (!phase2)
+        if (!m_bPhase2)
             DoMeleeAttackIfReady();
     }
 };

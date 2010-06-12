@@ -42,8 +42,9 @@ enum say
     SAY_FROST_TOWER     = -1603213,
     SAY_FIRE_TOWER      = -1603214,
     SAY_ENERGY_TOWER    = -1603215,
-    SAY_NATURE_TOWER    = -1603216
+    SAY_NATURE_TOWER    = -1603216,
 
+    EMOTE_PURSUE        = -1603352,
 };
 
 enum spells
@@ -59,7 +60,7 @@ enum spells
     SPELL_OVERLOAD_CIRCUIT  = 62399,
 
     SPELL_SEARING_FLAME     = 62402, // used by defense turret
-    // interuptec by
+    // interupted by
     SPELL_SYSTEMS_SHUTDOWN  = 62475,
 
     SPELL_FLAME_CANNON      = 62395,
@@ -105,24 +106,22 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
 {
     boss_flame_leviathan(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Regular = pCreature->GetMap()->IsRegularDifficulty();
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         pCreature->setFaction(35);  // remove this when vehicules fixed!
-        //assert(vehicle);
+        pCreature->SetVisibility(VISIBILITY_OFF);
         Reset();
     }
 
-    ScriptedInstance *pInstance;
+    ScriptedInstance* m_pInstance;
+    bool m_bIsRegularMode;
 
-    //Vehicle *vehicle;
-    bool Regular;
-
-    uint32 BatteringRamTimer;
-    uint32 FlameVentsTimer;
-    uint32 MissileBarrageTimer;
-    uint32 PursueTimer;
-    uint32 GatheringSpeedTimer;
-    uint32 SummonFlyerTimer;
+    uint32 m_uiBatteringRamTimer;
+    uint32 m_uiFlameVentsTimer;
+    uint32 m_uiMissileBarrageTimer;
+    uint32 m_uiPursueTimer;
+    uint32 m_uiGatheringSpeedTimer;
+    uint32 m_uiSummonFlyerTimer;
     uint8 maxFlyers;
 
     bool isHardMode;
@@ -131,19 +130,19 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
     bool isMimironsTower;
     bool isThorimsTower;
 
-    uint32 FreyaWardTimer;
-    uint32 MimironInfernoTimer;
-    uint32 HodirFuryTimer;
-    uint32 ThorimHammerTimer;
+    uint32 m_uiFreyaWardTimer;
+    uint32 m_uiMimironInfernoTimer;
+    uint32 m_uiHodirFuryTimer;
+    uint32 m_uiThorimHammerTimer;
 
     void Reset()
     {
-        BatteringRamTimer = 15000 + rand()%20000;
-        FlameVentsTimer = 20000 + rand()%10000;
-        MissileBarrageTimer = 1000;
-        PursueTimer = 30000;
-        GatheringSpeedTimer = 50000;
-        SummonFlyerTimer = 2000;
+        m_uiBatteringRamTimer   = 15000 + rand()%20000;
+        m_uiFlameVentsTimer     = 15000 + rand()%10000;
+        m_uiMissileBarrageTimer = 1000;
+        m_uiPursueTimer         = 30000;
+        m_uiGatheringSpeedTimer = 50000;
+        m_uiSummonFlyerTimer    = 2000;
         maxFlyers = 10;
 
         isHardMode      = false;
@@ -152,35 +151,38 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
         isMimironsTower = false;
         isThorimsTower  = false;
 
-        FreyaWardTimer = 40000 + urand(1000, 10000);
-        MimironInfernoTimer = 40000 + urand(1000, 10000);
-        HodirFuryTimer = 40000 + urand(1000, 10000);
-        ThorimHammerTimer = 40000 + urand(1000, 10000);
+        m_uiFreyaWardTimer      = 40000 + urand(1000, 10000);
+        m_uiMimironInfernoTimer = 40000 + urand(1000, 10000);
+        m_uiHodirFuryTimer      = 40000 + urand(1000, 10000);
+        m_uiThorimHammerTimer   = 40000 + urand(1000, 10000);
 
-        if(pInstance) 
-            pInstance->SetData(TYPE_LEVIATHAN, NOT_STARTED);
-
-        m_creature->SetSpeedRate(MOVE_RUN,0.3f);
+        m_creature->SetSpeedRate(MOVE_RUN, 0.3f);
     }
 
     void Aggro(Unit *who) 
     {
-        if(pInstance) 
-            pInstance->SetData(TYPE_LEVIATHAN, IN_PROGRESS);
+        if(m_pInstance) 
+            m_pInstance->SetData(TYPE_LEVIATHAN, IN_PROGRESS);
 
         DoScriptText(SAY_AGGRO, m_creature);
     }
 
     void JustDied(Unit *killer)
     {
-        if(pInstance) 
+        if(m_pInstance) 
         {
-            pInstance->SetData(TYPE_LEVIATHAN, DONE);
+            m_pInstance->SetData(TYPE_LEVIATHAN, DONE);
             if(isHardMode)
-                pInstance->SetData(TYPE_LEVIATHAN_HARD, DONE);
+                m_pInstance->SetData(TYPE_LEVIATHAN_HARD, DONE);
         }
 
         DoScriptText(SAY_DEATH, m_creature);
+    }
+
+    void JustReachedHome()
+    {
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_LEVIATHAN, FAIL);
     }
 
     void KilledUnit(Unit *who)
@@ -203,18 +205,19 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
         m_creature->InterruptSpell(CURRENT_CHANNELED_SPELL);*/
     }
 
-    void DamageTaken(Unit *pDoneBy, uint32 &dmg)
+    void DamageTaken(Unit *pDoneBy, uint32 &uiDamage)
     {
-        dmg *= 4;
+        if(m_creature->HasAura(SPELL_SYSTEMS_SHUTDOWN, EFFECT_INDEX_0))
+            uiDamage += uiDamage/2;
     }
 
-    void UpdateAI(const uint32 diff)
+    void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
         // pursue
-        if(PursueTimer < diff)
+        if(m_uiPursueTimer < uiDiff)
         {
             switch(urand(0, 3))
             {
@@ -222,62 +225,71 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
                 case 1: DoScriptText(SAY_CHANGE2, m_creature); break;
                 case 2: DoScriptText(SAY_CHANGE3, m_creature); break;
             }
+            DoScriptText(EMOTE_PURSUE, m_creature);
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            {
+                m_creature->AddThreat(pTarget, 100.0f);
                 DoCast(pTarget, SPELL_PURSUED);
+            }
 
-            PursueTimer = 30000;
+            m_uiPursueTimer = 30000;
         }
-        else PursueTimer -= diff;
+        else m_uiPursueTimer -= uiDiff;
 
         // flame vents
-        if(FlameVentsTimer < diff)
+        if(m_uiFlameVentsTimer < uiDiff)
         {
             DoCast(m_creature->getVictim(), SPELL_FLAME_VENTS);
-            FlameVentsTimer = 30000 + rand()%20000;
+            m_uiFlameVentsTimer = 30000 + rand()%20000;
         }
-        else FlameVentsTimer -= diff;
+        else m_uiFlameVentsTimer -= uiDiff;
 
         // battering ram
-        if(BatteringRamTimer < diff)
+        if(m_uiBatteringRamTimer < uiDiff)
         {
             DoCast(m_creature->getVictim(), SPELL_BATTERING_RAM);
-            BatteringRamTimer = 25000 + rand()%15000;
+            m_uiBatteringRamTimer = 25000 + rand()%15000;
         }
-        else BatteringRamTimer -= diff;
+        else m_uiBatteringRamTimer -= uiDiff;
 
         /* flyers
-        if(SummonFlyerTimer < diff)
+        if(m_uiSummonFlyerTimer < uiDiff)
         {
-        m_creature->SummonCreature(MOB_MECHANOLIFT, m_creature->GetPositionX() + rand()%20, m_creature->GetPositionY() + rand()%20, m_creature->GetPositionZ() + 50, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 40000);
-        SummonFlyerTimer = 2000;
+            m_creature->SummonCreature(MOB_MECHANOLIFT, m_creature->GetPositionX() + rand()%20, m_creature->GetPositionY() + rand()%20, m_creature->GetPositionZ() + 50, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 40000);
+            m_uiSummonFlyerTimer = 2000;
         }
-        else SummonFlyerTimer -= diff;*/
+        else m_uiSummonFlyerTimer -= uiDiff;*/
 
         // missile barrage
-        if(MissileBarrageTimer < diff)
+        if(m_uiMissileBarrageTimer < uiDiff)
         {
-            for(uint8 i = 0; i < 5; i++)
-            {
-                Unit *target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0);
-                int32 dmg = Regular ? (3000 + rand()%2000) : (2000 + rand()%1200);
-                if(target && target->isAlive())
-                    m_creature->CastCustomSpell(target, SPELL_MISSILE_BARRAGE, &dmg, 0, 0, false);
-            }
-            MissileBarrageTimer = 3000 + rand()%2000;
+            DoCast(m_creature, SPELL_MISSILE_BARRAGE);
+            m_uiMissileBarrageTimer = 3000 + rand()%2000;
         }
-        else MissileBarrageTimer -= diff;
+        else m_uiMissileBarrageTimer -= uiDiff;
+
+        if(m_uiGatheringSpeedTimer < uiDiff)
+        {
+            // increase aura buff
+            if (m_creature->HasAura(SPELL_GATHERING_SPEED))
+                m_creature->GetAura(SPELL_GATHERING_SPEED, EFFECT_INDEX_0)->modStackAmount(+1);
+            else
+                DoCast(m_creature, SPELL_GATHERING_SPEED);
+            m_uiGatheringSpeedTimer = urand(50000, 60000);
+        }
+        else m_uiGatheringSpeedTimer -= uiDiff;
 
         // tower of freya
         if(isFreyasTower)
         {
             DoCast(m_creature, SPELL_TOWER_OF_LIFE);
 
-            if(FreyaWardTimer < diff)
+            if(m_uiFreyaWardTimer < uiDiff)
             {
                 DoCast(m_creature, SPELL_FREYAS_WARD);
-                FreyaWardTimer = 40000 + urand(1000, 10000);
+                m_uiFreyaWardTimer = 40000 + urand(1000, 10000);
             }
-            else FreyaWardTimer -= diff;
+            else m_uiFreyaWardTimer -= uiDiff;
         }
 
         // tower of mimiron
@@ -285,12 +297,12 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
         {
             DoCast(m_creature, SPELL_TOWER_OF_FLAMES);
 
-            if(MimironInfernoTimer < diff)
+            if(m_uiMimironInfernoTimer < uiDiff)
             {
                 DoCast(m_creature, SPELL_FREYAS_WARD);
-                MimironInfernoTimer = 40000 + urand(1000, 10000);
+                m_uiMimironInfernoTimer = 40000 + urand(1000, 10000);
             }
-            else MimironInfernoTimer -= diff;
+            else m_uiMimironInfernoTimer -= uiDiff;
         }
 
         // tower of hodir
@@ -298,12 +310,12 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
         {
             m_creature->SetHealth(m_creature->GetHealth() + 0.1* m_creature->GetHealth());
 
-            if(HodirFuryTimer < diff)
+            if(m_uiHodirFuryTimer < uiDiff)
             {
                 DoCast(m_creature, SPELL_HODIR_FURY);
-                HodirFuryTimer = 40000 + urand(1000, 10000);
+                m_uiHodirFuryTimer = 40000 + urand(1000, 10000);
             }
-            else HodirFuryTimer -= diff;
+            else m_uiHodirFuryTimer -= uiDiff;
         }
 
         // tower of thorim
@@ -311,12 +323,12 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
         {
             DoCast(m_creature, SPELL_TOWER_OF_STORMS);
 
-            if(ThorimHammerTimer < diff)
+            if(m_uiThorimHammerTimer < uiDiff)
             {
                 DoCast(m_creature, SPELL_THORIMS_HAMMER);
-                ThorimHammerTimer = 40000 + urand(1000, 10000);
+                m_uiThorimHammerTimer = 40000 + urand(1000, 10000);
             }
-            else ThorimHammerTimer -= diff;
+            else m_uiThorimHammerTimer -= uiDiff;
         }
 
         DoMeleeAttackIfReady();
@@ -327,11 +339,11 @@ struct MANGOS_DLL_DECL mob_defense_turretAI : public ScriptedAI
 {
     mob_defense_turretAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
-    uint32 Spell_Timer;
+    uint32 m_uiSpell_Timer;
 
     void Reset()
     {
-        Spell_Timer = urand(10000, 15000);
+        m_uiSpell_Timer = urand(10000, 15000);
     }
 
     void SpellHit(Unit *caster, const SpellEntry *spell)
@@ -340,18 +352,16 @@ struct MANGOS_DLL_DECL mob_defense_turretAI : public ScriptedAI
             m_creature->ForcedDespawn();
     }
 
-    void UpdateAI(const uint32 diff)
+    void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (Spell_Timer < diff)
+        if (m_uiSpell_Timer < uiDiff)
         {
             DoCast(m_creature, SPELL_SEARING_FLAME);
-            Spell_Timer = urand(10000, 15000);
-        }else Spell_Timer -= diff;        
-
-        DoMeleeAttackIfReady();
+            m_uiSpell_Timer = urand(10000, 15000);
+        }else m_uiSpell_Timer -= uiDiff;        
     }
 };
 

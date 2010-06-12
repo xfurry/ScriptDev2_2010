@@ -35,16 +35,6 @@ enum
     TYPE_VISION3                = 21, 
     TYPE_YOGG_BRAIN             = 22,
 
-    DATA_LEVIATHAN              = 14,
-    DATA_IGNIS                  = 15,
-    DATA_RAZORSCALE             = 16,
-    DATA_XT002                  = 17,
-    DATA_HEART                  = 50,
-    DATA_KOLOGARN               = 18,
-    DATA_AURIAYA                = 19,
-    DATA_STEELBREAKER           = 20,
-    DATA_MOLGEIM                = 21,
-    DATA_BRUNDIR                = 22,
     DATA_MIMIRON                = 23,
     DATA_HODIR                  = 24,
     DATA_THORIM                 = 25,
@@ -52,12 +42,6 @@ enum
     DATA_VEZAX                  = 27,
     DATA_YOGGSARON              = 28,
     DATA_ALGALON                = 29,
-    DATA_RIGHT_ARM              = 30,
-    DATA_LEFT_ARM               = 31,
-    DATA_SENTRY_1				= 32,
-    DATA_SENTRY_2				= 33,
-    DATA_SENTRY_3				= 34,
-    DATA_SENTRY_4				= 35,
     DATA_FERAL_DEFENDER			= 36,
     DATA_BRIGHTLEAF             = 46,
     DATA_IRONBRACH              = 47,
@@ -81,6 +65,7 @@ enum
     DATA_BRAIN_DOOR2            = 66,
     DATA_BRAIN_DOOR3            = 67,
 
+    // hard mode bosses
     TYPE_LEVIATHAN_HARD         = 37,
     TYPE_XT002_HARD             = 38,
     TYPE_ASSEMBLY_HARD          = 39,
@@ -100,11 +85,13 @@ enum
     TYPE_XT002_TP,
     TYPE_MIMIRON_TP,
 
+    // siege
     NPC_LEVIATHAN               = 33113,
     NPC_IGNIS                   = 33118,
     NPC_RAZORSCALE              = 33186,
+    NPC_COMMANDER               = 33210,
     NPC_XT002                   = 33293,
-    NPC_HEART				    = 33329,
+    // antechamber
     NPC_STEELBREAKER            = 32867,
     NPC_MOLGEIM                 = 32927,
     NPC_BRUNDIR                 = 32857,
@@ -114,6 +101,7 @@ enum
     NPC_AURIAYA                 = 33515,
     NPC_SANCTUM_SENTRY			= 34014,
     NPC_FERAL_DEFENDER			= 34035,
+    // keepers
     NPC_MIMIRON                 = 33350,
     NPC_LEVIATHAN_MK            = 33432,
     NPC_VX001                   = 33651,
@@ -126,6 +114,7 @@ enum
     NPC_BRIGHTLEAF              = 32915,
     NPC_IRONBRACH               = 32913,
     NPC_STONEBARK               = 32914,
+    // madness
     NPC_VEZAX                   = 33271,
     NPC_ANIMUS                  = 33524,
     NPC_YOGGSARON               = 33288,
@@ -170,7 +159,7 @@ enum
     GO_FREYA_GIFT_H_3           = 194331,//25 3 elders
     // Mimiron
     GO_CACHE_OF_INOVATION       = 194789,
-    GO_CACHE_OF_INOVATION_H     = 194956,
+    GO_CACHE_OF_INOVATION_H     = 194956, // and 57 58
 
 
     // doors
@@ -178,6 +167,7 @@ enum
     GO_SHIELD_WALL              = 194416,
     GO_LEVIATHAN_GATE           = 194630,
     GO_XT002_GATE               = 194631,
+    GO_BROKEN_HARPOON           = 194565,
     // archivum
     GO_SHATTERED_DOOR           = 194553,
     GO_IRON_ENTRANCE_DOOR       = 194554,
