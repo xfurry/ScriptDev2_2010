@@ -61,21 +61,18 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
 
     bool Regular;
 
-    uint32 m_auiEncounter[MAX_ENCOUNTER];
     std::string m_strInstData;
-    uint32 mHardBoss[9];
-    uint32 mMiniBoss[6];
+    uint32 m_auiEncounter[MAX_ENCOUNTER];
+    uint32 m_auiHardBoss[HARD_ENCOUNTER];
+    uint32 m_auiUlduarKeepers[KEEPER_ENCOUNTER];
+    uint32 m_auiMiniBoss[6];
     uint32 mVision[3];
-
-    uint32 m_uiDoorCheckTimer;
-    bool hasChecked;
 
     uint64 m_uiLeviathanGUID;
     uint64 m_uiIgnisGUID;
     uint64 m_uiRazorscaleGUID;
     uint64 m_uiCommanderGUID;
     uint64 m_uiXT002GUID;
-    uint64 m_uiXTheartGUID;
     uint64 m_auiAssemblyGUIDs[3];
     uint64 m_uiKologarnGUID;
     uint64 m_uiAuriayaGUID;
@@ -164,15 +161,17 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiFreyaLoot2GUID;
     uint64 m_uiFreyaLoot3GUID;
     uint64 m_uiMimironLootGUID;
+    uint64 m_uiMimironHardLootGUID;
     uint64 m_uiAlagonLootGUID;
 
     void Initialize()
     {
-        for(uint8 i = 0; i < 9; i++)
-            mHardBoss[i] = NOT_STARTED;
+        memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+        memset(&m_auiHardBoss, 0, sizeof(m_auiHardBoss));
+        memset(&m_auiUlduarKeepers, 0, sizeof(m_auiUlduarKeepers));
 
         for(uint8 i = 0; i < 6; i++)
-            mMiniBoss[i] = NOT_STARTED;
+            m_auiMiniBoss[i] = NOT_STARTED;
 
         for(uint8 i = 0; i < 9; i++)
             m_uiMimironTelGUID[i] = 0;
@@ -180,15 +179,11 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         for(uint8 i = 0; i < 3; i++)
             mVision[i] = 0;
 
-        m_uiDoorCheckTimer      = 1000;
-        hasChecked              = false;
-
         m_uiLeviathanGUID       = 0;
         m_uiIgnisGUID           = 0;
         m_uiRazorscaleGUID      = 0;
         m_uiCommanderGUID       = 0;
         m_uiXT002GUID           = 0;
-        m_uiXTheartGUID         = 0;
         m_uiKologarnGUID        = 0;
         m_uiAuriayaGUID         = 0;
         m_uiMimironGUID         = 0;
@@ -232,6 +227,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiFreyaLoot2GUID      = 0; 
         m_uiFreyaLoot3GUID      = 0;
         m_uiMimironLootGUID     = 0;
+        m_uiMimironHardLootGUID = 0;
         m_uiAlagonLootGUID      = 0;
 
         // doors
@@ -276,10 +272,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiBrainDoor1GUID      = 0;
         m_uiBrainDoor2GUID      = 0;
         m_uiBrainDoor3GUID      = 0;
-
-
-        memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
-        memset(&m_auiAssemblyGUIDs, 0, sizeof(m_auiAssemblyGUIDs));
     }
 
     bool IsEncounterInProgress() const
@@ -404,17 +396,30 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case NPC_ALGALON:
             m_uiAlgalonGUID = pCreature->GetGUID();
             break;
+            // used to handle the keepers images
         case HODIR_IMAGE:
             m_uiHodirImageGUID = pCreature->GetGUID();
+            pCreature->SetVisibility(VISIBILITY_OFF);
+            if(m_auiEncounter[8] == DONE)
+                pCreature->SetVisibility(VISIBILITY_ON);
             break;
         case FREYA_IMAGE:
             m_uiFreyaImageGUID = pCreature->GetGUID();
+            pCreature->SetVisibility(VISIBILITY_OFF);
+            if(m_auiEncounter[10] == DONE)
+                pCreature->SetVisibility(VISIBILITY_ON);
             break;
         case THORIM_IMAGE:
             m_uiThorimImageGUID = pCreature->GetGUID();
+            pCreature->SetVisibility(VISIBILITY_OFF);
+            if(m_auiEncounter[9] == DONE)
+                pCreature->SetVisibility(VISIBILITY_ON);
             break;
         case MIMIRON_IMAGE:
             m_uiMimironImageGUID = pCreature->GetGUID();
+            pCreature->SetVisibility(VISIBILITY_OFF);
+            if(m_auiEncounter[7] == DONE)
+                pCreature->SetVisibility(VISIBILITY_ON);
             break;
         }
     }
@@ -671,13 +676,21 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
 
             // Mimiron
-        case GO_CACHE_OF_INOVATION:
+        case GO_CACHE_OF_INOV:
             if(Regular)
                 m_uiMimironLootGUID = pGo->GetGUID();
             break;
-        case GO_CACHE_OF_INOVATION_H:
+        case GO_CACHE_OF_INOV_H:
             if(!Regular)
                 m_uiMimironLootGUID = pGo->GetGUID();
+            break;
+        case GO_CACHE_OF_INOV_HARD:
+            if(Regular)
+                m_uiMimironHardLootGUID = pGo->GetGUID();
+            break;
+        case GO_CACHE_OF_INOV_HARD_H:
+            if(!Regular)
+                m_uiMimironHardLootGUID = pGo->GetGUID();
             break;
 
             // Alagon
@@ -706,6 +719,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         if(pGo) pGo->SetGoState(GO_STATE_READY);
     }
 
+    // used in order to unlock the door to Vezax and make vezax attackable (exploit check)
     void OpenMadnessDoor()
     {
         if(m_auiEncounter[7] == DONE && m_auiEncounter[8] == DONE && m_auiEncounter[9] == DONE && m_auiEncounter[10] == DONE)
@@ -716,6 +730,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         }
     }
 
+    // used to open the door to XT (custom script because Leviathan is disabled)
     void OpenXtDoor()
     {
         if(m_auiEncounter[1] == DONE && m_auiEncounter[2] == DONE)
@@ -762,8 +777,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             {
                 DoRespawnGameObject(m_uiKologarnLootGUID, 30*MINUTE);
                 CheckIronCouncil();
-                if (GameObject* pBridge = instance->GetGameObject(m_uiKologarnBridgeGUID))
-                    pBridge->SetGoState(GO_STATE_READY);
             }
             break;
         case TYPE_AURIAYA:
@@ -780,7 +793,11 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             DoUseDoorOrButton(m_uiMimironDoor3GUID);
             if (uiData == DONE)
             {
-                DoRespawnGameObject(m_uiMimironLootGUID, 30*MINUTE);
+                if(m_auiHardBoss[3] != DONE)
+                    DoRespawnGameObject(m_uiMimironLootGUID, 30*MINUTE);
+                // used to make the friendly keeper visible
+                if(Creature* pImage = instance->GetCreature(m_uiMimironImageGUID))
+                    pImage->SetVisibility(VISIBILITY_ON);
                 OpenMadnessDoor();
                 CheckKeepers();
             }
@@ -793,6 +810,9 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 DoUseDoorOrButton(m_uiHodirWallGUID);
                 DoUseDoorOrButton(m_uiHodirExitDoorGUID);
                 DoRespawnGameObject(m_uiHodirLootGUID, 30*MINUTE);
+                // used to make the friendly keeper visible
+                if(Creature* pImage = instance->GetCreature(m_uiHodirImageGUID))
+                    pImage->SetVisibility(VISIBILITY_ON);
                 OpenMadnessDoor();
                 CheckKeepers();
             }    
@@ -804,8 +824,11 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 DoUseDoorOrButton(m_uiArenaExitDoorGUID);
             if (uiData == DONE)
             {
-                if(mHardBoss[5] != DONE)
+                if(m_auiHardBoss[5] != DONE)
                     DoRespawnGameObject(m_uiThorimLootGUID, 30*MINUTE);
+                // used to make the friendly keeper visible
+                if(Creature* pImage = instance->GetCreature(m_uiThorimImageGUID))
+                    pImage->SetVisibility(VISIBILITY_ON);
                 OpenMadnessDoor();
                 CheckKeepers();
             }
@@ -814,14 +837,18 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             m_auiEncounter[10] = uiData;
             if (uiData == DONE)
             {
-                if(mHardBoss[6] == 0)
+                // do this in order to see how many elders were alive and spawn the correct chest
+                if(m_auiHardBoss[6] == 0)
                     DoRespawnGameObject(m_uiFreyaLootGUID, 30*MINUTE);
-                else if(mHardBoss[6] == 1)
+                else if(m_auiHardBoss[6] == 1)
                     DoRespawnGameObject(m_uiFreyaLoot1GUID, 30*MINUTE);
-                else if(mHardBoss[6] == 2)
+                else if(m_auiHardBoss[6] == 2)
                     DoRespawnGameObject(m_uiFreyaLoot2GUID, 30*MINUTE);
-                else if(mHardBoss[6] == 3)
+                else if(m_auiHardBoss[6] == 3)
                     DoRespawnGameObject(m_uiFreyaLoot3GUID, 30*MINUTE);
+                // used to make the friendly keeper visible
+                if(Creature* pImage = instance->GetCreature(m_uiFreyaImageGUID))
+                    pImage->SetVisibility(VISIBILITY_ON);
                 OpenMadnessDoor();
                 CheckKeepers();
             }
@@ -868,60 +895,75 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
 
             // Hard modes
         case TYPE_LEVIATHAN_HARD:
-            mHardBoss[0] = uiData;  // todo: add extra loot
+            m_auiHardBoss[0] = uiData;  // todo: add extra loot
             break;
         case TYPE_XT002_HARD:
-            mHardBoss[1] = uiData;  // todo: add extra loot
+            m_auiHardBoss[1] = uiData;  // hard mode loot in sql
             break;
         case TYPE_HODIR_HARD:
-            mHardBoss[4] = uiData;
+            m_auiHardBoss[4] = uiData;
             if(uiData == DONE)
                 DoRespawnGameObject(m_uiHodirRareLootGUID, 30*MINUTE);
             break;
         case TYPE_ASSEMBLY_HARD:
-            mHardBoss[2] = uiData;
+            m_auiHardBoss[2] = uiData;  // hard mode loot in sql
             break;
         case TYPE_FREYA_HARD:
-            mHardBoss[6] = uiData; 
+            m_auiHardBoss[6] = uiData;  // hard mode loot in the script above
             break;
         case TYPE_THORIM_HARD:
-            mHardBoss[5] = uiData;
+            m_auiHardBoss[5] = uiData;
             if(uiData == DONE)
                 DoRespawnGameObject(m_uiThorimRareLootGUID, 30*MINUTE);
             break;
         case TYPE_MIMIRON_HARD:
-            mHardBoss[3] = uiData;  // todo: add extra loot
+            m_auiHardBoss[3] = uiData;
+            if(uiData == DONE)
+                DoRespawnGameObject(m_uiMimironHardLootGUID, 30*MINUTE);
             break;
         case TYPE_VEZAX_HARD:
-            mHardBoss[7] = uiData;  // todo: add extra loot
+            m_auiHardBoss[7] = uiData;  // hard mode loot in sql
             break;
         case TYPE_YOGGSARON_HARD:
-            mHardBoss[8] = uiData;  // todo: add extra loot
+            m_auiHardBoss[8] = uiData;  // todo: add extra loot
             break;
 
+            // Ulduar keepers
+        case TYPE_KEEPER_HODIR:
+            m_auiUlduarKeepers[0] = uiData;
+            break;
+        case TYPE_KEEPER_THORIM:
+            m_auiUlduarKeepers[1] = uiData;
+            break;
+        case TYPE_KEEPER_FREYA:
+            m_auiUlduarKeepers[2] = uiData;
+            break;
+        case TYPE_KEEPER_MIMIRON:
+            m_auiUlduarKeepers[3] = uiData;
+            break;
 
             // mini boss
         case TYPE_RUNIC_COLOSSUS:
-            mMiniBoss[0] = uiData;
+            m_auiMiniBoss[0] = uiData;
             if (uiData == DONE)
                 OpenDoor(m_uiHallwayDoorGUID);
             else
                 CloseDoor(m_uiHallwayDoorGUID);
             break;
         case TYPE_RUNE_GIANT:
-            mMiniBoss[1] = uiData;
+            m_auiMiniBoss[1] = uiData;
             if (uiData == DONE)
                 OpenDoor(m_uiThorimEnterDoorGUID);
             else
                 CloseDoor(m_uiThorimEnterDoorGUID);
             break;
         case TYPE_LEVIATHAN_MK:
-            mMiniBoss[2] = uiData;
+            m_auiMiniBoss[2] = uiData;
             if (uiData == DONE)
                 CloseDoor(m_uiMimironElevatorGUID);
             break;
         case TYPE_VX001:
-            mMiniBoss[3] = uiData;
+            m_auiMiniBoss[3] = uiData;
             if (uiData == SPECIAL)
                 OpenDoor(m_uiMimironElevatorGUID);
             if (uiData == DONE)     // just for animation :)
@@ -931,10 +973,10 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             }
             break;
         case TYPE_AERIAL_UNIT:
-            mMiniBoss[4] = uiData;
+            m_auiMiniBoss[4] = uiData;
             break;
         case TYPE_YOGG_BRAIN:
-            mMiniBoss[5] = uiData;
+            m_auiMiniBoss[5] = uiData;
             break;
 
             //visions
@@ -961,14 +1003,21 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         }
 
-        if (uiData == DONE || uiData == SPECIAL || uiData == FAIL)
+        if (uiData == DONE || uiData == FAIL)
         {
             OUT_SAVE_INST_DATA;
 
+            // save all encounters, hard bosses and keepers
             std::ostringstream saveStream;
-
-            for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
-                saveStream << m_auiEncounter[i] << " ";
+            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
+                << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " "
+                << m_auiEncounter[6] << " " << m_auiEncounter[7] << " " << m_auiEncounter[8] << " "
+                << m_auiEncounter[9] << " " << m_auiEncounter[10] << " " << m_auiEncounter[11] << " "
+                << m_auiEncounter[12] << " " << m_auiEncounter[13] << " " << m_auiHardBoss[0] << " " 
+                << m_auiHardBoss[1] << " " << m_auiHardBoss[2] << " " << m_auiHardBoss[2] << " "
+                << m_auiHardBoss[4] << " " << m_auiHardBoss[5] << " " << m_auiHardBoss[6] << " "
+                << m_auiHardBoss[7] << " " << m_auiHardBoss[8] << " " << m_auiUlduarKeepers[0] << " "
+                << m_auiUlduarKeepers[1] << " " << m_auiUlduarKeepers[2] << " " << m_auiUlduarKeepers[3];
 
             m_strInstData = saveStream.str();
 
@@ -981,6 +1030,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     {
         switch(uiData)
         {
+            // Siege
         case NPC_LEVIATHAN:
             return m_uiLeviathanGUID;
         case NPC_IGNIS:
@@ -991,6 +1041,13 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return m_uiCommanderGUID;
         case NPC_XT002:
             return m_uiXT002GUID;
+            // Antechamber
+        case NPC_STEELBREAKER:
+            return m_auiAssemblyGUIDs[0];
+        case NPC_MOLGEIM:
+            return m_auiAssemblyGUIDs[1];
+        case NPC_BRUNDIR:
+            return m_auiAssemblyGUIDs[2];
         case NPC_KOLOGARN:
             return m_uiKologarnGUID;
         case NPC_LEFT_ARM:
@@ -999,6 +1056,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return m_uiRightArmGUID;
         case NPC_AURIAYA:
             return m_uiAuriayaGUID;
+            // Keepers
         case DATA_MIMIRON:
             return m_uiMimironGUID;
         case DATA_LEVIATHAN_MK:
@@ -1046,13 +1104,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case DATA_MIMIRON_IMAGE:
             return m_uiMimironImageGUID;
 
-            // Assembly of Iron
-        case NPC_STEELBREAKER:
-            return m_auiAssemblyGUIDs[0];
-        case NPC_MOLGEIM:
-            return m_auiAssemblyGUIDs[1];
-        case NPC_BRUNDIR:
-            return m_auiAssemblyGUIDs[2];
             // mimiron hard  mode button
         case DATA_RED_BUTTON:
             return m_uiMimironButtonGUID;
@@ -1084,50 +1135,69 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case TYPE_XT002:
             return m_auiEncounter[3];
         case TYPE_ASSEMBLY:
+            return m_auiEncounter[4];
         case TYPE_KOLOGARN:
+            return m_auiEncounter[5];
         case TYPE_AURIAYA:
+            return m_auiEncounter[6];
         case TYPE_MIMIRON:
+            return m_auiEncounter[7];
         case TYPE_HODIR:
+            return m_auiEncounter[8];
         case TYPE_THORIM:
+            return m_auiEncounter[9];
         case TYPE_FREYA:
+            return m_auiEncounter[10];
         case TYPE_VEZAX:
+            return m_auiEncounter[11];
         case TYPE_YOGGSARON:
+            return m_auiEncounter[12];
         case TYPE_ALGALON:
-            return m_auiEncounter[uiType];
+            return m_auiEncounter[13];
 
         // hard modes
         case TYPE_LEVIATHAN_HARD:
-            return mHardBoss[0];
+            return m_auiHardBoss[0];
         case TYPE_XT002_HARD:
-            return mHardBoss[1];
+            return m_auiHardBoss[1];
         case TYPE_ASSEMBLY_HARD:
-            return mHardBoss[2];
+            return m_auiHardBoss[2];
         case TYPE_MIMIRON_HARD:
-            return mHardBoss[3];
+            return m_auiHardBoss[3];
         case TYPE_HODIR_HARD:
-            return mHardBoss[4];
+            return m_auiHardBoss[4];
         case TYPE_THORIM_HARD:
-            return mHardBoss[5];
+            return m_auiHardBoss[5];
         case TYPE_FREYA_HARD:
-            return mHardBoss[6];
+            return m_auiHardBoss[6];
         case TYPE_VEZAX_HARD:
-            return mHardBoss[7];
+            return m_auiHardBoss[7];
         case TYPE_YOGGSARON_HARD:
-            return mHardBoss[8];
+            return m_auiHardBoss[8];
+
+            // ulduar keepers
+        case TYPE_KEEPER_HODIR:
+            return m_auiUlduarKeepers[0];
+        case TYPE_KEEPER_THORIM:
+            return m_auiUlduarKeepers[1];
+        case TYPE_KEEPER_FREYA:
+            return m_auiUlduarKeepers[2];
+        case TYPE_KEEPER_MIMIRON:
+            return m_auiUlduarKeepers[3];
 
             // mini boss
         case TYPE_RUNE_GIANT:
-            return mMiniBoss[1];
+            return m_auiMiniBoss[1];
         case TYPE_RUNIC_COLOSSUS:
-            return mMiniBoss[0];
+            return m_auiMiniBoss[0];
         case TYPE_LEVIATHAN_MK:
-            return mMiniBoss[2];
+            return m_auiMiniBoss[2];
         case TYPE_VX001:
-            return mMiniBoss[3];
+            return m_auiMiniBoss[3];
         case TYPE_AERIAL_UNIT:
-            return mMiniBoss[4];
+            return m_auiMiniBoss[4];
         case TYPE_YOGG_BRAIN:
-            return mMiniBoss[5];
+            return m_auiMiniBoss[5];
 
         case TYPE_VISION1:
             return mVision[0];
@@ -1156,11 +1226,16 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         OUT_LOAD_INST_DATA(strIn);
 
         std::istringstream loadStream(strIn);
+        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3]
+        >> m_auiEncounter[4] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7]
+        >> m_auiEncounter[8] >> m_auiEncounter[9] >> m_auiEncounter[10] >> m_auiEncounter[11]
+        >> m_auiEncounter[12] >> m_auiEncounter[13] >> m_auiHardBoss[0] >> m_auiHardBoss[1]
+        >> m_auiHardBoss[2] >> m_auiHardBoss[3] >> m_auiHardBoss[4] >> m_auiHardBoss[5]
+        >> m_auiHardBoss[6] >> m_auiHardBoss[7] >> m_auiHardBoss[8] >> m_auiUlduarKeepers[0]
+        >> m_auiUlduarKeepers[1] >> m_auiUlduarKeepers[2] >> m_auiUlduarKeepers[3];
 
         for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
         {
-            loadStream >> m_auiEncounter[i];
-
             if (m_auiEncounter[i] == IN_PROGRESS)
                 m_auiEncounter[i] = NOT_STARTED;
         }

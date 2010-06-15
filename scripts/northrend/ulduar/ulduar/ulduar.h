@@ -8,7 +8,10 @@
 enum
 {
     MAX_ENCOUNTER               = 14,
+    HARD_ENCOUNTER              = 9,
+    KEEPER_ENCOUNTER            = 4,
 
+    // boss types
     TYPE_LEVIATHAN              = 0,
     TYPE_IGNIS                  = 1,
     TYPE_RAZORSCALE             = 2,
@@ -24,7 +27,24 @@ enum
     TYPE_YOGGSARON              = 12,
     TYPE_ALGALON                = 13,
 
-    //other
+    // hard mode bosses
+    TYPE_LEVIATHAN_HARD         = 37,
+    TYPE_XT002_HARD             = 38,
+    TYPE_ASSEMBLY_HARD          = 39,
+    TYPE_MIMIRON_HARD           = 40,
+    TYPE_HODIR_HARD             = 41,
+    TYPE_THORIM_HARD            = 42,
+    TYPE_FREYA_HARD             = 43,
+    TYPE_VEZAX_HARD             = 44,
+    TYPE_YOGGSARON_HARD         = 45,
+
+    // keepers help at Yogg
+    TYPE_KEEPER_HODIR           = 46,
+    TYPE_KEEPER_FREYA           = 47,
+    TYPE_KEEPER_THORIM          = 48,
+    TYPE_KEEPER_MIMIRON         = 49,
+
+    //other-> these won't be saved to db
     TYPE_RUNE_GIANT             = 14,
     TYPE_RUNIC_COLOSSUS         = 15,
     TYPE_LEVIATHAN_MK           = 16,
@@ -65,26 +85,6 @@ enum
     DATA_BRAIN_DOOR2            = 66,
     DATA_BRAIN_DOOR3            = 67,
 
-    // hard mode bosses
-    TYPE_LEVIATHAN_HARD         = 37,
-    TYPE_XT002_HARD             = 38,
-    TYPE_ASSEMBLY_HARD          = 39,
-    TYPE_MIMIRON_HARD           = 40,
-    TYPE_HODIR_HARD             = 41,
-    TYPE_THORIM_HARD            = 42,
-    TYPE_FREYA_HARD             = 43,
-    TYPE_VEZAX_HARD             = 44,
-    TYPE_YOGGSARON_HARD         = 45,
-
-    // iron council
-    TYPE_BRUNDIR                = 46,
-    TYPE_MOLGEIM                = 47,
-    TYPE_STEELBREAKER           = 48,
-
-    TYPE_LEVIATHAN_TP,
-    TYPE_XT002_TP,
-    TYPE_MIMIRON_TP,
-
     // siege
     NPC_LEVIATHAN               = 33113,
     NPC_IGNIS                   = 33118,
@@ -122,14 +122,18 @@ enum
     NPC_SARA                    = 33134,
     NPC_YOGG_BRAIN              = 33890, 
     // keepers images used to start the encounter
-    THORIM_IMAGE                = 33878,
-    MIMIRON_IMAGE               = 33880,
-    HODIR_IMAGE                 = 33879,
-    FREYA_IMAGE                 = 33876,
+    THORIM_IMAGE                = 33413,
+    MIMIRON_IMAGE               = 33412,
+    HODIR_IMAGE                 = 33411,
+    FREYA_IMAGE                 = 33410,
+    // Keepers used at yogg saron encounter
+    KEEPER_FREYA                = 33241,
+    KEEPER_HODIR                = 33213,
+    KEEPER_MIMIRON              = 33244,
+    KEEPER_THORIM               = 33242, 
 
     // loot chests
     // Kologarn
-    GO_KOLOGARN_BRIDGE			= 194232,
     GO_CACHE_OF_LIVING_STONE    = 195046,
     GO_CACHE_OF_LIVING_STONE_H	= 195047,
     // Hodir
@@ -158,9 +162,10 @@ enum
     GO_FREYA_GIFT_H_2           = 194330,//25 2 elder
     GO_FREYA_GIFT_H_3           = 194331,//25 3 elders
     // Mimiron
-    GO_CACHE_OF_INOVATION       = 194789,
-    GO_CACHE_OF_INOVATION_H     = 194956, // and 57 58
-
+    GO_CACHE_OF_INOV            = 194789,
+    GO_CACHE_OF_INOV_H          = 194956,
+    GO_CACHE_OF_INOV_HARD       = 194957,
+    GO_CACHE_OF_INOV_HARD_H     = 194958,
 
     // doors
     // the siege
@@ -169,10 +174,12 @@ enum
     GO_XT002_GATE               = 194631,
     GO_BROKEN_HARPOON           = 194565,
     // archivum
+    GO_KOLOGARN_BRIDGE			= 194232,
     GO_SHATTERED_DOOR           = 194553,
     GO_IRON_ENTRANCE_DOOR       = 194554,
     GO_ARCHIVUM_DOOR            = 194556,
     GO_ARCHIVUM_CONSOLE         = 194555,
+    // planetarium: algalon
     GO_CELESTIAL_ACCES          = 194628,
     GO_CELESTIAL_DOOR           = 194767,
     GO_UNIVERSE_FLOOR_ARCHIVUM  = 194715,

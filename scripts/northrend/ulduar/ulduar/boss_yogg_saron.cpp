@@ -180,22 +180,22 @@ enum
     SPELL_BERSERK               = 64166,    //26662, extinguish all life
 
     // keepers
-    KEEPER_FREYA                = 33410,
+    // freya
     SPELL_RESILIENCE_OF_NATURE  = 62670,
     MOB_SANITY_WELL             = 33991,
     SPELL_SANITY_WELL           = 64169,    // regen sanity
     SPELL_SANITY_WELL_VISUAL    = 63288,
     SPELL_SUMMON_SANITY_WELL    = 64170,
 
-    KEEPER_HODIR                = 33411,
+    // hodir
     SPELL_FORTITUDE_OF_FROST    = 62650,
     SPELL_HODIRS_PROTECTIVE_GAZE= 64174,    // saves players from killing blows ~25secs cd
 
-    KEEPER_MIMIRON              = 33412,
+    // thorim
     SPELL_SPEED_OF_INVENTION    = 62671,
     SPELL_DESTABILIZATION_MATRIX= 65210,    // cast in phase 2 on the tentacules
 
-    KEEPER_THORIM               = 33413,
+    // mimiron
     SPELL_FURY_OF_THE_STORM     = 62702,
     SPELL_TITANIC_STORM         = 64171,    // used in phase 3 to kill guardians
 };
@@ -353,9 +353,6 @@ static VisionLocXY SkullIcecrownLoc[]=
     {1908.828003f, -88.593613f, 239.98986f},
 };
 
-#define REQUEST_HELP    "Help me fight Yogg-Saron!"
-#define DENY_HELP       "I don't need your help."
-
 // location of the minds eye:
 // X: 1981.422974 Y: -22.442831 Z: 236.104813
 
@@ -385,6 +382,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
     bool isPhase2;
     uint32 berserkTimer;
     uint32 sanityTimer;
+    uint32 m_uiKeepersActive;
 
     uint32 lunaticGazaTimer;
     uint32 shadowBeaconTimer;
@@ -403,7 +401,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
         isPhase3 = false;
         isPhase2 = false;
         sanityTimer = 10000;
-        m_uiKeepersAlive = 0;
+        m_uiKeepersActive = 0;
         m_creature->SetVisibility(VISIBILITY_OFF);
         m_creature->SetHealth(m_creature->GetMaxHealth());
 
@@ -418,8 +416,35 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
 
     void Aggro(Unit *who) 
     {
-        //if(m_pInstance) m_pInstance->SetData(TYPE_YOGGSARON, IN_PROGRESS);
         m_creature->SetInCombatWithZone();
+        if(m_pInstance)
+        {
+            m_pInstance->SetData(TYPE_YOGGSARON, IN_PROGRESS);
+            // summon thorim
+            if(m_pInstance->GetData(TYPE_KEEPER_THORIM) == DONE)
+            {
+                m_creature->SummonCreature(KEEPER_THORIM, KeepersLoc[0].x, KeepersLoc[0].y, KeepersLoc[0].z, KeepersLoc[0].o, TEMPSUMMON_MANUAL_DESPAWN, 0);
+                m_uiKeepersActive += 1;
+            }
+            // summon hodir
+            if(m_pInstance->GetData(TYPE_KEEPER_HODIR) == DONE)
+            {
+                m_creature->SummonCreature(KEEPER_HODIR, KeepersLoc[1].x, KeepersLoc[1].y, KeepersLoc[1].z, KeepersLoc[1].o, TEMPSUMMON_MANUAL_DESPAWN, 0);
+                m_uiKeepersActive += 1;
+            }
+            // summon freya
+            if(m_pInstance->GetData(TYPE_KEEPER_FREYA) == DONE)
+            {
+                m_creature->SummonCreature(KEEPER_FREYA, KeepersLoc[2].x, KeepersLoc[2].y, KeepersLoc[2].z, KeepersLoc[2].o, TEMPSUMMON_MANUAL_DESPAWN, 0);
+                m_uiKeepersActive += 1;
+            }
+            // summon mimiron
+            if(m_pInstance->GetData(TYPE_KEEPER_MIMIRON) == DONE)
+            {
+                m_creature->SummonCreature(KEEPER_MIMIRON, KeepersLoc[3].x, KeepersLoc[3].y, KeepersLoc[3].z, KeepersLoc[3].o, TEMPSUMMON_MANUAL_DESPAWN, 0);
+                m_uiKeepersActive += 1;
+            }
+        }
     }
 
     void JustReachedHome()
@@ -438,21 +463,6 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
             {
                 if(!pYoggBrain->isAlive())
                     pYoggBrain->Respawn();
-            }
-        }
-
-        std::list<Creature*> lAddsList;
-        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_IMMORTAL_GUARDIAN, DEFAULT_VISIBILITY_INSTANCE);
-        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_GUARDIAN_OF_YOGG, DEFAULT_VISIBILITY_INSTANCE);
-        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_CONSTRICTOR_TENTACLE, DEFAULT_VISIBILITY_INSTANCE);
-        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_CRUSHER_TENTACLE, DEFAULT_VISIBILITY_INSTANCE);
-        GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_CORRUPTOR_TENTACLE, DEFAULT_VISIBILITY_INSTANCE);
-        if (!lAddsList.empty())
-        {
-            for(std::list<Creature*>::iterator iter = lAddsList.begin(); iter != lAddsList.end(); ++iter)
-            {
-                if ((*iter) && !(*iter)->isAlive())
-                    (*iter)->ForcedDespawn();
             }
         }
     }
@@ -2271,240 +2281,6 @@ struct MANGOS_DLL_DECL keeper_mimironAI : public ScriptedAI
 };
 
 /*
-*   Keepers images -> used to separate hard/normal mode
-*/
-struct MANGOS_DLL_DECL hodir_imageAI : public ScriptedAI
-{
-    hodir_imageAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        SetCombatMovement(false);
-        pCreature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-        Reset();
-    }
-
-    ScriptedInstance *m_pInstance;
-
-    void Reset() { }
-    void UpdateAI(const uint32 diff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-    }
-};
-
-bool GossipHello_hodir_image(Player* pPlayer, Creature* pCreature)
-{
-    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
-
-    //if(m_pInstance && m_pInstance->GetData(TYPE_HODIR) == DONE && m_pInstance->GetData(TYPE_FREYA) == DONE && m_pInstance->GetData(TYPE_THORIM) == DONE && m_pInstance->GetData(TYPE_MIMIRON) == DONE)
-    // hodir doesn't save! fix it!!!
-    //if(m_pInstance && m_pInstance->GetData(TYPE_HODIR) == DONE)
-    {
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
-    }
-
-    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
-    return true;
-}
-
-bool GossipSelect_hodir_image(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
-{
-    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
-    {
-        if(!GetClosestCreatureWithEntry(pCreature, KEEPER_HODIR, 200.0f))
-        {
-            if(Creature *pHodir = pCreature->SummonCreature(KEEPER_HODIR, KeepersLoc[1].x, KeepersLoc[1].y, KeepersLoc[1].z, KeepersLoc[1].o, TEMPSUMMON_MANUAL_DESPAWN, 30000))
-            {
-                pHodir->SetFloatValue(OBJECT_FIELD_SCALE_X, 0.7f);
-                DoScriptText(SAY_HODIR_ACTIVE, pHodir);
-            }
-        }
-        m_uiKeepersAlive++;
-        pCreature->SetVisibility(VISIBILITY_OFF);
-        pPlayer->CLOSE_GOSSIP_MENU();
-    }
-    if (uiAction == GOSSIP_ACTION_INFO_DEF+2)
-    {
-        pCreature->SetVisibility(VISIBILITY_OFF);
-        pPlayer->CLOSE_GOSSIP_MENU();
-    }
-    return true;
-}
-
-struct MANGOS_DLL_DECL freya_imageAI : public ScriptedAI
-{
-    freya_imageAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        pCreature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-        SetCombatMovement(false);
-        Reset();
-    }
-
-    ScriptedInstance *m_pInstance;
-
-    void Reset() { }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-    }
-};
-
-bool GossipHello_freya_image(Player* pPlayer, Creature* pCreature)
-{
-    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
-
-    //if(m_pInstance && m_pInstance->GetData(TYPE_FREYA) == DONE)
-    {
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
-    }
-
-    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
-    return true;
-}
-
-bool GossipSelect_freya_image(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
-{
-    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
-    {
-        if(!GetClosestCreatureWithEntry(pCreature, KEEPER_FREYA, 200.0f))
-        {
-            if(Creature *pFreya = pCreature->SummonCreature(KEEPER_FREYA, KeepersLoc[2].x, KeepersLoc[2].y, KeepersLoc[2].z, KeepersLoc[2].o, TEMPSUMMON_MANUAL_DESPAWN, 30000))
-                DoScriptText(SAY_FREYA_ACTIVE, pFreya);  
-        }
-        m_uiKeepersAlive++;
-        pCreature->SetVisibility(VISIBILITY_OFF);
-        pPlayer->CLOSE_GOSSIP_MENU();
-    }
-    if (uiAction == GOSSIP_ACTION_INFO_DEF+2)
-    {
-        pCreature->SetVisibility(VISIBILITY_OFF);
-        pPlayer->CLOSE_GOSSIP_MENU();
-    }
-    return true;
-}
-
-struct MANGOS_DLL_DECL mimiron_imageAI : public ScriptedAI
-{
-    mimiron_imageAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        pCreature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-        SetCombatMovement(false);
-        Reset();
-    }
-
-    ScriptedInstance *m_pInstance;
-
-    void Reset() { }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-    }
-};
-
-bool GossipHello_mimiron_image(Player* pPlayer, Creature* pCreature)
-{
-    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
-
-    //if(m_pInstance && m_pInstance->GetData(TYPE_MIMIRON) == DONE)
-    {
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
-    }
-
-    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
-    return true;
-}
-
-bool GossipSelect_mimiron_image(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
-{
-    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
-    {
-        if(!GetClosestCreatureWithEntry(pCreature, KEEPER_MIMIRON, 200.0f))
-        {
-            if(Creature *pMimiron = pCreature->SummonCreature(KEEPER_MIMIRON, KeepersLoc[3].x, KeepersLoc[3].y, KeepersLoc[3].z, KeepersLoc[3].o, TEMPSUMMON_MANUAL_DESPAWN, 30000))
-                DoScriptText(SAY_MIMIRON_ACTIVE, pMimiron);
-        }
-        m_uiKeepersAlive++;
-        pCreature->SetVisibility(VISIBILITY_OFF);
-        pPlayer->CLOSE_GOSSIP_MENU();
-    }
-    if (uiAction == GOSSIP_ACTION_INFO_DEF+2)
-    {
-        pCreature->SetVisibility(VISIBILITY_OFF);
-        pPlayer->CLOSE_GOSSIP_MENU();
-    }
-    return true;
-}
-
-struct MANGOS_DLL_DECL thorim_imageAI : public ScriptedAI
-{
-    thorim_imageAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        pCreature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-        SetCombatMovement(false);
-        Reset();
-    }
-
-    ScriptedInstance *m_pInstance;
-
-    void Reset() {}
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-    }
-};
-
-bool GossipHello_thorim_image(Player* pPlayer, Creature* pCreature)
-{
-    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
-
-    //if(m_pInstance && m_pInstance->GetData(TYPE_THORIM) == DONE)
-    {
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
-    }
-
-    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
-    return true;
-}
-
-bool GossipSelect_thorim_image(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
-{
-    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
-    {
-        if(!GetClosestCreatureWithEntry(pCreature, KEEPER_THORIM, 200.0f))
-        {
-            if(Creature *pThorim = pCreature->SummonCreature(KEEPER_THORIM, KeepersLoc[0].x, KeepersLoc[0].y, KeepersLoc[0].z, KeepersLoc[0].o, TEMPSUMMON_MANUAL_DESPAWN, 30000))
-            {
-                pThorim->SetFloatValue(OBJECT_FIELD_SCALE_X, 0.7f);
-                DoScriptText(SAY_THORIM_ACTIVE, pThorim);
-            }
-        }
-        m_uiKeepersAlive++;
-        pCreature->SetVisibility(VISIBILITY_OFF);
-        pPlayer->CLOSE_GOSSIP_MENU();
-    }
-    if (uiAction == GOSSIP_ACTION_INFO_DEF+2)
-    {
-        pCreature->SetVisibility(VISIBILITY_OFF);
-        pPlayer->CLOSE_GOSSIP_MENU();
-    }
-    return true;
-}
-
-/*
 *   Guardians
 */
 class MANGOS_DLL_DECL EmpoweredAura : public Aura
@@ -3123,26 +2899,6 @@ CreatureAI* GetAI_keeper_mimiron(Creature* pCreature)
     return new keeper_mimironAI(pCreature);
 }
 
-CreatureAI* GetAI_hodir_image(Creature* pCreature)
-{
-    return new hodir_imageAI(pCreature);
-}
-
-CreatureAI* GetAI_freya_image(Creature* pCreature)
-{
-    return new freya_imageAI(pCreature);
-}
-
-CreatureAI* GetAI_thorim_image(Creature* pCreature)
-{
-    return new thorim_imageAI(pCreature);
-}
-
-CreatureAI* GetAI_mimiron_image(Creature* pCreature)
-{
-    return new mimiron_imageAI(pCreature);
-}
-
 CreatureAI* GetAI_mob_death_orb(Creature* pCreature)
 {
     return new mob_death_orbAI(pCreature);
@@ -3230,35 +2986,7 @@ void AddSC_boss_yogg_saron()
     newscript->Name = "keeper_mimiron";
     newscript->GetAI = &GetAI_keeper_mimiron;
     newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "hodir_image";
-    newscript->GetAI = &GetAI_hodir_image;
-    newscript->pGossipHello = &GossipHello_hodir_image;
-    newscript->pGossipSelect = &GossipSelect_hodir_image;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "freya_image";
-    newscript->GetAI = &GetAI_freya_image;
-    newscript->pGossipHello = &GossipHello_freya_image;
-    newscript->pGossipSelect = &GossipSelect_freya_image;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "thorim_image";
-    newscript->GetAI = &GetAI_thorim_image;
-    newscript->pGossipHello = &GossipHello_thorim_image;
-    newscript->pGossipSelect = &GossipSelect_thorim_image;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "mimiron_image";
-    newscript->GetAI = &GetAI_mimiron_image;
-    newscript->pGossipHello = &GossipHello_mimiron_image;
-    newscript->pGossipSelect = &GossipSelect_mimiron_image;
-    newscript->RegisterSelf();
-
+    
     newscript = new Script;
     newscript->Name = "mob_death_orb";
     newscript->GetAI = &GetAI_mob_death_orb;

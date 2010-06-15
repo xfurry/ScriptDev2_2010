@@ -202,13 +202,55 @@ UPDATE creature_template SET ScriptName = "mob_freya_spawned" WHERE entry in (32
 
 -- Hodir
 UPDATE creature_template SET ScriptName = "boss_hodir" WHERE entry = 32845;
-UPDATE creature_template SET ScriptName = "mob_snowdrift" WHERE entry = 33174;
-UPDATE creature_template SET ScriptName = "mob_flashFreeze" WHERE entry in (32926, 32938);
-Update creature set spawnMask = 0 where id in (32926, 32938);
+UPDATE creature_template SET ScriptName = "mob_toasty_fire" WHERE entry = 33342;
+UPDATE creature_template SET ScriptName = "mob_flashFreeze" WHERE entry in (32926);
+UPDATE `creature_template` SET `modelid_A` = 15880 WHERE `entry` = 33174;
+UPDATE `creature_template` SET `modelid_H` = 28470, ScriptName = "mob_icicle" WHERE `entry` = 33169;
+-- flash freeze that will lock the npcs in iceblock
+UPDATE creature_template SET `modelid_A` = 25865, ScriptName = "mob_npc_flashFreeze" WHERE entry in (32938, 33353);
+Update creature set spawnMask = 3 where id in (32938);
+update creature set spawnMask = 2 where id in (32901, 32900, 32950, 32946,33333, 33330, 33326);
 UPDATE creature_template SET ScriptName = "npc_hodir_priest" WHERE entry in (32897, 33326, 32948, 33330);
 UPDATE creature_template SET ScriptName = "npc_hodir_druid" WHERE entry in (33325, 32901, 32941, 33333);
 UPDATE creature_template SET ScriptName = "npc_hodir_shaman" WHERE entry in (33328, 32900, 33332, 32950);
 UPDATE creature_template SET ScriptName = "npc_hodir_mage" WHERE entry in (32893, 33327, 33331, 32946);
+-- fixed npc positioning and added 4 extra flashfreeze for them.
+-- 10 man: 
+-- mage
+update creature set position_x = 2000.9, position_y = -231.232 where guid = 131930;
+-- priest
+update creature set position_x = 2009.06, position_y = -244.058 where guid = 131933;
+delete from creature where guid in (800005);
+insert into creature VALUES
+(800005, 32897, 603, 3, 128,0,0, 2009.06, -244.058, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);		-- aly priest 
+-- shaman
+update creature set position_x = 1983.75, position_y = -243.358 where id = 33328;
+update creature set position_x = 1983.75, position_y = -243.358 where id = 33332;
+-- druid
+update creature set position_x = 2021.12, position_y = -236.648 where id = 32941;
+update creature set position_x = 2021.12, position_y = -236.648 where id = 33325;
+-- 25 man:
+-- druid
+update creature set position_x = 2013.5, position_y = -240.338 where id = 32901;
+delete from creature where guid in (800006);
+insert into creature VALUES
+(800006, 32938, 603, 2, 1,0,0, 2013.5, -240.338, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
+-- shaman:
+update creature set position_x = 2011.48, position_y = -232.79 where id = 32900;
+update creature set position_x = 2011.48, position_y = -232.79 where id = 32950;
+delete from creature where guid in (800007);
+insert into creature VALUES
+(800007, 32938, 603, 2, 1,0,0, 2011.48, -232.79, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
+-- mage:
+delete from creature where guid in (800008, 800010);
+insert into creature VALUES
+(800008, 33327, 603, 2, 128,0,0, 1978.49, -241.476, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0), -- aly mage
+(800010, 32938, 603, 2, 1,0,0, 1978.49, -241.476, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
+-- priest
+update creature set position_x = 1997.88, position_y = -239.394 where id = 33330;
+delete from creature where guid in (800009);
+insert into creature VALUES
+(800009, 32938, 603, 2, 1,0,0, 1997.88, -239.394, 432.687, 1.68485, 7200,0,0, 5647, 0, 0, 0);
 
 -- Mimiron
 UPDATE creature_template SET unit_flags = 0, `AIName` = '', ScriptName = "boss_mimiron" WHERE entry = 33350;
@@ -274,31 +316,17 @@ UPDATE creature_template SET ScriptName = "mob_sanity_well" WHERE entry = 33991;
 UPDATE creature_template SET scriptname='mob_madness_portal' WHERE `entry`=34072;
 UPDATE creature_template SET scriptname='mob_laughing_skull' WHERE `entry`=33990;
 -- Keepers
-UPDATE creature_template SET ScriptName = "keeper_hodir" WHERE entry = 33411;
-UPDATE creature_template SET ScriptName = "keeper_freya" WHERE entry = 33410;
-UPDATE creature_template SET ScriptName = "keeper_thorim" WHERE entry = 33413;
-UPDATE creature_template SET ScriptName = "keeper_mimiron" WHERE entry = 33412;
--- Keepers images
-UPDATE creature_template SET ScriptName = "hodir_image" WHERE entry = 33879;
-UPDATE creature_template SET ScriptName = "freya_image" WHERE entry = 33876;
-UPDATE creature_template SET ScriptName = "thorim_image" WHERE entry = 33878;
-UPDATE creature_template SET ScriptName = "mimiron_image" WHERE entry = 33880;
--- insert the brain and keepers imagees into the db
-delete from creature where id in (33890, 33876, 33880, 33879, 33878);
-insert into creature VALUES (800000,33890,603,3,65535,0,0,1981.422,-22.442,255.011,0,604800,0,0,1371428,0,0,0),	-- Brain
-(800001, 33876, 603, 3, 65535,0,0, 1888.782, -3.919, 333.446, 5.91, 604800,0,0, 5647, 0, 0, 0),		-- Freya 
-(800002, 33880, 603, 3, 65535,0,0, 1891.667, 3.103, 333.051, 5.82, 604800,0,0, 5647, 0, 0, 0),		-- Mimiron
-(800003, 33879, 603, 3, 65535,0,0, 1888.782, -45.434, 333.434, 0.26, 604800,0,0, 5647, 0, 0, 0), 	-- Hodir
-(800004, 33878, 603, 3, 65535,0,0, 1891.667, -53.316, 333.031, 0.38, 604800,0,0, 5647, 0, 0, 0); 	-- Thorim
+UPDATE creature_template SET ScriptName = "keeper_hodir" WHERE entry = 33213;
+UPDATE creature_template SET ScriptName = "keeper_freya" WHERE entry = 33241;
+UPDATE creature_template SET ScriptName = "keeper_thorim" WHERE entry = 33242;
+UPDATE creature_template SET ScriptName = "keeper_mimiron" WHERE entry = 33244;
 -- insert doors & portals into the brain room
 delete from gameobject where id in (194635);
 insert into gameobject VALUES (110000,194635,603,3,65535,2022.490,-25.389,261.961,0,0,0,0,0,604800,0,1);
 delete from gameobject where guid = 110001;
 insert into gameobject VALUES (110001,194462,603,3,65535,2104.555, -25.635,242.646,0,0,0,0,0,604800,100,1);
-delete from areatrigger_teleport where id = 10000;
-delete from gameobject_template where entry = 500000;
-#insert into gameobject VALUES (110002,500000,603,3,65535,1999.690, -54.931, 242.418,0,0,0,0,0,604800,100,1);
-#insert into gameobject VALUES (110003,500000,603,3,65535,1946.898, -25.769, 242.169,0,0,0,0,0,604800,100,1);
+delete from creature where id in (33890);
+insert into creature VALUES (800000,33890,603,3,65535,0,0,1981.422,-22.442,255.011,0,604800,0,0,1371428,0,0,0);
 
 
 -- Algalon
@@ -322,9 +350,24 @@ REPLACE INTO spell_target_position VALUES
 (65061, 603, 2517.31, 2568.87, 412.299, 0),        /* Spark of Imagination */
 (65042, 603, 1854.73, -11.637, 334.575, 0);        /* Prison of Yogg-Saron */
 
+-- Keepers
+-- Keepers images
+UPDATE creature_template SET `npcflag` = 1, `unit_flags` = 2, ScriptName = "hodir_image" WHERE entry = 33411;
+UPDATE creature_template SET `npcflag` = 1, `unit_flags` = 2, ScriptName = "freya_image" WHERE entry = 33410;
+UPDATE creature_template SET `npcflag` = 1, `unit_flags` = 2, ScriptName = "thorim_image" WHERE entry = 33413;
+UPDATE creature_template SET `npcflag` = 1, `unit_flags` = 2, ScriptName = "mimiron_image" WHERE entry = 33412;
+-- insert keepers imagees into the db
+delete from creature where guid in (800001, 800002, 800003, 800004);
+insert into creature VALUES
+(800001, 33410, 603, 3, 65535,0,0, 2036.892, 25.621, 411.358, 3.83, 604800,0,0, 5647, 0, 0, 0),		-- Freya 
+(800002, 33412, 603, 3, 65535,0,0, 1939.215, 42.677, 411.355, 5.31, 604800,0,0, 5647, 0, 0, 0),		-- Mimiron
+(800003, 33411, 603, 3, 65535,0,0, 1939.195, -90.662, 411.357, 1.06, 604800,0,0, 5647, 0, 0, 0), 	-- Hodir
+(800004, 33413, 603, 3, 65535,0,0, 2036.674, -73.814, 411.355, 2.51, 604800,0,0, 5647, 0, 0, 0); 	-- Thorim
+
 -- Doors 
 UPDATE gameobject_template SET faction = 114 WHERE entry in (194553, 194554, 194556, 194148, 194634, 194635, 194905, 194441,
 194442, 194416, 194774, 194775, 194776, 194560, 194557, 194558, 194750, 194910, 194559, 194635, 194636, 194637, 194631, 194255, 194630, 194767);
+UPDATE gameobject_template SET faction = 114, `flags` = 4 WHERE entry in (192075, 194173); -- snowdrifts
 -- consoles
 UPDATE gameobject_template SET faction = 0 WHERE entry in (194555, 194628);
 

@@ -653,8 +653,6 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
 
         if(m_pInstance) 
         {
-            m_pInstance->SetData(TYPE_FREYA, NOT_STARTED);
-
             // remove elder auras
             if (Creature* pBrightleaf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRIGHTLEAF))))
             {

@@ -116,6 +116,8 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603085,"You will suffer for this trespass!","","","","","","","","",15552,1,0,0,"Hodir Aggro"),
 (-1603086,"The veil of winter will protect you, champions!","","","","","","","","",15559,1,0,0,"Hodir yogg"),
 (-1603087,"Enough! This ends now!","","","","","","","","",15558,1,0,0,"Hodir berserk"),
+(-1603360,'Hodir begins to cast Flash Freeze!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_flash freeze'),
+(-1603361,'Hodir gains Frozen Blows!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_frozen blows'),
 
 -- Freya: 
 (-1603000,"The Conservatory must be protected!","","","","","","","","",15526,1,0,0,"freya aggro"),

@@ -37,28 +37,32 @@ The teleporter appears to be active and stable.
 - Spark of Imagination
 - Prison of Yogg-Saron
 */
+enum
+{
+    BASE_CAMP    = 200,
+    GROUNDS      = 201,
+    FORGE        = 202,
+    SCRAPYARD    = 203,
+    ANTECHAMBER  = 204,
+    WALKWAY      = 205,
+    CONSERVATORY = 206,
+    SPARK        = 207,
+    PRISON       = 208,
 
-#define BASE_CAMP    200
-#define GROUNDS      201
-#define FORGE        202
-#define SCRAPYARD    203
-#define ANTECHAMBER  204
-#define WALKWAY      205
-#define CONSERVATORY 206
-#define SPARK        207
-#define PRISON       208
+    // spells
+    SPELL_TELEPORT_BASE_CAMP    = 64014,
+    SPELL_TELEPORT_GROUNDS      = 64032,
+    SPELL_TELEPORT_FORGE        = 64028,
+    SPELL_TELEPORT_SCRAPYARD    = 64031,
+    SPELL_TELEPORT_ANTECHAMBER  = 64030,
+    SPELL_TELEPORT_WALKWAY      = 64029,
+    SPELL_TELEPORT_CONSERVATORY = 64024,
+    SPELL_TELEPORT_SPARK        = 65061,
+    SPELL_TELEPORT_PRISON       = 65042,
+};
 
-// spells
-#define SPELL_TELEPORT_BASE_CAMP    64014
-#define SPELL_TELEPORT_GROUNDS      64032
-#define SPELL_TELEPORT_FORGE        64028
-#define SPELL_TELEPORT_SCRAPYARD    64031
-#define SPELL_TELEPORT_ANTECHAMBER  64030
-#define SPELL_TELEPORT_WALKWAY      64029
-#define SPELL_TELEPORT_CONSERVATORY 64024
-#define SPELL_TELEPORT_SPARK        65061
-#define SPELL_TELEPORT_PRISON       65042
-
+#define REQUEST_HELP    "Help me fight Yogg-Saron!"
+#define DENY_HELP       "I don't need your help."
 
 bool GoHello_ulduar_teleporter( Player *pPlayer, GameObject *pGO )
 {
@@ -68,13 +72,13 @@ bool GoHello_ulduar_teleporter( Player *pPlayer, GameObject *pGO )
     // base camp
     pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Expedition Base Camp", GOSSIP_SENDER_MAIN, BASE_CAMP);
 
-    // formation grounds & colossal forge
+    // TEMP
+    // formation grounds & colossal forge (this should be on Leviathan)
+    pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Formation Grounds", GOSSIP_SENDER_MAIN, GROUNDS);
+    pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Colossal Forge", GOSSIP_SENDER_MAIN, FORGE);
+
     if(pInstance->GetData(TYPE_IGNIS) == DONE && pInstance->GetData(TYPE_RAZORSCALE) == DONE)
     {
-        pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Formation Grounds", GOSSIP_SENDER_MAIN, GROUNDS);
-        pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Colossal Forge", GOSSIP_SENDER_MAIN, FORGE);
-
-
         // scrapyard & antechamber
         if(pInstance->GetData(TYPE_XT002) == DONE)
         {
@@ -147,6 +151,140 @@ bool GoSelect_ulduar_teleporter( Player *pPlayer, GameObject *pGO, uint32 sender
     return true;
 }
 
+/*#######
+*### Keepers images
+#######*/
+// HODIR
+bool GossipHello_hodir_image(Player* pPlayer, Creature* pCreature)
+{
+    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
+
+    if(m_pInstance && m_pInstance->GetData(TYPE_KEEPER_HODIR) != DONE && m_pInstance->GetData(TYPE_KEEPER_HODIR) != FAIL)
+    {
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+    }
+
+    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_hodir_image(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
+    pPlayer->CLOSE_GOSSIP_MENU();
+
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
+    {
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KEEPER_HODIR, DONE);
+    }
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+2)
+    {
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KEEPER_HODIR, FAIL);
+    }
+    return true;
+}
+
+// FREYA
+bool GossipHello_freya_image(Player* pPlayer, Creature* pCreature)
+{
+    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
+
+    if(m_pInstance && m_pInstance->GetData(TYPE_KEEPER_FREYA) != DONE && m_pInstance->GetData(TYPE_KEEPER_FREYA) != FAIL)
+    {
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+    }
+
+    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_freya_image(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
+    pPlayer->CLOSE_GOSSIP_MENU();
+
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
+    {
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KEEPER_FREYA, DONE);
+    }
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+2)
+    {
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KEEPER_FREYA, FAIL);
+    }
+    return true;
+}
+// MIMIRON
+bool GossipHello_mimiron_image(Player* pPlayer, Creature* pCreature)
+{
+    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
+
+    if(m_pInstance && m_pInstance->GetData(TYPE_KEEPER_MIMIRON) != DONE && m_pInstance->GetData(TYPE_KEEPER_MIMIRON) != FAIL)
+    {
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+    }
+
+    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_mimiron_image(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
+    pPlayer->CLOSE_GOSSIP_MENU();
+
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
+    {
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KEEPER_MIMIRON, DONE);
+    }
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+2)
+    {
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KEEPER_MIMIRON, FAIL);
+    }
+    return true;
+}
+
+// THORIM
+bool GossipHello_thorim_image(Player* pPlayer, Creature* pCreature)
+{
+    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
+
+    if(m_pInstance && m_pInstance->GetData(TYPE_KEEPER_THORIM) != DONE && m_pInstance->GetData(TYPE_KEEPER_THORIM) != FAIL)
+    {
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, REQUEST_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, DENY_HELP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+    }
+
+    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_thorim_image(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
+    pPlayer->CLOSE_GOSSIP_MENU();
+
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
+    {
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KEEPER_THORIM, DONE);
+    }
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+2)
+    {
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KEEPER_THORIM, FAIL);
+    }
+    return true;
+}
+
 void AddSC_ulduar()
 {
     Script *newscript;
@@ -155,4 +293,29 @@ void AddSC_ulduar()
     newscript->pGOHello = &GoHello_ulduar_teleporter;
     newscript->pGOGossipSelect = &GoSelect_ulduar_teleporter;
     newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "hodir_image";
+    newscript->pGossipHello = &GossipHello_hodir_image;
+    newscript->pGossipSelect = &GossipSelect_hodir_image;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "freya_image";
+    newscript->pGossipHello = &GossipHello_freya_image;
+    newscript->pGossipSelect = &GossipSelect_freya_image;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "thorim_image";
+    newscript->pGossipHello = &GossipHello_thorim_image;
+    newscript->pGossipSelect = &GossipSelect_thorim_image;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mimiron_image";
+    newscript->pGossipHello = &GossipHello_mimiron_image;
+    newscript->pGossipSelect = &GossipSelect_mimiron_image;
+    newscript->RegisterSelf();
+
 }
