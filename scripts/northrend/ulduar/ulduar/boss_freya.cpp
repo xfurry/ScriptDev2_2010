@@ -37,6 +37,10 @@ enum
     SAY_SLAY2               = -1603006,
     SAY_DEATH               = -1603007,
     SAY_BERSERK             = -1603008,
+    EMOTE_ALLIES_NATURE     = -1603362,
+    EMOTE_LIFEBINDERS_GIFT  = -1603363,
+    EMOTE_GROUND_TREMMOR    = -1603364,
+    EMOTE_IRON_ROOTS        = -1603365,
     //brightleaf
     SAY_BRIGHTLEAF_AGGRO    = -1603160,
     SAY_BRIGHTLEAF_SLAY1    = -1603161,

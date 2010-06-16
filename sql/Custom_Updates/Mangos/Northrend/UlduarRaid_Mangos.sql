@@ -57,20 +57,20 @@ INSERT INTO `creature_loot_template` VALUES
 -- hard mode loot for the heart
 DELETE FROM `creature_loot_template` WHERE (`entry`=33329);
 INSERT INTO `creature_loot_template` VALUES 
-(33329, 45867, 0, 3, 1, 1, 0, 0, 0),
-(33329, 45868, 0, 3, 1, 1, 0, 0, 0),
-(33329, 45869, 0, 3, 1, 1, 0, 0, 0),
-(33329, 45870, 0, 3, 1, 1, 0, 0, 0),
-(33329, 45871, 0, 3, 1, 1, 0, 0, 0);
+(33329, 45867, 0, 1, 1, 1, 0, 0, 0),
+(33329, 45868, 0, 1, 1, 1, 0, 0, 0),
+(33329, 45869, 0, 1, 1, 1, 0, 0, 0),
+(33329, 45870, 0, 1, 1, 1, 0, 0, 0),
+(33329, 45871, 0, 1, 1, 1, 0, 0, 0);
 -- 25 man:
 -- no hard loot on xt so moving to the heart
 DELETE FROM `creature_loot_template` WHERE (`entry`=33995);
 INSERT INTO `creature_loot_template` VALUES 
-(33995, 45445, 0, 4, 1, 1, 0, 0, 0),
-(33995, 45443, 0, 4, 1, 1, 0, 0, 0),
-(33995, 45444, 0, 4, 1, 1, 0, 0, 0),
-(33995, 45446, 0, 4, 1, 1, 0, 0, 0),
-(33995, 45442, 0, 4, 1, 1, 0, 0, 0);
+(33995, 45445, 0, 1, 1, 1, 0, 0, 0),
+(33995, 45443, 0, 1, 1, 1, 0, 0, 0),
+(33995, 45444, 0, 1, 1, 1, 0, 0, 0),
+(33995, 45446, 0, 1, 1, 1, 0, 0, 0),
+(33995, 45442, 0, 1, 1, 1, 0, 0, 0);
 
 -- Iron council
 UPDATE creature_template SET mechanic_immune_mask=619395071, scriptname='boss_brundir' WHERE entry=32857;
@@ -298,6 +298,38 @@ UPDATE creature_template SET MinHealth = 23009250, MaxHealth = 23009250, ScriptN
 UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` in (33271, 33449);
 UPDATE creature_template SET ScriptName = "mob_saronite_animus" WHERE entry = 33524;
 UPDATE creature_template SET ScriptName = "mob_saronite_vapor", movementType = 1  WHERE entry = 33488;
+-- hard loot for the animus
+update creature_template set lootid = 33524 where entry = 33524;
+update creature_template set lootid = 34152 where entry = 34152;
+-- ulduar hard mode loot
+DELETE FROM `creature_loot_template` WHERE (`entry`=33271);
+INSERT INTO `creature_loot_template` VALUES 
+(33271, 47241, 100, 0, 1, 1, 0, 0, 0),
+(33271, 45996, 0, 1, 1, 1, 0, 0, 0),
+(33271, 46010, 0, 1, 1, 1, 0, 0, 0),
+(33271, 46011, 0, 1, 1, 1, 0, 0, 0),
+(33271, 46012, 0, 1, 1, 1, 0, 0, 0),
+(33271, 46014, 0, 1, 1, 1, 0, 0, 0),
+(33271, 45997, 0, 2, 1, 1, 0, 0, 0),
+(33271, 46008, 0, 2, 1, 1, 0, 0, 0),
+(33271, 46009, 0, 2, 1, 1, 0, 0, 0),
+(33271, 46013, 0, 2, 1, 1, 0, 0, 0),
+(33271, 46015, 0, 2, 1, 1, 0, 0, 0);
+DELETE FROM `creature_loot_template` WHERE (`entry`=33524);
+INSERT INTO `creature_loot_template` VALUES 
+(33524, 46032, 0, 1, 1, 1, 0, 0, 0),
+(33524, 46033, 0, 1, 1, 1, 0, 0, 0),
+(33524, 46034, 0, 1, 1, 1, 0, 0, 0),
+(33524, 46035, 0, 1, 1, 1, 0, 0, 0),
+(33524, 46036, 0, 1, 1, 1, 0, 0, 0);
+-- 25 man:
+DELETE FROM `creature_loot_template` WHERE (`entry`=34152);
+INSERT INTO `creature_loot_template` VALUES 
+(34152, 45516, 0, 1, 1, 1, 0, 0, 0),
+(34152, 45517, 0, 1, 1, 1, 0, 0, 0),
+(34152, 45518, 0, 1, 1, 1, 0, 0, 0),
+(34152, 45519, 0, 1, 1, 1, 0, 0, 0),
+(34152, 45520, 0, 1, 1, 1, 0, 0, 0);
 
 -- Yogg
 UPDATE creature_template SET ScriptName = "boss_yogg_saron" WHERE entry = 33288;

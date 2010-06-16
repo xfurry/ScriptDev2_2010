@@ -379,7 +379,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case NPC_VEZAX:
             m_uiVezaxGUID = pCreature->GetGUID();
-            //pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE); // must fix this!
             break;
         case NPC_ANIMUS:
             m_uiSaroniteAnimusGUID = pCreature->GetGUID();
@@ -575,6 +574,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case GO_VEZAX_GATE:
             m_uiVezaxGateGUID = pGo->GetGUID();
+            pGo->SetGoState(GO_STATE_READY);
             if(m_auiEncounter[11])
                 pGo->SetGoState(GO_STATE_ACTIVE);
             break;
@@ -723,11 +723,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     void OpenMadnessDoor()
     {
         if(m_auiEncounter[7] == DONE && m_auiEncounter[8] == DONE && m_auiEncounter[9] == DONE && m_auiEncounter[10] == DONE)
-        {
-            if(Creature *pVezax = instance->GetCreature(m_uiVezaxGUID))
-                pVezax->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             OpenDoor(m_uiAncientGateGUID);
-        }
     }
 
     // used to open the door to XT (custom script because Leviathan is disabled)

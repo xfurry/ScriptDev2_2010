@@ -130,6 +130,10 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603007,"His hold on me dissipates. I can see clearly once more. Thank you, heroes.","","","","","","","","",15531,1,0,0,"freya Death"),
 (-1603008,"You have strayed too far, wasted too much time!","","","","","","","","",15532,1,0,0,"freya berserk"),
 (-1603009,"Eonar, your servant calls for your blessing!","","","","","","","","",15535,1,0,0,"freya yogg"),
+(-1603362,'Allies of Nature have appeared!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_allies'),
+(-1603363,'A Lifebinder\'s Gift begins to grow!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_lifebinders'),
+(-1603364,'Freya begins to cast Ground Tremor!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_ground tremor'),
+(-1603365,'Freya casts Strenghtened Iron Roots!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_iron roots'),
 -- Brightleaf
 (-1603160,"Matron, the Conservatory has been breached!","","","","","","","","",15483,1,0,0,"brightleaf aggro"),
 (-1603161,"Fertilizer.","","","","","","","","",15485,1,0,0,"brightleaf slay1"),
@@ -200,6 +204,9 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603124,'Oh, what horrors await....',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15546,'1',NULL,NULL,'vezax death'),
 (-1603125,'Your defeat was inevitable!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15547,'1',NULL,NULL,'vezax enrage'),
 (-1603126,'Behold, now! Terror, absolute!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15548,'1',NULL,NULL,'vezax hard'),
+(-1603366,'A cloud of saronite vapors coalesces nearby!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_vapors'),
+(-1603367,'General Vezax roars and surges with dark might!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_might'),
+(-1603368,'The saronite vapors mass and swirl violently, merging into a monstrous form!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_animus'),
 
 -- Yogg:
 -- Sara:
