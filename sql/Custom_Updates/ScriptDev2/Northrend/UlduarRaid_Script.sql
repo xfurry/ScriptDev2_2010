@@ -173,6 +173,10 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603185,"Thorim, my lord, why else would these invaders have come into your sanctum but to slay you? They must be stopped!","","","","","","","","",15668,1,0,0,"sif start"),
 (-1603186,"Impossible! Lord Thorim, I will bring your foes a frigid death!","","","","","","","","",15670,1,0,0,"sif event"),
 (-1603187,"These pathetic mortals are harmless, beneath my station. Dispose of them!","","","","","","","","",15669,1,0,0,"sif despawn"),
+(-1603369,'Runic Colossus surrounds itself with a crackling Runic Barrier!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_barrier'),
+(-1603370,'Ancient Rune Giant fortifies nearby allies with runic might!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_barrier'),
+(-1603371,'Rune detonation on $N' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_detonation'),
+(-1603372,'Phase 2' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_phase'),
 
 -- Mimiron:
 (-1603241,"Oh, my! I wasn't expecting company! The workshop is such a mess! How embarrassing!","","","","","","","","",15611,1,0,0,"mimiron aggro"), 

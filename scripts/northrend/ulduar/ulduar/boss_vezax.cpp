@@ -356,7 +356,7 @@ struct MANGOS_DLL_DECL mob_saronite_animusAI : public ScriptedAI
     {
         if(m_pInstance)
         {
-            if (Creature* pVezax = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_VEZAX))))
+            if (Creature* pVezax = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VEZAX))))
             {
                 if (pVezax->isAlive())
                     pVezax->RemoveAurasDueToSpell(SPELL_SARONITE_BARRIER);

@@ -1421,27 +1421,6 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         m_creature->SetMaxHealth(199999);
         m_creature->SetHealth(m_creature->GetMaxHealth());
 
-        // reset
-        if (Creature *pHodirImage = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_HODIR_IMAGE))))
-        {
-            if(pHodirImage->isAlive())
-                pHodirImage->SetVisibility(VISIBILITY_ON);
-        }
-        if (Creature *pFreyaImage = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_FREYA_IMAGE))))
-        {
-            if(pFreyaImage->isAlive())
-                pFreyaImage->SetVisibility(VISIBILITY_ON);
-        }
-        if (Creature *pThorimImage = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_THORIM_IMAGE))))
-        {
-            if(pThorimImage->isAlive())
-                pThorimImage->SetVisibility(VISIBILITY_ON);
-        }
-        if (Creature *pMimironImage = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MIMIRON_IMAGE))))
-        {
-            if(pMimironImage->isAlive())
-                pMimironImage->SetVisibility(VISIBILITY_ON);
-        }
 
         std::list<Creature*> lAddsList;
         GetCreatureListWithEntryInGrid(lAddsList, m_creature, MOB_IMMORTAL_GUARDIAN, DEFAULT_VISIBILITY_INSTANCE);
@@ -1547,27 +1526,6 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         {
             if(m_pInstance) 
                 m_pInstance->SetData(TYPE_YOGGSARON, IN_PROGRESS);
-
-            if (Creature *pHodirImage = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_HODIR_IMAGE))))
-            {
-                if(pHodirImage->isAlive())
-                    pHodirImage->SetVisibility(VISIBILITY_OFF);
-            }
-            if (Creature *pFreyaImage = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_FREYA_IMAGE))))
-            {
-                if(pFreyaImage->isAlive())
-                    pFreyaImage->SetVisibility(VISIBILITY_OFF);
-            }
-            if (Creature *pThorimImage = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_THORIM_IMAGE))))
-            {
-                if(pThorimImage->isAlive())
-                    pThorimImage->SetVisibility(VISIBILITY_OFF);
-            }
-            if (Creature *pMimironImage = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MIMIRON_IMAGE))))
-            {
-                if(pMimironImage->isAlive())
-                    pMimironImage->SetVisibility(VISIBILITY_OFF);
-            }
 
             DoScriptText(SAY_AGGRO, m_creature);
             phase = 1;

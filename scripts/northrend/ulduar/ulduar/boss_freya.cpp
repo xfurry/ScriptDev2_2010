@@ -658,17 +658,17 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
         if(m_pInstance) 
         {
             // remove elder auras
-            if (Creature* pBrightleaf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRIGHTLEAF))))
+            if (Creature* pBrightleaf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRIGHTLEAF))))
             {
                 if (pBrightleaf->isAlive())
                     pBrightleaf->RemoveAllAuras();
             }
-            if (Creature* pIronbranch = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_IRONBRACH))))
+            if (Creature* pIronbranch = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_IRONBRACH))))
             {
                 if (pIronbranch->isAlive())
                     pIronbranch->RemoveAllAuras();
             }
-            if (Creature* pStonebark = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STONEBARK))))
+            if (Creature* pStonebark = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STONEBARK))))
             {
                 if (pStonebark->isAlive())
                     pStonebark->RemoveAllAuras();
@@ -707,7 +707,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             m_pInstance->SetData(TYPE_FREYA, IN_PROGRESS);
 
             // check brightleaf
-            if (Creature* pBrightleaf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_BRIGHTLEAF))))
+            if (Creature* pBrightleaf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRIGHTLEAF))))
             {
                 if (pBrightleaf->isAlive())
                 {
@@ -722,7 +722,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             }
 
             // check ironbranch
-            if (Creature* pIronbranch = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_IRONBRACH))))
+            if (Creature* pIronbranch = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_IRONBRACH))))
             {
                 if (pIronbranch->isAlive())
                 {
@@ -737,7 +737,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             }
 
             // check stonebark
-            if (Creature* pStonebark = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_STONEBARK))))
+            if (Creature* pStonebark = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STONEBARK))))
             {
                 if (pStonebark->isAlive())
                 {
@@ -1235,7 +1235,7 @@ struct MANGOS_DLL_DECL mob_freya_groundAI : public ScriptedAI
 
             if(EonarsGift_Timer < diff)
             {
-                if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_FREYA))))
+                if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
                     m_creature->CastSpell(pFreya, m_bIsRegularMode ? SPELL_LIFEBINDERS_GIFT : SPELL_LIFEBINDERS_GIFT_H, true);
                 EonarsGift_Timer = IN_MILLISECONDS;
             }else EonarsGift_Timer -= diff;
@@ -1357,7 +1357,7 @@ struct MANGOS_DLL_DECL mob_freya_spawnedAI : public ScriptedAI
     {
         if(AncientWaterSpirit || Snaplasher || StormLasher)
         {
-            if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_FREYA))))
+            if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
                 ((boss_freyaAI*)pFreya->AI())->m_bWaveCheck = true;
         }
     }

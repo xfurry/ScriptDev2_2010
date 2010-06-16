@@ -37,20 +37,6 @@ bool GOHello_go_red_button(Player* pPlayer, GameObject* pGo)
     return false;
 }
 
-bool GOHello_go_door_lever(Player* pPlayer, GameObject* pGo)
-{
-    ScriptedInstance* pInstance = (ScriptedInstance*)pGo->GetInstanceData();
-
-    if (!pInstance)
-        return false;
-
-    if(pGo->GetEntry() == GO_DOOR_LEVER)
-        pInstance->SetData(TYPE_THORIM, SPECIAL);
-
-    return false;
-}
-
-
 struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
 {
     instance_ulduar(Map* pMap) : ScriptedInstance(pMap) 
@@ -362,7 +348,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case NPC_RUNIC_COLOSSUS:
             m_uiRunicColossusGUID = pCreature->GetGUID();
             break;
-        case NPC_ANCIENT_RUNE_GIANT:
+        case NPC_RUNE_GIANT:
             m_uiRuneGiantGUID = pCreature->GetGUID();
             break;
         case NPC_FREYA:
@@ -1061,28 +1047,24 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return m_uiVx001GUID;
         case DATA_AERIAL_UNIT:
             return m_uiAerialUnitGUID;
-        case DATA_HODIR:
+        case NPC_HODIR:
             return m_uiMimironGUID;
-        case DATA_THORIM:
+        case NPC_THORIM:
             return m_uiThorimGUID;
-        case DATA_RUNE_GIANT:
+        case NPC_RUNE_GIANT:
             return m_uiRuneGiantGUID;
-        case DATA_RUNIC_COLOSSUS:
+        case NPC_RUNIC_COLOSSUS:
             return m_uiRunicColossusGUID;
-        case DATA_FREYA:
+        case NPC_FREYA:
             return m_uiFreyaGUID;
-        case DATA_BRIGHTLEAF:
+        case NPC_BRIGHTLEAF:
             return m_uiElderBrightleafGUID;
-        case DATA_IRONBRACH:
+        case NPC_IRONBRACH:
             return m_uiElderIronbrachGUID;
-        case DATA_STONEBARK:
+        case NPC_STONEBARK:
             return m_uiElderStonebarkGUID;
-        case DATA_VEZAX:
+        case NPC_VEZAX:
             return m_uiVezaxGUID;
-        case DATA_MADNESS_DOOR:
-            return m_uiAncientGateGUID;
-        case DATA_ANIMUS:
-            return m_uiSaroniteAnimusGUID;
         case DATA_YOGGSARON:
             return m_uiYoggSaronGUID;
         case DATA_SARA:
@@ -1091,20 +1073,12 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return m_uiYoggBrainGUID;
         case DATA_ALGALON:
             return m_uiAlgalonGUID;
-        case DATA_HODIR_IMAGE:
-            return m_uiHodirImageGUID;
-        case DATA_FREYA_IMAGE:
-            return m_uiFreyaImageGUID;
-        case DATA_THORIM_IMAGE:
-            return m_uiThorimImageGUID;
-        case DATA_MIMIRON_IMAGE:
-            return m_uiMimironImageGUID;
 
             // mimiron hard  mode button
         case DATA_RED_BUTTON:
             return m_uiMimironButtonGUID;
             // thorim encounter starter lever
-        case DATA_THORIM_LEVER:
+        case GO_DOOR_LEVER:
             return m_uiThorimLeverGUID;
             // madness chamber doors
         case DATA_BRAIN_DOOR1:
@@ -1270,10 +1244,5 @@ void AddSC_instance_ulduar()
     newscript = new Script;
     newscript->Name = "go_red_button";
     newscript->pGOHello = &GOHello_go_red_button;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "go_door_lever";
-    newscript->pGOHello = &GOHello_go_door_lever;
     newscript->RegisterSelf();
 }
