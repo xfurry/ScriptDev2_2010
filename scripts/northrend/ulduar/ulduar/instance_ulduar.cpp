@@ -24,19 +24,6 @@ EndScriptData */
 #include "precompiled.h"
 #include "ulduar.h"
 
-bool GOHello_go_red_button(Player* pPlayer, GameObject* pGo)
-{
-    ScriptedInstance* pInstance = (ScriptedInstance*)pGo->GetInstanceData();
-
-    if (!pInstance)
-        return false;
-
-    if(pGo->GetEntry() == G0_MIMIRON_BUTTON)
-        pInstance->SetData(TYPE_MIMIRON, SPECIAL);
-
-    return false;
-}
-
 struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
 {
     instance_ulduar(Map* pMap) : ScriptedInstance(pMap) 
@@ -854,25 +841,15 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 CloseDoor(m_uiBrainDoor1GUID);
                 CloseDoor(m_uiBrainDoor2GUID);
             }
-            if (uiData == DONE)
-                OpenDoor(m_uiCelestialDoorGUID);
             break;
 
             // Celestial Planetarium
         case TYPE_ALGALON:
             m_auiEncounter[13] = uiData;
+            DoUseDoorOrButton(m_uiCelestialDoorGUID);
+            DoUseDoorOrButton(m_uiUniverseFloorCelestialGUID);
             if (uiData == DONE)
-            {
                 DoRespawnGameObject(m_uiAlagonLootGUID, 30*MINUTE);
-                OpenDoor(m_uiCelestialDoorGUID);
-            }
-            if (uiData == IN_PROGRESS)
-            {
-                OpenDoor(m_uiUniverseFloorCelestialGUID);
-                CloseDoor(m_uiCelestialDoorGUID);
-            }
-            else
-                CloseDoor(m_uiUniverseFloorCelestialGUID);
             break;
 
             // Hard modes
@@ -1039,7 +1016,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case NPC_AURIAYA:
             return m_uiAuriayaGUID;
             // Keepers
-        case DATA_MIMIRON:
+        case NPC_MIMIRON:
             return m_uiMimironGUID;
         case DATA_LEVIATHAN_MK:
             return m_uiLeviathanMkGUID;
@@ -1071,15 +1048,18 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return m_uiSaraGUID;
         case DATA_YOGG_BRAIN:
             return m_uiYoggBrainGUID;
-        case DATA_ALGALON:
+        case NPC_ALGALON:
             return m_uiAlgalonGUID;
 
             // mimiron hard  mode button
-        case DATA_RED_BUTTON:
+        case G0_MIMIRON_BUTTON:
             return m_uiMimironButtonGUID;
             // thorim encounter starter lever
         case GO_DOOR_LEVER:
             return m_uiThorimLeverGUID;
+            // celestial door
+        case GO_CELESTIAL_DOOR:
+            return m_uiCelestialDoorGUID;
             // madness chamber doors
         case DATA_BRAIN_DOOR1:
             return m_uiBrainDoor1GUID;
@@ -1239,10 +1219,5 @@ void AddSC_instance_ulduar()
     newscript = new Script;
     newscript->Name = "instance_ulduar";
     newscript->GetInstanceData = &GetInstanceData_instance_ulduar;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "go_red_button";
-    newscript->pGOHello = &GOHello_go_red_button;
     newscript->RegisterSelf();
 }

@@ -203,8 +203,6 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
         if(GameObject* pLever = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_DOOR_LEVER)))
             pLever->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1); 
 
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-
         GetCreatureListWithEntryInGrid(lIronDwarfes, m_creature, MOB_IRON_RING_GUARD, DEFAULT_VISIBILITY_INSTANCE);
         GetCreatureListWithEntryInGrid(lIronDwarfes, m_creature, MOB_DARK_RUNE_ACOLYTE, DEFAULT_VISIBILITY_INSTANCE);
         GetCreatureListWithEntryInGrid(lIronDwarfes, m_creature, MOB_IRON_HOHOR_GUARD, DEFAULT_VISIBILITY_INSTANCE);

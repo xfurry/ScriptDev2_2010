@@ -92,6 +92,9 @@ enum
     SPELL_WATER_SPRAY       = 64619,
 
     SPELL_BERSERK           = 26662,
+
+    ACHIEV_FIREFIGHTER      = 3180,
+    ACHIEV_FIREFIGHTER_H    = 3189,
 };
 
 #define CENTER_X            2744.732f
@@ -215,7 +218,7 @@ struct MANGOS_DLL_DECL boss_leviathan_mkAI : public ScriptedAI
 
     void KilledUnit(Unit* pVictim)
     {
-        if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MIMIRON))))
+        if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MIMIRON))))
         {
             if(!isPhase4)
             {
@@ -366,7 +369,7 @@ struct MANGOS_DLL_DECL boss_leviathan_mkAI : public ScriptedAI
                 m_creature->SetHealth(m_creature->GetMaxHealth());
                 m_creature->GetMotionMaster()->MovePoint(0, PosTankHome[0], PosTankHome[1], CENTER_Z); 
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MIMIRON))))
+                if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MIMIRON))))
                     DoScriptText(SAY_TANK_DEATH, pMimiron);
                 ++Step;
                 OutroTimer = 12000;
@@ -433,7 +436,7 @@ struct MANGOS_DLL_DECL boss_vx001AI : public ScriptedAI
 
     void KilledUnit(Unit* pVictim)
     {
-        if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MIMIRON))))
+        if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MIMIRON))))
         {
             if(!isPhase4)
             {
@@ -482,7 +485,7 @@ struct MANGOS_DLL_DECL boss_vx001AI : public ScriptedAI
 
             if(!isPhase4)
             {
-                if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MIMIRON))))
+                if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MIMIRON))))
                     DoScriptText(SAY_TORSO_DEATH, pMimiron);
             }
         }
@@ -671,7 +674,7 @@ struct MANGOS_DLL_DECL boss_aerial_command_unitAI : public ScriptedAI
         {
             if(!isPhase4)
             {
-                if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MIMIRON))))
+                if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MIMIRON))))
                     DoScriptText(SAY_HEAD_DEATH, pMimiron);
             }
 
@@ -682,7 +685,7 @@ struct MANGOS_DLL_DECL boss_aerial_command_unitAI : public ScriptedAI
 
     void KilledUnit(Unit* pVictim)
     {
-        if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MIMIRON))))
+        if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MIMIRON))))
         {
             if(!isPhase4)
             {
@@ -811,7 +814,6 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        //pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         SetCombatMovement(false);
         Reset();
     }
@@ -907,11 +909,8 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
 
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
-        if(GameObject* pButton = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_RED_BUTTON)))
-        {
-            pButton->SetGoState(GO_STATE_READY);
+        if(GameObject* pButton = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(G0_MIMIRON_BUTTON)))
             pButton->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
-        }
 
         if(Creature* Torso = GetClosestCreatureWithEntry(m_creature, NPC_VX001, 80.0f))
             m_creature->DealDamage(Torso, Torso->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
@@ -930,25 +929,17 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
         phase = 0;
     }
 
-    /*void MoveInLineOfSight(Unit* pWho)
-    {
-        if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsTaunted && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 30) && m_creature->IsWithinLOSInMap(pWho))
-        {
-            m_bIsTaunted = true;
-            phase = 0;
-            DoScriptText(SAY_AGGRO, m_creature);
-        }
-    }*/
-
     void DoOutro()
     {
         if(m_pInstance) 
         {
-            m_pInstance->SetData(TYPE_MIMIRON, DONE);
             if(isHardMode)
+            {
                 m_pInstance->SetData(TYPE_MIMIRON_HARD, DONE);
+                //m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_FIREFIGHTER : ACHIEV_FIREFIGHTER_H);
+            }
+            m_pInstance->SetData(TYPE_MIMIRON, DONE);
         }
-
         m_creature->ForcedDespawn();
     }
 
@@ -970,17 +961,6 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
 
         if(phase == 0)
         {
-            if (hardModeCheckTimer <= diff && !isHardMode)
-            {
-                if(m_pInstance && m_pInstance->GetData(TYPE_MIMIRON) == SPECIAL) 
-                {
-                    berserkTimer = 460000;  // 8 min
-                    isHardMode = true;
-                }
-                hardModeCheckTimer = 1000;
-            }
-            else hardModeCheckTimer -= diff;
-
             if(isIntro)
             {
                 //hard mode check
@@ -993,6 +973,12 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                 case 3:
                     if(isHardMode)
                     {
+                        if(GameObject* pButton = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(G0_MIMIRON_BUTTON)))
+                            pButton->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1); 
+
+                        berserkTimer = 460000;  // 8 min
+                        isHardMode = true;
+
                         DoScriptText(SAY_HARD_MODE, m_creature);
                         ++IntroStep;
                         IntroTimer = 15000;
@@ -1021,12 +1007,7 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                     else
                         return;
                     if (m_pInstance)
-                    {
-                        if(GameObject* pButton = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_RED_BUTTON)))
-                            pButton->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1); 
-
                         m_pInstance->SetData(TYPE_MIMIRON, IN_PROGRESS);
-                    }
                     ++IntroStep;
                     IntroTimer = 15000;
                     break;
@@ -1670,6 +1651,26 @@ struct MANGOS_DLL_DECL mob_frost_bombAI : public ScriptedAI
         else explosionTimer -= diff;
     }
 };
+
+bool GOHello_go_red_button(Player* pPlayer, GameObject* pGo)
+{
+    ScriptedInstance* m_pInstance = (ScriptedInstance*)pGo->GetInstanceData();
+
+    if (!m_pInstance)
+        return false;
+
+    if(pGo->GetEntry() == G0_MIMIRON_BUTTON)
+    {
+        if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*pGo), m_pInstance->GetData64(NPC_MIMIRON))))
+        {
+            if(pMimiron->isAlive())
+                ((boss_mimironAI*)pMimiron->AI())->isHardMode = true;
+        }
+    }
+
+    return false;
+}
+
 CreatureAI* GetAI_boss_mimiron(Creature* pCreature)
 {
     return new boss_mimironAI(pCreature);
@@ -1760,5 +1761,10 @@ void AddSC_boss_mimiron()
     newscript = new Script;
     newscript->Name = "mob_frost_bomb";
     newscript->GetAI = &GetAI_mob_bomb_bot;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "go_red_button";
+    newscript->pGOHello = &GOHello_go_red_button;
     newscript->RegisterSelf();
 }

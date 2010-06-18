@@ -47,6 +47,9 @@ enum
     SAY_OUTRO4                      = -1603149,
     SAY_OUTRO5                      = -1603279,
 
+    ITEM_PLANETARIUM_KEY            = 45796,
+    ITEM_PLANETARIUM_KEY_H          = 45798,
+
     //spells to be casted
     SPELL_QUANTUM_STRIKE            = 64395, //Normal Quantum Strike
     SPELL_QUANTUM_STRIKE_H          = 64592, //Heroic Quantum Strike
@@ -133,8 +136,6 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
     uint32 IntroTimer;
     uint32 IntroStep;
 
-    bool hasYoggChecked;
-
     uint8 phase;
     bool isPhase2;
 
@@ -143,13 +144,7 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
 
     void Reset()
     {
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_ALGALON, NOT_STARTED);
-
         BlackHoleGUID = 0;
-
-        m_lCollapsingStarGUIDList.clear();
-        m_lLivingConstelationGUIDList.clear();
 
         Ascend_Timer        = 480000; //8 minutes
         QuantumStrike_Timer = 4000 + rand()%10000;
@@ -173,7 +168,6 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
         isOutro             = false;  
 
         isDespawned         = false;
-        hasYoggChecked      = false;
         isFirstTime         = false;
 
         if(!isFirstTime)
@@ -191,24 +185,16 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
         }
     }
 
+    void JustReachedHome()
+    {
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_ALGALON, NOT_STARTED);
+    }
+
     void DoOutro()
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_ALGALON, DONE);
-
-        std::list<Creature*> lAddsList;
-        GetCreatureListWithEntryInGrid(lAddsList, m_creature, CREATURE_COLLAPSING_STAR, DEFAULT_VISIBILITY_INSTANCE);
-        GetCreatureListWithEntryInGrid(lAddsList, m_creature, CREATURE_BLACK_HOLE, DEFAULT_VISIBILITY_INSTANCE);
-        GetCreatureListWithEntryInGrid(lAddsList, m_creature, CREATURE_LIVING_CONSTELLATION, DEFAULT_VISIBILITY_INSTANCE);
-        GetCreatureListWithEntryInGrid(lAddsList, m_creature, CREATURE_DARK_MATTER, DEFAULT_VISIBILITY_INSTANCE);
-        if (!lAddsList.empty())
-        {
-            for(std::list<Creature*>::iterator iter = lAddsList.begin(); iter != lAddsList.end(); ++iter)
-            {
-                if ((*iter) && !(*iter)->isAlive())
-                    (*iter)->ForcedDespawn();
-            }
-        }
 
         m_creature->ForcedDespawn();
     }
@@ -224,6 +210,13 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
             SetCombatMovement(false);
             phase = 0;
         }
+    }
+
+    void StartEncounter()
+    {
+        m_creature->setFaction(14);
+        isFirstTime = true;
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
@@ -297,19 +290,6 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        // check for first time
-        if(m_pInstance && m_pInstance->GetData(TYPE_YOGGSARON) == DONE && !hasYoggChecked)
-        {
-            // update world state
-            m_creature->setFaction(14);
-            isFirstTime = true;
-            hasYoggChecked = true;
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-
-            if (m_pInstance)
-                m_pInstance->SetData(TYPE_YOGGSARON, SPECIAL);
-        }
-
         // despawn timer
         if(DespawnTimer < uiDiff && !isDespawned)
         {
@@ -727,6 +707,51 @@ struct MANGOS_DLL_DECL mob_black_holeAI : public ScriptedAI
     }	
 };
 
+bool GOHello_go_celestial_acces(Player* pPlayer, GameObject* pGo)
+{
+    ScriptedInstance* m_pInstance = (ScriptedInstance*)pGo->GetInstanceData();
+    bool m_bIsRegularMode = pGo->GetMap()->IsRegularDifficulty();
+    bool m_bHasItem = false;
+
+    if (m_bIsRegularMode)
+    {
+        if(pPlayer->HasItemCount(ITEM_PLANETARIUM_KEY, 1) || pPlayer->HasItemCount(ITEM_PLANETARIUM_KEY_H, 1)) 
+            m_bHasItem = true;
+    }
+    else
+    {
+        if(pPlayer->HasItemCount(ITEM_PLANETARIUM_KEY_H, 1))
+            m_bHasItem = true;        
+    }
+
+    if(!m_bHasItem)        
+        return false;
+
+    if (!m_pInstance)
+        return false;
+
+    if (m_pInstance->GetData(TYPE_ALGALON) == DONE)
+    {
+        pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+        return false;
+    }
+
+    if (Creature* pAlgalon = ((Creature*)Unit::GetUnit((*pGo), m_pInstance->GetData64(NPC_ALGALON))))
+    {
+        if(pAlgalon->isAlive())
+        {
+            ((boss_algalonAI*)pAlgalon->AI())->StartEncounter();
+            pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+
+            // open celestial door
+            if(GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_CELESTIAL_DOOR)))
+                m_pInstance->DoUseDoorOrButton(pDoor->GetGUID());
+        }
+    }
+
+    return false;
+}
+
 CreatureAI* GetAI_boss_algalon(Creature* pCreature)
 {
     return new boss_algalonAI(pCreature);
@@ -768,5 +793,10 @@ void AddSC_boss_algalon()
     newscript = new Script;
     newscript->Name = "mob_black_hole";
     newscript->GetAI = &GetAI_mob_black_hole;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "go_celestial_acces";
+    newscript->pGOHello = &GOHello_go_celestial_acces;
     newscript->RegisterSelf();
 }

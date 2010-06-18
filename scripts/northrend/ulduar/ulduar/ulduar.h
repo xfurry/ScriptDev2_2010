@@ -55,10 +55,7 @@ enum
     TYPE_VISION3                = 21, 
     TYPE_YOGG_BRAIN             = 22,
 
-    DATA_MIMIRON                = 23,
     DATA_YOGGSARON              = 28,
-    DATA_ALGALON                = 29,
-    DATA_RED_BUTTON             = 53,
     DATA_LEVIATHAN_MK           = 54,
     DATA_VX001                  = 55,
     DATA_AERIAL_UNIT            = 56,
@@ -164,6 +161,7 @@ enum
     GO_ARCHIVUM_CONSOLE         = 194555,
     // planetarium: algalon
     GO_CELESTIAL_ACCES          = 194628,
+    GO_CELESTIAL_ACCES_H        = 194752,
     GO_CELESTIAL_DOOR           = 194767,
     GO_UNIVERSE_FLOOR_ARCHIVUM  = 194715,
     GO_UNIVERSE_FLOOR_CELESTIAL = 194716,

@@ -195,8 +195,7 @@ UPDATE creature_template SET ScriptName = "boss_freya" WHERE entry = 32906;
 UPDATE creature_template SET ScriptName = "boss_elder_brightleaf" WHERE entry = 32915;
 UPDATE creature_template SET ScriptName = "boss_elder_ironbranch" WHERE entry = 32913;
 UPDATE creature_template SET ScriptName = "boss_elder_stonebark" WHERE entry = 32914;
-UPDATE creature_template SET ScriptName = "mob_iron_roots" WHERE entry in (33088);
-UPDATE creature_template SET ScriptName = "mob_str_iron_roots" WHERE entry in (33168);
+UPDATE creature_template SET ScriptName = "mob_iron_roots" WHERE entry in (33088, 33168);
 UPDATE creature_template SET ScriptName = "mob_freya_ground" WHERE entry in (33215, 33228, 33170, 33050, 34129);
 UPDATE creature_template SET ScriptName = "mob_freya_spawned" WHERE entry in (32916, 32919, 33202, 33203, 32918);
 
@@ -260,12 +259,77 @@ UPDATE creature_template SET `RegenHealth`= 0, ScriptName = "boss_vx001" WHERE e
 UPDATE creature_template SET `RegenHealth`= 0, ScriptName = "boss_aerial_command_unit" WHERE entry = 33670;
 update creature set position_x = 2784.35, position_y = 2578.03, orientation = 3.2 where id = 33350;
 update creature set position_x = 2794.86, position_y = 2597.83, orientation = 3.57, spawnMask = 3 where id = 33432;
-UPDATE gameobject_template SET  ScriptName="go_red_button" WHERE entry = 194739; -- also set data2 = 5000,
+UPDATE gameobject_template SET data2 = 10000, ScriptName="go_red_button" WHERE entry = 194739;
 UPDATE creature_template SET ScriptName = "mob_proximity_mine" WHERE entry = 34362;
 UPDATE creature_template SET ScriptName = "mob_bomb_bot" WHERE entry in (33836, 34192);
 UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, `minlevel` = 80, `maxlevel` = 80, ScriptName = "mob_emergency_bot" WHERE entry = 34147;
 UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, ScriptName = "mob_frost_bomb" WHERE entry = 34149;
 update `gameobject` set `position_x` = 2734.73 where `id` in (194789, 194956);
+-- mimiron loot fix:
+-- 10 man:
+DELETE FROM `gameobject_loot_template` WHERE (`entry`=194789);
+INSERT INTO `gameobject_loot_template` VALUES 
+(194789, 45089, 5, 0, -45089, 1, 0, 0, 0),
+(194789, 45095, 2.0408, 0, 1, 1, 0, 0, 0),
+(194789, 45649, 100, 0, -45649, 1, 0, 0, 0),
+(194789, 45663, 0.4028, 0, 1, 1, 0, 0, 0),
+(194789, 47241, 100, 0, 1, 1, 0, 0, 0),
+(194789, 45972, 0, 1, 1, 1, 0, 0, 0),
+(194789, 45973, 0, 1, 1, 1, 0, 0, 0),
+(194789, 45974, 0, 1, 1, 1, 0, 0, 0),
+(194789, 45975, 0, 1, 1, 1, 0, 0, 0),
+(194789, 45976, 0, 1, 1, 1, 0, 0, 0);
+-- 25 man:
+DELETE FROM `gameobject_loot_template` WHERE (`entry`=194956);
+INSERT INTO `gameobject_loot_template` VALUES 
+(194956, 45038, 10, 0, 1, 1, 0, 0, 0),
+(194956, 45087, 33, 0, 1, 1, 0, 0, 0),
+(194956, 45089, 5, 0, -45089, 1, 0, 0, 0),
+(194956, 45643, 100, 0, -45643, 1, 0, 0, 0),
+(194956, 47241, 100, 0, 1, 1, 0, 0, 0),
+(194956, 45489, 0, 1, 1, 1, 0, 0, 0),
+(194956, 45490, 0, 1, 1, 1, 0, 0, 0),
+(194956, 45491, 0, 1, 1, 1, 0, 0, 0),
+(194956, 45492, 0, 1, 1, 1, 0, 0, 0),
+(194956, 45493, 0, 1, 1, 1, 0, 0, 0);
+-- 10 man hard:
+DELETE FROM `gameobject_loot_template` WHERE (`entry`=194957);
+INSERT INTO `gameobject_loot_template` VALUES 
+(194957, 45089, 5, 0, -45089, 1, 0, 0, 0),
+(194957, 45095, 2.0408, 0, 1, 1, 0, 0, 0),
+(194957, 45649, 100, 0, -45649, 1, 0, 0, 0),
+(194957, 45663, 0.4028, 0, 1, 1, 0, 0, 0),
+(194957, 45787, -100, 0, 1, 1, 0, 0, 0),
+(194957, 47241, 100, 0, 1, 1, 0, 0, 0),
+(194957, 45972, 0, 1, 1, 1, 0, 0, 0),
+(194957, 45973, 0, 1, 1, 1, 0, 0, 0),
+(194957, 45974, 0, 1, 1, 1, 0, 0, 0),
+(194957, 45975, 0, 1, 1, 1, 0, 0, 0),
+(194957, 45976, 0, 1, 1, 1, 0, 0, 0),
+(194957, 45982, 0, 2, 1, 1, 0, 0, 0),
+(194957, 45988, 0, 2, 1, 1, 0, 0, 0),
+(194957, 45989, 0, 2, 1, 1, 0, 0, 0),
+(194957, 45990, 0, 2, 1, 1, 0, 0, 0),
+(194957, 45993, 0, 2, 1, 1, 0, 0, 0);
+-- 25 man hard:
+DELETE FROM `gameobject_loot_template` WHERE (`entry`=194958);
+INSERT INTO `gameobject_loot_template` VALUES 
+(194958, 45038, 10, 0, 1, 1, 0, 0, 0),
+(194958, 45087, 33, 0, 1, 1, 0, 0, 0),
+(194958, 45089, 5, 0, -45089, 1, 0, 0, 0),
+(194958, 45643, 100, 0, -45643, 1, 0, 0, 0),
+(194958, 45816, -100, 0, 1, 1, 0, 0, 0),
+(194958, 47241, 100, 0, 1, 1, 0, 0, 0),
+(194958, 45489, 0, 1, 1, 1, 0, 0, 0),
+(194958, 45490, 0, 1, 1, 1, 0, 0, 0),
+(194958, 45491, 0, 1, 1, 1, 0, 0, 0),
+(194958, 45492, 0, 1, 1, 1, 0, 0, 0),
+(194958, 45493, 0, 1, 1, 1, 0, 0, 0),
+(194958, 45494, 0, 2, 1, 1, 0, 0, 0),
+(194958, 45495, 0, 2, 1, 1, 0, 0, 0),
+(194958, 45496, 0, 2, 1, 1, 0, 0, 0),
+(194958, 45497, 0, 2, 1, 1, 0, 0, 0),
+(194958, 45663, 0, 2, 1, 1, 0, 0, 0);
 
 -- Thorim
 UPDATE creature_template SET `unit_flags` = 0, ScriptName = "boss_thorim" WHERE entry = 32865;
@@ -367,6 +431,7 @@ UPDATE creature_template SET ScriptName = "mob_collapsing_star" WHERE entry = 32
 UPDATE creature_template SET ScriptName = "mob_living_constellation" WHERE entry = 33052;
 UPDATE creature_template SET ScriptName = "mob_black_hole" WHERE entry = 32953;
 update creature_template set minhealth = 39099, maxhealth = 39099 where entry = 33089;
+UPDATE gameobject_template SET flags= 6553632, ScriptName="go_celestial_acces" WHERE entry in (194628, 194752);
 
 -- Teleporter
 UPDATE gameobject_template SET ScriptName="ulduar_teleporter" WHERE entry = 194569;

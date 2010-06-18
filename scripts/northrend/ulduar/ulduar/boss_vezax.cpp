@@ -93,6 +93,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
     bool m_bActiveHardMode;
     bool m_bHasMark;
     bool m_bHasSimphon;
+    bool m_bIsAnimusAlive;
 
     void Reset()
     {
@@ -103,6 +104,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         m_bActiveHardMode       = false;
         m_bHasMark              = false;
         m_bHasSimphon           = false;
+        m_bIsAnimusAlive        = false;
 
         m_uiSurgeTimer          = urand(60000, 70000);
         m_uiMarkTimer           = urand(10000, 35000);
@@ -175,10 +177,10 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
                 if ((*iter) && (*iter)->isAlive())
                 {
                     (*iter)->RemoveAllAuras();
-                    (*iter)->SetSpeedRate(MOVE_RUN, 2.0f);
-                    (*iter)->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                    (*iter)->GetMotionMaster()->MoveFollow(m_creature, 0, 0);
                     (*iter)->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    (*iter)->SetSpeedRate(MOVE_RUN, 3.0f);
+                    (*iter)->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                    (*iter)->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ());
                 }
             }
         }
@@ -208,16 +210,17 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         }
         
         m_bIsHardMode = true;
+        m_bIsAnimusAlive = true;
     }
 
-    void CheckForMark(uint64 m_uiMarkTargetGUID)
+    void CheckForMark(uint64 m_uiTargetGUID)
     {
-        if(m_uiMarkTargetGUID == 0)
+        if(m_uiTargetGUID == 0)
             return;
 
         m_bHasSimphon = false;
         Map *map = m_creature->GetMap();
-        Unit* pTarget = Unit::GetUnit(*m_creature, m_uiMarkTargetGUID);
+        Unit* pTarget = Unit::GetUnit(*m_creature, m_uiTargetGUID);
         if (map->IsDungeon())
         {
             Map::PlayerList const &PlayerList = map->GetPlayers();
@@ -227,7 +230,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
 
             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
             {
-                if(pTarget && pTarget->isAlive() && !m_bHasSimphon)
+                if(pTarget && pTarget->isAlive() && !m_bHasSimphon && m_uiTargetGUID != i->getSource()->GetGUID())
                 {
                     if (i->getSource()->isAlive() && pTarget->GetDistance2d(i->getSource()) < 10.0f)
                     {
@@ -265,7 +268,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         else m_uiSaroniteVaporTimer -= uiDiff;
 
         // searing flames
-        if(m_uiFlamesTimer < uiDiff && !m_creature->HasAura(SPELL_SARONITE_BARRIER, EFFECT_INDEX_0))
+        if(m_uiFlamesTimer < uiDiff && !m_bIsAnimusAlive)
         {
             DoCast(m_creature, SPELL_SEARING_FLAMES);
             m_uiFlamesTimer = urand(5000, 10000);
@@ -306,7 +309,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         // simphon life every sec
         if(m_uiMarkCheckTimer < uiDiff && m_bHasMark)
         {
-            //CheckForMark(m_uiMarkTargetGUID); // needs some fixing
+            CheckForMark(m_uiMarkTargetGUID);
             m_uiMarkCheckTimer = 1000;
         }
         else m_uiMarkCheckTimer -= uiDiff;
@@ -359,7 +362,10 @@ struct MANGOS_DLL_DECL mob_saronite_animusAI : public ScriptedAI
             if (Creature* pVezax = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VEZAX))))
             {
                 if (pVezax->isAlive())
+                {
                     pVezax->RemoveAurasDueToSpell(SPELL_SARONITE_BARRIER);
+                    ((boss_vezaxAI*)pVezax->AI())->m_bIsAnimusAlive = false;
+                }
             }
         }
         // used for hard mode loot
