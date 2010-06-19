@@ -87,7 +87,7 @@ enum
     NPC_MISTRESS_OF_PAIN        = 34826,
     SPELL_SHIVAN_SLASH_10       = 66378,
     SPELL_SHIVAN_SLASH_25       = 67097,
-    SPELL_MISTRESS_KISS         = 67077,
+    SPELL_MISTRESS_KISS         = 67078,    // 67077; 66425
     SPELL_SPINNING_PAIN_SPIKE   = 66283,
 
     SPELL_ERUPTION              = 66252,    // 3 infernals
@@ -211,7 +211,6 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        //SetEquipmentSlots(false, EQUIP_MAIN, EQUIP_OFFHAND, EQUIP_RANGED);
         Reset();
     }
 
@@ -249,7 +248,10 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         m_uiSummonTimer             = 30000;
         m_bVolcanoSummon            = true;
         m_uiNetherPowerTimer        = 40000;
-        m_uiMaxNetherPower          = m_bIsRegularMode ? 5 : 10;
+        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+            m_uiMaxNetherPower      = 10;
+        else if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+            m_uiMaxNetherPower      = 5;
 
         m_uiBerserkTimer    = 600000;  // 10 min
         m_uiWipeCheckTimer  = 30000;
@@ -721,10 +723,12 @@ struct MANGOS_DLL_DECL mob_mistress_of_painAI : public ScriptedAI
     uint32 Difficulty;
 
     uint32 spellTimer;
+    uint32 m_uiMistressKissTimer;
 
     void Reset()
     {
-        spellTimer = 10000;
+        spellTimer = urand(5000, 10000);
+        m_uiMistressKissTimer = urand(7000, 14000);
         m_creature->SetRespawnDelay(DAY);
     }
 
@@ -754,6 +758,17 @@ struct MANGOS_DLL_DECL mob_mistress_of_painAI : public ScriptedAI
             }
             spellTimer = urand(5000, 8000);
         }else spellTimer -= uiDiff;
+
+        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+        {
+            if(m_uiMistressKissTimer < uiDiff)
+            {
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                    DoCast(pTarget, SPELL_MISTRESS_KISS);
+                m_uiMistressKissTimer = urand(13000, 19000);
+            }
+            else m_uiMistressKissTimer -= uiDiff;
+        }
 
         DoMeleeAttackIfReady();
     }

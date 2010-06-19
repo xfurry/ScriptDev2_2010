@@ -566,7 +566,8 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         // starts submerged
         SetCombatMovement(false);
-        DoCast(pCreature, SPELL_SUBMERGE, false);
+        DoCast(pCreature, SPELL_SUBMERGE);
+        pCreature->SetVisibility(VISIBILITY_OFF);
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
         Reset();
     }
@@ -751,6 +752,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
             m_creature->GetMotionMaster()->MoveIdle();
             SetCombatMovement(false);
             m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+            m_creature->SetVisibility(VISIBILITY_ON);
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
             startPhase = true;
             phaseStartTimer = 30000;
@@ -764,7 +766,8 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
             if (phaseChangeTimer < uiDiff)
             {
                 m_creature->CastStop();
-                DoCast(m_creature, SPELL_SUBMERGE, false);
+                DoCast(m_creature, SPELL_SUBMERGE);
+                m_creature->SetVisibility(VISIBILITY_OFF);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 m_uiMoveTimer       = 2000;
                 m_uiSubmergeTimer   = 4000;
@@ -789,6 +792,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
             if (m_uiSubmergeTimer < uiDiff)
             {
                 m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->SetVisibility(VISIBILITY_ON);
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 m_creature->SetDisplayId(DISPLAY_ACID_MOBILE);
                 phase = 2;
@@ -861,7 +865,8 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
             if (phaseChangeTimer < uiDiff)
             {
                 m_creature->CastStop();
-                DoCast(m_creature, SPELL_SUBMERGE, false);
+                DoCast(m_creature, SPELL_SUBMERGE);
+                m_creature->SetVisibility(VISIBILITY_OFF);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 SetCombatMovement(false);
                 m_uiMoveTimer       = 2000;
@@ -887,6 +892,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
             if (m_uiSubmergeTimer < uiDiff)
             {
                 m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->SetVisibility(VISIBILITY_ON);
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 m_creature->SetDisplayId(DISPLAY_ACID_FIXED);
                 phase = 1;
@@ -1159,7 +1165,8 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
             if (phaseChangeTimer < uiDiff)
             {
                 m_creature->CastStop();
-                DoCast(m_creature, SPELL_SUBMERGE, false);
+                DoCast(m_creature, SPELL_SUBMERGE);
+                m_creature->SetVisibility(VISIBILITY_OFF);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 m_uiSubmergeTimer   = 4000;
                 m_uiMoveTimer       = 2000;
@@ -1184,6 +1191,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
             if (m_uiSubmergeTimer < uiDiff)
             {
                 m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->SetVisibility(VISIBILITY_ON);
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 m_creature->SetDisplayId(DISPLAY_DREAD_MOBILE);
                 phase = 2;
@@ -1256,7 +1264,8 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
             if (phaseChangeTimer < uiDiff)
             {
                 m_creature->CastStop();
-                DoCast(m_creature, SPELL_SUBMERGE, false);
+                DoCast(m_creature, SPELL_SUBMERGE);
+                m_creature->SetVisibility(VISIBILITY_OFF);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 SetCombatMovement(false);
                 m_uiSubmergeTimer   = 4000;
@@ -1282,6 +1291,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
             if (m_uiSubmergeTimer < uiDiff)
             {
                 m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                m_creature->SetVisibility(VISIBILITY_ON);
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 m_creature->SetDisplayId(DISPLAY_DREAD_FIXED);
                 phase = 1;
