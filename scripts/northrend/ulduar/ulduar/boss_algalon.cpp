@@ -76,6 +76,14 @@ enum
 
     CREATURE_DARK_MATTER            = 33089,    // populates the black holes = 7
     CREATURE_COSMIC_SMASH           = 33104,
+
+    ACHIEV_FEED_TEARS               = 3004,
+    ACHIEV_FEED_TEARS_H             = 3005,     // nobody dies in the raid lockout
+    ACHIEV_HERALD_OF_TITANS         = 3316,
+    ACHIEV_OBSERVED                 = 3036,
+    ACHIEV_OBSERVED_H               = 3037,
+    ACHIEV_SUPERMASSIVE             = 3003,
+    ACHIEV_SUPERMASSIVE_H           = 3002,
 };
 
 //Positional defines

@@ -84,6 +84,42 @@ enum
     MOB_DARK_RUNE_EVOKER            = 32878,
     MOB_DARK_RUNE_WARBRINGER        = 32877,
 
+    // mobs spells
+    // acolyte
+    SPELL_GREATER_HEAL              = 62334,
+    SPELL_GREATER_HEAL_H            = 62442,
+    SPELL_RENEW                     = 62333,
+    SPELL_RENEW_H                   = 62441,
+    SPELL_HOLY_SMITE                = 62335,
+    SPELL_HOLY_SMITE_H              = 62443,
+    // champion
+    SPELL_MORTAL_STRIKE             = 35054,
+    SPELL_CHARGE_CHAMPION           = 32323,
+    SPELL_WHIRLWIND                 = 15578,
+    // commoner         
+    SPELL_LOW_BLOW                  = 62326,
+    SPELL_PUMMEL                    = 38313,
+    // evoker
+    SPELL_RUNIC_LIGHTNING           = 62327,
+    SPELL_RUNIC_LIGHTNING_H         = 62445,
+    SPELL_RUNIC_MENDING             = 62328,
+    SPELL_RUNIC_MENDING_H           = 62446,
+    SPELL_RUNIC_SHIELD              = 62321,
+    SPELL_RUNIC_SHIELD_H            = 62529,
+    // warbringer
+    SPELL_RUNIC_STRIKE              = 62322,
+    SPELL_AURA_CELERITY             = 62320,
+
+    // ring guard
+    SPELL_WHIRLING_TRIP             = 64151,
+    SPELL_IMPALE                    = 62331,
+    SPELL_IMPALE_H                  = 62418,
+    // honor guard
+    SPELL_CLEAVE                    = 42724, 
+    SPELL_HAMSTRING                 = 48639,
+    SPELL_SHIELD_SMASH              = 62332,
+    SPELL_SHIELD_SMASH_H            = 62420,
+
     // hallway
     MOB_DARK_RUNE_ACOLYTE           = 33110,
     MOB_IRON_RING_GUARD             = 32874,
