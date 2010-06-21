@@ -419,7 +419,7 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
                             i->getSource()->DealDamage(i->getSource(), m_uiSwarmDmg, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                         }
                     }
-                    m_creature->DealHeal(m_creature, m_uiSwarmDmgTotal, NULL);
+                    m_creature->DealHeal(m_creature, m_uiSwarmDmgTotal/2, NULL);
                 }
                 SwarmTickTimer = 1000;
             }
