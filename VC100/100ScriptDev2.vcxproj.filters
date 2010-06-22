@@ -372,6 +372,9 @@
     <ClCompile Include="..\scripts\eastern_kingdoms\stranglethorn_vale.cpp">
       <Filter>scripts\eastern_kingdoms</Filter>
     </ClCompile>
+    <ClCompile Include="..\scripts\eastern_kingdoms\swamp_of_sorrows.cpp">
+      <Filter>scripts\eastern_kingdoms</Filter>
+    </ClCompile>
     <ClCompile Include="..\scripts\eastern_kingdoms\tirisfal_glades.cpp">
       <Filter>scripts\eastern_kingdoms</Filter>
     </ClCompile>
@@ -1006,9 +1009,6 @@
       <Filter>scripts\kalimdor\temple_of_ahnqiraj</Filter>
     </ClCompile>
     <ClCompile Include="..\scripts\kalimdor\wailing_caverns\instance_wailing_caverns.cpp">
-      <Filter>scripts\kalimdor\wailing_caverns</Filter>
-    </ClCompile>
-    <ClCompile Include="..\scripts\kalimdor\wailing_caverns\wailing_caverns.h">
       <Filter>scripts\kalimdor\wailing_caverns</Filter>
     </ClCompile>
     <ClCompile Include="..\scripts\kalimdor\zulfarrak\zulfarrak.cpp">
@@ -1679,6 +1679,9 @@
     </ClInclude>
     <ClInclude Include="..\scripts\kalimdor\temple_of_ahnqiraj\temple_of_ahnqiraj.h">
       <Filter>scripts\kalimdor\temple_of_ahnqiraj</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scripts\kalimdor\wailing_caverns\wailing_caverns.h">
+      <Filter>scripts\kalimdor\wailing_caverns</Filter>
     </ClInclude>
     <ClInclude Include="..\scripts\northrend\azjol-nerub\ahnkahet\ahnkahet.h">
       <Filter>scripts\northrend\azjol-nerub\ahnkahet</Filter>

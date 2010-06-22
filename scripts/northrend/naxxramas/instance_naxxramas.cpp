@@ -47,6 +47,8 @@ instance_naxxramas::instance_naxxramas(Map* pMap) : ScriptedInstance(pMap),
     m_uiStalaggGUID(0),
     m_uiFeugenGUID(0),
 
+    m_uiKelthuzadGUID(0),
+
     m_uiPathExitDoorGUID(0),
     m_uiGlutExitDoorGUID(0),
     m_uiThadDoorGUID(0),
@@ -72,6 +74,8 @@ instance_naxxramas::instance_naxxramas(Map* pMap) : ScriptedInstance(pMap),
     m_uiLoathebDoorGUID(0),
 
     m_uiKelthuzadDoorGUID(0),
+    m_uiKelthuzadExitDoorGUID(0),
+
     m_fChamberCenterX(0.0f),
     m_fChamberCenterY(0.0f),
     m_fChamberCenterZ(0.0f)
@@ -98,6 +102,7 @@ void instance_naxxramas::OnCreatureCreate(Creature* pCreature)
         case NPC_BLAUMEUX:          m_uiBlaumeuxGUID = pCreature->GetGUID();    break;
         case NPC_RIVENDARE:         m_uiRivendareGUID = pCreature->GetGUID();   break;
         case NPC_GOTHIK:            m_uiGothikGUID = pCreature->GetGUID();      break;
+        case NPC_KELTHUZAD:         m_uiKelthuzadGUID = pCreature->GetGUID();   break;
         case NPC_SUB_BOSS_TRIGGER:  m_lGothTriggerList.push_back(pCreature->GetGUID()); break;
     }
 }
@@ -197,6 +202,10 @@ void instance_naxxramas::OnObjectCreate(GameObject* pGo)
                 pGo->SetGoState(GO_STATE_ACTIVE);
             break;
 
+        case GO_KELTHUZAD_EXIT_DOOR:
+            m_uiKelthuzadExitDoorGUID = pGo->GetGUID();
+            break;
+
         case GO_ARAC_EYE_RAMP:
             m_uiAracEyeRampGUID = pGo->GetGUID();
             if (m_auiEncounter[2] == DONE)
@@ -268,6 +277,7 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
             {
                 DoUseDoorOrButton(m_uiAracEyeRampGUID);
                 DoRespawnGameObject(m_uiAracPortalGUID, 30*MINUTE);
+                DoTaunt();
             }
             break;
         case TYPE_NOTH:
@@ -292,6 +302,7 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
             {
                 DoUseDoorOrButton(m_uiPlagEyeRampGUID);
                 DoRespawnGameObject(m_uiPlagPortalGUID, 30*MINUTE);
+                DoTaunt();
             }
             break;
         case TYPE_RAZUVIOUS:
@@ -329,6 +340,7 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
                 DoUseDoorOrButton(m_uiMiliEyeRampGUID);
                 DoRespawnGameObject(m_uiMiliPortalGUID, 30*MINUTE);
                 DoRespawnGameObject(m_uiHorsemenChestGUID, 30*MINUTE);
+                DoTaunt();
             }
             break;
         case TYPE_PATCHWERK:
@@ -354,6 +366,7 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
             {
                 DoUseDoorOrButton(m_uiConsEyeRampGUID);
                 DoRespawnGameObject(m_uiConsPortalGUID, 30*MINUTE);
+                DoTaunt();
             }
             break;
         case TYPE_SAPPHIRON:
@@ -362,38 +375,8 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
                 DoUseDoorOrButton(m_uiKelthuzadDoorGUID);
             break;
         case TYPE_KELTHUZAD:
-            switch(uiData)
-            {
-                case SPECIAL:
-                {
-                    Map::PlayerList const& lPlayers = instance->GetPlayers();
-
-                    if (lPlayers.isEmpty())
-                        return;
-
-                    bool bCanBegin = true;
-
-                    for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
-                    {
-                        if (Player* pPlayer = itr->getSource())
-                        {
-                            if (!pPlayer->IsWithinDist2d(m_fChamberCenterX, m_fChamberCenterY, 15.0f))
-                                bCanBegin = false;
-                        }
-                    }
-
-                    if (bCanBegin)
-                        m_auiEncounter[14] = IN_PROGRESS;
-
-                    break;
-                }
-                case FAIL:
-                    m_auiEncounter[14] = NOT_STARTED;
-                    break;
-                default:
-                    m_auiEncounter[14] = uiData;
-                    break;
-            }
+            m_auiEncounter[14] = uiData;
+            DoUseDoorOrButton(m_uiKelthuzadExitDoorGUID);
             break;
     }
 
@@ -504,6 +487,8 @@ uint64 instance_naxxramas::GetData64(uint32 uiData)
             return m_uiFeugenGUID;
         case NPC_GOTHIK:
             return m_uiGothikGUID;
+        case NPC_KELTHUZAD:
+            return m_uiKelthuzadGUID;
     }
     return 0;
 }
@@ -584,6 +569,36 @@ void instance_naxxramas::SetChamberCenterCoords(float fX, float fY, float fZ)
     m_fChamberCenterZ = fZ;
 }
 
+void instance_naxxramas::DoTaunt()
+{
+    Creature* pKelThuzad = instance->GetCreature(m_uiKelthuzadGUID);
+
+    if (pKelThuzad && pKelThuzad->isAlive())
+    {
+        uint8 uiWingsCleared = 0;
+
+        if (m_auiEncounter[2] == DONE)
+            ++uiWingsCleared;
+
+        if (m_auiEncounter[5] == DONE)
+            ++uiWingsCleared;
+
+        if (m_auiEncounter[8] == DONE)
+            ++uiWingsCleared;
+
+        if (m_auiEncounter[12] == DONE)
+            ++uiWingsCleared;
+
+        switch(uiWingsCleared)
+        {
+            case 1: DoScriptText(SAY_KELTHUZAD_TAUNT1, pKelThuzad); break;
+            case 2: DoScriptText(SAY_KELTHUZAD_TAUNT2, pKelThuzad); break;
+            case 3: DoScriptText(SAY_KELTHUZAD_TAUNT3, pKelThuzad); break;
+            case 4: DoScriptText(SAY_KELTHUZAD_TAUNT4, pKelThuzad); break;
+        }
+    }
+}
+
 InstanceData* GetInstanceData_instance_naxxramas(Map* pMap)
 {
     return new instance_naxxramas(pMap);
@@ -593,15 +608,25 @@ bool AreaTrigger_at_naxxramas(Player* pPlayer, AreaTriggerEntry* pAt)
 {
     if (pAt->id == AREATRIGGER_KELTHUZAD)
     {
-        if (pPlayer->isDead())
+        if (pPlayer->isGameMaster() || pPlayer->isDead())
             return false;
 
-        if (instance_naxxramas* pInstance = (instance_naxxramas*)pPlayer->GetInstanceData())
+        instance_naxxramas* pInstance = (instance_naxxramas*)pPlayer->GetInstanceData();
+
+        if (!pInstance)
+            return false;
+
+        pInstance->SetChamberCenterCoords(pAt->x, pAt->y, pAt->z);
+
+        if (pInstance->GetData(TYPE_KELTHUZAD) == NOT_STARTED)
         {
-            if (pInstance->GetData(TYPE_KELTHUZAD) == NOT_STARTED)
+            if (Creature* pKelthuzad = pInstance->instance->GetCreature(pInstance->GetData64(NPC_KELTHUZAD)))
             {
-                pInstance->SetData(TYPE_KELTHUZAD, SPECIAL);
-                pInstance->SetChamberCenterCoords(pAt->x, pAt->y, pAt->z);
+                if (pKelthuzad->isAlive())
+                {
+                    pInstance->SetData(TYPE_KELTHUZAD, IN_PROGRESS);
+                    pKelthuzad->SetInCombatWithZone();
+                }
             }
         }
     }
