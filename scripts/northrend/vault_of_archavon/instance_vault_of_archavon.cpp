@@ -35,11 +35,6 @@ struct MANGOS_DLL_DECL instance_vault_of_archavon : public ScriptedInstance
     uint64 m_uiEmalonGUID;
     uint64 m_uiKoralonGUID;
     uint64 m_uiToravonGUID;
-    uint64 m_uiTempestMinion1GUID;
-    uint64 m_uiTempestMinion2GUID;
-    uint64 m_uiTempestMinion3GUID;
-    uint64 m_uiTempestMinion4GUID;
-    uint8 m_uiMinion;
 
     void Initialize()
     {
@@ -48,11 +43,6 @@ struct MANGOS_DLL_DECL instance_vault_of_archavon : public ScriptedInstance
         m_uiEmalonGUID = 0;
         m_uiKoralonGUID = 0;
         m_uiToravonGUID = 0;
-        m_uiTempestMinion1GUID = 0;
-        m_uiTempestMinion2GUID = 0;
-        m_uiTempestMinion3GUID = 0;
-        m_uiTempestMinion4GUID = 0;
-        m_uiMinion = 0;
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -70,27 +60,6 @@ struct MANGOS_DLL_DECL instance_vault_of_archavon : public ScriptedInstance
                 break;
             case NPC_TORAVON:
                 m_uiToravonGUID = pCreature->GetGUID();
-                break;
-            case NPC_TEMPEST_MINION:
-                ++m_uiMinion;
-                switch (m_uiMinion)
-                {
-                    case 1:
-                        m_uiTempestMinion1GUID = pCreature->GetGUID();
-                        break;
-                    case 2:
-                        m_uiTempestMinion2GUID = pCreature->GetGUID();
-                        break;
-                    case 3:
-                        m_uiTempestMinion3GUID = pCreature->GetGUID();
-                        break;
-                    case 4:
-                        m_uiTempestMinion4GUID = pCreature->GetGUID();
-                        break;
-                    case 5:
-                        m_uiMinion = 0;
-                        break;
-                }
                 break;
         }
     }
@@ -117,7 +86,7 @@ struct MANGOS_DLL_DECL instance_vault_of_archavon : public ScriptedInstance
             OUT_SAVE_INST_DATA;
 
             std::ostringstream saveStream;
-            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2];
+            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3];
 
             strInstData = saveStream.str();
 
@@ -146,22 +115,14 @@ struct MANGOS_DLL_DECL instance_vault_of_archavon : public ScriptedInstance
     {
         switch (uiData)
         {
-            case DATA_ARCHAVON:
+            case NPC_ARCHAVON:
                 return m_uiArchavonGUID;
-            case DATA_EMALON:
+            case NPC_EMALON:
                 return m_uiEmalonGUID;
-            case DATA_KORALON:
+            case NPC_KORALON:
                 return m_uiKoralonGUID;
-            case DATA_TORAVON:
+            case NPC_TORAVON:
                 return m_uiToravonGUID;
-            case DATA_TEMPEST_MINION_1:
-                return m_uiTempestMinion1GUID;
-            case DATA_TEMPEST_MINION_2:
-                return m_uiTempestMinion2GUID;
-            case DATA_TEMPEST_MINION_3:
-                return m_uiTempestMinion3GUID;
-            case DATA_TEMPEST_MINION_4:
-                return m_uiTempestMinion4GUID;
         }
         return 0;
     }
@@ -181,7 +142,7 @@ struct MANGOS_DLL_DECL instance_vault_of_archavon : public ScriptedInstance
         OUT_LOAD_INST_DATA(in);
 
         std::istringstream loadStream(in);
-        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1];
+        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3];
 
         for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
         {

@@ -27,180 +27,22 @@ EndScriptData */
 enum
 {
     // Emalon spells
-    SPELL_CHAIN_LIGHTNING_N                 = 64213,
+    SPELL_CHAIN_LIGHTNING                   = 64213,
     SPELL_CHAIN_LIGHTNING_H                 = 64215,
-    SPELL_LIGHTNING_NOVA_N                  = 64216,
+    SPELL_LIGHTNING_NOVA                    = 64216,
     SPELL_LIGHTNING_NOVA_H                  = 65279,
-    SPELL_OVERCHARGE                        = 64379,        //This spell is used by Time Warder, and temporary by Emalon, because 64218 is bugged
+    SPELL_OVERCHARGE                        = 64379, // current spell is bugged 64218,
     SPELL_BERSERK                           = 26662,
 
     // Tempest Minion spells
     SPELL_SHOCK                             = 64363,
+    SPELL_OVERCHARGED                       = 64217,
     SPELL_OVERCHARGED_BLAST                 = 64219,
-    SPELL_OVERCHARGED                       = 64217
 };
-
-/*######
-## npc_tempest_minion
-######*/
-
-struct MANGOS_DLL_DECL npc_tempest_minionAI : public ScriptedAI
-{
-    npc_tempest_minionAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        m_fDefaultX = m_creature->GetPositionX();
-        m_fDefaultY = m_creature->GetPositionY();
-        m_fDefaultZ = m_creature->GetPositionZ();
-        m_fDefaultO = m_creature->GetOrientation();
-        Reset();
-    }
-
-    ScriptedInstance* m_pInstance;
-    uint32 m_uiEvadeCheckCooldown;
-
-    uint32 m_uiShockTimer;
-    uint32 m_uiRespawnTimer;
-    uint32 m_uiOverchargedStacksCheckTimer;
-    bool m_bDead;
-    bool m_bTimeToDie;
-    float m_fDefaultX;
-    float m_fDefaultY;
-    float m_fDefaultZ;
-    float m_fDefaultO;
-
-    void Init()
-    {
-        m_uiEvadeCheckCooldown = 2000;
-        m_uiShockTimer = 8000+rand()%4000;
-        m_bDead = false;
-        m_bTimeToDie = false;
-        m_uiRespawnTimer = 4000;
-        m_uiOverchargedStacksCheckTimer = 2000;
-
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->SetStandState(UNIT_STAND_STATE_STAND);
-        m_creature->SetVisibility(VISIBILITY_ON);
-    }
-
-    void Reset()
-    {
-        Init();
-    }
-
-    void Aggro(Unit* pWho)
-    {
-        m_creature->CallForHelp(80.0f);
-    }
-
-    void FakeDeath()
-    {
-        m_bDead = true;
-        m_bTimeToDie = false;
-        m_uiRespawnTimer = 4000;
-        m_creature->InterruptNonMeleeSpells(false);
-        m_creature->SetHealth(0);
-        m_creature->StopMoving();
-        m_creature->ClearComboPointHolders();
-        m_creature->RemoveAllAurasOnDeath();
-        m_creature->ModifyAuraState(AURA_STATE_HEALTHLESS_20_PERCENT, false);
-        m_creature->ModifyAuraState(AURA_STATE_HEALTHLESS_35_PERCENT, false);
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->ClearAllReactives();
-        m_creature->SetUInt64Value(UNIT_FIELD_TARGET,0);
-        m_creature->GetMotionMaster()->Clear();
-        m_creature->GetMotionMaster()->MoveIdle();
-        m_creature->SetStandState(UNIT_STAND_STATE_DEAD);
-        m_creature->GetMap()->CreatureRelocation(m_creature, m_fDefaultX, m_fDefaultY, m_fDefaultZ, m_fDefaultO);
-    }
-
-    void DamageTaken(Unit* pDoneBy, uint32& uiDamage)
-    {
-        if (uiDamage < m_creature->GetHealth())
-            return;
-
-        if (m_pInstance && (m_pInstance->GetData(TYPE_EMALON) != DONE))
-        {
-            uiDamage = 0;
-            FakeDeath();
-        }
-    }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        if (m_uiEvadeCheckCooldown < uiDiff)
-        {
-            Creature* pEmalon = (Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_EMALON));
-            if ((pEmalon && pEmalon->IsInEvadeMode()) || (m_creature->GetDistance2d(-219.119f, -289.037f) > 80.0f))
-            {
-                EnterEvadeMode();
-                return;
-            }
-            m_uiEvadeCheckCooldown = 2000;
-        }
-        else
-            m_uiEvadeCheckCooldown -= uiDiff;
-
-        if (m_bTimeToDie)
-        {
-            FakeDeath();
-            return;
-        }
-
-        if (m_bDead)
-        {
-            if (m_uiRespawnTimer < uiDiff)
-            {
-                m_creature->SetHealth(m_creature->GetMaxHealth());
-                m_creature->SetVisibility(VISIBILITY_OFF);
-                Init();
-                m_creature->MonsterTextEmote("%s appears to defend Emalon!", 0, true);
-                m_creature->SetInCombatWithZone();
-                DoResetThreat();
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                    m_creature->GetMotionMaster()->MoveChase(pTarget);
-
-            }
-            else
-                m_uiRespawnTimer -= uiDiff;
-
-            return;
-        }
-
-        if (m_uiOverchargedStacksCheckTimer < uiDiff)
-        {
-            m_uiOverchargedStacksCheckTimer = 2000;
-            Aura* pAuraOvercharged = m_creature->GetAura(SPELL_OVERCHARGED, EFFECT_INDEX_0);
-            if(pAuraOvercharged && pAuraOvercharged->GetStackAmount() >= 10)
-            {
-                DoCast(m_creature, SPELL_OVERCHARGED_BLAST);
-                m_bTimeToDie = true;
-                return;
-            }
-        }
-        else
-            m_uiOverchargedStacksCheckTimer -= uiDiff;
-
-        if (m_uiShockTimer < uiDiff)
-        {
-            DoCast(m_creature->getVictim(), SPELL_SHOCK);
-            m_uiShockTimer = 8000+rand()%4000;
-        }
-        else
-            m_uiShockTimer -= uiDiff;
-
-        DoMeleeAttackIfReady();
-    }
-};
-
 
 /*######
 ## boss_emalon
 ######*/
-
 struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
 {
     boss_emalonAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -212,69 +54,123 @@ struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
 
     ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
-    uint32 m_uiEvadeCheckCooldown;
 
-    uint64 m_auiTempestMinionGUID[4];
     uint32 m_uiChainLightningTimer;
     uint32 m_uiChainLightningCount;
     uint32 m_uiLightningNovaTimer;
     uint32 m_uiOverchargeTimer;
+    uint32 m_uiRespawnTimer;
+    bool m_bMustRespawn;
+    uint32 m_uiCombatTimer;
+    bool m_bGetInCombat;
     uint32 m_uiEnrageTimer;
 
     void Reset()
     {
-        m_uiEvadeCheckCooldown = 2000;
-        memset(&m_auiTempestMinionGUID, 0, sizeof(m_auiTempestMinionGUID));
         m_uiChainLightningTimer = 15000;
         m_uiChainLightningCount = 0;
-        m_uiLightningNovaTimer = 20000;
-        m_uiOverchargeTimer = 45000;
-        m_uiEnrageTimer = 360000;
+        m_uiLightningNovaTimer  = 20000;
+        m_uiOverchargeTimer     = 45000;
+        m_uiRespawnTimer        = 0;
+        m_bMustRespawn          = false;
+        m_uiCombatTimer         = 0;
+        m_bGetInCombat          = false;
+        m_uiEnrageTimer         = 360000;   // 6 min       
+    }
 
-        if (m_pInstance)
-        {
-            m_auiTempestMinionGUID[0] = m_pInstance->GetData64(DATA_TEMPEST_MINION_1);
-            m_auiTempestMinionGUID[1] = m_pInstance->GetData64(DATA_TEMPEST_MINION_2);
-            m_auiTempestMinionGUID[2] = m_pInstance->GetData64(DATA_TEMPEST_MINION_3);
-            m_auiTempestMinionGUID[3] = m_pInstance->GetData64(DATA_TEMPEST_MINION_4);
-        }
-
-        for (uint8 i=0; i<4; ++i)
-        {
-            Creature* pMinion = (Creature*)Unit::GetUnit((*m_creature), m_auiTempestMinionGUID[i]);
-            if (pMinion && pMinion->isDead())
-                pMinion->Respawn();
-        }
-
+    void JustReachedHome()
+    {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_EMALON, NOT_STARTED);
+
+        std::list<Creature*> lMinions;
+        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 50.0f);
+        if (!lMinions.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lMinions.begin(); iter != lMinions.end(); ++iter)
+            {
+                if ((*iter))
+                {
+                    if((*iter)->isAlive())
+                        (*iter)->AI()->EnterEvadeMode();
+                    else
+                        (*iter)->Respawn();
+                }
+            }
+        }
+    }
+
+    void RespawnDeadMinions()
+    {
+        std::list<Creature*> lMinions;
+        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 50.0f);
+        if (!lMinions.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lMinions.begin(); iter != lMinions.end(); ++iter)
+            {
+                if ((*iter) && !(*iter)->isAlive())
+                {
+                    (*iter)->Respawn();
+                    (*iter)->AI()->AttackStart(m_creature->getVictim());
+                }
+            }
+        }
+    }
+
+    void StartRespawn()
+    {
+        m_uiRespawnTimer = 4000;
+        m_bMustRespawn = true;
     }
 
     void Aggro(Unit* pWho)
     {
         if (m_pInstance)
-        {
-            m_auiTempestMinionGUID[0] = m_pInstance->GetData64(DATA_TEMPEST_MINION_1);
-            m_auiTempestMinionGUID[1] = m_pInstance->GetData64(DATA_TEMPEST_MINION_2);
-            m_auiTempestMinionGUID[2] = m_pInstance->GetData64(DATA_TEMPEST_MINION_3);
-            m_auiTempestMinionGUID[3] = m_pInstance->GetData64(DATA_TEMPEST_MINION_4);
-        }
-
-        m_creature->CallForHelp(80.0f);
-
-        if (m_pInstance)
             m_pInstance->SetData(TYPE_EMALON, IN_PROGRESS);
+
+        GetMinionsInCombat(pWho);
+    }
+
+    void GetMinionsInCombat(Unit* pTarget)
+    {
+        std::list<Creature*> lMinions;
+        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 50.0f);
+        if (!lMinions.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lMinions.begin(); iter != lMinions.end(); ++iter)
+            {
+                if ((*iter) && (*iter)->isAlive())
+                    (*iter)->AI()->AttackStart(pTarget);
+            }
+        }
     }
 
     void JustDied(Unit* pKiller)
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_EMALON, DONE);
-        for (uint8 i=0; i<4; ++i)
+    }
+
+    Creature* SelectRandomMinion()
+    {
+        std::list<Creature*> lMinions;
+        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 100.0f);
+
+        //This should not appear!
+        if (lMinions.empty()){
+            m_uiOverchargeTimer = 5000;
+            return NULL;
+        }
+
+        std::list<Creature* >::iterator iter = lMinions.begin();
+        advance(iter, urand(0, lMinions.size()-1));
+
+        if((*iter)->isAlive() && (*iter)->GetHealthPercent() > 1.0f)
+            return *iter;
+        else
         {
-            Creature *pMinion = (Creature*)Unit::GetUnit((*m_creature), m_auiTempestMinionGUID[i]);
-            if (pMinion)
-                pMinion->DealDamage(pMinion, pMinion->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            m_uiOverchargeTimer = 500;
+            return NULL;
         }
     }
 
@@ -283,20 +179,12 @@ struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (m_uiEvadeCheckCooldown < uiDiff)
-        {
-            if (m_creature->GetDistance2d(-219.119f, -289.037f) > 80.0f)
-                EnterEvadeMode();
-            m_creature->CallForHelp(80.0f);
-            m_uiEvadeCheckCooldown = 2000;
-        }
-        else
-            m_uiEvadeCheckCooldown -= uiDiff;
+        if (m_creature->getVictim()->GetTypeId() != TYPEID_PLAYER)
+            EnterEvadeMode();
 
         if (m_uiOverchargeTimer < uiDiff)
         {
-            Creature* pMinion = (Creature*)Unit::GetUnit((*m_creature), m_auiTempestMinionGUID[rand()%4]);
-            if(pMinion && pMinion->isAlive())
+            if(Creature* pMinion = SelectRandomMinion())
             {
                 m_creature->MonsterTextEmote("%s overcharges Tempest Minion!", 0, true);
                 pMinion->SetHealth(pMinion->GetMaxHealth());
@@ -307,10 +195,28 @@ struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
         else
             m_uiOverchargeTimer -= uiDiff;
 
+        if (m_uiRespawnTimer < uiDiff && m_bMustRespawn)
+        {
+            RespawnDeadMinions();
+            m_uiCombatTimer = 500;
+            m_bGetInCombat = true;
+            m_bMustRespawn = false;
+        }
+        else 
+            m_uiRespawnTimer -= uiDiff;
+
+        if (m_uiCombatTimer < uiDiff && m_bGetInCombat)
+        {
+            GetMinionsInCombat(m_creature->getVictim());
+            m_bGetInCombat = false;
+        }
+        else
+            m_uiCombatTimer -= uiDiff;
+
         if (m_uiChainLightningTimer < uiDiff)
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                DoCast(pTarget, m_bIsRegularMode ? SPELL_CHAIN_LIGHTNING_N : SPELL_CHAIN_LIGHTNING_H);
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_CHAIN_LIGHTNING : SPELL_CHAIN_LIGHTNING_H);
             m_uiChainLightningTimer = 10000 + rand()%15000;
         }
         else
@@ -318,7 +224,7 @@ struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
 
         if (m_uiLightningNovaTimer < uiDiff)
         {
-            DoCast(m_creature, m_bIsRegularMode ? SPELL_LIGHTNING_NOVA_N : SPELL_LIGHTNING_NOVA_H);
+            DoCast(m_creature, m_bIsRegularMode ? SPELL_LIGHTNING_NOVA : SPELL_LIGHTNING_NOVA_H);
             m_uiLightningNovaTimer = 45000;
         }
         else
@@ -332,6 +238,103 @@ struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
         else
             m_uiEnrageTimer -= uiDiff;
 
+        if (m_creature->GetDistance2d(-219.119f, -289.037f) > 80.0f)
+            EnterEvadeMode();
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+/*######
+## npc_tempest_minion
+######*/
+struct MANGOS_DLL_DECL npc_tempest_minionAI : public ScriptedAI
+{
+    npc_tempest_minionAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+
+    uint32 m_uiShockTimer;
+    uint32 m_uiRespawnTimer;
+    uint32 m_uiOverchargedStacksCheckTimer;
+    uint32 m_uiDieTimer;
+    bool m_bMustDie;
+
+    void Reset()
+    {
+        m_uiShockTimer  = 8000+rand()%4000;
+        m_uiDieTimer    = 0;
+        m_bMustDie      = false;
+        m_uiOverchargedStacksCheckTimer = 2000;
+    }
+
+    void Aggro(Unit* pWho)
+    {
+        if(Creature* pEmalon = GetClosestCreatureWithEntry(m_creature, NPC_EMALON, 100.0f))
+            pEmalon->AI()->AttackStart(pWho);
+
+        std::list<Creature*> lMinions;
+        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 50.0f);
+        if (!lMinions.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lMinions.begin(); iter != lMinions.end(); ++iter)
+            {
+                if ((*iter) && (*iter)->isAlive())
+                    (*iter)->AI()->AttackStart(pWho);
+            }
+        }
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        if(Creature* pEmalon = GetClosestCreatureWithEntry(m_creature, NPC_EMALON, 100.0f))
+            ((boss_emalonAI*)pEmalon->AI())->StartRespawn();
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if(m_pInstance && m_pInstance->GetData(TYPE_EMALON) == DONE)
+        {
+            m_creature->ForcedDespawn();
+            return;
+        }
+
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if(m_uiDieTimer < uiDiff && m_bMustDie)
+            m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        else
+            m_uiDieTimer -= uiDiff;
+
+        if (m_uiOverchargedStacksCheckTimer < uiDiff)
+        {
+            m_uiOverchargedStacksCheckTimer = 1000;
+            Aura* pAuraOvercharged = m_creature->GetAura(SPELL_OVERCHARGED, EFFECT_INDEX_0);
+            if(pAuraOvercharged && pAuraOvercharged->GetStackAmount() >= 10)
+            {
+                DoCast(m_creature, SPELL_OVERCHARGED_BLAST);
+                m_bMustDie = true;
+                m_uiDieTimer = 500;
+                return;
+            }
+        }
+        else
+            m_uiOverchargedStacksCheckTimer -= uiDiff;
+
+        if (m_uiShockTimer < uiDiff)
+        {
+            if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_SHOCK);
+            m_uiShockTimer = urand(3000, 6000);
+        }
+        else
+            m_uiShockTimer -= uiDiff;
+
         DoMeleeAttackIfReady();
     }
 };
@@ -339,7 +342,6 @@ struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
 /*######
 ## npc_tempest_warder
 ######*/
-
 struct MANGOS_DLL_DECL npc_tempest_warderAI : public ScriptedAI
 {
     npc_tempest_warderAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -351,58 +353,22 @@ struct MANGOS_DLL_DECL npc_tempest_warderAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
 
     uint32 m_uiShockTimer;
-    bool m_bOvercharged;
-    uint32 m_uiOverchargedStacksCheckTimer;
-    bool m_bTimeToDie;
 
     void Reset()
     {
-        m_uiShockTimer = 8000+rand()%4000;
-        m_bOvercharged = false;
-        uint32 m_uiOverchargedStacksCheckTimer = 2000;
-        m_bTimeToDie = false;
+        m_uiShockTimer = urand(4000, 8000);
     }
-
-    void Aggro(Unit* pWho) {}
 
     void UpdateAI(const uint32 uiDiff)
     {  
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (m_bTimeToDie)
-        {
-            m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-            return;
-        }
-
-        if (!m_bOvercharged && ((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 37))
-        {
-            DoCast(m_creature, SPELL_OVERCHARGE);
-            m_bOvercharged = true;
-        }
-
-        if (m_bOvercharged)
-        {
-            if (m_uiOverchargedStacksCheckTimer < uiDiff)
-            {
-                m_uiOverchargedStacksCheckTimer = 2000;
-                Aura* pAuraOvercharged = m_creature->GetAura(SPELL_OVERCHARGED, EFFECT_INDEX_0);
-                if(pAuraOvercharged && pAuraOvercharged->GetStackAmount() >= 10)
-                {
-                    DoCast(m_creature, SPELL_OVERCHARGED_BLAST);
-                    m_bTimeToDie = true;
-                    return;
-                }
-            }
-            else
-                m_uiOverchargedStacksCheckTimer -= uiDiff;
-        }
-
         if (m_uiShockTimer < uiDiff)
         {
-            DoCast(m_creature->getVictim(), SPELL_SHOCK);
-            m_uiShockTimer = 8000+rand()%4000;
+            if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                DoCast(pTarget, SPELL_SHOCK);
+            m_uiShockTimer = urand(3000, 6000);
         }
         else
             m_uiShockTimer -= uiDiff;

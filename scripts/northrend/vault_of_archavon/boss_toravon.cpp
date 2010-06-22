@@ -138,12 +138,12 @@ struct MANGOS_DLL_DECL mob_frost_warderAI : public ScriptedAI
     mob_frost_warderAI(Creature *pCreature) : ScriptedAI(pCreature) 
     {
         pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Regular = pCreature->GetMap()->IsRegularDifficulty();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
 
     ScriptedInstance* pInstance;
-    bool Regular;
+    bool m_bIsRegularMode;
 
     uint32 m_uiFrostBlastTimer;
 
@@ -157,17 +157,18 @@ struct MANGOS_DLL_DECL mob_frost_warderAI : public ScriptedAI
         DoCast(m_creature, SPELL_FROZEN_MALLET_FW);
     }
 
-    void UpdateAI(const uint32 diff)
+    void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if(m_uiFrostBlastTimer < diff)
+        if(m_uiFrostBlastTimer < uiDiff)
         {
-            DoCast(m_creature->getVictim(), SPELL_FROST_BLAST);
-            m_uiFrostBlastTimer = 2000;
+            if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_FROST_BLAST : SPELL_FROST_BLAST_H);
+            m_uiFrostBlastTimer = urand(3000, 6000);
         }
-        else m_uiFrostBlastTimer -= diff;
+        else m_uiFrostBlastTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
@@ -235,7 +236,7 @@ struct MANGOS_DLL_DECL mob_frozen_orb_stalkerAI : public ScriptedAI
         if (!spawned)
         {
             Creature* pToravon;
-            if (pInstance && (pToravon = (Creature*)Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_TORAVON))))
+            if (pInstance && (pToravon = (Creature*)Unit::GetUnit((*m_creature), pInstance->GetData64(NPC_TORAVON))))
             {
                 uint8 num_orbs = Regular ? 1 : 3;
                 for (uint8 i=0; i<num_orbs; ++i)

@@ -67,6 +67,7 @@ struct MANGOS_DLL_DECL boss_koralonAI : public ScriptedAI
     uint32 m_uiMeteorFistsATimer;
     uint32 m_uiMeteorFistsBTimer;
     uint32 FlamesTimer;
+    uint32 m_uiBurningFuryTimer;
 
     uint32 BBTickTimer;
     uint32 BBTicks;
@@ -78,17 +79,19 @@ struct MANGOS_DLL_DECL boss_koralonAI : public ScriptedAI
         m_uiMeteorFistsATimer   = 75000;
         m_uiMeteorFistsBTimer   = 80000;
         FlamesTimer = 30000;
+        m_uiBurningFuryTimer    = 20000;
 
         BB = false;
+    }
 
+    void JustReachedHome()
+    {
         if(pInstance) 
             pInstance->SetData(TYPE_KORALON, NOT_STARTED);
     }
 
     void Aggro(Unit *who)
     {
-        DoCast(m_creature, SPELL_BURNING_FURY);
-
         if(pInstance) 
             pInstance->SetData(TYPE_KORALON, IN_PROGRESS);
     }
@@ -103,6 +106,14 @@ struct MANGOS_DLL_DECL boss_koralonAI : public ScriptedAI
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+        if(m_uiBurningFuryTimer < diff)
+        {
+            DoCast(m_creature, SPELL_BURNING_FURY);
+            m_uiBurningFuryTimer = 20000;
+        }
+        else 
+            m_uiBurningFuryTimer -= diff;
 
         if(BurningBreathTimer < diff)
         {

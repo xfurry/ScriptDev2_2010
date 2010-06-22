@@ -9,15 +9,6 @@ enum
 {
     MAX_ENCOUNTER               = 4,
 
-    DATA_ARCHAVON               = 1,
-    DATA_EMALON                 = 2,
-    DATA_KORALON                = 3,
-    DATA_TORAVON                = 12,
-    DATA_TEMPEST_MINION_1       = 4,
-    DATA_TEMPEST_MINION_2       = 5,
-    DATA_TEMPEST_MINION_3       = 6,
-    DATA_TEMPEST_MINION_4       = 7,
-
     TYPE_ARCHAVON               = 8,
     TYPE_EMALON                 = 9,
     TYPE_KORALON                = 10,
