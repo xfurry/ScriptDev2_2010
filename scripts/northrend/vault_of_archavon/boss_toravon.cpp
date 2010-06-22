@@ -33,98 +33,144 @@ UPDATE `creature_template` SET `ScriptName`='mob_frozen_orb' WHERE `entry`='3845
 enum Spells
 {
     // Spells Toravon
-    SPELL_FREEZING_GROUND       = 72090,  // don't know cd... using 20 secs.
+    SPELL_FREEZING_GROUND       = 72090,  
     SPELL_FREEZING_GROUND_H     = 72104,
     SPELL_FROZEN_ORB            = 72091,
     SPELL_FROZEN_ORB_H          = 72095,
     SPELL_WHITEOUT              = 72034,  // Every 38 sec. cast. (after SPELL_FROZEN_ORB)
-    SPELL_WHITE0UT_H            = 72096,
+    SPELL_WHITEOUT_H            = 72096,
+    SPELL_WHITEOUT_VISUAL       = 72036,
     SPELL_FROZEN_MALLET         = 71993,
 
     // Spells Frost Warder
-    SPELL_FROST_BLAST           = 72123,      // don't know cd... using 20 secs.
+    SPELL_FROST_BLAST           = 72123,
     SPELL_FROST_BLAST_H         = 72124,
     SPELL_FROZEN_MALLET_FW      = 72122,
 
     // Spell Frozen Orb
     SPELL_FROZEN_ORB_DMG        = 72081,   // priodic dmg aura
-    SPELL_FROZEN_ORB_AURA       = 72067,   // make visible
+    SPELL_FROZEN_ORB_VISUAL     = 72067,   // make visible
 
     // Spell Frozen Orb Stalker
-    SPELL_FROZEN_ORB_SUMMON     = 72093,   // summon orb
+    SPELL_ORB_SUMMON_TRIG       = 72094,
+    SPELL_ORB_SUMMON            = 72093,   // summon orb
 
     // Mob Frozen Orb
-    MOB_FROZEN_ORB              = 38456,    // 1 in 10 mode and 3 in 25 mode
+    MOB_FROZEN_ORB_STALKER      = 38461,    // 1 in 10 mode and 3 in 25 mode
+};
+
+class MANGOS_DLL_DECL WhiteoutAura : public Aura
+{
+public:
+    WhiteoutAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
+    {}
 };
 
 struct MANGOS_DLL_DECL boss_toravonAI : public ScriptedAI
 {
     boss_toravonAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
-        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Regular = pCreature->GetMap()->IsRegularDifficulty();
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
 
-    ScriptedInstance *pInstance;
-    bool Regular;
+    ScriptedInstance* m_pInstance;
+    bool m_bIsRegularMode;
     
     uint32 m_uiFrozenOrbTimer;
     uint32 m_uiWhiteOutTimer;
+    uint8 m_uiWhiteoutStacks;
+    uint8 m_uiMaxOrbs;
     uint32 m_uiFreezingGroundTimer;
 
     void Reset()
     {
         m_uiFrozenOrbTimer      = 11000;
         m_uiWhiteOutTimer       = 13000;
-        m_uiFreezingGroundTimer = 15000;
-
-        if (pInstance)
-            pInstance->SetData(TYPE_TORAVON, NOT_STARTED);
+        m_uiFreezingGroundTimer = 15000; 
+        m_uiWhiteoutStacks      = 1;
+        m_uiMaxOrbs             = m_bIsRegularMode ? 1 : 3;
     }
 
-    void KilledUnit(Unit* Victim) {}
+    void JustReachedHome()
+    {
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_TORAVON, NOT_STARTED);
+    }
 
     void JustDied(Unit* Killer)
     {
-        if (pInstance)
-            pInstance->SetData(TYPE_TORAVON, DONE);
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_TORAVON, DONE);
     }
 
     void Aggro(Unit *who)
     {
         DoCast(m_creature, SPELL_FROZEN_MALLET);
 
-        if(pInstance) 
-            pInstance->SetData(TYPE_TORAVON, IN_PROGRESS);
+        if (m_pInstance) 
+            m_pInstance->SetData(TYPE_TORAVON, IN_PROGRESS);
     }
 
-    void UpdateAI(const uint32 diff)
+    void DoWhiteout(uint8 m_uiStacks)
+    {
+        Map *map = m_creature->GetMap();
+        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(m_bIsRegularMode ? SPELL_WHITEOUT : SPELL_WHITEOUT_H);
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (PlayerList.isEmpty())
+                return;
+
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()) < 80.0f)
+                {
+                    if(i->getSource()->AddAura(new WhiteoutAura(spell, EFFECT_INDEX_0, NULL, i->getSource(), i->getSource())))
+                        i->getSource()->GetAura(m_bIsRegularMode ? SPELL_WHITEOUT : SPELL_WHITEOUT_H, EFFECT_INDEX_0)->SetStackAmount(m_uiStacks);
+                }
+            }
+        } 
+    }
+
+    void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if(m_uiFrozenOrbTimer < diff)
+        if(m_uiFrozenOrbTimer < uiDiff)
         {
-            DoCast(m_creature, Regular ? SPELL_FROZEN_ORB : SPELL_FROZEN_ORB_H);
+            for(int i = 0; i < m_uiMaxOrbs; i++)
+            {
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                    m_creature->SummonCreature(MOB_FROZEN_ORB_STALKER, pTarget->GetPositionX(), pTarget->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
+            }
+            //DoCast(m_creature, m_bIsRegularMode ? SPELL_FROZEN_ORB : SPELL_FROZEN_ORB_H); // spell broken
             m_uiFrozenOrbTimer = 38000;
         }
-        else m_uiFrozenOrbTimer -= diff;
+        else m_uiFrozenOrbTimer -= uiDiff;
 
-        if(m_uiWhiteOutTimer < diff)
+        if(m_uiWhiteOutTimer < uiDiff)
         {
-            DoCast(m_creature, Regular ? SPELL_WHITEOUT : SPELL_WHITE0UT_H);
+            DoWhiteout(m_uiWhiteoutStacks);
+            m_uiWhiteoutStacks += 1;
+            DoCast(m_creature, SPELL_WHITEOUT_VISUAL);
             m_uiWhiteOutTimer = 38000;
         }
-        else m_uiWhiteOutTimer -= diff;
+        else m_uiWhiteOutTimer -= uiDiff;
 
-        if(m_uiFreezingGroundTimer < diff)
+        if(m_uiFreezingGroundTimer < uiDiff)
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                DoCast(pTarget, Regular ? SPELL_FREEZING_GROUND : SPELL_FREEZING_GROUND_H);
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_FREEZING_GROUND : SPELL_FREEZING_GROUND_H);
             m_uiFreezingGroundTimer = 20000;
         }
-        else m_uiFreezingGroundTimer -= diff;
+        else m_uiFreezingGroundTimer -= uiDiff;
+
+        if (m_creature->GetDistance2d(-43.12f, -290.56f) > 80.0f)
+            EnterEvadeMode();
 
         DoMeleeAttackIfReady();
     }
@@ -137,12 +183,9 @@ struct MANGOS_DLL_DECL mob_frost_warderAI : public ScriptedAI
 {
     mob_frost_warderAI(Creature *pCreature) : ScriptedAI(pCreature) 
     {
-        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
-
-    ScriptedInstance* pInstance;
     bool m_bIsRegularMode;
 
     uint32 m_uiFrostBlastTimer;
@@ -180,34 +223,52 @@ struct MANGOS_DLL_DECL mob_frost_warderAI : public ScriptedAI
 ######*/
 struct MANGOS_DLL_DECL mob_frozen_orbAI : public ScriptedAI
 {
-    mob_frozen_orbAI(Creature *pCreature) : ScriptedAI(pCreature) {}
+    mob_frozen_orbAI(Creature *pCreature) : ScriptedAI(pCreature) 
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        pCreature->SetDisplayId(11686);     // make invisible
+        pCreature->setFaction(14);
+        Reset();
+    }
 
-    bool done;
-    uint32 killtimer;
+    ScriptedInstance* m_pInstance;
+
+    uint32 m_uiSpellTimer;
+    bool m_bHasSpell;
+    uint32 m_uiChangeTargetTimer;
 
     void Reset()
     {
-        done = false;
-        killtimer = 60000; // if after this time there is no victim -> destroy!
+        DoCast(m_creature, SPELL_FROZEN_ORB_VISUAL);
+        m_creature->SetSplineFlags(SPLINEFLAG_WALKMODE);
+        m_creature->SetRespawnDelay(DAY);
+        m_uiSpellTimer = 500;
+        m_bHasSpell = false;
+        m_uiChangeTargetTimer = 3000;
     }
 
-    void UpdateAI(const uint32 diff)
+    void UpdateAI(const uint32 uiDiff)
     {
-        if (!done)
-        {
-            DoCast(m_creature, SPELL_FROZEN_ORB_AURA, true);
-            DoCast(m_creature, SPELL_FROZEN_ORB_DMG, true);
-            done = true;
-        }
+        if (m_pInstance && m_pInstance->GetData(TYPE_TORAVON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
 
-        if (killtimer <= diff)
+        if(m_uiSpellTimer < uiDiff && !m_bHasSpell)
         {
-            if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-                m_creature->ForcedDespawn();
-            killtimer = 10000;
+            DoCast(m_creature, SPELL_FROZEN_ORB_DMG);
+            m_bHasSpell = true;
         }
-        else
-            killtimer -= diff;
+        else m_uiSpellTimer -= uiDiff;
+
+        if(m_uiChangeTargetTimer < uiDiff)
+        {
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            {
+                m_creature->AddThreat(pTarget, 100.0f);
+                m_creature->GetMotionMaster()->MoveChase(pTarget);
+            }
+            m_uiChangeTargetTimer = 3000;
+        }
+        else m_uiChangeTargetTimer -= uiDiff;
     }
 };
 
@@ -218,36 +279,23 @@ struct MANGOS_DLL_DECL mob_frozen_orb_stalkerAI : public ScriptedAI
 {
     mob_frozen_orb_stalkerAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        pCreature->SetVisibility(VISIBILITY_OFF);
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-
-        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Regular = pCreature->GetMap()->IsRegularDifficulty();
-        spawned = false;
+        pCreature->SetDisplayId(11686);     // make invisible    
+        Reset();
     }
 
-    ScriptedInstance *pInstance;
-    bool spawned;
-    bool Regular;
+    void Reset()
+    {
+        DoCast(m_creature, SPELL_ORB_SUMMON_TRIG);
+    }
+
+    void JustSummoned(Creature* pSummoned)
+    {
+        pSummoned->SetInCombatWithZone();
+    }
 
     void UpdateAI(const uint32 diff)
-    {
-        if (!spawned)
-        {
-            Creature* pToravon;
-            if (pInstance && (pToravon = (Creature*)Unit::GetUnit((*m_creature), pInstance->GetData64(NPC_TORAVON))))
-            {
-                uint8 num_orbs = Regular ? 1 : 3;
-                for (uint8 i=0; i<num_orbs; ++i)
-                {
-                    m_creature->GetMotionMaster()->MovePoint(0, pToravon->GetPositionX(), pToravon->GetPositionY() + 10, pToravon->GetPositionZ());
-                    DoCast(m_creature, SPELL_FROZEN_ORB_SUMMON);
-                }
-            }
-            spawned = true;
-        }
-    }
+    { }
 };
 
 CreatureAI* GetAI_boss_toravon(Creature* pCreature)
@@ -265,10 +313,10 @@ CreatureAI* GetAI_mob_frozen_orb(Creature* pCreature)
     return new mob_frozen_orbAI (pCreature);
 }
 
-/*CreatureAI* GetAI_mob_frozen_orb_stalker(Creature* pCreature)
+CreatureAI* GetAI_mob_frozen_orb_stalker(Creature* pCreature)
 {
     return new mob_frozen_orb_stalkerAI (pCreature);
-}*/
+}
 
 void AddSC_boss_toravon()
 {
@@ -289,8 +337,8 @@ void AddSC_boss_toravon()
     newscript->GetAI = &GetAI_mob_frozen_orb;
     newscript->RegisterSelf();
 
-    /*newscript = new Script;
+    newscript = new Script;
     newscript->Name = "mob_frozen_orb_stalker";
     newscript->GetAI = &GetAI_mob_frozen_orb_stalker;
-    newscript->RegisterSelf();*/
+    newscript->RegisterSelf();
 }

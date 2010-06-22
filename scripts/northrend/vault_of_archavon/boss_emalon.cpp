@@ -84,7 +84,7 @@ struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
             m_pInstance->SetData(TYPE_EMALON, NOT_STARTED);
 
         std::list<Creature*> lMinions;
-        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 50.0f);
+        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 100.0f);
         if (!lMinions.empty())
         {
             for(std::list<Creature*>::iterator iter = lMinions.begin(); iter != lMinions.end(); ++iter)
@@ -103,7 +103,7 @@ struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
     void RespawnDeadMinions()
     {
         std::list<Creature*> lMinions;
-        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 50.0f);
+        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 100.0f);
         if (!lMinions.empty())
         {
             for(std::list<Creature*>::iterator iter = lMinions.begin(); iter != lMinions.end(); ++iter)
@@ -134,7 +134,7 @@ struct MANGOS_DLL_DECL boss_emalonAI : public ScriptedAI
     void GetMinionsInCombat(Unit* pTarget)
     {
         std::list<Creature*> lMinions;
-        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 50.0f);
+        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 100.0f);
         if (!lMinions.empty())
         {
             for(std::list<Creature*>::iterator iter = lMinions.begin(); iter != lMinions.end(); ++iter)
@@ -278,7 +278,7 @@ struct MANGOS_DLL_DECL npc_tempest_minionAI : public ScriptedAI
             pEmalon->AI()->AttackStart(pWho);
 
         std::list<Creature*> lMinions;
-        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 50.0f);
+        GetCreatureListWithEntryInGrid(lMinions, m_creature, NPC_TEMPEST_MINION, 100.0f);
         if (!lMinions.empty())
         {
             for(std::list<Creature*>::iterator iter = lMinions.begin(); iter != lMinions.end(); ++iter)
@@ -334,6 +334,9 @@ struct MANGOS_DLL_DECL npc_tempest_minionAI : public ScriptedAI
         }
         else
             m_uiShockTimer -= uiDiff;
+
+        if (m_creature->GetDistance2d(-219.119f, -289.037f) > 80.0f)
+            EnterEvadeMode();
 
         DoMeleeAttackIfReady();
     }
