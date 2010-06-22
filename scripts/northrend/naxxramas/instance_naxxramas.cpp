@@ -24,11 +24,62 @@ EndScriptData */
 #include "precompiled.h"
 #include "naxxramas.h"
 
+const float PosAracTele[4] = {3020.08f, -3448.65f, 300.97f, 3.14f};
+const float PosConsTele[4] = {3019.93f, -3420.31f, 300.97f, 3.14f};
+const float PosPlagTele[4] = {2991.58f, -3448.51f, 300.97f, 3.14f};
+const float PosMiliTele[4] = {2991.71f, -3420.18f, 300.97f, 3.14f};
+
+bool GOHello_go_naxxTeleporter(Player* pPlayer, GameObject* pGo)
+{
+    ScriptedInstance* pInstance = (ScriptedInstance*)pGo->GetInstanceData();
+
+    if (!pInstance)
+        return false;
+
+    switch(pGo->GetEntry())
+    {
+    case GO_ARAC_PORTAL:
+        if(pInstance->GetData(TYPE_MAEXXNA) == DONE)
+        {
+            if(pGo->GetDistance2d(pPlayer->GetPositionX(), pPlayer->GetPositionY()) < 2)
+                pPlayer->TeleportTo(pPlayer->GetMapId(), PosAracTele[0], PosAracTele[1], PosAracTele[2], PosAracTele[3]);
+        }
+        break;
+    case GO_CONS_PORTAL:
+        if(pInstance->GetData(TYPE_THADDIUS) == DONE)
+        {
+            if(pGo->GetDistance2d(pPlayer->GetPositionX(), pPlayer->GetPositionY()) < 2)
+                pPlayer->TeleportTo(pPlayer->GetMapId(), PosConsTele[0], PosConsTele[1], PosConsTele[2], PosConsTele[3]);
+        }
+        break;
+    case GO_MILI_PORTAL:
+        if(pInstance->GetData(TYPE_FOUR_HORSEMEN) == DONE)
+        {
+            if(pGo->GetDistance2d(pPlayer->GetPositionX(), pPlayer->GetPositionY()) < 2)
+                pPlayer->TeleportTo(pPlayer->GetMapId(), PosMiliTele[0], PosMiliTele[1], PosMiliTele[2], PosMiliTele[3]);
+        }
+        break;
+    case GO_PLAG_PORTAL:
+        if(pInstance->GetData(TYPE_LOATHEB) == DONE)
+        {
+            if(pGo->GetDistance2d(pPlayer->GetPositionX(), pPlayer->GetPositionY()) < 2)
+                pPlayer->TeleportTo(pPlayer->GetMapId(), PosPlagTele[0], PosPlagTele[1], PosPlagTele[2], PosPlagTele[3]);
+        }
+        break;
+    }
+    return false;
+}
+
 instance_naxxramas::instance_naxxramas(Map* pMap) : ScriptedInstance(pMap),
     m_uiAracEyeRampGUID(0),
     m_uiPlagEyeRampGUID(0),
     m_uiMiliEyeRampGUID(0),
     m_uiConsEyeRampGUID(0),
+
+    m_uiAracEyeGUID(0),
+    m_uiPlagEyeGUID(0),
+    m_uiMiliEyeGUID(0),
+    m_uiConsEyeGUID(0),
 
     m_uiAracPortalGUID(0),
     m_uiPlagPortalGUID(0),
@@ -52,6 +103,8 @@ instance_naxxramas::instance_naxxramas(Map* pMap) : ScriptedInstance(pMap),
     m_uiPathExitDoorGUID(0),
     m_uiGlutExitDoorGUID(0),
     m_uiThadDoorGUID(0),
+    m_uiThadNoxTeslaFeugenGUID(0),
+    m_uiThadNoxTeslaStalaggGUID(0),
 
     m_uiAnubDoorGUID(0),
     m_uiAnubGateGUID(0),
@@ -78,7 +131,23 @@ instance_naxxramas::instance_naxxramas(Map* pMap) : ScriptedInstance(pMap),
 
     m_fChamberCenterX(0.0f),
     m_fChamberCenterY(0.0f),
-    m_fChamberCenterZ(0.0f)
+    m_fChamberCenterZ(0.0f),
+
+    BlaumeuxDead(false),
+    RivendareDead(false),
+    ZeliekDead(false), 
+    KorthazzDead(false),
+
+    m_auiStalaggEncounter(0),
+    m_auiFeugenEncouter(0),
+
+    DeadTimer(0),            
+    UpdateCheck(false),
+
+    m_uiArachnofobiaTimer(0),
+    m_bIsArachnofobia (false),
+
+    m_uiImmortaCheck(1000)
 {
     Initialize();
 }
@@ -104,6 +173,7 @@ void instance_naxxramas::OnCreatureCreate(Creature* pCreature)
         case NPC_GOTHIK:            m_uiGothikGUID = pCreature->GetGUID();      break;
         case NPC_KELTHUZAD:         m_uiKelthuzadGUID = pCreature->GetGUID();   break;
         case NPC_SUB_BOSS_TRIGGER:  m_lGothTriggerList.push_back(pCreature->GetGUID()); break;
+        case NPC_TESLA_COIL:        m_lThadTeslaCoilList.push_back(pCreature->GetGUID()); break;
     }
 }
 
@@ -176,9 +246,12 @@ void instance_naxxramas::OnObjectCreate(GameObject* pGo)
             break;
 
         case GO_CHEST_HORSEMEN_NORM:
-        case GO_CHEST_HORSEMEN_HERO:
-            m_uiHorsemenChestGUID = pGo->GetGUID();
+            if(instance->IsRegularDifficulty())
+                m_uiHorsemenChestGUID = pGo->GetGUID();
             break;
+        case GO_CHEST_HORSEMEN_HERO:
+            if(!instance->IsRegularDifficulty())
+                m_uiHorsemenChestGUID = pGo->GetGUID();
 
         case GO_CONS_PATH_EXIT_DOOR:
             m_uiPathExitDoorGUID = pGo->GetGUID();
@@ -194,6 +267,12 @@ void instance_naxxramas::OnObjectCreate(GameObject* pGo)
             m_uiThadDoorGUID = pGo->GetGUID();
             if (m_auiEncounter[11] == DONE)
                 pGo->SetGoState(GO_STATE_ACTIVE);
+            break;
+        case GO_CONS_NOX_TESLA_FEUGEN:
+            m_uiThadNoxTeslaFeugenGUID = pGo->GetGUID();
+            break;
+        case GO_CONS_NOX_TESLA_STALAGG:
+            m_uiThadNoxTeslaStalaggGUID = pGo->GetGUID();
             break;
 
         case GO_KELTHUZAD_WATERFALL_DOOR:
@@ -239,7 +318,34 @@ void instance_naxxramas::OnObjectCreate(GameObject* pGo)
         case GO_CONS_PORTAL:
             m_uiConsPortalGUID = pGo->GetGUID();
             break;
+
+        case GO_ARAC_EYE: 
+            m_uiAracEyeGUID = pGo->GetGUID(); 
+            break;
+        case GO_PLAG_EYE: 
+            m_uiPlagEyeGUID = pGo->GetGUID(); 
+            break;
+        case GO_MILI_EYE: 
+            m_uiMiliEyeGUID = pGo->GetGUID(); 
+            break;
+        case GO_CONS_EYE: 
+            m_uiConsEyeGUID = pGo->GetGUID(); 
+            break;
     }
+}
+
+void instance_naxxramas::OpenDoor(uint64 guid)
+{
+    if(!guid) return;
+    GameObject* pGo = instance->GetGameObject(guid);
+    if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
+}
+
+void instance_naxxramas::CloseDoor(uint64 guid)
+{
+    if(!guid) return;
+    GameObject* pGo = instance->GetGameObject(guid);
+    if(pGo) pGo->SetGoState(GO_STATE_READY);
 }
 
 bool instance_naxxramas::IsEncounterInProgress()
@@ -259,16 +365,20 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
             m_auiEncounter[0] = uiData;
             DoUseDoorOrButton(m_uiAnubDoorGUID);
             if (uiData == DONE)
-                DoUseDoorOrButton(m_uiAnubGateGUID);
+            {
+                OpenDoor(m_uiAnubGateGUID);
+                m_uiArachnofobiaTimer = 0;
+                m_bIsArachnofobia = true;
+            }
             break;
         case TYPE_FAERLINA:
             m_auiEncounter[1] = uiData;
             DoUseDoorOrButton(m_uiFaerWebGUID);
             if (uiData == DONE)
-            {
-                DoUseDoorOrButton(m_uiFaerDoorGUID);
-                DoUseDoorOrButton(m_uiMaexOuterGUID);
-            }
+        {
+            OpenDoor(m_uiFaerDoorGUID);
+            OpenDoor(m_uiMaexOuterGUID);
+        }
             break;
         case TYPE_MAEXXNA:
             m_auiEncounter[2] = uiData;
@@ -276,8 +386,17 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
             if (uiData == DONE)
             {
                 DoUseDoorOrButton(m_uiAracEyeRampGUID);
+                DoUseDoorOrButton(m_uiAracEyeGUID);
                 DoRespawnGameObject(m_uiAracPortalGUID, 30*MINUTE);
+                Immortal();
                 DoTaunt();
+
+                // Arachnofobia
+                if(m_uiArachnofobiaTimer <= 20 * 60000 && m_bIsArachnofobia)
+                {
+                    Arachnofobia();
+                    m_bIsArachnofobia = false;
+                }
             }
             break;
         case TYPE_NOTH:
@@ -285,15 +404,18 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
             DoUseDoorOrButton(m_uiNothEntryDoorGUID);
             if (uiData == DONE)
             {
-                DoUseDoorOrButton(m_uiNothExitDoorGUID);
-                DoUseDoorOrButton(m_uiHeigEntryDoorGUID);
+                OpenDoor(m_uiNothExitDoorGUID);
+                OpenDoor(m_uiHeigEntryDoorGUID);
             }
             break;
         case TYPE_HEIGAN:
             m_auiEncounter[4] = uiData;
             DoUseDoorOrButton(m_uiHeigEntryDoorGUID);
             if (uiData == DONE)
-                DoUseDoorOrButton(m_uiHeigExitDoorGUID);
+            {
+                OpenDoor(m_uiHeigExitDoorGUID);
+                OpenDoor(m_uiLoathebDoorGUID);
+            }
             break;
         case TYPE_LOATHEB:
             m_auiEncounter[5] = uiData;
@@ -301,12 +423,16 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
             if (uiData == DONE)
             {
                 DoUseDoorOrButton(m_uiPlagEyeRampGUID);
+                DoUseDoorOrButton(m_uiPlagEyeGUID);
                 DoRespawnGameObject(m_uiPlagPortalGUID, 30*MINUTE);
                 DoTaunt();
+                Immortal();
             }
             break;
         case TYPE_RAZUVIOUS:
             m_auiEncounter[6] = uiData;
+            if (uiData == DONE)
+                OpenDoor(m_uiGothikEntryDoorGUID);
             break;
         case TYPE_GOTHIK:
             switch(uiData)
@@ -325,9 +451,10 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
                     DoUseDoorOrButton(m_uiGothikEntryDoorGUID);
                     break;
                 case DONE:
-                    DoUseDoorOrButton(m_uiGothikEntryDoorGUID);
-                    DoUseDoorOrButton(m_uiGothikExitDoorGUID);
-                    DoUseDoorOrButton(m_uiHorsemenDoorGUID);
+                    OpenDoor(m_uiGothikEntryDoorGUID);
+                    OpenDoor(m_uiGothikExitDoorGUID);
+                    OpenDoor(m_uiHorsemenDoorGUID);
+                    OpenDoor(m_uiGothCombatGateGUID);
                     break;
             }
             m_auiEncounter[7] = uiData;
@@ -338,15 +465,17 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
             if (uiData == DONE)
             {
                 DoUseDoorOrButton(m_uiMiliEyeRampGUID);
+                DoUseDoorOrButton(m_uiMiliEyeGUID);
                 DoRespawnGameObject(m_uiMiliPortalGUID, 30*MINUTE);
                 DoRespawnGameObject(m_uiHorsemenChestGUID, 30*MINUTE);
                 DoTaunt();
+                Immortal();
             }
             break;
         case TYPE_PATCHWERK:
             m_auiEncounter[9] = uiData;
             if (uiData == DONE)
-                DoUseDoorOrButton(m_uiPathExitDoorGUID);
+                OpenDoor(m_uiPathExitDoorGUID);
             break;
         case TYPE_GROBBULUS:
             m_auiEncounter[10] = uiData;
@@ -355,18 +484,23 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
             m_auiEncounter[11] = uiData;
             if (uiData == DONE)
             {
-                DoUseDoorOrButton(m_uiGlutExitDoorGUID);
-                DoUseDoorOrButton(m_uiThadDoorGUID);
+                OpenDoor(m_uiGlutExitDoorGUID);
+                OpenDoor(m_uiThadDoorGUID);
             }
             break;
         case TYPE_THADDIUS:
             m_auiEncounter[12] = uiData;
-            DoUseDoorOrButton(m_uiThadDoorGUID, uiData);
+            if(uiData != SPECIAL)
+                DoUseDoorOrButton(m_uiThadDoorGUID, uiData);
+            if(uiData == FAIL)
+                OpenDoor(m_uiThadDoorGUID);
             if (uiData == DONE)
             {
                 DoUseDoorOrButton(m_uiConsEyeRampGUID);
+                DoUseDoorOrButton(m_uiConsEyeGUID);
                 DoRespawnGameObject(m_uiConsPortalGUID, 30*MINUTE);
                 DoTaunt();
+                Immortal();
             }
             break;
         case TYPE_SAPPHIRON:
@@ -377,6 +511,48 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
         case TYPE_KELTHUZAD:
             m_auiEncounter[14] = uiData;
             DoUseDoorOrButton(m_uiKelthuzadExitDoorGUID);
+            break;
+        case TYPE_IMMORTAL:
+            m_auiEncounter[15] = uiData;
+            break;
+            //Four Horsemen Chest
+        case TYPE_BLAUMEAUX:
+            if (uiData == DONE)
+            {
+                BlaumeuxDead = true;
+                UpdateCheck = true;
+                Horseman();
+            }
+            break;
+        case TYPE_RIVENDARE:
+            if (uiData == DONE)
+            {
+                RivendareDead = true;
+                UpdateCheck = true;
+                Horseman();
+            }
+            break;
+        case TYPE_ZELIEK:
+            if (uiData == DONE)
+            {
+                ZeliekDead = true;
+                UpdateCheck = true;
+                Horseman();
+            }
+            break;
+        case TYPE_KORTHAZZ:
+            if (uiData == DONE)
+            {
+                KorthazzDead = true;
+                UpdateCheck = true;
+                Horseman();
+            }
+            break;
+        case TYPE_STALAGG:
+            m_auiStalaggEncounter = uiData;
+            break;
+        case TYPE_FEUGEN:
+            m_auiFeugenEncouter = uiData;
             break;
     }
 
@@ -389,7 +565,8 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
             << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " "
             << m_auiEncounter[6] << " " << m_auiEncounter[7] << " " << m_auiEncounter[8] << " "
             << m_auiEncounter[9] << " " << m_auiEncounter[10] << " " << m_auiEncounter[11] << " "
-            << m_auiEncounter[12] << " " << m_auiEncounter[13] << " " << m_auiEncounter[14];
+            << m_auiEncounter[12] << " " << m_auiEncounter[13] << " " << m_auiEncounter[14] << " "
+            << m_auiEncounter[15];
 
         strInstData = saveStream.str();
 
@@ -412,7 +589,7 @@ void instance_naxxramas::Load(const char* chrIn)
     loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3]
         >> m_auiEncounter[4] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7]
         >> m_auiEncounter[8] >> m_auiEncounter[9] >> m_auiEncounter[10] >> m_auiEncounter[11]
-        >> m_auiEncounter[12] >> m_auiEncounter[13] >> m_auiEncounter[14];
+        >> m_auiEncounter[12] >> m_auiEncounter[13] >> m_auiEncounter[14] >> m_auiEncounter[15];
 
     for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
     {
@@ -421,6 +598,81 @@ void instance_naxxramas::Load(const char* chrIn)
     }
 
     OUT_LOAD_INST_DATA_COMPLETE;
+}
+
+void instance_naxxramas::Horseman()
+{
+    // check the 4 horseman and also check the other bosses in Military quaters
+    if (BlaumeuxDead && RivendareDead && ZeliekDead && KorthazzDead)
+    {
+        SetData(TYPE_FOUR_HORSEMEN, DONE);
+
+        // check if the other bosses in military are dead
+        if(m_auiEncounter[7] == DONE && m_auiEncounter[6] == DONE && this)
+            DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEVEMENT_HORSEMEN : H_ACHIEVEMENT_HORSEMEN);
+    }
+}
+
+void instance_naxxramas::Arachnofobia()
+{
+    if(this)
+        DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEV_ARACHNOFOBIA : ACHIEV_ARACHNOFOBIA_H);
+}
+
+void instance_naxxramas::Immortal()
+{
+    if(m_auiEncounter[15] != FAIL)
+    {
+        if(m_auiEncounter[14] == DONE && m_auiEncounter[12] == DONE && m_auiEncounter[2] == DONE && m_auiEncounter[5] == DONE && m_auiEncounter[8] == DONE)
+        {
+            if(this)
+                DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEV_THE_UNDYING : ACHIEV_THE_IMMORTAL);
+        }
+    }
+}
+
+void instance_naxxramas::IsRaidWiped()
+{
+    Map::PlayerList const &players = instance->GetPlayers();
+    for (Map::PlayerList::const_iterator i = players.begin(); i != players.end(); ++i)
+    {
+        if(Player* pPlayer = i->getSource())
+        {
+            if(!pPlayer->isAlive())
+                m_auiEncounter[15] = FAIL;
+        }
+    }
+}
+
+void instance_naxxramas::Update(uint32 uiDiff)
+{
+    // Down they fall together achiev
+    if (BlaumeuxDead || RivendareDead || ZeliekDead || KorthazzDead)
+    {
+        if (DeadTimer < 15000 && UpdateCheck)
+        {
+            if (BlaumeuxDead && RivendareDead && ZeliekDead && KorthazzDead)
+            {
+                if(this)
+                    DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEVEMENT_TOGETHER : H_ACHIEVEMENT_TOGETHER);
+
+                UpdateCheck = false;
+            }
+            else 
+                DeadTimer += uiDiff;
+        }
+    }
+
+    // Arachnofobia achiev
+    if(m_bIsArachnofobia)
+        m_uiArachnofobiaTimer += uiDiff;
+
+    // Immortal check
+    if (m_uiImmortaCheck < uiDiff)
+    {
+        IsRaidWiped();
+        m_uiImmortaCheck = 1000;
+    }else m_uiImmortaCheck -= uiDiff;
 }
 
 uint32 instance_naxxramas::GetData(uint32 uiType)
@@ -629,6 +881,17 @@ bool AreaTrigger_at_naxxramas(Player* pPlayer, AreaTriggerEntry* pAt)
                 }
             }
         }
+    }
+
+    if (pAt->id == AREATRIGGER_THADDIUS_DOOR)
+    {
+        if (instance_naxxramas* pInstance = (instance_naxxramas*)pPlayer->GetInstanceData())
+            if (pInstance->GetData(TYPE_THADDIUS) == NOT_STARTED)
+                if (Creature* pThaddius = pInstance->instance->GetCreature(pInstance->GetData64(NPC_THADDIUS)))
+                {
+                    pInstance->SetData(TYPE_THADDIUS, SPECIAL);
+                    DoScriptText(SAY_THADDIUS_GREET, pThaddius);
+                }
     }
 
     return false;
