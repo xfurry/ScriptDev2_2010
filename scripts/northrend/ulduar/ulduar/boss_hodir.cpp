@@ -17,7 +17,7 @@
 /* ScriptData
 SDName: boss_hodir
 SD%Complete: 60%
-SDComment:Auras needs core fix, implement flash freeze and icicles, snowdrift
+SDComment:Auras needs core fix
 SDCategory: Ulduar
 EndScriptData */
 
@@ -408,7 +408,7 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
     {
-        if(uiDamage > m_creature->GetHealth())
+        if(m_creature->GetHealthPercent() < 1.0f)
         {
             uiDamage = 0;
             m_bIsOutro = true;

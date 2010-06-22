@@ -284,6 +284,7 @@ struct MANGOS_DLL_DECL mob_dark_rune_watcherAI : public ScriptedAI
     mob_dark_rune_watcherAI(Creature* pCreature) : ScriptedAI(pCreature)
 	{
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
 	}
 
@@ -331,6 +332,7 @@ struct MANGOS_DLL_DECL mob_dark_rune_sentinelAI : public ScriptedAI
     mob_dark_rune_sentinelAI(Creature* pCreature) : ScriptedAI(pCreature) 
 	{
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
 	}
 
@@ -830,12 +832,8 @@ bool GOHello_go_broken_harpoon(Player* pPlayer, GameObject* pGo)
         return false;
 
     pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
-
-    if(pGo->GetEntry() == GO_BROKEN_HARPOON)
-    {
-        if (Creature* pRazor = ((Creature*)Unit::GetUnit((*pGo), pInstance->GetData64(NPC_RAZORSCALE))))
-            ((boss_razorscaleAI*)pRazor->AI())->m_uiHarpoonsUsed += 1;
-    }
+    if (Creature* pRazor = ((Creature*)Unit::GetUnit((*pGo), pInstance->GetData64(NPC_RAZORSCALE))))
+        ((boss_razorscaleAI*)pRazor->AI())->m_uiHarpoonsUsed += 1;
 
     return false;
 }

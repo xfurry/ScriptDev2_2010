@@ -785,7 +785,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
     {
-        if(uiDamage > m_creature->GetHealth())
+        if(m_creature->GetHealthPercent() < 1.0f)
         {
             uiDamage = 0;
             m_bIsOutro = true;

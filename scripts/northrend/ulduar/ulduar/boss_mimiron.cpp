@@ -190,7 +190,7 @@ struct MANGOS_DLL_DECL boss_leviathan_mkAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
     {
-        if(uiDamage > m_creature->GetHealth())
+        if(m_creature->GetHealthPercent() < 1.0f)
         {
             if(!isPhase4)
             {
@@ -1659,13 +1659,10 @@ bool GOHello_go_red_button(Player* pPlayer, GameObject* pGo)
     if (!m_pInstance)
         return false;
 
-    if(pGo->GetEntry() == G0_MIMIRON_BUTTON)
+    if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*pGo), m_pInstance->GetData64(NPC_MIMIRON))))
     {
-        if (Creature* pMimiron = ((Creature*)Unit::GetUnit((*pGo), m_pInstance->GetData64(NPC_MIMIRON))))
-        {
-            if(pMimiron->isAlive())
-                ((boss_mimironAI*)pMimiron->AI())->isHardMode = true;
-        }
+        if(pMimiron->isAlive())
+            ((boss_mimironAI*)pMimiron->AI())->isHardMode = true;
     }
 
     return false;
