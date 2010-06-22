@@ -7,7 +7,7 @@
 
 enum
 {
-    MAX_ENCOUNTER               = 16,
+    MAX_ENCOUNTER               = 15,
 
     TYPE_ANUB_REKHAN            = 1,
     TYPE_FAERLINA               = 2,
@@ -31,22 +31,12 @@ enum
     TYPE_SAPPHIRON              = 16,
     TYPE_KELTHUZAD              = 17,
 
-    //Misc
-    TYPE_KORTHAZZ,
-    TYPE_BLAUMEAUX,
-    TYPE_ZELIEK,
-    TYPE_RIVENDARE,
-
-    TYPE_IMMORTAL,
-
     NPC_ANUB_REKHAN             = 15956,
     NPC_FAERLINA                = 15953,
-    NPC_LOATHEB                 = 16011,
 
     NPC_THADDIUS                = 15928,
     NPC_STALAGG                 = 15929,
     NPC_FEUGEN                  = 15930,
-    NPC_TESLA_COIL              = 16218,
 
     NPC_ZELIEK                  = 16063,
     NPC_THANE                   = 16064,
@@ -88,7 +78,7 @@ enum
     GO_PLAG_LOAT_DOOR           = 181241,                   //encounter door
 
     // Military Quarter
-    GO_MILI_GOTH_ENTRY_GATE     = 181124,                   //open after razuvious died
+    GO_MILI_GOTH_ENTRY_GATE     = 181124,                   //used while encounter is in progress
     GO_MILI_GOTH_EXIT_GATE      = 181125,                   //exit, open at boss dead
     GO_MILI_GOTH_COMBAT_GATE    = 181170,                   //used while encounter is in progress
     GO_MILI_HORSEMEN_DOOR       = 181119,                   //encounter door
@@ -99,23 +89,16 @@ enum
     // Construct Quarter
     GO_CONS_PATH_EXIT_DOOR      = 181123,
     GO_CONS_GLUT_EXIT_DOOR      = 181120,
-    GO_CONS_NOX_TESLA_FEUGEN    = 181477,
-    GO_CONS_NOX_TESLA_STALAGG   = 181478,
     GO_CONS_THAD_DOOR           = 181121,                   // Thaddius enc door
 
     // Frostwyrm Lair
     GO_KELTHUZAD_WATERFALL_DOOR = 181225,                   // exit, open after sapphiron is dead
-    GO_KELTHUZAD_COMBAT_GATE    = 181228,
 
     // Eyes
     GO_ARAC_EYE_RAMP            = 181212,
     GO_PLAG_EYE_RAMP            = 181211,
     GO_MILI_EYE_RAMP            = 181210,
     GO_CONS_EYE_RAMP            = 181213,
-    GO_ARAC_EYE                 = 181233,
-    GO_PLAG_EYE                 = 181231,
-    GO_MILI_EYE                 = 181230,
-    GO_CONS_EYE                 = 181232,
 
     // Portals
     GO_ARAC_PORTAL              = 181575,
@@ -125,21 +108,7 @@ enum
 
     AREATRIGGER_FROSTWYRM       = 4120,                    //not needed here, but AT to be scripted
     AREATRIGGER_KELTHUZAD       = 4112,
-    AREATRIGGER_GOTHIK          = 4116,
-    AREATRIGGER_THADDIUS_DOOR   = 4113,
-    SAY_THADDIUS_GREET          = -1533029,
-
-    ACHIEVEMENT_HORSEMEN        = 568,
-    H_ACHIEVEMENT_HORSEMEN      = 569,
-    ACHIEVEMENT_TOGETHER        = 2176,
-    H_ACHIEVEMENT_TOGETHER      = 2177,
-
-    ACHIEV_ARACHNOFOBIA         = 1858,
-    ACHIEV_ARACHNOFOBIA_H       = 1859,
-
-    // counts for: Thaddius, 4 horseman, maexxna, loatheb, kelthuzad
-    ACHIEV_THE_UNDYING          = 2187, // on 10 man
-    ACHIEV_THE_IMMORTAL         = 2186, // on 25 man
+    AREATRIGGER_GOTHIK          = 4116
 };
 
 struct GothTrigger
@@ -156,7 +125,7 @@ class MANGOS_DLL_DECL instance_naxxramas : public ScriptedInstance
 
         void Initialize();
 
-        bool IsEncounterInProgress() const;
+        bool IsEncounterInProgress();
 
         void OnCreatureCreate(Creature* pCreature);
         void OnObjectCreate(GameObject* pGo);
@@ -167,16 +136,12 @@ class MANGOS_DLL_DECL instance_naxxramas : public ScriptedInstance
 
         const char* Save() { return strInstData.c_str(); }
         void Load(const char* chrIn);
-        void Update(uint32 uiDiff);
 
         // goth
         void SetGothTriggers();
         Creature* GetClosestAnchorForGoth(Creature* pSource, bool bRightSide);
         void GetGothSummonPointCreatures(std::list<Creature*> &lList, bool bRightSide);
         bool IsInRightSideGothArea(Unit* pUnit);
-
-        // thaddius
-        void GetThadTeslaCreatures(std::list<uint64> &lList){ lList = m_lThadTeslaCoilList; };
 
         // kel
         void SetChamberCenterCoords(float fX, float fY, float fZ);
@@ -196,11 +161,6 @@ class MANGOS_DLL_DECL instance_naxxramas : public ScriptedInstance
         uint64 m_uiMiliPortalGUID;
         uint64 m_uiConsPortalGUID;
 
-        uint64 m_uiAracEyeGUID;
-        uint64 m_uiPlagEyeGUID;
-        uint64 m_uiMiliEyeGUID;
-        uint64 m_uiConsEyeGUID;
-
         uint64 m_uiAnubRekhanGUID;
         uint64 m_uiFaerlinanGUID;
 
@@ -216,9 +176,6 @@ class MANGOS_DLL_DECL instance_naxxramas : public ScriptedInstance
         uint64 m_uiPathExitDoorGUID;
         uint64 m_uiGlutExitDoorGUID;
         uint64 m_uiThadDoorGUID;
-        std::list<uint64> m_lThadTeslaCoilList;
-        uint64 m_uiThadNoxTeslaFeugenGUID;
-        uint64 m_uiThadNoxTeslaStalaggGUID;
 
         uint64 m_uiAnubDoorGUID;
         uint64 m_uiAnubGateGUID;
@@ -244,34 +201,9 @@ class MANGOS_DLL_DECL instance_naxxramas : public ScriptedInstance
         uint64 m_uiLoathebDoorGUID;
 
         uint64 m_uiKelthuzadDoorGUID;
-        uint64 m_uiKelthuzadWaterfallDoorGUID;
         float m_fChamberCenterX;
         float m_fChamberCenterY;
         float m_fChamberCenterZ;
-
-        bool BlaumeuxDead;
-        bool RivendareDead;
-        bool ZeliekDead;
-        bool KorthazzDead;
-        uint32 m_auiStalaggEncounter;
-        uint32 m_auiFeugenEncouter;
-
-        int32 DeadTimer;
-        uint32 HorsemanDeadCount;
-        bool UpdateCheck;
-
-        uint32 m_uiArachnofobiaTimer;
-        bool m_bIsArachnofobia;
-
-        uint32 m_uiImmortaCheck;
-
-        void CloseDoor(uint64 guid);
-        void OpenDoor(uint64 guid);
-
-        void Horseman();
-        void IsRaidWiped();
-        void Immortal();
-        void Arachnofobia();
 };
 
 #endif
