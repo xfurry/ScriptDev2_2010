@@ -407,7 +407,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case GO_LEVIATHAN_GATE:
             m_uiLeviathanGateGUID = pGo->GetGUID();
-            pGo->SetGoState(GO_STATE_ACTIVE);   // should be ready when leviathan is implemented
             if(m_auiEncounter[0] == DONE)
                 pGo->SetGoState(GO_STATE_ACTIVE);
             break;
