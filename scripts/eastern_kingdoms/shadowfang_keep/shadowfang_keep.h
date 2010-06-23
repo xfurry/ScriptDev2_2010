@@ -13,7 +13,11 @@ enum
     TYPE_NANDOS       = 4,
     TYPE_INTRO        = 5,
     TYPE_VOIDWALKER   = 6,
-    DATA_LIGHTNING    = 7
+    DATA_LIGHTNING    = 7,
+
+	NPC_HUMMEL		= 36296,
+	NPC_FRYE		= 36272,
+	NPC_BAXTER		= 36565,
 };
 
 #endif

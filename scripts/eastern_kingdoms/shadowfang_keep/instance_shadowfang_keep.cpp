@@ -54,6 +54,10 @@ struct MANGOS_DLL_DECL instance_shadowfang_keep : public ScriptedInstance
     uint64 m_uiAshGUID;
     uint64 m_uiAdaGUID;
 
+	uint64 m_uiHummelGUID;
+	uint64 m_uiBaxterGUID;
+	uint64 m_uiFryeGUID;
+
     uint64 m_uiDoorCourtyardGUID;
     uint64 m_uiDoorSorcererGUID;
     uint64 m_uiDoorArugalGUID;
@@ -69,6 +73,10 @@ struct MANGOS_DLL_DECL instance_shadowfang_keep : public ScriptedInstance
 
         m_uiAshGUID = 0;
         m_uiAdaGUID = 0;
+
+		m_uiHummelGUID	= 0;
+		m_uiBaxterGUID	= 0;
+		m_uiFryeGUID	= 0;
 
         m_uiDoorCourtyardGUID = 0;
         m_uiDoorSorcererGUID = 0;
@@ -93,6 +101,9 @@ struct MANGOS_DLL_DECL instance_shadowfang_keep : public ScriptedInstance
                 if (m_auiEncounter[4] == DONE)
                     pCreature->SetStandState(UNIT_STAND_STATE_DEAD);
                 break;
+			case NPC_HUMMEL: m_uiHummelGUID = pCreature->GetGUID(); break;
+			case NPC_BAXTER: m_uiBaxterGUID = pCreature->GetGUID(); break;
+			case NPC_FRYE: m_uiFryeGUID = pCreature->GetGUID(); break;
         }
     }
 
@@ -212,6 +223,12 @@ struct MANGOS_DLL_DECL instance_shadowfang_keep : public ScriptedInstance
         {
             case DATA_LIGHTNING:
                 return m_uiArugalFocusGUID;
+			case NPC_HUMMEL:
+				return m_uiHummelGUID;
+			case NPC_BAXTER:
+				return m_uiBaxterGUID;
+			case NPC_FRYE:
+				return m_uiFryeGUID;
         }
         return 0;
     }

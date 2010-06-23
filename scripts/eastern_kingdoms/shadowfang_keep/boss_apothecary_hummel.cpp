@@ -22,6 +22,7 @@ SDCategory: Apothecary Hummel
 EndScriptData */
 
 #include "precompiled.h"
+#include "shadowfang_keep.h"
 
 enum
 {
@@ -39,9 +40,6 @@ enum
 	SPELL_UNSTABLE_REACTION		= 68957,	// by adds
 
 	// npc
-	NPC_HUMMEL					= 36296,
-	NPC_FRYE					= 36272,
-	NPC_BAXTER					= 36565,
 	NCP_CRAZED_APOTHECARY		= 36568,	// this is the right one
 	NPC_CROWN_APOTHECARY		= 36885,
 
@@ -66,8 +64,11 @@ struct MANGOS_DLL_DECL boss_apothecary_baxterAI : public ScriptedAI
 {
     boss_apothecary_baxterAI(Creature* pCreature) : ScriptedAI(pCreature) 
 	{
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		Reset();
 	}
+
+	ScriptedInstance* m_pInstance;
 
 	uint32 m_uiSprayTimer;
 	uint32 m_uiReactionTimer;
@@ -86,12 +87,12 @@ struct MANGOS_DLL_DECL boss_apothecary_baxterAI : public ScriptedAI
 
 	void JustReachedHome()
 	{
-		if(Creature* pFrye = GetClosestCreatureWithEntry(m_creature, NPC_FRYE, 50.0f))
+		if(Creature* pFrye = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FRYE)))
 		{
 			if(!pFrye->isAlive())
 				pFrye->Respawn();
 		}
-		if(Creature* pHummel = GetClosestCreatureWithEntry(m_creature, NPC_HUMMEL, 50.0f))
+		if(Creature* pHummel = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HUMMEL)))
 		{
 			if(!pHummel->isAlive())
 				pHummel->Respawn();
@@ -101,7 +102,7 @@ struct MANGOS_DLL_DECL boss_apothecary_baxterAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
 		bool bAddsDead = true;
-		if(Creature* pFrye = GetClosestCreatureWithEntry(m_creature, NPC_FRYE, 50.0f))
+		if(Creature* pFrye = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FRYE)))
 		{
 			if(pFrye->isAlive())
 				bAddsDead = false;
@@ -110,7 +111,7 @@ struct MANGOS_DLL_DECL boss_apothecary_baxterAI : public ScriptedAI
 		if(!bAddsDead)
 			return;
 
-		if(Creature* pHummel = GetClosestCreatureWithEntry(m_creature, NPC_HUMMEL, 50.0f))
+		if(Creature* pHummel = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HUMMEL)))
 		{
 			if(!pHummel->isAlive())
 				pHummel->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
@@ -164,8 +165,11 @@ struct MANGOS_DLL_DECL boss_apothecary_fryeAI : public ScriptedAI
 {
     boss_apothecary_fryeAI(Creature* pCreature) : ScriptedAI(pCreature) 
 	{
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		Reset();
 	}
+
+	ScriptedInstance* m_pInstance;
 
 	uint32 m_uiSpillTimer;
 	uint32 m_uiSummonTimer;
@@ -181,12 +185,12 @@ struct MANGOS_DLL_DECL boss_apothecary_fryeAI : public ScriptedAI
 
 	void JustReachedHome()
 	{
-		if(Creature* pBaxter = GetClosestCreatureWithEntry(m_creature, NPC_BAXTER, 50.0f))
+		if(Creature* pBaxter = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BAXTER)))
 		{
 			if(!pBaxter->isAlive())
 				pBaxter->Respawn();
 		}
-		if(Creature* pHummel = GetClosestCreatureWithEntry(m_creature, NPC_HUMMEL, 50.0f))
+		if(Creature* pHummel = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HUMMEL)))
 		{
 			if(!pHummel->isAlive())
 				pHummel->Respawn();
@@ -216,7 +220,7 @@ struct MANGOS_DLL_DECL boss_apothecary_fryeAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
 		bool bAddsDead = true;
-		if(Creature* pBaxter = GetClosestCreatureWithEntry(m_creature, NPC_BAXTER, 50.0f))
+		if(Creature* pBaxter = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BAXTER)))
 		{
 			if(pBaxter->isAlive())
 			{
@@ -228,7 +232,7 @@ struct MANGOS_DLL_DECL boss_apothecary_fryeAI : public ScriptedAI
 		if(!bAddsDead)
 			return;
 
-		if(Creature* pHummel = GetClosestCreatureWithEntry(m_creature, NPC_HUMMEL, 50.0f))
+		if(Creature* pHummel = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HUMMEL)))
 		{
 			if(!pHummel->isAlive())
 				pHummel->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
@@ -279,8 +283,11 @@ struct MANGOS_DLL_DECL boss_apothecary_hummelAI : public ScriptedAI
 {
     boss_apothecary_hummelAI(Creature* pCreature) : ScriptedAI(pCreature) 
 	{
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		Reset();
 	}
+
+	ScriptedInstance* m_pInstance;
 
 	uint32 m_uiBaxterTimer;
 	uint32 m_uiFryeTimer;
@@ -309,12 +316,12 @@ struct MANGOS_DLL_DECL boss_apothecary_hummelAI : public ScriptedAI
 
 	void JustReachedHome()
 	{
-		if(Creature* pBaxter = GetClosestCreatureWithEntry(m_creature, NPC_BAXTER, 50.0f))
+		if(Creature* pBaxter = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BAXTER)))
 		{
 			if(!pBaxter->isAlive())
 				pBaxter->Respawn();
 		}
-		if(Creature* pFrye = GetClosestCreatureWithEntry(m_creature, NPC_FRYE, 50.0f))
+		if(Creature* pFrye = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FRYE)))
 		{
 			if(!pFrye->isAlive())
 				pFrye->Respawn();
@@ -324,12 +331,12 @@ struct MANGOS_DLL_DECL boss_apothecary_hummelAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
 		bool bAddsDead = true;
-		if(Creature* pBaxter = GetClosestCreatureWithEntry(m_creature, NPC_BAXTER, 50.0f))
+		if(Creature* pBaxter = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BAXTER)))
 		{
 			if(pBaxter->isAlive())
 				bAddsDead = false;
 		}
-		if(Creature* pFrye = GetClosestCreatureWithEntry(m_creature, NPC_FRYE, 50.0f))
+		if(Creature* pFrye = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FRYE)))
 		{
 			if(pFrye->isAlive())
 			{
