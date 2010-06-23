@@ -78,6 +78,7 @@ struct MANGOS_DLL_DECL instance_blackrock_depths : public ScriptedInstance
     uint64 m_uiSeethrelGUID;
     uint64 m_uiDoomrelGUID;
     uint64 m_uiDoperelGUID;
+	uint64 m_uiDirebrewGUID;
 
     uint64 m_uiGoArena1GUID;
     uint64 m_uiGoArena2GUID;
@@ -116,6 +117,7 @@ struct MANGOS_DLL_DECL instance_blackrock_depths : public ScriptedInstance
         m_uiSeethrelGUID = 0;
         m_uiDoomrelGUID = 0;
         m_uiDoperelGUID = 0;
+		m_uiDirebrewGUID = 0;
 
         m_uiGoArena1GUID = 0;
         m_uiGoArena2GUID = 0;
@@ -155,6 +157,7 @@ struct MANGOS_DLL_DECL instance_blackrock_depths : public ScriptedInstance
             case NPC_SEETHREL: m_uiSeethrelGUID = pCreature->GetGUID(); break;
             case NPC_DOOMREL: m_uiDoomrelGUID = pCreature->GetGUID(); break;
             case NPC_DOPEREL: m_uiDoperelGUID = pCreature->GetGUID(); break;
+			case NPC_COREN_DIREBREW: m_uiDirebrewGUID = pCreature->GetGUID(); break;
         }
     }
 
@@ -311,6 +314,8 @@ struct MANGOS_DLL_DECL instance_blackrock_depths : public ScriptedInstance
                 return m_uiDoomrelGUID;
             case DATA_DOPEREL:
                 return m_uiDoperelGUID;
+			case NPC_COREN_DIREBREW:
+				return m_uiDirebrewGUID;
 
             case DATA_ARENA1:
                 return m_uiGoArena1GUID;

@@ -22,6 +22,7 @@ SDCategory: Blackrock Depths
 EndScriptData */
 
 #include "precompiled.h"
+#include "blackrock_depths.h"
 
 enum
 {
@@ -42,7 +43,6 @@ enum
 	SPELL_BREWMAIDEN_STUN			= 47340,	
 	SPELL_BREWMAIDEN_DESPAWN		= 48186,
 
-	NPC_COREN_DIREBREW				= 23872,
 	NPC_DIREBREW_MINION				= 26776,
 	NPC_ILSA_DIREBREW				= 26764,	// at 66%
 	NPC_URSULA_DIREBREW				= 26822,	// at 33%
@@ -65,12 +65,24 @@ struct MANGOS_DLL_DECL boss_coren_direbrewAI : public ScriptedAI
 	uint64 m_uiIlsaGUID;
 	uint64 m_uiUrsulaGUID;
 
+	uint32 m_uiCheckTimer;
+	uint32 m_uiUrsulaRespawnTimer;
+	uint32 m_uiIlsaRespawnTimer;
+	bool m_bIsUrsulaDead;
+	bool m_bIsIlsaDead;
+
     void Reset()
     {
 		m_uiDisarmTimer		= 10000;
 		m_uiChargeTimer		= 5000;
 		m_uiSummonTimer		= 15000;
 		m_uiHpPhase			= 0;
+
+		m_uiUrsulaRespawnTimer	= 20000;
+		m_uiIlsaRespawnTimer	= 20000;
+		m_bIsUrsulaDead		= false;
+		m_bIsIlsaDead		= false;
+		m_uiCheckTimer		= 1000000;
 
 		m_uiIlsaGUID		= 0;
 		m_uiUrsulaGUID		= 0;
@@ -97,6 +109,7 @@ struct MANGOS_DLL_DECL boss_coren_direbrewAI : public ScriptedAI
 				m_uiIlsaGUID = pTemp->GetGUID();
 				pTemp->AI()->AttackStart(m_creature->getVictim());
 			}
+			m_uiCheckTimer = 1000;
 			m_uiHpPhase = 1;
 		}
 
@@ -132,6 +145,44 @@ struct MANGOS_DLL_DECL boss_coren_direbrewAI : public ScriptedAI
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+		if(m_uiUrsulaRespawnTimer < uiDiff && m_bIsUrsulaDead)
+		{
+			if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_uiUrsulaGUID))
+				pTemp->Respawn();
+			m_bIsUrsulaDead = false;
+		}
+		else m_uiUrsulaRespawnTimer -= uiDiff;
+
+		if(m_uiIlsaRespawnTimer < uiDiff && m_bIsIlsaDead)
+		{
+			if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_uiIlsaGUID))
+				pTemp->Respawn();
+			m_bIsIlsaDead = false;
+		}
+		else m_uiIlsaRespawnTimer -= uiDiff;
+
+		if(m_uiCheckTimer < uiDiff)
+		{
+			if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_uiIlsaGUID))
+			{
+				if(!pTemp->isAlive())
+				{
+					m_bIsIlsaDead = true;
+					m_uiIlsaRespawnTimer = 20000;
+				}
+			}
+			if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_uiUrsulaGUID))
+			{
+				if(!pTemp->isAlive())
+				{
+					m_bIsUrsulaDead = true;
+					m_uiUrsulaRespawnTimer = 20000;
+				}
+			}
+			m_uiCheckTimer = 1000;
+		}
+		else m_uiCheckTimer -= uiDiff;
 
 		if(m_uiDisarmTimer < uiDiff)
 		{
@@ -172,8 +223,11 @@ struct MANGOS_DLL_DECL mob_direbrew_maidenAI : public ScriptedAI
 {
     mob_direbrew_maidenAI(Creature* pCreature) : ScriptedAI(pCreature) 
 	{
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		Reset();
 	}
+
+	ScriptedInstance* m_pInstance;
 
 	uint32 m_uiMugTimer;
 	uint32 m_uiBarreledTimer;
@@ -182,12 +236,6 @@ struct MANGOS_DLL_DECL mob_direbrew_maidenAI : public ScriptedAI
     {
 		m_uiMugTimer		= 2000;
 		m_uiBarreledTimer	= 5000;
-		// respawn if Coren is Alive
-		if(Creature* pCoren = GetClosestCreatureWithEntry(m_creature, NPC_COREN_DIREBREW, 50.0f))
-		{
-			if(pCoren->isAlive())
-				m_creature->SetRespawnDelay(30000);
-		}
     }
 
 	void SpellHitTarget(Unit* pTarget, const SpellEntry* pSpell)
@@ -214,7 +262,7 @@ struct MANGOS_DLL_DECL mob_direbrew_maidenAI : public ScriptedAI
 
 		if(m_uiBarreledTimer < uiDiff)
 		{
-			if(Creature* pCoren = GetClosestCreatureWithEntry(m_creature, NPC_COREN_DIREBREW, 50.0f))
+			if(Creature* pCoren = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COREN_DIREBREW)))
 			{
 				if (Unit* pTarget = pCoren->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
 					DoCastSpellIfCan(pTarget, SPELL_BARRELED);

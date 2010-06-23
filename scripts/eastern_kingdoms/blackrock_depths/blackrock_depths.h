@@ -34,7 +34,9 @@ enum
     DATA_GO_BAR_KEG_TRAP    = 25,
     DATA_GO_BAR_DOOR        = 26,
     DATA_GO_CHALICE         = 27,
-    DATA_GO_TOMB_EXIT       = 28
+    DATA_GO_TOMB_EXIT       = 28,
+
+	NPC_COREN_DIREBREW		= 23872,
 };
 
 #endif
