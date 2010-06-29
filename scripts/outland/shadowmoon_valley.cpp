@@ -312,7 +312,7 @@ struct MANGOS_DLL_DECL mob_dragonmaw_peonAI : public ScriptedAI
             m_bIsTapped = true;
 
             float fX, fY, fZ;
-            pCaster->GetClosePoint(fX, fY, fZ, m_creature->GetObjectSize());
+            pCaster->GetClosePoint(fX, fY, fZ, m_creature->GetObjectBoundingRadius());
 
             m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
             m_creature->GetMotionMaster()->MovePoint(POINT_DEST, fX, fY, fZ);
@@ -821,10 +821,10 @@ static TorlothCinematic TorlothAnim[]=
     {SAY_TORLOTH_DIALOGUE1, TORLOTH, 2000},
     {SAY_ILLIDAN_DIALOGUE, LORD_ILLIDAN, 7000},
     {SAY_TORLOTH_DIALOGUE2, TORLOTH, 3000},
-    {NULL, TORLOTH, 2000},                                  // Torloth stand
+    {0, TORLOTH, 2000},                                  // Torloth stand
     {SAY_TORLOTH_DIALOGUE3, TORLOTH, 1000}, 
-    {NULL, TORLOTH, 3000},
-    {NULL, TORLOTH, NULL}
+    {0, TORLOTH, 3000},
+    {0, TORLOTH, 0}
 };
 
 struct Location

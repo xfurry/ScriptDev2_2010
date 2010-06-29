@@ -3,7 +3,7 @@
 --
 
 DELETE FROM sd2_db_version;
-INSERT INTO sd2_db_version (version) VALUES ('ScriptDev2 (for MaNGOS 9832+) ');
+INSERT INTO sd2_db_version (version) VALUES ('ScriptDev2 (for MaNGOS 10112+) ');
 
 --
 -- Below contains data for table `script_texts` mainly used in C++ parts.
@@ -603,7 +603,7 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 (-1000575,'Together we will fight our way out of here. Are you ready?',0,0,0,0,'Lurgglbr - SAY_START_1'),
 (-1000576,'Then we leave.',0,0,0,0,'Lurgglbr - SAY_START_2'),
 (-1000577,'This is far enough. I can make it on my own from here.',0,0,0,0,'Lurgglbr - SAY_END_1'),
-(-1000578,'Thank You for helping me $c. Please tell the king I am back.',0,0,0,0,'Lurgglbr - SAY_END_2'),
+(-1000578,'Thank you for helping me $r. Please tell the king I am back.',0,0,0,0,'Lurgglbr - SAY_END_2'),
 
 (-1000579,'Insolent fool! You thought to steal Zelemar\'s blood? You shall pay with your own!',0,1,0,0,'Zelemar the Wrathful - Aggro'),
 
@@ -723,7 +723,9 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 (-1189031,'Horseman rise...',0,0,0,0,'horseman SAY_PLAYER1'),
 (-1189032,'Your time is night...',0,0,0,0,'horseman SAY_PLAYER2'),
 (-1189033,'You felt death once...',0,0,0,0,'horseman SAY_PLAYER3'),
-(-1189034,'Now, know demise!',0,0,0,0,'horseman SAY_PLAYER4');
+(-1189034,'Now, know demise!',0,0,0,0,'horseman SAY_PLAYER4'),
+
+(-1189035,'The master has fallen! Avenge him my brethren!',5834,1,0,0,'trainee SAY_TRAINEE_SPAWN');
 
 -- -1 209 000 ZUL'FARRAK
 
@@ -1251,7 +1253,11 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 
 (-1533143,'An aura of necrotic energy blocks all healing!',0,3,0,0,'Loatheb EMOTE_AURA_BLOCKING'),
 (-1533144,'The power of Necrotic Aura begins to wane!',0,3,0,0,'Loatheb EMOTE_AURA_WANE'),
-(-1533145,'The aura fades away, allowing healing once more!',0,3,0,0,'Loatheb EMOTE_AURA_FADING');
+(-1533145,'The aura fades away, allowing healing once more!',0,3,0,0,'Loatheb EMOTE_AURA_FADING'),
+
+(-1533146,'%s spins her web into a cocoon!',0,3,0,0,'maexxna EMOTE_SPIN_WEB'),
+(-1533147,'Spiderlings appear on the web!',0,3,0,0,'maexxna EMOTE_SPIDERLING'),
+(-1533148,'%s sprays strands of web everywhere!',0,3,0,0,'maexxna EMOTE_SPRAY');
 
 -- -1 534 000 THE BATTLE OF MT. HYJAL
 INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
@@ -4480,7 +4486,6 @@ INSERT INTO script_waypoint VALUES
 (25208,22,4256.81,6230.74,-0.090,0,''),
 (25208,23,4241.09,6217.87,-0.140,0,''),
 (25208,24,4254.66,6205.16,-0.170,0,''),
-(25208,25,4261.82,6186.47,-0.140,30000,'Lurgglbr - final point'),
-(25208,26,4300.55,6140.35,-2.70,0,'');
+(25208,25,4270.07,6188.42,0.059,15000,'Lurgglbr - final point');
 -- EOF
 
