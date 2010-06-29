@@ -203,6 +203,15 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         GameObject* pGo = instance->GetGameObject(guid);
         if(pGo) pGo->SetGoState(GO_STATE_READY);
     }
+
+    void SwitchBridge()
+    {
+        if(m_auiEncounter[0] == SPECIAL && m_auiEncounter[1] == SPECIAL && m_auiEncounter[2] == SPECIAL)
+        {
+            DoUseDoorOrButton(m_uiBridgeGUID);
+            DoUseDoorOrButton(m_uiCollisionGUID);
+        }
+    }
     
     void SetData(uint32 uiType, uint32 uiData)
     {
@@ -216,7 +225,10 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
                     if (GameObject* pGo = instance->GetGameObject(m_uiAltarOfSladranGUID))
                         pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
                 if (uiData == SPECIAL)
+                {
                     DoUseDoorOrButton(m_uiSnakeKeyGUID);
+                    SwitchBridge();
+                }
                 break;
             case TYPE_MOORABI:
                 m_auiEncounter[1] = uiData;
@@ -228,7 +240,10 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
                         pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
                 }
                 if (uiData == SPECIAL)
+                {
                     DoUseDoorOrButton(m_uiMammothKeyGUID);
+                    SwitchBridge();
+                }
                 break;
             case TYPE_COLOSSUS:
                 m_auiEncounter[2] = uiData;
@@ -236,7 +251,10 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
                     if (GameObject* pGo = instance->GetGameObject(m_uiAltarOfColossusGUID))
                         pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
                 if (uiData == SPECIAL)
+                {
                     DoUseDoorOrButton(m_uiTrollKeyGUID);
+                    SwitchBridge();
+                }
                 break;
             case TYPE_GALDARAH:
                 m_auiEncounter[3] = uiData;
