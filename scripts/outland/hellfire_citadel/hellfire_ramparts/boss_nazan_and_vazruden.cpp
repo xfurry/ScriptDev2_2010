@@ -240,8 +240,23 @@ struct MANGOS_DLL_DECL boss_vazruden_heraldAI : public ScriptedAI
             m_pInstance->SetData(TYPE_VAZRUDEN, IN_PROGRESS);
     }
 
+    void KillCreditNazan()
+    {
+        Map *map = m_creature->GetMap();
+        Map::PlayerList const& players = map->GetPlayers();
+        if (!players.isEmpty() && map->IsDungeon())
+        {
+            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+            {
+                if(Player* pPlayer = itr->getSource()) 
+                    pPlayer->KilledMonsterCredit(17536, m_creature->GetGUID());
+            }
+        }
+    }
+
     void JustDied(Unit* pKiller)
     {
+        KillCreditNazan();
         if (m_pInstance)
             m_pInstance->SetData(TYPE_NAZAN, DONE);
     }
