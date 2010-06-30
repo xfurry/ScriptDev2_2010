@@ -31,11 +31,12 @@ enum Spells
     SPELL_MAGICSBANE_H          = 69050,
     SPELL_SHADOW_BOLT           = 70043,
     SPELL_SHADOW_BOLT_H         = 70043,
-    SPELL_FEAR                  = 30584,//68950,
+    SPELL_FEAR                  = 68950,
     SPELL_SOULSTORM             = 68872,
     SPELL_TELEPORT              = 68988,
-    SPELL_SOULSTORM_EFFECT      = 68925,
-    SPELL_SOULSTORM_DMG         = 68921,
+    SPELL_DRAW_SOUL             = 68846,
+    SPELL_CONSUME_SOUL          = 68858,
+    SPELL_CONSUME_SOUL_H        = 69047,
 
     NPC_CORRUPT_SOUL_FRAGMENT   = 36535,
     EQUIP_ID                    = 35514,
@@ -70,32 +71,44 @@ struct MANGOS_DLL_DECL boss_BronjahnAI : public ScriptedAI
     bool m_bIsRegularMode;
 
     uint32 m_uiCorruptSoulTimer;
+    uint32 m_uiCorruptSoulSummon;
+    uint64 m_uiCorruptTargetGUID;
     uint32 m_uiMagicsBaneTimer;
     uint32 m_uiShadowBoltTimer;
     uint32 m_uiFearTimer;
     uint32 m_uiSoulStormTimer;
+    uint32 m_uiSoulStormDmgTimer;
+    uint8 m_uiAchievCounter;
 
     bool m_bIsSoulStorm;
     bool m_bHasTeleported;
 
     void Reset()
     {        
+        SetCombatMovement(true);
+        m_creature->GetMotionMaster()->Clear();
         m_uiCorruptSoulTimer    = urand(15000, 25000);
+        m_uiCorruptSoulSummon   = 60000;
+        m_uiCorruptTargetGUID   = 0;
         m_uiMagicsBaneTimer     = urand(8000, 15000);
         m_uiShadowBoltTimer     = 2000;
         m_uiFearTimer           = 1000;
+        m_uiAchievCounter       = 0;
 
         m_bIsSoulStorm          = false;
         m_bHasTeleported        = false;
+    }
 
+    void JustReachedHome()
+    {
         if (m_pInstance)
-            m_pInstance->SetData(TYPE_BRONJAHN, NOT_STARTED);
+            m_pInstance->SetData(TYPE_BRONJAHM, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
         if (m_pInstance)
-            m_pInstance->SetData(TYPE_BRONJAHN, IN_PROGRESS);
+            m_pInstance->SetData(TYPE_BRONJAHM, IN_PROGRESS);
 
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -112,8 +125,43 @@ struct MANGOS_DLL_DECL boss_BronjahnAI : public ScriptedAI
     {
         DoScriptText(SAY_DEATH, m_creature);
 
+        std::list<Creature*> lSouls;
+        GetCreatureListWithEntryInGrid(lSouls, m_creature, NPC_CORRUPT_SOUL_FRAGMENT, 100.0f);
+        if (!lSouls.empty() && lSouls.size() >= 4)
+        {
+            for(std::list<Creature*>::iterator iter = lSouls.begin(); iter != lSouls.end(); ++iter)
+            {
+                if ((*iter) && (*iter)->isAlive())
+                    m_uiAchievCounter += 1;
+            }
+        }
+
+        if(m_uiAchievCounter >= 4)
+        {
+            if(m_pInstance && !m_bIsRegularMode)
+                m_pInstance->DoCompleteAchievement(ACHIEV_SOUL_POWER);
+        }
+
         if (m_pInstance)
-            m_pInstance->SetData(TYPE_BRONJAHN, DONE);
+            m_pInstance->SetData(TYPE_BRONJAHM, DONE);
+    }
+
+    void DoSoulstorm()
+    {
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (PlayerList.isEmpty())
+                return;
+
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if(i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()) > 10.0f)
+                    i->getSource()->DealDamage(i->getSource(), m_bIsRegularMode ? 1000 : 2500, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            }
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -125,19 +173,24 @@ struct MANGOS_DLL_DECL boss_BronjahnAI : public ScriptedAI
         if (m_uiCorruptSoulTimer < uiDiff && !m_bIsSoulStorm)
         {
             DoScriptText(SAY_CORRUPT_SOUL, m_creature);
-            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(pTarget, SPELL_CORRUPT_SOUL);
-                /*if(Creature *pTemp = m_creature->SummonCreature(NPC_CORRUPT_SOUL_FRAGMENT, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                {
-                    pTemp->SetSplineFlags(SPLINEFLAG_WALKMODE);
-                    pTemp->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ());
-                }*/
+                m_uiCorruptTargetGUID = pTarget->GetGUID();
             }
+            m_uiCorruptSoulSummon = 4000;
             m_uiCorruptSoulTimer = urand(15000, 25000);
         }
         else
             m_uiCorruptSoulTimer -= uiDiff;
+
+        if(m_uiCorruptSoulSummon < uiDiff && !m_bIsSoulStorm)
+        {
+            if(Unit* pTarget = Unit::GetUnit(*m_creature, m_uiCorruptTargetGUID))
+                pTarget->CastSpell(pTarget, SPELL_DRAW_SOUL, false);
+            m_uiCorruptSoulSummon = 60000;
+        }
+        else m_uiCorruptSoulSummon -= uiDiff;
 
         if (m_uiMagicsBaneTimer < uiDiff)
         {
@@ -149,20 +202,19 @@ struct MANGOS_DLL_DECL boss_BronjahnAI : public ScriptedAI
 
         if (m_uiShadowBoltTimer < uiDiff)
         {
-            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT_H);
-            
-            if(m_bIsSoulStorm)
-                m_uiShadowBoltTimer = 3000;
-            else
-                m_uiShadowBoltTimer = 5000;
+            if (!m_creature->IsWithinDistInMap(m_creature->getVictim(), 3))
+            {
+                if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                    DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT_H);
+            }
+            m_uiShadowBoltTimer = 1500;
         }
         else
             m_uiShadowBoltTimer -= uiDiff;
 
         if (m_uiFearTimer < uiDiff && m_bIsSoulStorm)
         {
-            m_creature->CastStop();
+            m_creature->InterruptNonMeleeSpells(true);
             if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(m_creature, SPELL_FEAR);
             m_uiFearTimer = urand(8000, 12000);
@@ -172,26 +224,35 @@ struct MANGOS_DLL_DECL boss_BronjahnAI : public ScriptedAI
 
         if(m_creature->GetHealthPercent() <= 30.0f && !m_bHasTeleported)
         {
-            m_creature->CastStop();
-            m_uiSoulStormTimer = 2000;
+            m_creature->InterruptNonMeleeSpells(true);
+            DoCast(m_creature, SPELL_TELEPORT);
+            m_uiSoulStormTimer = 1000;
             m_bHasTeleported = true;
+            SetCombatMovement(false);
             m_creature->GetMotionMaster()->Clear();
-            m_creature->GetMotionMaster()->MovePoint(0, 5297.33f, 2506.64f, 686.068f);     
+            m_creature->GetMotionMaster()->MoveIdle();  
         }
 
         if (m_uiSoulStormTimer < uiDiff && !m_bIsSoulStorm && m_bHasTeleported)
         {
-            m_creature->CastStop();
+            m_creature->InterruptNonMeleeSpells(true);
             m_uiFearTimer = 7000;
-            //DoCast(m_creature, SPELL_SOULSTORM); // spell broken!!!
-            DoCast(m_creature, SPELL_SOULSTORM_EFFECT);
-            DoScriptText(SAY_SOULSTORM, m_creature);
-            m_creature->GetMotionMaster()->Clear();
-            m_creature->GetMotionMaster()->MoveIdle();
+            m_uiSoulStormDmgTimer = 5000;
+            DoCast(m_creature, SPELL_SOULSTORM);
+            DoScriptText(SAY_SOULSTORM, m_creature);            
             m_bIsSoulStorm = true;;
         }
         else
             m_uiSoulStormTimer -= uiDiff;
+
+        // workaround because the soulstorm aura can be removed
+        if (m_uiSoulStormDmgTimer < uiDiff && m_bIsSoulStorm)
+        {
+            DoSoulstorm();
+            m_uiSoulStormDmgTimer = 1000;
+        }
+        else
+            m_uiSoulStormDmgTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
 
@@ -210,15 +271,21 @@ struct MANGOS_DLL_DECL mob_corrupted_soul_fragmentAI : public ScriptedAI
     mob_corrupted_soul_fragmentAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-uint32 m_uiRangeCheck_Timer;
+    bool m_bIsRegularMode;
+
+    uint32 m_uiRangeCheck_Timer;
 
     void Reset()
     {
         m_uiRangeCheck_Timer = 1000;
+        m_creature->SetSpeedRate(MOVE_RUN, 0.2f);
+        if(Creature* pBronjahm = GetClosestCreatureWithEntry(m_creature, NPC_BRONJAHM, 100.0f))
+            m_creature->GetMotionMaster()->MoveFollow(pBronjahm, 0, 0);
     }
 
     void AttackStart(Unit* pWho)
@@ -232,17 +299,17 @@ uint32 m_uiRangeCheck_Timer;
         {
             if (m_pInstance)
             {
-                if (Creature* pBronjahm = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRONJAHM))))
+                if(Creature* pBronjahm = GetClosestCreatureWithEntry(m_creature, NPC_BRONJAHM, 100.0f))
                 {
-                    float fDistance = m_creature->GetDistance2d(pBronjahm);
-                    if (fDistance <= 2)
+                    if (m_creature->GetDistance2d(pBronjahm) <= 2)
                     {
-                        //((boss_bronjahmAI*)pBronjahm->AI())->SoulFragmentHit();
+                        pBronjahm->InterruptNonMeleeSpells(true);
+                        pBronjahm->CastSpell(pBronjahm, m_bIsRegularMode ? SPELL_CONSUME_SOUL : SPELL_CONSUME_SOUL_H, false);
                         m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                     }
                 }
             }
-            m_uiRangeCheck_Timer = 1000;
+            m_uiRangeCheck_Timer = 500;
         }
         else m_uiRangeCheck_Timer -= uiDiff;
     }

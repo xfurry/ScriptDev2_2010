@@ -11,7 +11,7 @@ UPDATE `creature_template` SET `ScriptName`='npc_SoulHorror' WHERE `entry`=36522
 -- Boss
 UPDATE `creature_template` SET `ScriptName`='boss_Bronjahn' WHERE `entry`=36497;
 UPDATE `creature_template` SET `ScriptName`='mob_corrupted_soul_fragment' WHERE `entry`=36535;
-UPDATE `creature_template` SET `ScriptName`='boss_Devourer_of_Souls' WHERE `entry`=36502;
+UPDATE `creature_template` SET mechanic_immune_mask = 764362751, `ScriptName`='boss_Devourer_of_Souls' WHERE `entry`=36502;
 UPDATE `creature_template` SET `ScriptName`='mob_well_of_souls' WHERE `entry`=36536;
 -- Npc
 UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_fos_start' WHERE `entry` in (37596, 37597);

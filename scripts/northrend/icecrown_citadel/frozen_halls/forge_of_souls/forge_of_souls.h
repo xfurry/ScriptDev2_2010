@@ -30,7 +30,7 @@ enum
     NPC_SYLVANAS_START              = 37596,
     NPC_SYLVANAS_END                = 38161,
 
-    TYPE_BRONJAHN                 = 1,
+    TYPE_BRONJAHM                 = 1,
     TYPE_DEVOURER_OF_SOULS        = 2,
 };
 

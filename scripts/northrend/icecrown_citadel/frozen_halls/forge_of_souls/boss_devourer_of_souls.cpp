@@ -38,13 +38,16 @@ enum
     SPELL_MIRRORED_SOUL         = 69051,
     SPELL_WELL_OF_SOULS         = 68820,
     SPELL_UNLEASHED_SOULS       = 68939,
-    SPELL_WAILING_SOULS         = 68912,
+    SPELL_WAILING_SOULS         = 70324,
     SPELL_WELL_OF_SOULS_VIS     = 68854,
 
-    SPELL_WELL_OF_SOULS_AURA    = 68863,
-    SPELL_WELL_OF_SOULS_AURA_H  = 70323,
+    SPELL_WELL_OF_SOULS_AURA    = 68854,
 
     ACHIEVEMENT_THREE_FACED     = 4523,
+
+    /*Others*/
+    MODEL_FAT                     = 30149,
+    MODEL_WOMAN                   = 30150,
 
     MOB_WELL_OF_SOULS           = 36536,
 
@@ -267,6 +270,7 @@ struct MANGOS_DLL_DECL boss_Devourer_of_SoulsAI : public ScriptedAI
     uint32 m_uiMirroredSoulTimer;
     uint32 m_uiWellOfSoulsTimer;
     uint32 m_uiUnleashedSoulsTimer;
+    uint32 m_uiUnleashedSoulsEnd;
     uint32 m_uiWailingSoulsTimer;
 
     bool m_bIsThreeFaced;
@@ -283,8 +287,12 @@ struct MANGOS_DLL_DECL boss_Devourer_of_SoulsAI : public ScriptedAI
         m_uiMirroredSoulTimer   = 20000;
         m_uiWellOfSoulsTimer    = 30000;
         m_uiUnleashedSoulsTimer = 25000;
+        m_uiUnleashedSoulsEnd   = 40000;
         m_uiWailingSoulsTimer   = 28000;
+    }
 
+    void JustReachedHome()
+    {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_DEVOURER_OF_SOULS, NOT_STARTED);
     }
@@ -350,10 +358,11 @@ struct MANGOS_DLL_DECL boss_Devourer_of_SoulsAI : public ScriptedAI
 
         if (m_uiPhantomBlastTimer < uiDiff)
         {
-            m_creature->CastStop();
             if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            {
                 if(DoCastSpellIfCan(pTarget, m_bIsRegularMode ? SPELL_PHANTOM_BLAST : SPELL_PHANTOM_BLAST_H) == CAST_OK)
                     m_bIsThreeFaced = false;
+            }
             m_uiPhantomBlastTimer = urand(6000, 8000);
         }
         else
@@ -391,13 +400,25 @@ struct MANGOS_DLL_DECL boss_Devourer_of_SoulsAI : public ScriptedAI
             }
 
             DoScriptText(EMOTE_UNLEASHED_SOULS, m_creature);
-            m_creature->CastStop();
+            m_creature->InterruptNonMeleeSpells(true);
             DoCast(m_creature, SPELL_UNLEASHED_SOULS);
 
+            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->SetDisplayId(MODEL_FAT);
+            m_creature->RemoveAllAuras();
+            m_uiUnleashedSoulsEnd = 5000;
             m_uiUnleashedSoulsTimer = 30000;
         }
         else
             m_uiUnleashedSoulsTimer -= uiDiff;
+
+        if(m_uiUnleashedSoulsEnd < uiDiff)
+        {
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->SetDisplayId(MODEL_WOMAN);
+            m_uiUnleashedSoulsEnd = 60000;
+        }
+        else m_uiUnleashedSoulsEnd -= uiDiff;
 
         if (m_uiWailingSoulsTimer < uiDiff)
         {
@@ -467,6 +488,8 @@ struct MANGOS_DLL_DECL mob_well_of_soulsAI : public ScriptedAI
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        pCreature->SetDisplayId(11686);
+        pCreature->setFaction(14);
         SetCombatMovement(false);
         Reset();
     }
@@ -474,36 +497,15 @@ struct MANGOS_DLL_DECL mob_well_of_soulsAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
-    uint32 m_uiSpellTimer;
-
     void Reset()
     { 
-        m_uiSpellTimer = 1000;
-        DoCast(m_creature, m_bIsRegularMode ? SPELL_WELL_OF_SOULS_AURA : SPELL_WELL_OF_SOULS_AURA_H);
+        DoCast(m_creature, SPELL_WELL_OF_SOULS_AURA);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        /*if (m_uiSpellTimer < uiDiff)
-        {
-            Map *map = m_creature->GetMap();
-            if (map->IsDungeon())
-            {
-                Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                if (PlayerList.isEmpty())
-                    return;
-
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 4)
-                        m_creature->DealDamage(i->getSource(), m_bIsRegularMode ? urand(2925, 3075) : urand(3900, 4100), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                }
-            } 
-            m_uiSpellTimer = 1000;
-        }
-        else
-            m_uiSpellTimer -= uiDiff;*/
+        if (m_pInstance && m_pInstance->GetData(TYPE_DEVOURER_OF_SOULS) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
     }
 };
 

@@ -267,13 +267,13 @@ struct MANGOS_DLL_DECL npc_SoulguardBonecasterAI: public ScriptedAI
 
     uint32 m_uiBoneVolleyTimer;
     uint32 m_uiRaiseDeadTimer;
-    uint32 m_uiShieldOfBonesTimer;
+    bool m_bHasShield;
 
     void Reset()
     {
         m_uiBoneVolleyTimer     = 6000;
         m_uiRaiseDeadTimer      = 25000;
-        m_uiShieldOfBonesTimer  = 6000;
+        m_bHasShield            = false;
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -298,13 +298,11 @@ struct MANGOS_DLL_DECL npc_SoulguardBonecasterAI: public ScriptedAI
         else
             m_uiRaiseDeadTimer -= uiDiff;
 
-        if (m_uiShieldOfBonesTimer < uiDiff)
+        if (m_creature->GetHealthPercent() < 30.0f && !m_bHasShield)
         {
             DoCast(m_creature, m_bIsRegularMode ? SPELL_SHIELD_OF_BONES : SPELL_SHIELD_OF_BONES_H);
-            m_uiShieldOfBonesTimer = 8000;
+            m_bHasShield = true;
         }
-        else
-            m_uiShieldOfBonesTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
