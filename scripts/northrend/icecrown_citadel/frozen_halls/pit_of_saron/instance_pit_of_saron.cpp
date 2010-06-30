@@ -23,12 +23,14 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
 {
     instance_pit_of_saron(Map* pMap) : ScriptedInstance(pMap) {Initialize();};
 
-	std::string str_data;
-    uint64 m_uiKrick;
-    uint64 m_uiIck;
-    uint64 m_uiRimefang;
-	uint64 m_uiGarfrost;
-	uint64 m_uiTyrannus;
+	std::string m_strInstData;
+    uint64 m_uiKrickGUID;
+    uint64 m_uiIckGUID;
+    uint64 m_uiRimefangGUID;
+	uint64 m_uiGarfrostGUID;
+	uint64 m_uiTyrannusGUID;
+
+    uint64 m_uiHorPortcullisGUID;
 
     uint32 m_auiEncounter[MAX_ENCOUNTER];
 
@@ -36,11 +38,12 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
    {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
-        m_uiGarfrost = 0;
-		m_uiKrick = 0;
-		m_uiTyrannus = 0;
-        m_uiIck = 0;
-        m_uiRimefang = 0;
+        m_uiGarfrostGUID    = 0;
+		m_uiKrickGUID       = 0;
+		m_uiTyrannusGUID    = 0;
+        m_uiIckGUID         = 0;
+        m_uiRimefangGUID    = 0;
+        m_uiHorPortcullisGUID = 0;
     }
 
     bool IsEncounterInProgress() const
@@ -53,56 +56,35 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
 
     void OnCreatureCreate(Creature* pCreature, bool add)
     {
-        Map::PlayerList const &players = instance->GetPlayers();
-        uint32 TeamInInstance = 0;
-
-        if (!players.isEmpty())
-        {
-            if (Player* pPlayer = players.begin()->getSource())
-                TeamInInstance = pPlayer->GetTeam();
-        }
-
         switch(pCreature->GetEntry())
         {
            case NPC_KRICK:    
-               m_uiKrick = pCreature->GetGUID();     
+               m_uiKrickGUID = pCreature->GetGUID();     
                break;
            case NPC_ICK: 
-               m_uiIck = pCreature->GetGUID();
+               m_uiIckGUID = pCreature->GetGUID();
                break;
 		   case NPC_GARFROST:    
-               m_uiGarfrost = pCreature->GetGUID();        
+               m_uiGarfrostGUID = pCreature->GetGUID();        
                break;
 		   case NPC_TYRANNUS:    
-               m_uiTyrannus = pCreature->GetGUID();        
+               m_uiTyrannusGUID = pCreature->GetGUID();        
                break;
            case NPC_RIMEFANG:
-               m_uiRimefang = pCreature->GetGUID();
+               m_uiRimefangGUID = pCreature->GetGUID();
                break;
-           case NPC_SLYVANAS_PART1:
-                if (TeamInInstance == ALLIANCE)
-                   pCreature->UpdateEntry(NPC_JAINA_PART1, ALLIANCE);
-				break;
-           case NPC_KALIRA:
-                if (TeamInInstance == ALLIANCE)
-                   pCreature->UpdateEntry(NPC_ELANDRA, ALLIANCE);
-				break;
-           case NPC_LORALEN:
-                if (TeamInInstance == ALLIANCE)
-                   pCreature->UpdateEntry(NPC_KORELN, ALLIANCE);
-				break;
-            case NPC_CHAMPION_1_HORDE:
-                if (TeamInInstance == ALLIANCE)
-                   pCreature->UpdateEntry(NPC_CHAMPION_1_ALLIANCE, ALLIANCE);
-				break;
-            case NPC_CHAMPION_2_HORDE:
-                if (TeamInInstance == ALLIANCE)
-                   pCreature->UpdateEntry(NPC_CHAMPION_2_ALLIANCE, ALLIANCE);
-				break;
-            case NPC_CHAMPION_3_HORDE: // No 3rd set for Alliance?
-                if (TeamInInstance == ALLIANCE) 
-                   pCreature->UpdateEntry(NPC_CHAMPION_2_ALLIANCE, ALLIANCE);
-				break;
+        }
+    }
+
+    void OnObjectCreate(GameObject* pGo)
+    {
+        switch(pGo->GetEntry())
+        {
+        case GO_HOR_PORTCULLIS:
+            m_uiHorPortcullisGUID = pGo->GetGUID();
+            if(m_auiEncounter[1] == DONE)
+                pGo->SetGoState(GO_STATE_ACTIVE);
+            break;
         }
     }
 
@@ -110,31 +92,40 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
     {
         switch(identifier)
         {
-            case TYPE_GARFROST:			    return m_uiGarfrost;
-			case TYPE_TYRANNUS:             return m_uiTyrannus;
-			case TYPE_KRICK_AND_ICK:        return m_uiKrick;
+            case NPC_GARFROST:			    return m_uiGarfrostGUID;
+			case NPC_TYRANNUS:              return m_uiTyrannusGUID;
+			case NPC_KRICK:                 return m_uiKrickGUID;
         }
 
         return 0;
     }
 
-    void SetData(uint32 type, uint32 data)
+    void SetData(uint32 type, uint32 uiData)
     {
         switch(type)
         {
         case TYPE_GARFROST:
-            m_auiEncounter[0] = data; break;
+            m_auiEncounter[0] = uiData; break;
 		case TYPE_TYRANNUS:
-            m_auiEncounter[1] = data; break;
+            m_auiEncounter[1] = uiData; 
+            if(uiData == DONE)
+                DoUseDoorOrButton(m_uiHorPortcullisGUID);
+            break;
         case TYPE_KRICK_AND_ICK:
-            m_auiEncounter[2] = data; break;
+            m_auiEncounter[2] = uiData; break;
         case TYPE_INTRO:
-            m_auiEncounter[3] = data; break;
+            m_auiEncounter[3] = uiData; break;
         }
 
-        if (data == DONE)
+        if (uiData == DONE)
         {
+            std::ostringstream saveStream;
+            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3];
+            m_strInstData = saveStream.str();
+
+            OUT_SAVE_INST_DATA;
             SaveToDB();
+            OUT_SAVE_INST_DATA_COMPLETE;
         }
     }
 
@@ -151,47 +142,24 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
         return 0;
     }
 
-    std::string GetSaveData()
+    void Load(const char* strIn)
     {
-        OUT_SAVE_INST_DATA;
-
-        std::ostringstream saveStream;
-        saveStream << "P S " << m_auiEncounter[0] << " " << m_auiEncounter[1]  << " " << m_auiEncounter[2] << " " << m_auiEncounter[3];
-
-        str_data = saveStream.str();
-
-        OUT_SAVE_INST_DATA_COMPLETE;
-        return str_data;
-    }
-
-    void Load(const char* in)
-    {
-        if (!in)
+        if (!strIn)
         {
             OUT_LOAD_INST_DATA_FAIL;
             return;
         }
 
-        OUT_LOAD_INST_DATA(in);
+        OUT_LOAD_INST_DATA(strIn);
 
-        char dataHead1, dataHead2;
-        uint16 data0, data1, data2, data3, data4;
+        std::istringstream loadStream(strIn);
+        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3];
 
-        std::istringstream loadStream(in);
-        loadStream >> dataHead1 >> dataHead2 >> data0 >> data1 >> data2 >> data3 >> data4;
-
-        if (dataHead1 == 'F' && dataHead2 == 'S')
+        for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
         {
-            m_auiEncounter[0] = data0;
-            m_auiEncounter[1] = data1;
-			m_auiEncounter[2] = data2;
-            m_auiEncounter[3] = data3;
-
-            for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
-                if (m_auiEncounter[i] == IN_PROGRESS)
-                    m_auiEncounter[i] = NOT_STARTED;
-
-        } else OUT_LOAD_INST_DATA_FAIL;
+            if (m_auiEncounter[i] == IN_PROGRESS)
+                m_auiEncounter[i] = NOT_STARTED;
+        }
 
         OUT_LOAD_INST_DATA_COMPLETE;
     }

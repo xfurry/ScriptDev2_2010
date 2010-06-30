@@ -26,18 +26,21 @@ EndScriptData */
 
 enum
 {
+    // ick
+    SPELL_POISON_NOVA             = 68989,
+    SPELL_POISON_NOVA_H           = 70434,
+    SPELL_MIGHTY_KICK             = 69021,
     SPELL_PURSUED                 = 68987,
     SPELL_CONFUSION               = 69029,
+    // krick
+    SPELL_TOXIC_WASTE             = 69024,
+    SPELL_TOXIC_WASTE_H           = 70436,
+    SPELL_STRANGULATING           = 69413,
+    SPELL_SHADOW_BOLT             = 69028,
     SPELL_EXPLOSIVE_BARRAGE       = 69263,
     NPC_EXPLOSIVE_ORB             = 36610,
     SPELL_EXPLOSIVE_BARRAGE_ORB   = 69019,
     SPELL_EXPLOSIVE_BARRAGE_ORB_H = 70433,
-    SPELL_MIGHTY_KICK             = 69021,
-    SPELL_POISON_NOVA             = 68989,
-    SPELL_POISON_NOVA_H           = 70434,
-    SPELL_SHADOW_BOLT             = 69028,
-    SPELL_TOXIC_WASTE             = 69024,
-    SPELL_TOXIC_WASTE_H           = 70436,
 
     SAY_KRICK_CHASE_1             = -1610064,
     SAY_KRICK_CHASE_2             = -1610065,
@@ -82,23 +85,25 @@ struct MANGOS_DLL_DECL boss_IckAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
-    Creature* pKrick;
-    Creature* pIck;
+    uint64 m_uiKrickGUID;
 
     uint32 m_uiPoisonNovaTimer;
     uint32 m_uiPursueTimer;
+    uint32 m_uiPursueDelayTimer;
     uint32 m_uiMightKickTimer;
 
     void Reset()
     {
+        m_uiKrickGUID       = 0;
         m_uiPoisonNovaTimer = 30000;
         m_uiPursueTimer     = 10000;
+        m_uiPursueDelayTimer= 30000;
         m_uiMightKickTimer  = 20000;
     }
 
     void KilledUnit(Unit *victim)
     {
-        if(pKrick)
+        if(Creature* pKrick = m_pInstance->instance->GetCreature(m_uiKrickGUID))
         {
             if(irand(0,1))
                 DoScriptText(SAY_SLAY1, pKrick);
@@ -114,25 +119,24 @@ struct MANGOS_DLL_DECL boss_IckAI : public ScriptedAI
 
         if(!GetClosestCreatureWithEntry(m_creature, NPC_KRICK, 50.0f))
         {
-            pKrick = m_creature->SummonCreature(NPC_KRICK, KrickPos[0], KrickPos[1], KrickPos[2], KrickPos[3], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000);
-            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                pKrick->AddThreat(pTarget, 0.0f);
-            DoScriptText(SAY_AGGRO, pKrick);
+            if(Creature* pKrick = m_creature->SummonCreature(NPC_KRICK, KrickPos[0], KrickPos[1], KrickPos[2], KrickPos[3], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000))
+            {
+                if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                    pKrick->AddThreat(pTarget, 0.0f);
+                DoScriptText(SAY_AGGRO, pKrick);
+                m_uiKrickGUID = pKrick->GetGUID();
+            }
         }
         else
         {
-            pKrick = GetClosestCreatureWithEntry(m_creature, NPC_KRICK, 80.0f);
-            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                pKrick->AddThreat(pTarget, 0.0f);
-            DoScriptText(SAY_AGGRO, pKrick);
+            if(Creature* pKrick = GetClosestCreatureWithEntry(m_creature, NPC_KRICK, 80.0f))
+            {
+                if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                    pKrick->AddThreat(pTarget, 0.0f);
+                DoScriptText(SAY_AGGRO, pKrick);
+                m_uiKrickGUID = pKrick->GetGUID();
+            }
         }
-    }
-
-    // TODO: effect 0 and effect 1 may be on different target
-    void SpellHitTarget(Unit *pTarget, const SpellEntry *spell)
-    {
-        if (spell->Id == SPELL_PURSUED)
-            AttackStart(pTarget);
     }
 
     void JustDied(Unit *victim)
@@ -148,9 +152,8 @@ struct MANGOS_DLL_DECL boss_IckAI : public ScriptedAI
 
         if (m_uiPoisonNovaTimer < uiDiff)
         {
-            if (pKrick)
+            if (Creature* pKrick = m_pInstance->instance->GetCreature(m_uiKrickGUID))
                 DoScriptText(SAY_KRICK_POISON, pKrick);
-            //DoScriptText(SAY_ICK_POISON, m_creature);
             DoCast(m_creature, m_bIsRegularMode ? SPELL_POISON_NOVA : SPELL_POISON_NOVA_H);
             m_uiPoisonNovaTimer = 30000;
         }
@@ -159,7 +162,7 @@ struct MANGOS_DLL_DECL boss_IckAI : public ScriptedAI
 
         if (m_uiPursueTimer < uiDiff)
         {
-            if (pKrick)
+            if (Creature* pKrick = m_pInstance->instance->GetCreature(m_uiKrickGUID))
             {
                 switch (urand(0, 2))
                 {
@@ -174,15 +177,22 @@ struct MANGOS_DLL_DECL boss_IckAI : public ScriptedAI
                     break;
                 }
             }
-            //DoScriptText(SAY_ICK_CHASE, m_creature);
 
             if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_PURSUED);
-            DoCast(m_creature, SPELL_CONFUSION);
+            
             m_uiPursueTimer = 13000;
+            m_uiPursueDelayTimer = 1000;
         }
         else
             m_uiPursueTimer -= uiDiff;
+
+        if(m_uiPursueDelayTimer < uiDiff)
+        {
+            //DoCast(m_creature, SPELL_CONFUSION);
+            m_uiPursueDelayTimer = 30000;
+        }
+        else m_uiPursueDelayTimer -= uiDiff;
 
         if (m_uiMightKickTimer < uiDiff)
         {
@@ -276,7 +286,11 @@ struct MANGOS_DLL_DECL boss_KrickAI : public ScriptedAI
 
             if (m_uiToxicWasteTimer < uiDiff)
             {
-                DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_TOXIC_WASTE : SPELL_TOXIC_WASTE_H);
+                if(Creature* pIck = GetClosestCreatureWithEntry(m_creature, NPC_ICK, 100.0f))
+                {
+                    if (Unit* pTarget = pIck->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                        DoCast(pTarget, m_bIsRegularMode ? SPELL_TOXIC_WASTE : SPELL_TOXIC_WASTE_H);
+                }
                 m_uiToxicWasteTimer = 10000;
             }
             else
@@ -284,7 +298,11 @@ struct MANGOS_DLL_DECL boss_KrickAI : public ScriptedAI
 
             if (m_uiShadowboltTimer < uiDiff)
             {
-                DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT);
+                if(Creature* pIck = GetClosestCreatureWithEntry(m_creature, NPC_ICK, 100.0f))
+                {
+                    if (Unit* pTarget = pIck->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                        DoCast(pTarget, SPELL_SHADOW_BOLT);
+                }
                 m_uiShadowboltTimer = 15000;
             }
             else
@@ -306,10 +324,13 @@ struct MANGOS_DLL_DECL boss_KrickAI : public ScriptedAI
 
             if (m_uiSummonOrbsTimer < uiDiff && m_bIsSummoning)
             {
-                for(uint8 i = 0; i < 4; i++)
+                for(uint8 i = 0; i < 4; ++i)
                 {
-                    if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        m_creature->SummonCreature(NPC_EXPLOSIVE_ORB, pTarget->GetPositionX() + urand(0, 3), pTarget->GetPositionY() + urand(0, 3), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 4000);
+                    if(Creature* pIck = GetClosestCreatureWithEntry(m_creature, NPC_ICK, 100.0f))
+                    {
+                        if (Unit* pTarget = pIck->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                            m_creature->SummonCreature(NPC_EXPLOSIVE_ORB, pTarget->GetPositionX() + urand(0, 3), pTarget->GetPositionY() + urand(0, 3), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 4000);
+                    }
                 }
                 m_uiSummonOrbsTimer = 1500;
             }
@@ -463,6 +484,8 @@ struct MANGOS_DLL_DECL mob_explosive_orbAI : public ScriptedAI
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->setFaction(14);
+        pCreature->SetDisplayId(11686);
         SetCombatMovement(false);
         Reset();
     }

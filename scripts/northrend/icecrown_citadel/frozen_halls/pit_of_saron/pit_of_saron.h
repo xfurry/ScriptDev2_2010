@@ -45,6 +45,8 @@ enum
     NPC_RIMEFANG                    = 36661,
     NPC_TYRANNUS_INTRO              = 36794,
 
+    GO_HOR_PORTCULLIS               = 201848,
+
     TYPE_GARFROST                  = 1,
     TYPE_TYRANNUS                  = 2,
     TYPE_KRICK_AND_ICK             = 3,

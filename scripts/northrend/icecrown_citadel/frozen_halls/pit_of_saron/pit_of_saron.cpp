@@ -841,6 +841,13 @@ struct MANGOS_DLL_DECL npc_GeistAmbusherAI: public ScriptedAI
     }
 };
 
+// TODO:
+enum GaunteletEvent
+{
+    NPC_COLLAPSING_ICICLE       = 36847,
+    SPELL_ICICLE_DUMMY          = 69428,
+};
+
 struct MANGOS_DLL_DECL npc_disturbedGlacialRevenantAI: public ScriptedAI
 {
     npc_disturbedGlacialRevenantAI(Creature *pCreature) : ScriptedAI(pCreature)

@@ -26,7 +26,6 @@ EndScriptData */
 
 enum
 {
-
     SAY_AGGRO           = -1610051,
     SAY_SLAY1           = -1610052,
     SAY_SLAY2           = -1610054,
@@ -36,7 +35,7 @@ enum
     SAY_DEATH           = -1610057,
 
     SPELL_PERMAFROST                 = 70326,
-    SPELL_PERMAFROST_TRIG            = 68786,
+    SPELL_PERMAFROST_AURA            = 68786,
     SPELL_THROW_SARONITE             = 68788,
     SPELL_THUNDERING_STOMP           = 68771,
     SPELL_CHILLING_WAVE              = 68778,
@@ -336,7 +335,7 @@ struct MANGOS_DLL_DECL boss_GarfrostAI : public ScriptedAI
                 if (!pTarget || pTarget->GetTypeId() != TYPEID_PLAYER)
                     continue;
 
-                Aura *AuraFrost = pTarget->GetAura(SPELL_PERMAFROST_TRIG, EFFECT_INDEX_0);
+                Aura *AuraFrost = pTarget->GetAura(SPELL_PERMAFROST_AURA, EFFECT_INDEX_0);
                 if (AuraFrost && AuraFrost->GetStackAmount() > 10)
                 {
                     hasMoreThanTen = true;
@@ -358,8 +357,7 @@ struct MANGOS_DLL_DECL boss_GarfrostAI : public ScriptedAI
 
         if (m_uiThunderingStompTimer < uiDiff)
         {
-            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                DoCast(pTarget, SPELL_THUNDERING_STOMP);
+            DoCast(m_creature, SPELL_THUNDERING_STOMP);
             m_uiThunderingStompTimer = 20000;
         }
         else
@@ -367,7 +365,7 @@ struct MANGOS_DLL_DECL boss_GarfrostAI : public ScriptedAI
 
         if (m_uiDeepFreezeTimer < uiDiff)
         {
-            if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_DEEP_FREEZE : SPELL_DEEP_FREEZE_H);
             m_uiDeepFreezeTimer = 35000;
         }
@@ -376,7 +374,8 @@ struct MANGOS_DLL_DECL boss_GarfrostAI : public ScriptedAI
 
         if (m_uiChillingWaveTimer < uiDiff)
         {
-            DoCast(m_creature, m_bIsRegularMode ? SPELL_CHILLING_WAVE : SPELL_CHILLING_WAVE_H);
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_CHILLING_WAVE : SPELL_CHILLING_WAVE_H);
             m_uiChillingWaveTimer = 40000;
         }
         else
@@ -394,7 +393,7 @@ struct MANGOS_DLL_DECL boss_GarfrostAI : public ScriptedAI
         {
             m_pInstance->SetData(TYPE_GARFROST, DONE);
 
-            /* fix this!!! -> invalid aura id
+            /* fix this!!!
             if(!m_bIsRegularMode && !hasMoreThanTen)
                 m_pInstance->DoCompleteAchievement(ACHIEV_DOESNT_GO_TO_ELEVEN);*/
         }
