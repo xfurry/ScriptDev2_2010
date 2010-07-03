@@ -50,7 +50,7 @@ enum
     WHISPER_OPEN_PORTAL                         = -1615042, // whisper, shared by two dragons
 
     //Sartharion Spells
-    SPELL_BERSERK                               = 26662,//61632,    // Increases the caster's attack speed by 150% and all damage it deals by 500% for 5 min.
+    SPELL_BERSERK                               = 61632,    // Increases the caster's attack speed by 150% and all damage it deals by 500% for 5 min.
     SPELL_CLEAVE                                = 56909,    // Inflicts 35% weapon damage to an enemy and its nearest allies, affecting up to 10 targets.
     SPELL_FLAME_BREATH                          = 56908,    // Inflicts 8750 to 11250 Fire damage to enemies in a cone in front of the caster.
     SPELL_FLAME_BREATH_H                        = 58956,    // Inflicts 10938 to 14062 Fire damage to enemies in a cone in front of the caster.
@@ -78,51 +78,57 @@ enum
 
     SPELL_SHADOW_FISSURE_H                      = 59127,    // Deals 9488 to 13512 Shadow damage to any enemy within the Shadow fissure after 5 sec.
     SPELL_SHADOW_FISSURE                        = 57579,    // Deals 6188 to 8812 Shadow damage to any enemy within the Shadow fissure after 5 sec.
-    NPC_TWILIGHT_FISSURE                        = 30641,
 
     //Vesperon
     //In portal is a disciple, when disciple killed remove Power_of_vesperon, portal open multiple times
     NPC_ACOLYTE_OF_VESPERON                     = 31219,    // Acolyte of Vesperon 30858,
+    NPC_DISCIPLE_OF_VESPERON                    = 30858,
     SPELL_POWER_OF_VESPERON                     = 61251,    // Vesperon's presence decreases the maximum health of all enemies by 25%.
     SPELL_TWILIGHT_TORMENT_VESP                 = 57948,    // (Shadow only) trigger 57935 then 57988
-    SPELL_TWILIGHT_TORMENT_AURA                 = 57988,
+    SPELL_TWILIGHT_TORMENT_AURA                 = 57935,    // Aura that triggers the dmg
     SPELL_TWILIGHT_TORMENT_VESP_ACO             = 58853,    // (Fire and Shadow) trigger 58835 then 57988
 
     //Shadron
     //In portal is a disciple, when disciple killed remove Power_of_vesperon, portal open multiple times
     NPC_ACOLYTE_OF_SHADRON                      = 31218,    // Acolyte of Shadron 30688,
+    NPC_DISCIPLE_OF_SHADRON                     = 30688,    // dummy npc, used to keep the aura alive
     SPELL_POWER_OF_SHADRON                      = 58105,    // Shadron's presence increases Fire damage taken by all enemies by 100%.
     SPELL_GIFT_OF_TWILIGTH_SHA                  = 57835,    // TARGET_SCRIPT shadron
     SPELL_GIFT_OF_TWILIGTH_SAR                  = 58766,    // TARGET_SCRIPT sartharion
-    SPELL_VOID_BLAST                            = 57581,    // Twilight Fissure
-    SPELL_VOID_BLAST_H                          = 59128,
 
     //Tenebron
     //in the portal spawns 6 eggs, if not killed in time (approx. 20s)  they will hatch,  whelps can cast 60708
     SPELL_POWER_OF_TENEBRON                     = 61248,    // Tenebron's presence increases Shadow damage taken by all enemies by 100%.
     //Tenebron, dummy spell
-    SPELL_SUMMON_TWILIGHT_WHELP                 = 58035,    // doesn't work, will spawn NPC_TWILIGHT_WHELP
-    SPELL_SUMMON_SARTHARION_TWILIGHT_WHELP      = 58826,    // doesn't work, will spawn NPC_SHARTHARION_TWILIGHT_WHELP
+    SPELL_SUMMON_TWILIGHT_WHELP                 = 58035,    // will spawn NPC_TWILIGHT_WHELP
+    SPELL_SUMMON_SARTHARION_TWILIGHT_WHELP      = 58826,    // will spawn NPC_SHARTHARION_TWILIGHT_WHELP
 
     SPELL_HATCH_EGGS_H                          = 59189,
     SPELL_HATCH_EGGS                            = 58542,
     SPELL_HATCH_EGGS_EFFECT_H                   = 59190,
     SPELL_HATCH_EGGS_EFFECT                     = 58685,
     NPC_TWILIGHT_EGG                            = 30882,
+    NPC_SARTHARION_TWILIGHT_EGG                 = 31204,
 
     //Whelps
     NPC_TWILIGHT_WHELP                          = 30890,
-    NPC_SHARTHARION_TWILIGHT_WHELP              = 31214,
+    NPC_SARTHARION_TWILIGHT_WHELP               = 31214,
     SPELL_FADE_ARMOR                            = 60708,    // Reduces the armor of an enemy by 1500 for 15s
 
     //flame tsunami
-    SPELL_FLAME_TSUNAMI                         = 57494,    // the visual dummy
-    SPELL_FLAME_TSUNAMI_LEAP                    = 60241,    // SPELL_EFFECT_138 some leap effect, causing caster to move in direction
+    SPELL_FLAME_TSUNAMI_VISUAL                  = 57494,    // the visual dummy
     SPELL_FLAME_TSUNAMI_DMG_AURA                = 57492,    // periodic damage, npc has this aura
-    SPELL_TORNADO                               = 57560,    //effect tornado
+    SPELL_FLAME_TSUNAMI_KNOCK                   = 60241,
+    SPELL_FLAME_TSUNAMI_DMG                     = 57491,
+    SPELL_MOLTEN_FURY                           = 60430,
+
+    // flame tornado
+    SPELL_TORNADO_VISUAL                        = 57560,    //effect tornado
     SPELL_TORNADO_SCALE                         = 57598,    //if tornado ready use lava strike
-    SPELL_FOUNTANE                              = 27810,
-    SPELL_FIRE_WALL                             = 43113,
+
+    // twilight fissure
+    SPELL_VOID_BLAST                            = 57581, 
+    SPELL_VOID_BLAST_H                          = 59128,
 
     NPC_FLAME_TSUNAMI                           = 30616,    // for the flame waves
     NPC_LAVA_BLAZE                              = 30643,    // adds spawning from flame strike
@@ -256,7 +262,12 @@ enum VespText
 };
 
 
-uint8 EggCounter = 0;
+class MANGOS_DLL_DECL TwilightAura : public Aura
+{
+public:
+    TwilightAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
+    {}
+};
 
 /*######
 ## Boss Sartharion
@@ -272,10 +283,6 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
 
     ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
-
-    Creature* FlameWave01;
-    Creature* FlameWave02;
-    Creature* FlameWave03;
 
     bool m_bIsBerserk;
     bool m_bIsSoftEnraged;
@@ -297,10 +304,10 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
     bool m_bHasCalledShadron;
     bool m_bHasCalledVesperon;
     bool bCanUseWill;
-    bool hasUsedWill;
+    bool m_bHasUsedWill;
     bool m_bSwitchSide;
 
-    uint32 achievProgress;
+    uint32 m_uiAchievProgress;
 
     void Reset()
     {
@@ -324,21 +331,27 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         m_bHasCalledTenebron = false;
         m_bHasCalledShadron = false;
         m_bHasCalledVesperon = false;
-        bCanUseWill = false;
-        hasUsedWill = false;
+        bCanUseWill         = false;
+        m_bHasUsedWill      = false;
 
         if (m_creature->HasAura(SPELL_TWILIGHT_REVENGE))
             m_creature->RemoveAurasDueToSpell(SPELL_TWILIGHT_REVENGE);
 
-        //m_creature->ResetLootMode();
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_DRAKES, 0);
 
-        achievProgress = 0;
+        m_uiAchievProgress = 0;
     }
 
     void JustReachedHome()
     {
         if (m_pInstance)
+        {
             m_pInstance->SetData(TYPE_SARTHARION_EVENT, NOT_STARTED);
+
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT);
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT_ENTER);
+        }
     }
 
     void Aggro(Unit* pWho)
@@ -364,37 +377,37 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
     {
         DoScriptText(SAY_SARTHARION_DEATH,m_creature);
 
-        if (achievProgress == 1)
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_DRAKES, 0);
+
+        if (m_uiAchievProgress == 1)
         {
             if(m_pInstance)
+            {
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWILIGHT_ASSIST : ACHIEV_TWILIGHT_ASSIST_H);
+                m_pInstance->SetData(TYPE_DRAKES, 1);
+            }
         }
-        else if (achievProgress == 2)
+        else if (m_uiAchievProgress == 2)
         {
             if(m_pInstance)
+            {
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWILIGHT_DUO : ACHIEV_TWILIGHT_DUO_H);
+                m_pInstance->SetData(TYPE_DRAKES, 2);
+            }
         }
-        else if (achievProgress == 3)
+        else if (m_uiAchievProgress == 3)
         {
             if(m_pInstance)
+            {
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_TWILIGHT_ZONE : ACHIEV_TWILIGHT_ZONE_H);
+                m_pInstance->SetData(TYPE_DRAKES, 3);
+            }
         }
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_SARTHARION_EVENT, DONE);
     }
-
-    // m_creature->ResetLootMode() is called from Reset()
-    // AddDrakeLootMode() should only ever be called from FetchDragons(), which is called from Aggro()
-    /*void AddDrakeLootMode()
-    {
-        if (m_creature->HasLootMode(LOOT_MODE_HARD_MODE_2))      // Has two Drake loot modes
-            m_creature->AddLootMode(LOOT_MODE_HARD_MODE_3);      // Add 3rd Drake loot mode
-        else if (m_creature->HasLootMode(LOOT_MODE_HARD_MODE_1)) // Has one Drake loot mode
-            m_creature->AddLootMode(LOOT_MODE_HARD_MODE_2);      // Add 2nd Drake loot mode
-        else                                                     // Has no Drake loot modes
-            m_creature->AddLootMode(LOOT_MODE_HARD_MODE_1);      // Add 1st Drake loot mode
-    }*/
 
     void KilledUnit(Unit* pVictim)
     {
@@ -416,8 +429,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         if (pTene && pTene->isAlive() && !pTene->getVictim())
         {
             bCanUseWill = true;
-            achievProgress += 1;
-            //AddDrakeLootMode();
+            m_uiAchievProgress += 1;
             pTene->GetMotionMaster()->MovePoint(POINT_ID_INIT, m_aTene[0].m_fX, m_aTene[0].m_fY, m_aTene[0].m_fZ);
 
             if (!pTene->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
@@ -427,8 +439,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         if (pShad && pShad->isAlive() && !pShad->getVictim())
         {
             bCanUseWill = true;
-            achievProgress += 1;
-            //AddDrakeLootMode();
+            m_uiAchievProgress += 1;
             pShad->GetMotionMaster()->MovePoint(POINT_ID_INIT, m_aShad[0].m_fX, m_aShad[0].m_fY, m_aShad[0].m_fZ);
 
             if (!pShad->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
@@ -438,8 +449,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         if (pVesp && pVesp->isAlive() && !pVesp->getVictim())
         {
             bCanUseWill = true;
-            achievProgress += 1;
-            //AddDrakeLootMode();
+            m_uiAchievProgress += 1;
             pVesp->GetMotionMaster()->MovePoint(POINT_ID_INIT, m_aVesp[0].m_fX, m_aVesp[0].m_fY, m_aVesp[0].m_fZ);
 
             if (!pVesp->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
@@ -449,7 +459,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
         if (bCanUseWill)
         {
             DoCast(m_creature, SPELL_WILL_OF_SARTHARION);
-            hasUsedWill = true;
+            m_bHasUsedWill = true;
         }
     }
 
@@ -575,10 +585,10 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
                 m_uiEnrageTimer -= uiDiff;
         }
 
-        if (hasUsedWill)
+        if (m_bHasUsedWill)
         {
             m_creature->SetHealth(m_creature->GetMaxHealth() + (m_creature->GetMaxHealth() * 0.25));
-            hasUsedWill = false;
+            m_bHasUsedWill = false;
         }
 
         // flame tsunami
@@ -879,26 +889,26 @@ struct MANGOS_DLL_DECL dummy_dragonAI : public ScriptedAI
 /*######
 ## Mob Tenebron
 ######*/
-
 struct MANGOS_DLL_DECL mob_tenebronAI : public dummy_dragonAI
 {
     mob_tenebronAI(Creature* pCreature) : dummy_dragonAI(pCreature) { Reset(); }
 
     uint32 m_uiShadowBreathTimer;
     uint32 m_uiShadowFissureTimer;
-    uint32 m_uiHatchEggTimer;
-    uint32 m_uiHatchEggFinalTimer;
-    uint32 m_uiPortalTimer;
-    bool isEnraged;
+    uint32 m_uiSummonEggTimer;
+    uint32 m_uiHatchEggsTimer;
+
+    std::list<uint64> m_lEggsGUIDList;
+    std::list<uint64> m_lWhelpsGUIDList;
 
     void Reset()
     {
         m_uiShadowBreathTimer = 20000;
         m_uiShadowFissureTimer = 5000;
-        m_uiHatchEggTimer = 30000;
-        uint32 m_uiHatchEggFinalTimer = 50000;
-        m_uiPortalTimer = 20000;
-        isEnraged = false;
+        m_uiSummonEggTimer = 20000;
+
+        m_lEggsGUIDList.clear();
+        m_lWhelpsGUIDList.clear();
     }
 
     void Aggro(Unit* pWho)
@@ -914,6 +924,47 @@ struct MANGOS_DLL_DECL mob_tenebronAI : public dummy_dragonAI
         DoScriptText(urand(0, 1) ? SAY_TENEBRON_SLAY_1 : SAY_TENEBRON_SLAY_2, m_creature);
     }
 
+    void HatchEggs()
+    {
+        uint32 m_uiWhelpId = 0;
+        if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
+            m_uiWhelpId = NPC_SARTHARION_TWILIGHT_WHELP;
+        else
+            m_uiWhelpId = NPC_TWILIGHT_WHELP;
+
+        if (!m_lEggsGUIDList.empty())
+        {
+            for(std::list<uint64>::iterator itr = m_lEggsGUIDList.begin(); itr != m_lEggsGUIDList.end(); ++itr)
+            {
+                if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
+                {
+                    if (pTemp->isAlive())
+                    {
+                        if(Creature* pWhelp = m_creature->SummonCreature(m_uiWhelpId, pTemp->GetPositionX(), pTemp->GetPositionY(), pTemp->GetPositionZ(), pTemp->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                            pWhelp->SetInCombatWithZone();
+                    }
+                }
+            }
+        }
+        if (!m_lWhelpsGUIDList.empty())
+        {
+            for(std::list<uint64>::iterator itr = m_lWhelpsGUIDList.begin(); itr != m_lWhelpsGUIDList.end(); ++itr)
+            {
+                if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
+                {
+                    if (pTemp->isAlive())
+                    {
+                        if(Creature* pWhelp = m_creature->SummonCreature(m_uiWhelpId, pTemp->GetPositionX(), pTemp->GetPositionY(), pTemp->GetPositionZ(), pTemp->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+                            pWhelp->SetInCombatWithZone();
+                    }
+                }
+            }
+        }
+        m_lEggsGUIDList.clear();
+        m_lWhelpsGUIDList.clear();
+        m_uiSummonEggTimer = 20000;
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
         //if no target, update dummy and return
@@ -927,10 +978,7 @@ struct MANGOS_DLL_DECL mob_tenebronAI : public dummy_dragonAI
         if (m_uiShadowFissureTimer < uiDiff)
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-            {
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_FISSURE : SPELL_SHADOW_FISSURE_H);
-                m_creature->SummonCreature(NPC_TWILIGHT_FISSURE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
-            }
             m_uiShadowFissureTimer = urand(15000, 20000);
         }
         else
@@ -946,76 +994,51 @@ struct MANGOS_DLL_DECL mob_tenebronAI : public dummy_dragonAI
         else
             m_uiShadowBreathTimer -= uiDiff;
 
-        // portal
-        if (m_uiPortalTimer < uiDiff)
+        // twilight eggs
+        if (m_uiSummonEggTimer < uiDiff)
         {
             DoScriptText(urand(0, 1) ? SAY_TENEBRON_SPECIAL_1 : SAY_TENEBRON_SPECIAL_2, m_creature);
             OpenPortal();
-            m_uiPortalTimer = 30000;
-        }
-        else
-            m_uiPortalTimer -= uiDiff;
 
-        // twilight eggs
-        if (m_uiHatchEggTimer < uiDiff)
-        {
-            EggCounter = 6;
-            uint64 whelpId = 0;
-
+            uint32 m_uiEggId = 0;
             if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
-                whelpId = NPC_SHARTHARION_TWILIGHT_WHELP;
+                m_uiEggId = NPC_SARTHARION_TWILIGHT_EGG;
             else
-                whelpId = NPC_TWILIGHT_WHELP;
+                m_uiEggId = NPC_TWILIGHT_EGG;
 
-            for (uint8 i = 0; i < EggCounter; i++)
+            uint32 m_uiWhelpId = 0;
+            if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
+                m_uiWhelpId = NPC_SARTHARION_TWILIGHT_WHELP;
+            else
+                m_uiWhelpId = NPC_TWILIGHT_WHELP;
+
+            SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_TWILIGHT_SHIFT_ENTER);
+
+            for (uint8 i = 0; i < 6; ++i)
             {
                 if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                    m_creature->SummonCreature(whelpId, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 60000);
-
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                    m_creature->SummonCreature(NPC_TWILIGHT_EGG, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 20000);
-            }
-            m_uiHatchEggTimer = 30000;
-        }
-        else
-            m_uiHatchEggTimer -= uiDiff;
-
-        // twilight whelps
-        if (m_uiHatchEggFinalTimer < uiDiff)
-        {
-            if (EggCounter > 0)
-            {
-                uint64 whelpId = 0;
-
-                if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
-                    whelpId = NPC_SHARTHARION_TWILIGHT_WHELP;
-                else
-                    whelpId = NPC_TWILIGHT_WHELP;
-
-                for (uint8 i = 0; i < EggCounter; i++)
                 {
-                    if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        m_creature->SummonCreature(whelpId, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 60000);
+                    if(Creature* pEgg = m_creature->SummonCreature(m_uiEggId, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 1000))
+                        m_lEggsGUIDList.push_back(pEgg->GetGUID());
+                    if(Creature* pWhelp = m_creature->SummonCreature(m_uiWhelpId, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
+                    {
+                        m_lWhelpsGUIDList.push_back(pWhelp->GetGUID());
+                        pWhelp->AddAura(new TwilightAura(spell, EFFECT_INDEX_0, NULL, pWhelp, pWhelp));
+                    }
                 }
             }
-            EggCounter = 0;
-            m_uiHatchEggTimer = 30000;
+            m_uiSummonEggTimer = 60000;
+            m_uiHatchEggsTimer = 15000;
         }
         else
-            m_uiHatchEggFinalTimer -= uiDiff;
+            m_uiSummonEggTimer -= uiDiff;
 
-        if(!isEnraged)
+        if (m_uiHatchEggsTimer < uiDiff)
         {
-            if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
-            {
-                // enrage at 35%
-                Creature* pSartharion = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_SARTHARION));
-
-                if ((pSartharion->GetHealth()*100 / pSartharion->GetMaxHealth()) <= 35)
-                    DoCast(m_creature, SPELL_BERSERK);
-                isEnraged = true;
-            }
+            HatchEggs();
+            m_uiHatchEggsTimer = 60000;
         }
+        else m_uiHatchEggsTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
@@ -1029,7 +1052,6 @@ CreatureAI* GetAI_mob_tenebron(Creature* pCreature)
 /*######
 ## Mob Shadron
 ######*/
-
 struct MANGOS_DLL_DECL mob_shadronAI : public dummy_dragonAI
 {
     mob_shadronAI(Creature* pCreature) : dummy_dragonAI(pCreature) { Reset(); }
@@ -1038,18 +1060,15 @@ struct MANGOS_DLL_DECL mob_shadronAI : public dummy_dragonAI
     uint32 m_uiShadowFissureTimer;
     uint32 m_uiAcolyteShadronTimer;
     uint32 m_uiPortalTimer;
-    bool isEnraged;
+    uint64 m_uiDiscipleGUID;
 
     void Reset()
     {
         m_uiShadowBreathTimer = 20000;
         m_uiShadowFissureTimer = 5000;
-        m_uiAcolyteShadronTimer = 30000;
+        m_uiAcolyteShadronTimer = 25000;
         m_uiPortalTimer = 20000;
-        isEnraged = false;
-
-        if (m_creature->HasAura(SPELL_TWILIGHT_TORMENT_VESP))
-            m_creature->RemoveAurasDueToSpell(SPELL_TWILIGHT_TORMENT_VESP);
+        m_uiDiscipleGUID = 0;
 
         if (m_creature->HasAura(SPELL_GIFT_OF_TWILIGTH_SHA))
             m_creature->RemoveAurasDueToSpell(SPELL_GIFT_OF_TWILIGTH_SHA);
@@ -1087,6 +1106,16 @@ struct MANGOS_DLL_DECL mob_shadronAI : public dummy_dragonAI
         }
     }
 
+    void KillDisciple()
+    {
+        if(Unit* pDisciple = Unit::GetUnit(*m_creature, m_uiDiscipleGUID))
+            pDisciple->DealDamage(pDisciple, m_creature->GetMaxHealth(),NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+
+        m_creature->RemoveAurasDueToSpell(SPELL_GIFT_OF_TWILIGTH_SHA);
+        m_uiPortalTimer = 20000;
+        m_uiAcolyteShadronTimer = 30000;
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
         //if no target, update dummy and return
@@ -1100,10 +1129,7 @@ struct MANGOS_DLL_DECL mob_shadronAI : public dummy_dragonAI
         if (m_uiShadowFissureTimer < uiDiff)
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-            {
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_FISSURE : SPELL_SHADOW_FISSURE_H);
-                m_creature->SummonCreature(NPC_TWILIGHT_FISSURE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
-            }
             m_uiShadowFissureTimer = urand(15000, 20000);
         }
         else
@@ -1124,7 +1150,8 @@ struct MANGOS_DLL_DECL mob_shadronAI : public dummy_dragonAI
         {
             DoScriptText(urand(0, 1) ? SAY_SHADRON_SPECIAL_1 : SAY_SHADRON_SPECIAL_2, m_creature);
             OpenPortal();
-            m_uiPortalTimer = 30000;
+            m_uiAcolyteShadronTimer = urand(1000, 3000);
+            m_uiPortalTimer = 60000;
         }
         else
             m_uiPortalTimer -= uiDiff;
@@ -1134,25 +1161,34 @@ struct MANGOS_DLL_DECL mob_shadronAI : public dummy_dragonAI
         {
             SummonAcolyte();
 
+            // twilight acolyte
             Creature *Acolyte = m_creature->SummonCreature(NPC_ACOLYTE_OF_SHADRON, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 60000);
             Acolyte->SetInCombatWithZone();
 
-            m_uiAcolyteShadronTimer = 30000;
+            // dummy acolyte
+            if(Creature* pDisciple = m_creature->SummonCreature(NPC_DISCIPLE_OF_SHADRON, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 60000))
+            {
+                m_uiDiscipleGUID = pDisciple->GetGUID();
+                pDisciple->CombatStop();
+                pDisciple->GetMotionMaster()->MoveIdle();
+                pDisciple->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                pDisciple->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                pDisciple->SetDisplayId(11686);     // make invisible
+
+                if (m_pInstance)
+                {
+                    //if not solo figth, buff main boss, else place debuff on mini-boss. both spells TARGET_SCRIPT
+                    if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
+                        pDisciple->CastSpell(pDisciple, SPELL_GIFT_OF_TWILIGTH_SAR, false);
+                    else
+                        pDisciple->CastSpell(pDisciple, SPELL_GIFT_OF_TWILIGTH_SHA, false);
+                }
+            }
+
+            m_uiAcolyteShadronTimer = 60000;
         }
         else
             m_uiAcolyteShadronTimer -= uiDiff;
-
-        if(!isEnraged){
-            if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
-            {
-                // enrage at 35%
-                Creature* pSartharion = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_SARTHARION));
-
-                if ((pSartharion->GetHealth()*100 / pSartharion->GetMaxHealth()) <= 35)
-                    DoCast(m_creature, SPELL_BERSERK);
-                isEnraged = true;
-            }
-        }
 
         DoMeleeAttackIfReady();
     }
@@ -1166,7 +1202,6 @@ CreatureAI* GetAI_mob_shadron(Creature* pCreature)
 /*######
 ## Mob Vesperon
 ######*/
-
 struct MANGOS_DLL_DECL mob_vesperonAI : public dummy_dragonAI
 {
     mob_vesperonAI(Creature* pCreature) : dummy_dragonAI(pCreature) { Reset(); }
@@ -1175,15 +1210,18 @@ struct MANGOS_DLL_DECL mob_vesperonAI : public dummy_dragonAI
     uint32 m_uiShadowFissureTimer;
     uint32 m_uiAcolyteVesperonTimer;
     uint32 m_uiPortalTimer;
-    bool isEnraged;
+    uint64 m_uiDiscipleGUID;
 
     void Reset()
     {
         m_uiShadowBreathTimer = 20000;
         m_uiShadowFissureTimer = 5000;
-        m_uiAcolyteVesperonTimer = 30000;
+        m_uiAcolyteVesperonTimer = 25000;
         m_uiPortalTimer = 20000;
-        isEnraged = false;
+        m_uiDiscipleGUID = 0;
+
+        if (m_creature->HasAura(SPELL_TWILIGHT_TORMENT_VESP))
+            m_creature->RemoveAurasDueToSpell(SPELL_TWILIGHT_TORMENT_VESP);
     }
 
     void Aggro(Unit* pWho)
@@ -1197,6 +1235,16 @@ struct MANGOS_DLL_DECL mob_vesperonAI : public dummy_dragonAI
     void KilledUnit(Unit* pVictim)
     {
         DoScriptText(urand(0, 1) ? SAY_VESPERON_SLAY_1 : SAY_VESPERON_SLAY_2, m_creature);
+    }
+
+    void KillDisciple()
+    {
+        if(Unit* pDisciple = Unit::GetUnit(*m_creature, m_uiDiscipleGUID))
+            pDisciple->DealDamage(pDisciple, m_creature->GetMaxHealth(),NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+
+        m_creature->RemoveAurasDueToSpell(SPELL_TWILIGHT_TORMENT_VESP);
+        m_uiPortalTimer = 20000;
+        m_uiAcolyteVesperonTimer = 30000;
     }
 
     void SummonAcolyte()
@@ -1231,10 +1279,7 @@ struct MANGOS_DLL_DECL mob_vesperonAI : public dummy_dragonAI
         if (m_uiShadowFissureTimer < uiDiff)
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-            {
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_SHADOW_FISSURE : SPELL_SHADOW_FISSURE_H);
-                m_creature->SummonCreature(NPC_TWILIGHT_FISSURE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
-            }
             m_uiShadowFissureTimer = urand(15000, 20000);
         }
         else
@@ -1255,7 +1300,8 @@ struct MANGOS_DLL_DECL mob_vesperonAI : public dummy_dragonAI
         {
             DoScriptText(urand(0, 1) ? SAY_VESPERON_SPECIAL_1 : SAY_VESPERON_SPECIAL_2, m_creature);
             OpenPortal();
-            m_uiPortalTimer = 30000;
+            m_uiAcolyteVesperonTimer = urand(1000, 3000);
+            m_uiPortalTimer = 60000;
         }
         else
             m_uiPortalTimer -= uiDiff;
@@ -1264,27 +1310,25 @@ struct MANGOS_DLL_DECL mob_vesperonAI : public dummy_dragonAI
         if (m_uiAcolyteVesperonTimer < uiDiff)
         {
             SummonAcolyte();
-            //DoCast(m_creature, SPELL_TWILIGHT_TORMENT_VESP);
 
             Creature *Acolyte = m_creature->SummonCreature(NPC_ACOLYTE_OF_VESPERON, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 60000);
             Acolyte->SetInCombatWithZone();
-            m_uiAcolyteVesperonTimer = 30000;
+
+            // dummy acolyte
+            if(Creature* pDisciple = m_creature->SummonCreature(NPC_DISCIPLE_OF_VESPERON, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 60000))
+            {
+                m_uiDiscipleGUID = pDisciple->GetGUID();
+                pDisciple->GetMotionMaster()->MoveIdle();
+                pDisciple->CombatStop();
+                pDisciple->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                pDisciple->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                pDisciple->SetDisplayId(11686);     // make invisible
+                pDisciple->CastSpell(pDisciple, SPELL_TWILIGHT_TORMENT_VESP, false);
+            }
+            m_uiAcolyteVesperonTimer = 60000;
         }
         else
             m_uiAcolyteVesperonTimer -= uiDiff;
-
-        if(!isEnraged)
-        {
-            if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
-            {
-                // enrage at 35%
-                Creature* pSartharion = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_SARTHARION));
-
-                if ((pSartharion->GetHealth()*100 / pSartharion->GetMaxHealth()) <= 35)
-                    DoCast(m_creature, SPELL_BERSERK);
-                isEnraged = true;
-            }
-        }
 
         DoMeleeAttackIfReady();
     }
@@ -1298,7 +1342,6 @@ CreatureAI* GetAI_mob_vesperon(Creature* pCreature)
 /*######
 ## Mob Acolyte of Shadron
 ######*/
-
 struct MANGOS_DLL_DECL mob_acolyte_of_shadronAI : public ScriptedAI
 {
     mob_acolyte_of_shadronAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -1311,20 +1354,27 @@ struct MANGOS_DLL_DECL mob_acolyte_of_shadronAI : public ScriptedAI
 
     void Reset()
     {
+        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_TWILIGHT_SHIFT_ENTER);
+        m_creature->AddAura(new TwilightAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature));
     }
 
-    void Aggro(Unit* pWho)
+    void DoCastResidue()
     {
-        if (m_pInstance)
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
         {
-            //if not solo figth, buff main boss, else place debuff on mini-boss. both spells TARGET_SCRIPT
-            if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
-                DoCast(m_creature, SPELL_GIFT_OF_TWILIGTH_SAR);
-            else
-                DoCast(m_creature, SPELL_GIFT_OF_TWILIGTH_SHA);
-        }
-    }
+            Map::PlayerList const &PlayerList = map->GetPlayers();
 
+            if (PlayerList.isEmpty())
+                return;
+
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (i->getSource()->isAlive() && i->getSource()->HasAura(SPELL_TWILIGHT_SHIFT_ENTER, EFFECT_INDEX_0))
+                    i->getSource()->CastSpell(i->getSource(), SPELL_TWILIGHT_RESIDUE, true);
+            }
+        } 
+    }
 
     void JustDied(Unit* killer)
     {
@@ -1348,6 +1398,13 @@ struct MANGOS_DLL_DECL mob_acolyte_of_shadronAI : public ScriptedAI
                 if (pDebuffTarget && pDebuffTarget->isAlive() && pDebuffTarget->HasAura(SPELL_GIFT_OF_TWILIGTH_SHA))
                     pDebuffTarget->RemoveAurasDueToSpell(SPELL_GIFT_OF_TWILIGTH_SHA);
             }
+
+            DoCastResidue();
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT);
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT_ENTER);
+
+            if(Creature* pShadron = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_SHADRON)))
+                ((mob_shadronAI*)pShadron->AI())->KillDisciple();
         }
     }
 
@@ -1368,7 +1425,6 @@ CreatureAI* GetAI_mob_acolyte_of_shadron(Creature* pCreature)
 /*######
 ## Mob Acolyte of Vesperon
 ######*/
-
 struct MANGOS_DLL_DECL mob_acolyte_of_vesperonAI : public ScriptedAI
 {
     mob_acolyte_of_vesperonAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -1380,46 +1436,46 @@ struct MANGOS_DLL_DECL mob_acolyte_of_vesperonAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
 
     void Reset()
-    {        
+    {    
+        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_TWILIGHT_SHIFT_ENTER);
+        m_creature->AddAura(new TwilightAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature));
     }
 
-    void Aggro(Unit* pWho)
+    void DoCastResidue()
     {
-        //if (m_pInstance)
-            //DoCast(m_creature, SPELL_TWILIGHT_TORMENT_VESP_ACO);
-    }
-
-    //Removes each drakes unique debuff from players
-    void RemoveDebuff()
-    {
-        Map* pMap = m_creature->GetMap();
-
-        if (pMap && pMap->IsDungeon())
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
         {
-            Map::PlayerList const &PlayerList = pMap->GetPlayers();
+            Map::PlayerList const &PlayerList = map->GetPlayers();
 
             if (PlayerList.isEmpty())
                 return;
 
             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
             {
-                if (i->getSource()->isAlive() && i->getSource()->HasAura(SPELL_TWILIGHT_TORMENT_VESP_ACO))
-                    i->getSource()->RemoveAurasDueToSpell(SPELL_TWILIGHT_TORMENT_VESP_ACO);
+                if (i->getSource()->isAlive() && i->getSource()->HasAura(SPELL_TWILIGHT_SHIFT_ENTER, EFFECT_INDEX_0))
+                    i->getSource()->CastSpell(i->getSource(), SPELL_TWILIGHT_RESIDUE, true);
             }
-        }
+        } 
     }
-
 
     void JustDied(Unit* pKiller)
     {
         // remove twilight torment on Vesperon
         if (m_pInstance)
         {
-            RemoveDebuff();
             Creature* pVesperon = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_VESPERON));
 
             if (pVesperon && pVesperon->isAlive() && pVesperon->HasAura(SPELL_TWILIGHT_TORMENT_VESP))
                 pVesperon->RemoveAurasDueToSpell(SPELL_TWILIGHT_TORMENT_VESP);
+
+            DoCastResidue();
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_TORMENT_AURA);
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT);
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT_ENTER);
+
+            if(Creature* pVesperon = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_VESPERON)))
+                ((mob_vesperonAI*)pVesperon->AI())->KillDisciple();
         }
     }
 
@@ -1438,42 +1494,14 @@ CreatureAI* GetAI_mob_acolyte_of_vesperon(Creature* pCreature)
 }
 
 /*######
-## Mob Twilight Eggs
-######*/
-
-struct MANGOS_DLL_DECL mob_twilight_eggsAI : public ScriptedAI
-{
-    mob_twilight_eggsAI(Creature* pCreature) : ScriptedAI(pCreature) 
-    { 
-        SetCombatMovement(false);
-        Reset(); 
-    }
-
-    void Reset()
-    {
-    }
-
-    void JustDied(Unit* pKiller)
-    {
-        EggCounter -=1;
-    }
-
-    void AttackStart(Unit* pWho) { }
-    void MoveInLineOfSight(Unit* pWho) { }
-};
-
-CreatureAI* GetAI_mob_twilight_eggs(Creature* pCreature)
-{
-    return new mob_twilight_eggsAI(pCreature);
-}
-
-/*######
 ## Mob Twilight Whelps
 ######*/
-
 struct MANGOS_DLL_DECL mob_twilight_whelpAI : public ScriptedAI
 {
-    mob_twilight_whelpAI(Creature* pCreature) : ScriptedAI(pCreature) { Reset(); }
+    mob_twilight_whelpAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    { 
+        Reset(); 
+    }
 
     uint32 m_uiFadeArmorTimer;
 
@@ -1488,7 +1516,6 @@ struct MANGOS_DLL_DECL mob_twilight_whelpAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        // twilight torment
         if (m_uiFadeArmorTimer < uiDiff)
         {
             DoCast(m_creature->getVictim(), SPELL_FADE_ARMOR);
@@ -1507,64 +1534,154 @@ CreatureAI* GetAI_mob_twilight_whelp(Creature* pCreature)
 }
 
 /*######
-## Mob Shadow Issure
+## Mob Twilight Eggs
 ######*/
-
-struct MANGOS_DLL_DECL mob_twilight_fissureAI : public ScriptedAI
+struct MANGOS_DLL_DECL mob_twilight_eggsAI : public ScriptedAI
 {
-    mob_twilight_fissureAI(Creature *pCreature) : ScriptedAI(pCreature)
-    {
-        Reset();
-        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+    mob_twilight_eggsAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    { 
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
         SetCombatMovement(false);
+        Reset(); 
     }
 
-    uint32 m_uiShadowIssure_Timer;
-    uint32 m_uiDespawnTimer;
-    bool m_bIsRegularMode;
+    ScriptedInstance* m_pInstance;
 
-    void AttackStart(){}
+    uint32 m_uiSummonTimer;
+    uint32 m_uiDieTimer;
+
     void Reset()
     {
-        m_uiShadowIssure_Timer = 5000;
-        m_uiDespawnTimer = 5100;
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        // make it look like a black hole
-        m_creature->SetDisplayId(29038);
+        m_uiSummonTimer = 14000;
+        m_uiDieTimer    = 15000;
+
+        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_TWILIGHT_SHIFT_ENTER);
+        m_creature->AddAura(new TwilightAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature));
+    }
+
+    void JustDied(Unit* killer)
+    {
+        if(!GetOtherEggs())
+        {
+            EjectPlayers();
+            if(Creature* pTenebron = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_TENEBRON)))
+                ((mob_tenebronAI*)pTenebron->AI())->HatchEggs();
+        }
+    }
+
+    void JustSummoned(Creature* pSummoned)
+    {
+        pSummoned->SetInCombatWithZone();
+    }
+
+    bool GetOtherEggs()
+    {
+        if(GetClosestCreatureWithEntry(m_creature, NPC_SARTHARION_TWILIGHT_EGG, 100.0f))
+            return true;
+        if(GetClosestCreatureWithEntry(m_creature, NPC_TWILIGHT_EGG, 100.0f))
+            return true;
+ 
+        return false;
+    }
+
+    void AttackStart(Unit* pWho) 
+    {
+        return;
+    }
+
+    void DoCastResidue()
+    {
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (PlayerList.isEmpty())
+                return;
+
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (i->getSource()->isAlive() && i->getSource()->HasAura(SPELL_TWILIGHT_SHIFT_ENTER, EFFECT_INDEX_0))
+                    i->getSource()->CastSpell(i->getSource(), SPELL_TWILIGHT_RESIDUE, true);
+            }
+        } 
+    }
+
+    void EjectPlayers()
+    {
+        DoCastResidue();
+        if(m_pInstance)
+        {
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT);
+            m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT_ENTER);
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (m_uiShadowIssure_Timer)
-            if (m_uiShadowIssure_Timer < uiDiff)
-            {
-                Map *map = m_creature->GetMap();
-                if (map->IsDungeon())
-                {
-                    Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                    if (PlayerList.isEmpty())
-                        return;
-
-                    for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                    {
-                        if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
-                            i->getSource()->DealDamage(i->getSource(), m_bIsRegularMode? urand(6188, 8812) : urand(9488, 13512), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_SHADOW, NULL, false);
-                    }
-                } 
-                m_uiShadowIssure_Timer = 1000;
-            }
-            else m_uiShadowIssure_Timer -= uiDiff;
-
-        // despawn timer
-        if (m_uiDespawnTimer < uiDiff)
+        if(m_uiSummonTimer < uiDiff)
         {
-            m_creature->ForcedDespawn();
+            if(m_pInstance->GetData(TYPE_SARTHARION_EVENT == IN_PROGRESS))
+                DoCast(m_creature, SPELL_SUMMON_SARTHARION_TWILIGHT_WHELP);
+            else
+                DoCast(m_creature, SPELL_SUMMON_TWILIGHT_WHELP);
+            m_uiSummonTimer = 5000;
         }
         else
-            m_uiDespawnTimer -= uiDiff;
+            m_uiSummonTimer -= uiDiff;
+
+        if (m_uiDieTimer < uiDiff)
+        {
+            EjectPlayers();
+            m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(),NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        }
+        else m_uiDieTimer -= uiDiff;
+    }
+};
+
+CreatureAI* GetAI_mob_twilight_eggs(Creature* pCreature)
+{
+    return new mob_twilight_eggsAI(pCreature);
+}
+
+
+/*######
+## Mob Twilight Fissure
+######*/
+struct MANGOS_DLL_DECL mob_twilight_fissureAI : public ScriptedAI
+{
+    mob_twilight_fissureAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    {
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        SetCombatMovement(false);
+        pCreature->setFaction(14);
+        Reset();         
+    }
+
+    bool m_bIsRegularMode;
+    uint32 m_uiVoidBlast;
+    uint32 m_uiDieTimer;
+    
+    void Reset()
+    {
+        m_uiVoidBlast = 5000;
+        m_uiDieTimer  = 7000;
+    }
+ 
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (m_uiVoidBlast < uiDiff)
+        {
+            DoCast(m_creature,m_bIsRegularMode ? SPELL_VOID_BLAST : SPELL_VOID_BLAST_H);
+            m_uiVoidBlast = 5000;
+        }
+        else m_uiVoidBlast -= uiDiff;
+
+        if (m_uiDieTimer < uiDiff)
+            m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(),NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        else m_uiDieTimer -= uiDiff;
     }
 };
 
@@ -1576,39 +1693,44 @@ CreatureAI* GetAI_mob_twilight_fissure(Creature* pCreature)
 /*######
 ## Mob Flame Tsunami
 ######*/
-
 struct MANGOS_DLL_DECL mob_flame_tsunamiAI : public ScriptedAI
 {
     mob_flame_tsunamiAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
-        Reset();
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        pCreature->setFaction(14);
+        Reset();
     }
 
-    uint32 FlameTimer;
     bool m_bIsRegularMode;
-    bool hasMoved;
-    uint32 move_timer,die_timer, leap_timer;
 
-    void AttackStart(){}
+    uint32 m_uiDamageTimer;
+    uint32 m_uiMoveTimer;
+    bool m_bHasAura;
+
+    // workaround
+    uint32 m_uiLeapTimer;
+
     void Reset()
     {
-        FlameTimer = 1000;
-        hasMoved = false;
-        move_timer = 5000;
-        die_timer = 14000;
-        leap_timer = 1000;
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        DoCast(m_creature, SPELL_FLAME_TSUNAMI);
-        DoCast(m_creature, SPELL_FIRE_WALL);
-        DoCast(m_creature, SPELL_FLAME_TSUNAMI_DMG_AURA);      
+        m_uiDamageTimer = 1000;
+        m_bHasAura      = false;
+        m_uiMoveTimer   = 5000;
+        m_uiLeapTimer   = 5000;
+        DoCast(m_creature, SPELL_FLAME_TSUNAMI_VISUAL);    
     }
 
-    void AttackStart(Unit *who) { return; } // very sample, just don't make them aggreesive
+    void AttackStart(Unit *who) 
+    { 
+        return; 
+    }
 
     void DoLeap()
     {
-        DoCast(m_creature, SPELL_FLAME_TSUNAMI_DMG_AURA);
+        // dmg
+        DoCast(m_creature, SPELL_FLAME_TSUNAMI_DMG, true);
+        // knockgack
         Map* pMap = m_creature->GetMap();
         if (pMap && pMap->IsDungeon())
         {
@@ -1617,56 +1739,49 @@ struct MANGOS_DLL_DECL mob_flame_tsunamiAI : public ScriptedAI
             {
                 for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                 {
-                    if (Player* pPlayer = i->getSource())
+                    if (i->getSource()->isAlive())
                     {
-                        //if (pPlayer->isGameMaster())
-                            //continue;
-                        if (pPlayer->isAlive())
-                        {
-                            if (m_creature->GetDistance2d(pPlayer->GetPositionX(),pPlayer->GetPositionY()) <= 7)
-                            {
-                                pPlayer->CastSpell(pPlayer,60241,true);
-                                //m_creature->DealDamage(i->getSource(), 3200, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_FIRE, NULL, false);
-                            }
-                        }
+                        if (m_creature->GetDistance2d(i->getSource()->GetPositionX(),i->getSource()->GetPositionY()) <= 7)
+                            i->getSource()->CastSpell(i->getSource(), SPELL_FLAME_TSUNAMI_KNOCK, true);
                     }
-
                 }
             }
         }
-
     }
+
     void UpdateAI(const uint32 uiDiff)
     {
-        if (!hasMoved && move_timer <= uiDiff)
+        if (m_uiDamageTimer < uiDiff && !m_bHasAura)
         {
-            hasMoved = true;
+            //DoCast(m_creature, SPELL_FLAME_TSUNAMI_DMG_AURA);  // broken
+            m_bHasAura = true;
+        }
+        else m_uiDamageTimer -= uiDiff;
+
+        if (m_uiLeapTimer < uiDiff)
+        {
+            DoLeap();
+            m_uiLeapTimer = 1000;
+        }
+        else m_uiLeapTimer -= uiDiff;
+
+        if (m_uiMoveTimer <= uiDiff)
+        {
             if (m_creature->GetPositionX() < 3205)
             {
                 m_creature->SetSpeedRate(MOVE_RUN, 2.0f);
                 m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                 m_creature->GetMotionMaster()->MovePoint(POINT_ID_INIT, m_creature->GetPositionX()+84.0f, m_creature->GetPositionY(), m_creature->GetPositionZ());
-                //m_creature->SendMonsterMoveWithSpeed(m_creature->GetPositionX()+84.0f,m_creature->GetPositionY(),m_creature->GetPositionZ(),15000);
-                //m_creature->GetMap()->CreatureRelocation(m_creature,m_creature->GetPositionX()+84.0f,m_creature->GetPositionY(),m_creature->GetPositionZ(),m_creature->GetOrientation());
-            }else
+            }
+            else
             {
                 m_creature->SetSpeedRate(MOVE_RUN, 2.0f);
                 m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                 m_creature->GetMotionMaster()->MovePoint(POINT_ID_INIT, m_creature->GetPositionX()-84.0f, m_creature->GetPositionY(), m_creature->GetPositionZ());
-                //m_creature->SendMonsterMoveWithSpeed(m_creature->GetPositionX()-84.0f,m_creature->GetPositionY(),m_creature->GetPositionZ(),15000);
-                //m_creature->GetMap()->CreatureRelocation(m_creature,m_creature->GetPositionX()-84.0f,m_creature->GetPositionY(),m_creature->GetPositionZ(),m_creature->GetOrientation());
             }
-        }else move_timer -= uiDiff;
-
-        if (die_timer <= uiDiff)
-            m_creature->ForcedDespawn();
-        else die_timer -= uiDiff;
-
-        if (leap_timer <= uiDiff)
-        {
-            DoLeap();
-            leap_timer = 1000;
-        }else leap_timer -= uiDiff;
+            m_uiMoveTimer = 60000;
+        }
+        else m_uiMoveTimer -= uiDiff;
     }
 };
 
@@ -1676,179 +1791,17 @@ CreatureAI* GetAI_mob_flame_tsunami(Creature* pCreature)
 }
  
 /*######
-## Mob Lava Blaze
-######*/
- 
-struct MANGOS_DLL_DECL mob_lava_blazeAI : public ScriptedAI
-{
-    mob_lava_blazeAI(Creature* pCreature) : ScriptedAI(pCreature) { Reset(); }
- 
-    void Reset()
-    { }
- 
-    void SpellHit(Unit* pCaster, const SpellEntry* pSpell)
-    {
-        if (pSpell->Id == 60430)
-            m_creature->SetHealth(m_creature->GetMaxHealth());
-    }
-};
- 
-CreatureAI* GetAI_mob_lava_blaze(Creature* pCreature)
-{
-    return new mob_lava_blazeAI(pCreature);
-}
- 
-/*######
-## Mob Safe Area
-######*/
- 
-struct MANGOS_DLL_DECL mob_safe_areaAI : public ScriptedAI
-{
-    mob_safe_areaAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Reset(); 
-    }
- 
-    uint32 m_uiRangeCheck;
-    ScriptedInstance* m_pInstance;
- 
-    void Reset()
-    {
-        m_uiRangeCheck = 10000;
-    }
-    
-    void MoveInLineOfSight(Unit *who)
-    {
-        return;
-    }
- 
-    void Aggro(Unit* who)
-    {
-        DoStopAttack();
-        SetCombatMovement(false);
-    }
-    void JustDied(Unit* who)
-    {
-        //If dance mob was somehow killed - respawn him.
-        m_creature->Respawn();
-    }
- 
-    void CheckRange()
-    {
-        Map* pMap = m_creature->GetMap();
-        if (pMap && pMap->IsDungeon())
-        {
-            Map::PlayerList const &PlayerList = pMap->GetPlayers();
-            if (!PlayerList.isEmpty())
-            {
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (Player* pPlayer = i->getSource())
-                    {
-                        if (pPlayer->isGameMaster())
-                            continue;
-                        if (pPlayer->isAlive())
-                        {
-                            float fX = pPlayer->GetPositionX();
-                            float fY = pPlayer->GetPositionY();
-                            float fZ = pPlayer->GetPositionZ();
- 
-                            if (fX > 3218.86f && fX < 3275.69f && fY < 572.40f && fY > 484.68f)
-                                continue;
-                            else
-                                DoCast(m_creature,58903,true);
-                        }
-                    }
-                        
-                }
-            }
-        }
-    }
- 
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (!m_pInstance)
-            return;
- 
-        if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
-        {
-            if (m_uiRangeCheck <= uiDiff)
-            {
-                CheckRange();
-                m_uiRangeCheck = 4000;
-            }
-            else m_uiRangeCheck -= uiDiff;
-        }
- 
-    }
-};
- 
-/*######
-## Mob Shadow Fissure
-######*/
-
-struct MANGOS_DLL_DECL mob_shadow_fissureAI : public ScriptedAI
-{
-    mob_shadow_fissureAI(Creature* pCreature) : ScriptedAI(pCreature) 
-    {
-        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        Reset();         
-    }
- 
-    uint32 m_uiVoidBlast;
-    bool m_bIsRegularMode;
- 
-    void Aggro(Unit* who)
-    {
-        DoStopAttack();
-        SetCombatMovement(false);
-    }
- 
-    void Reset()
-    {
-        m_uiVoidBlast = 5000;
-        // make it look like a black hole
-        m_creature->SetDisplayId(29038);
-    }
- 
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (m_uiVoidBlast <= uiDiff)
-        {
-            DoCast(m_creature,m_bIsRegularMode ? 59128 : 57581,true);
-            m_creature->ForcedDespawn();
-        }else m_uiVoidBlast -= uiDiff;
-    }
-};
-
-CreatureAI* GetAI_mob_shadow_fissure(Creature* pCreature)
-{
-    return new mob_shadow_fissureAI(pCreature);
-}
- 
-CreatureAI* GetAI_mob_safe_area(Creature* pCreature)
-{
-    return new mob_safe_areaAI(pCreature);
-}
- 
-/*######
 ## Mob Onyx Flight Captain
 ######*/
- 
 struct MANGOS_DLL_DECL mob_onyx_flight_captainAI : public ScriptedAI
 {
     mob_onyx_flight_captainAI(Creature* pCreature) : ScriptedAI(pCreature) 
     {
-        //m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Reset();         
     }
  
     uint32 m_uiPummpelTimer, m_uiHammmerTimer;
-    bool m_bIsRegularMode;
     bool m_uiAggro;
     ScriptedInstance* m_pInstance;
  
@@ -1904,6 +1857,9 @@ CreatureAI* GetAI_mob_onyx_flight_captain(Creature* pCreature)
     return new mob_onyx_flight_captainAI(pCreature);
 }
 
+/*######
+## Mob Onyx Sanctum Guardian
+######*/
 struct MANGOS_DLL_DECL mob_onyx_sanctum_guardianAI : public ScriptedAI
 {
     mob_onyx_sanctum_guardianAI(Creature* pCreature) : ScriptedAI(pCreature) 
@@ -1978,109 +1934,119 @@ CreatureAI* GetAI_mob_onyx_sanctum_guardian(Creature* pCreature)
     return new mob_onyx_sanctum_guardianAI(pCreature);
 }
 
+/*######
+## Mob Flame Tornado
+######*/
 struct MANGOS_DLL_DECL npc_flame_tornadoAI : public ScriptedAI
 {
     npc_flame_tornadoAI(Creature* pCreature) : ScriptedAI(pCreature)
- { 
-  m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-  Reset(); 
- }
+    { 
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        pCreature->SetDisplayId(11686);     // make invisible
+        pCreature->setFaction(14);
+        Reset(); 
+    }
 
     ScriptedInstance* m_pInstance;
 
-    uint32 Step;
-    uint32 Steptim;
+    uint32 m_uiStep;
+    uint32 m_uiStepTimer;
     uint32 CX;
     uint32 CY;
-    uint32 Phase;
-    uint32 ui_MovementTimer;
-    uint32 ui_MovingSteps;
+    uint32 m_uiMovementTimer;
+    uint32 m_uiMovingSteps;
 
     void Reset()
     {
-        Step = 1;
+        m_uiStep = 1;
+        m_uiStepTimer = urand(5000, 20000);
+
         CX = m_creature->GetPositionX();
         CY = m_creature->GetPositionY();
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        Phase = 1;
-        ui_MovementTimer = 1000 + rand()%2000;
-        ui_MovingSteps = 0;
+
+        m_uiMovementTimer = 1000 + rand()%2000;
+        m_uiMovingSteps = 0;
+
+        DoCast(m_creature, SPELL_TORNADO_VISUAL);
     }
 
-    void AttackStart(Unit *who) { return; } // very sample, just don't make them aggreesive
+    void AttackStart(Unit *who) 
+    { 
+        return; 
+    }
 
     void UpdateAI(const uint32 uiDiff)
     {
-
- if(m_pInstance)
-     if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
-       {
-           switch(Step)
-              {
-                case 1:
-                    m_creature->SetInCombatWithZone();
-                    m_creature->CastSpell(m_creature,SPELL_TORNADO,false);
-                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                    ++Step;
-                    Steptim = rand()%10000; 
-                    break;
-                case 3:
-                    m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, 2);  //m_creature->CastSpell(m_creature,SPELL_TORNADO_SCALE,false);
-                    ++Step;
-                    Steptim = 2000 + rand()%6000;
-                    break;
-                case 5:
-                    if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                         DoCast(target,SPELL_LAVA_STRIKE);
-                    ++Step;
-                    Steptim = 1000;
-                    break;
-                case 7:
-                    if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                         DoCast(target,SPELL_LAVA_STRIKE);
-                    ++Step;
-                    Steptim = 1000;
-                    break;
-                case 9:
-                    if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                         DoCast(target,SPELL_LAVA_STRIKE);
-                    m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, 1);
-                    ++Step;
-                    Steptim = 30000;
-                    break;
-                 case 11:
-                    Step = 1;
-                    break;
-                 }
-
-       	   if (Steptim <= uiDiff)
-	   {
-		   ++Step;
-	   } Steptim -= uiDiff;
-
-        if(ui_MovementTimer < uiDiff)
+        if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
         {
-            if (m_pInstance)
+            switch(m_uiStep)
+            {
+            case 1:
+                m_creature->SetInCombatWithZone();
+                //DoCast(m_creature,SPELL_TORNADO_SCALE);
+                m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, 2);
+                ++m_uiStep;
+                m_uiStepTimer = urand(2000, 6000);
+                break;
+            case 3:
+                if (Creature* pSartharion = (Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_SARTHARION)))
+                {
+                    // TODO: Fix lava blaze!!!
+                    /*if (Unit* target = pSartharion->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                        DoCast(target,SPELL_LAVA_STRIKE);
+
+                    switch(urand(0, 15))
+                    {
+                    case 0: DoScriptText(SAY_SARTHARION_SPECIAL_1, pSartharion); break;
+                    case 1: DoScriptText(SAY_SARTHARION_SPECIAL_2, pSartharion); break;
+                    case 2: DoScriptText(SAY_SARTHARION_SPECIAL_3, pSartharion); break;
+                    }*/
+                }
+                ++m_uiStep;
+                m_uiStepTimer = 1000;
+                break;
+            case 5:
+                //m_creature->RemoveAurasDueToSpell(SPELL_TORNADO_SCALE);
+                m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, 1);
+                ++m_uiStep;
+                m_uiStepTimer = 1000;
+                break;
+            case 7:
+                m_uiStepTimer = urand(5000, 20000);
+                m_uiStep = 1;
+                break;
+            }
+
+            if (m_uiStepTimer <= uiDiff)
+            {
+                ++m_uiStep;
+            } 
+            m_uiStepTimer -= uiDiff;
+
+            // movement
+            if(m_uiMovementTimer < uiDiff)
             {
                 if(Creature* pSartharion = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_SARTHARION))))
                 {
-                    float angle = (M_PI / 10) * ui_MovingSteps;
+                    float angle = (M_PI / 10) * m_uiMovingSteps;
                     float X = CX + 1 * cos(angle);
                     float Y = CY + 1 * sin(angle);
 
                     m_creature->GetMotionMaster()->MovementExpired(false);
                     m_creature->GetMotionMaster()->MovePoint(0, X, Y, m_creature->GetPositionZ());
 
-                    ui_MovingSteps++;
-                    if (ui_MovingSteps > 19)
-                        ui_MovingSteps = 0;
+                    m_uiMovingSteps++;
+                    if (m_uiMovingSteps > 19)
+                        m_uiMovingSteps = 0;
                 }
+                m_uiMovementTimer = 1000;
             }
-            ui_MovementTimer = 1000;
-        }else ui_MovementTimer -= uiDiff;
-   } else m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(),NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-
-  }
+            else m_uiMovementTimer -= uiDiff;
+        } 
+        else 
+            m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(),NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+    }
 };
 
 CreatureAI* GetAI_npc_flame_tornado(Creature* pCreature)
@@ -2133,22 +2099,17 @@ void AddSC_boss_sartharion()
     newscript->RegisterSelf();
 
     newscript = new Script;
-    newscript->Name = "mob_tsunami";
+    newscript->Name = "mob_flame_tsunami";
     newscript->GetAI = &GetAI_mob_flame_tsunami;
     newscript->RegisterSelf();
- 
+
     newscript = new Script;
-    newscript->Name = "mob_lava_blaze";
-    newscript->GetAI = &GetAI_mob_lava_blaze;
+    newscript->Name = "npc_flame_tornado";
+    newscript->GetAI = &GetAI_npc_flame_tornado;
     newscript->RegisterSelf();
  
     newscript = new Script;
-    newscript->Name = "mob_safe_area";
-    newscript->GetAI = &GetAI_mob_safe_area;
-    newscript->RegisterSelf();
- 
-    newscript = new Script;
-    newscript->Name = "mob_shadow_fissure";
+    newscript->Name = "mob_twilight_fissure";
     newscript->GetAI = &GetAI_mob_twilight_fissure;
     newscript->RegisterSelf();
  
@@ -2160,10 +2121,5 @@ void AddSC_boss_sartharion()
     newscript = new Script;
     newscript->Name = "mob_onyx_sanctum_guardian";
     newscript->GetAI = &GetAI_mob_onyx_sanctum_guardian;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "npc_flame_tornado";
-    newscript->GetAI = &GetAI_npc_flame_tornado;
     newscript->RegisterSelf();
 }

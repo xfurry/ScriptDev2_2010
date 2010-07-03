@@ -38,6 +38,11 @@ struct MANGOS_DLL_DECL instance_obsidian_sanctum : public ScriptedInstance
     uint64 m_uiShadronGUID;
     uint64 m_uiVesperonGUID;
 
+    uint32 m_uiDrakesLoot;
+    uint64 m_uiOneDrakeChest;
+    uint64 m_uiTwoDrakeChest;
+    uint64 m_uiThreeDrakeChest;
+
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
@@ -46,6 +51,10 @@ struct MANGOS_DLL_DECL instance_obsidian_sanctum : public ScriptedInstance
         m_uiTenebronGUID   = 0;
         m_uiShadronGUID    = 0;
         m_uiVesperonGUID   = 0;
+        m_uiDrakesLoot     = 0;
+        m_uiOneDrakeChest  = 0;
+        m_uiTwoDrakeChest  = 0;
+        m_uiThreeDrakeChest= 0;
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -72,16 +81,62 @@ struct MANGOS_DLL_DECL instance_obsidian_sanctum : public ScriptedInstance
         }
     }
 
+    void OnObjectCreate(GameObject* pGo)
+    {
+        switch(pGo->GetEntry())
+        {
+        case GO_ONE_DRAKE_CHEST:
+            if(instance->IsRegularDifficulty())
+                m_uiOneDrakeChest = pGo->GetGUID();
+            break;
+        case GO_TWO_DRAKE_CHEST:
+            if(instance->IsRegularDifficulty())
+                m_uiTwoDrakeChest = pGo->GetGUID();
+            break;
+        case GO_THREE_DRAKE_CHEST:
+            if(instance->IsRegularDifficulty())
+                m_uiThreeDrakeChest = pGo->GetGUID();
+            break;
+        case GO_ONE_DRAKE_CHEST_H:
+            if(!instance->IsRegularDifficulty())
+                m_uiOneDrakeChest = pGo->GetGUID();
+            break;
+        case GO_TWO_DRAKE_CHEST_H:
+            if(!instance->IsRegularDifficulty())
+                m_uiTwoDrakeChest = pGo->GetGUID();
+            break;
+        case GO_THREE_DRAKE_CHEST_H:
+            if(!instance->IsRegularDifficulty())
+                m_uiThreeDrakeChest = pGo->GetGUID();
+            break;
+        }
+    }
+
     void SetData(uint32 uiType, uint32 uiData)
     {
         if (uiType == TYPE_SARTHARION_EVENT)
+        {
             m_auiEncounter[0] = uiData;
+            if(uiData == DONE)
+            {
+                if(m_uiDrakesLoot == 1)
+                    DoRespawnGameObject(m_uiOneDrakeChest, DAY);
+                else if (m_uiDrakesLoot == 2)
+                    DoRespawnGameObject(m_uiTwoDrakeChest, DAY);
+                else if (m_uiDrakesLoot == 3)
+                    DoRespawnGameObject(m_uiThreeDrakeChest, DAY);
+            }
+        }
+        if (uiType == TYPE_DRAKES)
+            m_uiDrakesLoot = uiData;
     }
 
     uint32 GetData(uint32 uiType)
     {
         if (uiType == TYPE_SARTHARION_EVENT)
             return m_auiEncounter[0];
+        if (uiType == TYPE_DRAKES)
+            return m_uiDrakesLoot;
 
         return 0;
     }
