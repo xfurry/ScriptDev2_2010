@@ -390,8 +390,8 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
 
                 m_bIsPhase3 = true;
                 SwarmTickTimer = 3000;
-                // stop summoning in not on Hc
-                if(Difficulty != RAID_DIFFICULTY_10MAN_NORMAL || Difficulty != RAID_DIFFICULTY_25MAN_NORMAL)
+                // stop summoning in only on Hc
+                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
                     m_bStopSummoning = true; 
             }
 
@@ -691,7 +691,7 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
             }
 
             DoCast(m_creature, SPELL_SUBMERGE_ANUB);
-            m_creature->SetHealth(m_creature->GetMaxHealth());
+            m_creature->SetHealth(m_creature->GetMaxHealth()/2);
             submergeTimer = 10000;
             isSubmerged = true;
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
