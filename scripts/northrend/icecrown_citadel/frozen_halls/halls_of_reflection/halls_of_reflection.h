@@ -7,24 +7,25 @@
 
 enum
 {
-    MAX_ENCOUNTERS              = 4,
+    MAX_ENCOUNTERS              = 5,
 
     TYPE_INTRO                  = 0,
     TYPE_FALRIC                 = 1,
     TYPE_MARWYN                 = 2,
-    TYPE_ESCAPE                 = 3,
+    TYPE_FROST_GENERAL          = 3,
+    TYPE_ESCAPE                 = 4,
 
     NPC_FALRYN                  = 38112,
     NPC_MARWYN                  = 38113,
     NPC_LICH_KING               = 37226,
     NPC_LICH_KING_INTRO         = 36954,
 
-    NPC_JAINA_START                 = 37221,
-    NPC_JAINA_END                   = 36955,
-    NPC_SYLVANAS_START              = 37223,
-    NPC_SYLVANAS_END                = 37554,
+    NPC_JAINA_START             = 37221,
+    NPC_JAINA_END               = 36955,
+    NPC_SYLVANAS_START          = 37223,
+    NPC_SYLVANAS_END            = 37554,
 
-    NPC_FROST_GENERAL            = 36723,
+    NPC_FROST_GENERAL           = 36723,
 
     DATA_ICECROWN_DOOR          = 1,
     DATA_FROSTMOURNE            = 2,
@@ -38,6 +39,7 @@ enum
     DATA_LICH_KING              = 10,
     DATA_JAINA_INTRO            = 11,
     DATA_SYLVANAS_INTRO         = 12,
+    DATA_ALTAR                  = 13,
 
     GO_ICECROWN_DOOR             = 201976, //72802
     GO_IMPENETRABLE_DOOR         = 197341, //72801
@@ -53,15 +55,14 @@ enum
     // these 2 are vehicles
     GO_SKY_BREAKER              = 201580,// 201598
     GO_ORGRIMS_HAMMER           = 201581,// 201599
-    
 
-    GO_CAPTAIN_CHEST_HORDE          = 202212, //3145
-    GO_CAPTAIN_CHEST_ALY            = 201710, //30357
-    GO_CAPTAIN_CHEST_HORDE_H        = 202337, //3246
-    GO_CAPTAIN_CHEST_ALY_H          = 202336, //3333
+    GO_CAPTAIN_CHEST_HORDE      = 202212, //3145
+    GO_CAPTAIN_CHEST_ALY        = 201710, //30357
+    GO_CAPTAIN_CHEST_HORDE_H    = 202337, //3246
+    GO_CAPTAIN_CHEST_ALY_H      = 202336, //3333
 
-    MOB_WAVES_NUM_1              = 5,
-    MOB_WAVES_DELAY_1            = 30000,  //in milliseconds
+    MOB_WAVES_NUM               = 5,
+    MOB_WAVES_DELAY             = 30000,  //in milliseconds
 
     MOB_SPECTRAL_FOOTMAN        = 38173,
     MOB_SHADOWY_MERCENARY       = 38177,
@@ -73,6 +74,9 @@ enum
     MOB_RAGING_GHOUL            = 36940,
     MOB_RISEN_WHITCH_DOCTOR     = 36941,
     MOB_LUMBERING_ABONIMATION   = 37069,
+
+    UI_STATE_SPIRIT_WAVES       = 4884,
+    UI_STATE_SPIRIT_WAVES_COUNT = 4882,
 };
 
 struct Locations

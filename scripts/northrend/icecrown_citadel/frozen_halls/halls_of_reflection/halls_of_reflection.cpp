@@ -105,6 +105,7 @@ struct MANGOS_DLL_DECL mob_frostsworn_generalAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         Reset();
     }
 
@@ -118,14 +119,24 @@ struct MANGOS_DLL_DECL mob_frostsworn_generalAI : public ScriptedAI
         m_uiThrowShieldTimer = 10000;
     }
 
+    void JustDied(Unit *killer)
+    {
+        if(m_pInstance) 
+            m_pInstance->SetData(TYPE_FROST_GENERAL, DONE);
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
+        if(m_pInstance->GetData(TYPE_MARWYN) == DONE && m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
         if (m_uiThrowShieldTimer < uiDiff)
         {
-            DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_THROW_SHIELD : SPELL_THROW_SHIELD_H);
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_THROW_SHIELD : SPELL_THROW_SHIELD_H);
             m_uiThrowShieldTimer = 8000;
         }
         else
@@ -261,7 +272,6 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         //pCreature->SetVisibility(VISIBILITY_OFF); // only when script is full
-        //pCreature->setFaction(35); // only when script is full
         Reset();
     }
 
@@ -300,15 +310,13 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
 
     uint32 creatureEntry;
     uint32 selfKillTimer;
-    bool hasCasted;
-    std::list<uint64> FriendlyList;
+    bool m_bHasCasted;
 
-    bool hasBeenChosen;
+    bool m_bHasBeenChosen;
 
     void Reset()
     {
         creatureEntry = m_creature->GetEntry();
-        FriendlyList.clear();
 
         // tortured rifleman
         m_uiCursedArrowTimer    = 8000;
@@ -328,7 +336,7 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
         m_uiFlameStrikeTimer    = 15000;
         m_uiFrostboltTimer      = 7000;
         m_uiHallucinationTimer  = 20000;
-        hasCasted = false;
+        m_bHasCasted = false;
 
         // shadowy mercenary
         m_uiDeadlyPoisonTimer   = 8000;
@@ -342,21 +350,13 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
         m_uiTorturedEnrageTimer = 15000;
 
         //m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        //m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        hasBeenChosen = true; // should be false when script is full
-    }
-
-    void MoveInLineOfSight(Unit* pWho)
-    {
-        // friendly list
-        if (!m_creature->IsHostileTo(pWho) && !ListContains(FriendlyList, pWho->GetGUID()) && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 80, true))
-            FriendlyList.push_back(pWho->GetGUID());
+        m_bHasBeenChosen = true;    // temp
     }
 
     void ChooseForAttack()
     {
         m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-        hasBeenChosen = true;
+        m_bHasBeenChosen = true;
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->SetInCombatWithZone();
         m_creature->GetMotionMaster()->MovePoint(0, 5305.374f, 1997.526f, 709.341f);
@@ -369,49 +369,35 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
         }
     }
 
-    /*void AttackStart(Unit* pWho)
+    void Aggro(Unit* pWho)
     {
-        if(!hasBeenChosen)
-            return;
-    }*/
-
-    uint64 SelectRandomAly(std::list<uint64> UnitList)
-    {
-        //This should not appear!
-        if (UnitList.empty())
-        {
-            return NULL;
-        }
-
-        std::list<uint64>::iterator iter = UnitList.begin();
-        advance(iter, urand(0, UnitList.size()-1));
-
-        return *iter;
+        m_bHasBeenChosen = true;
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
-    bool ListContains(std::list<uint64> &plist, uint64 element)
+    void AttackStart(Unit* pWho)
     {
-        if (plist.empty())
-            return false;
+        if(!m_bHasBeenChosen)
+            return;
 
-        std::list<uint64>::iterator i;
-        for (i = plist.begin(); i!=plist.end(); ++i)
+        if (m_creature->Attack(pWho, true)) 
         {
-            if ((*i) == element)
-                return true;
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
         }
-        return false;
     }
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
     {
-        if(uiDamage > m_creature->GetHealth() && !hasCasted && creatureEntry == MOB_PHANTOM_HALLUCINATION)
+        if(uiDamage > m_creature->GetHealth() && !m_bHasCasted && creatureEntry == MOB_PHANTOM_HALLUCINATION)
         {
             m_creature->SetHealth(m_creature->GetMaxHealth());
             DoCast(m_creature, m_bIsRegularMode ? SPELL_HALLUCINATION : SPELL_HALLUCINATION_H);
             uiDamage = 0;
             selfKillTimer = 500;
-            hasCasted = true;
+            m_bHasCasted = true;
         }
     }
 
@@ -528,7 +514,7 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
             m_uiFrostboltTimer = 7000;
         }else m_uiFrostboltTimer -= uiDiff;
 
-        if (selfKillTimer <= uiDiff && hasCasted)
+        if (selfKillTimer <= uiDiff && m_bHasCasted)
         {
             m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
             selfKillTimer = 8000;
@@ -592,10 +578,8 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
 
         if (m_uiDarkMendingTimer <= uiDiff)
         {
-            // this spell should be cast on friendly targets for heal -> is broken
-            Unit *pAly = Unit::GetUnit((*m_creature),(SelectRandomAly(FriendlyList)));
-            if (pAly && pAly->isAlive() && m_creature->GetDistance(pAly) < 10)
-                DoCast(pAly, m_bIsRegularMode ? SPELL_DARK_MENDING : SPELL_DARK_MENDING_H);
+            if(Unit* pTarget = DoSelectLowestHpFriendly(30.0f))
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_DARK_MENDING : SPELL_DARK_MENDING_H);
             m_uiDarkMendingTimer = 8000;
         }else m_uiDarkMendingTimer -= uiDiff;
 
@@ -698,6 +682,14 @@ enum
     SAY_INTRO_FALRIC        = -1610102,
     SAY_INTRO_MARWYN        = -1610110,
 
+    SPELL_TAKE_FROSTMOURNE             = 72729,
+    SPELL_FROSTMOURNE_DESPAWN          = 72726,
+    SPELL_FROSTMOURNE_SOUNDS           = 70667,
+    SPELL_CAST_VISUAL                  = 65633,  //Jaina And Sylavana cast this when summon uther.
+    SPELL_BOSS_SPAWN_AURA              = 72712,  //Falric and Marwyn
+    SPELL_UTHER_DESPAWN                = 70693,
+    SPELL_FROSTMOURNE_VISUAL           = 73220,
+
     NPC_UTHER               = 37225,
     EQUIP_ID_FROSTMOURNE    = 36942,
 };
@@ -777,109 +769,30 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
         }
 
 		std::list<Creature*> lCreatureList;
-		lCreatureList.clear();
-
-        // spectral footman
-        GetCreatureListWithEntryInGrid(lCreatureList, m_creature, MOB_SPECTRAL_FOOTMAN, DEFAULT_VISIBILITY_INSTANCE);
+        if(GameObject* pAltar = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_ALTAR)))
+        {
+            // spectral footman
+            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_SPECTRAL_FOOTMAN, DEFAULT_VISIBILITY_INSTANCE);
+            // shadowy mercenary
+            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_SHADOWY_MERCENARY, DEFAULT_VISIBILITY_INSTANCE);
+            // phantom hallucination
+            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_PHANTOM_HALLUCINATION, DEFAULT_VISIBILITY_INSTANCE);
+            // phantom mage
+            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_PHANTOM_MAGE, DEFAULT_VISIBILITY_INSTANCE);
+            // ghostly priest
+            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_GHOSTLY_PRIEST, DEFAULT_VISIBILITY_INSTANCE);
+            // tortured rifleman
+            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_TORTURED_RIFLEMAN, DEFAULT_VISIBILITY_INSTANCE);
+        }
 
         if (!lCreatureList.empty())
         {
             for(std::list<Creature*>::iterator iter = lCreatureList.begin(); iter != lCreatureList.end(); ++iter)
             {
                 if ((*iter) && !(*iter)->isAlive())
-                {
-                    (*iter)->setFaction(14);
                     (*iter)->SetVisibility(VISIBILITY_ON);
-                }
             }
         }
-
-		lCreatureList.clear();
-
-        // shadowy mercenary
-        GetCreatureListWithEntryInGrid(lCreatureList, m_creature, MOB_SHADOWY_MERCENARY, DEFAULT_VISIBILITY_INSTANCE);
-
-        if (!lCreatureList.empty())
-        {
-            for(std::list<Creature*>::iterator iter = lCreatureList.begin(); iter != lCreatureList.end(); ++iter)
-            {
-                if ((*iter) && !(*iter)->isAlive())
-                {
-                    (*iter)->setFaction(14);
-                    (*iter)->SetVisibility(VISIBILITY_ON);
-                }
-            }
-        }
-
-		lCreatureList.clear();
-
-        // phantom hallucination
-        GetCreatureListWithEntryInGrid(lCreatureList, m_creature, MOB_PHANTOM_HALLUCINATION, DEFAULT_VISIBILITY_INSTANCE);
-
-        if (!lCreatureList.empty())
-        {
-            for(std::list<Creature*>::iterator iter = lCreatureList.begin(); iter != lCreatureList.end(); ++iter)
-            {
-                if ((*iter) && !(*iter)->isAlive())
-                {
-                    (*iter)->setFaction(14);
-                    (*iter)->SetVisibility(VISIBILITY_ON);
-                }
-            }
-        }
-
-		lCreatureList.clear();
-
-        // phantom mage
-        GetCreatureListWithEntryInGrid(lCreatureList, m_creature, MOB_PHANTOM_MAGE, DEFAULT_VISIBILITY_INSTANCE);
-
-        if (!lCreatureList.empty())
-        {
-            for(std::list<Creature*>::iterator iter = lCreatureList.begin(); iter != lCreatureList.end(); ++iter)
-            {
-                if ((*iter) && !(*iter)->isAlive())
-                {
-                    (*iter)->setFaction(14);
-                    (*iter)->SetVisibility(VISIBILITY_ON);
-                }
-            }
-        }
-
-		lCreatureList.clear();
-
-        // ghostly priest
-        GetCreatureListWithEntryInGrid(lCreatureList, m_creature, MOB_GHOSTLY_PRIEST, DEFAULT_VISIBILITY_INSTANCE);
-
-        if (!lCreatureList.empty())
-        {
-            for(std::list<Creature*>::iterator iter = lCreatureList.begin(); iter != lCreatureList.end(); ++iter)
-            {
-                if ((*iter) && !(*iter)->isAlive())
-                {
-                    (*iter)->setFaction(14);
-                    (*iter)->SetVisibility(VISIBILITY_ON);
-                }
-            }
-        }
-
-		lCreatureList.clear();
-
-        // tortured rifleman
-        GetCreatureListWithEntryInGrid(lCreatureList, m_creature, MOB_TORTURED_RIFLEMAN, DEFAULT_VISIBILITY_INSTANCE);
-
-        if (!lCreatureList.empty())
-        {
-            for(std::list<Creature*>::iterator iter = lCreatureList.begin(); iter != lCreatureList.end(); ++iter)
-            {
-                if ((*iter) && !(*iter)->isAlive())
-                {
-                    (*iter)->setFaction(14);
-                    (*iter)->SetVisibility(VISIBILITY_ON);
-                }
-            }
-        }
-		
-		lCreatureList.clear();
 
         // delete frostmourne
         if(GameObject* pFrostmourne = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_FROSTMOURNE)))
@@ -927,6 +840,8 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
                         m_uiSpeech_Timer = 15000;
                         break;
                     case 4:
+                        DoCast(m_creature, SPELL_CAST_VISUAL);
+                        DoCast(m_creature, SPELL_FROSTMOURNE_SOUNDS);
                         if(GameObject* pFrostmourne = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_FROSTMOURNE)))
                             m_pInstance->DoUseDoorOrButton(pFrostmourne->GetGUID());
                         ++m_uiIntro_Phase;
@@ -935,6 +850,8 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
                     case 5:
                         if(Creature* pUther = m_creature->SummonCreature(NPC_UTHER, 5307.018f, 2004.103f, 709.342f, 4.22f, TEMPSUMMON_TIMED_DESPAWN, 150000))
 						{
+                            pUther->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID());
+                            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, pUther->GetGUID());
 							DoScriptText(SAY_UTHER_ALY1, pUther);
 							m_uiUtherGuid = pUther->GetGUID();
 						}
@@ -1024,16 +941,16 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
 							DoScriptText(SAY_UTHER_ALY9, pUther);
                         if(GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_IMPENETRABLE_DOOR)))
                             m_pInstance->DoUseDoorOrButton(pDoor->GetGUID());
-                        if(Creature* pLichKing = m_creature->SummonCreature(NPC_LICH_KING_INTRO, 5364.653f, 2064.413f, 707.695f, 3.85f, TEMPSUMMON_TIMED_DESPAWN, 45000))
+                        if(Creature* pLichKing = m_creature->SummonCreature(NPC_LICH_KING_INTRO, 5364.653f, 2064.413f, 707.695f, 3.85f, TEMPSUMMON_TIMED_DESPAWN, 55000))
 						{
-							pLichKing->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-							//pLichKing->SetSpeedRate(MOVE_WALK, 0.3f);
+							pLichKing->AddSplineFlag(SPLINEFLAG_WALKMODE);
+							pLichKing->SetSpeedRate(MOVE_WALK, 1.5f);
 							pLichKing->GetMotionMaster()->MovePoint(0, 5334.068f, 2031.866f, 707.694f);
 							pLichKing->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 							m_uiLichKingGuid = pLichKing->GetGUID();
 						}
                         ++m_uiIntro_Phase;
-                        m_uiSpeech_Timer = 6000;
+                        m_uiSpeech_Timer = 10000;
                         break;
                     case 21:
                         if(GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_IMPENETRABLE_DOOR)))
@@ -1048,15 +965,16 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
 							pLichKing->GetMotionMaster()->MovePoint(0, 5316.053f, 2013.209f, 709.341f);
 						}
 						if(Creature* pUther = m_pInstance->instance->GetCreature(m_uiUtherGuid))
+                        {
+                            pUther->CastSpell(pUther, SPELL_UTHER_DESPAWN, false);
 							pUther->ForcedDespawn();
+                        }
                         ++m_uiIntro_Phase;
-                        m_uiSpeech_Timer = 7000;
+                        m_uiSpeech_Timer = 8000;
                         break;
                     case 23:
 						if(Creature* pLichKing = m_pInstance->instance->GetCreature(m_uiLichKingGuid))
-						{
 							DoScriptText(SAY_LICH_KING_INTRO2, pLichKing);
-						}
                         ++m_uiIntro_Phase;
                         m_uiSpeech_Timer = 7000;
                         break;
@@ -1064,14 +982,20 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
                         if(GameObject* pFrostmourne = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_FROSTMOURNE)))
                             pFrostmourne->Delete();
 						if(Creature* pLichKing = m_pInstance->instance->GetCreature(m_uiLichKingGuid))
+                        {
 							((npc_lich_king_hor_startAI*)pLichKing->AI())->EquipFrostmourne();
-                        //m_creature->HandleEmoteCommand(EMOTE_ONESHOT_EXCLAMATION); // ???
+                            pLichKing->CastSpell(pLichKing, SPELL_TAKE_FROSTMOURNE, false);
+                        }
                         ++m_uiIntro_Phase;
                         m_uiSpeech_Timer = 3000;
                         break;
                     case 25:
 						if(Creature* pLichKing = m_pInstance->instance->GetCreature(m_uiLichKingGuid))
+                        {
 							DoScriptText(SAY_LICH_KING_INTRO3, pLichKing);
+                            pLichKing->CastSpell(pLichKing, SPELL_FROSTMOURNE_VISUAL, false);
+                        }
+                        m_creature->RemoveAurasDueToSpell(SPELL_FROSTMOURNE_SOUNDS);
                         ++m_uiIntro_Phase;
                         m_uiSpeech_Timer = 8000;
                         break;
@@ -1079,15 +1003,15 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
                         StartEncounter();
                         if(Creature* pFalric = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_FALRIC))))
                         {
-                            pFalric->setFaction(14);
                             pFalric->SetVisibility(VISIBILITY_ON);
                             DoScriptText(SAY_INTRO_FALRIC, pFalric);
+                            pFalric->CastSpell(pFalric, SPELL_BOSS_SPAWN_AURA, false);
                         }
                         if(Creature* pMarwyn = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MARWYN))))
                         {
-                            pMarwyn->setFaction(14);
                             pMarwyn->SetVisibility(VISIBILITY_ON);
                             DoScriptText(SAY_INTRO_MARWYN, pMarwyn);
+                            pMarwyn->CastSpell(pMarwyn, SPELL_BOSS_SPAWN_AURA, false);
                         }
 						if(Creature* pLichKing = m_pInstance->instance->GetCreature(m_uiLichKingGuid))
 							pLichKing->GetMotionMaster()->MovePoint(0, 5364.653f, 2064.413f, 707.695f);
@@ -1153,6 +1077,8 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
                         m_uiSpeech_Timer = 15000;
                         break;
                     case 4:
+                        DoCast(m_creature, SPELL_CAST_VISUAL);
+                        DoCast(m_creature, SPELL_FROSTMOURNE_SOUNDS);
                         if(GameObject* pFrostmourne = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_FROSTMOURNE)))
                             m_pInstance->DoUseDoorOrButton(pFrostmourne->GetGUID());
                         ++m_uiIntro_Phase;
@@ -1161,6 +1087,8 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
                     case 5:
                         if(Creature* pUther = m_creature->SummonCreature(NPC_UTHER, 5307.018f, 2004.103f, 709.342f, 4.22f, TEMPSUMMON_TIMED_DESPAWN, 135000))
 						{
+                            pUther->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID());
+                            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, pUther->GetGUID());
 							DoScriptText(SAY_UTHER_HORDE1, pUther);
 							m_uiUtherGuid = pUther->GetGUID();
 						}
@@ -1227,15 +1155,16 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
 							DoScriptText(SAY_UTHER_HORDE7, pUther);
                         if(GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_IMPENETRABLE_DOOR)))
                             m_pInstance->DoUseDoorOrButton(pDoor->GetGUID());
-                        if(Creature* pLichKing = m_creature->SummonCreature(NPC_LICH_KING_INTRO, 5364.653f, 2064.413f, 707.695f, 3.85f, TEMPSUMMON_TIMED_DESPAWN, 48000))
+                        if(Creature* pLichKing = m_creature->SummonCreature(NPC_LICH_KING_INTRO, 5364.653f, 2064.413f, 707.695f, 3.85f, TEMPSUMMON_TIMED_DESPAWN, 55000))
 						{
-							pLichKing->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+							pLichKing->AddSplineFlag(SPLINEFLAG_WALKMODE);
+                            pLichKing->SetSpeedRate(MOVE_WALK, 1.5f);
 							pLichKing->GetMotionMaster()->MovePoint(0, 5334.068f, 2031.866f, 707.694f);
 							pLichKing->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 							m_uiLichKingGuid = pLichKing->GetGUID();
 						}
                         ++m_uiIntro_Phase;
-                        m_uiSpeech_Timer = 6000;
+                        m_uiSpeech_Timer = 10000;
                         break;
                     case 17:
                         if(GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_IMPENETRABLE_DOOR)))
@@ -1252,7 +1181,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
 						if(Creature* pUther = m_pInstance->instance->GetCreature(m_uiUtherGuid))
 							pUther->ForcedDespawn();
                         ++m_uiIntro_Phase;
-                        m_uiSpeech_Timer = 7000;
+                        m_uiSpeech_Timer = 8000;
                         break;
                     case 19:
 						if(Creature* pLichKing = m_pInstance->instance->GetCreature(m_uiLichKingGuid))
@@ -1264,7 +1193,10 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
                         if(GameObject* pFrostmourne = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_FROSTMOURNE)))
                             pFrostmourne->Delete();
 						if(Creature* pLichKing = m_pInstance->instance->GetCreature(m_uiLichKingGuid))
+                        {
 							((npc_lich_king_hor_startAI*)pLichKing->AI())->EquipFrostmourne();
+                            pLichKing->CastSpell(pLichKing, SPELL_FROSTMOURNE_VISUAL, false);
+                        }
                         ++m_uiIntro_Phase;
                         m_uiSpeech_Timer = 3000;
                         break;
@@ -1278,13 +1210,13 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
                         StartEncounter();
                         if(Creature* pFalric = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_FALRIC))))
                         {
-                            pFalric->setFaction(14);
+                            pFalric->CastSpell(pFalric, SPELL_BOSS_SPAWN_AURA, false);
                             pFalric->SetVisibility(VISIBILITY_ON);
                             DoScriptText(SAY_INTRO_FALRIC, pFalric);
                         }
                         if(Creature* pMarwyn = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MARWYN))))
                         {
-                            pMarwyn->setFaction(14);
+                            pMarwyn->CastSpell(pMarwyn, SPELL_BOSS_SPAWN_AURA, false);
                             pMarwyn->SetVisibility(VISIBILITY_ON);
                             DoScriptText(SAY_INTRO_MARWYN, pMarwyn);
                         }

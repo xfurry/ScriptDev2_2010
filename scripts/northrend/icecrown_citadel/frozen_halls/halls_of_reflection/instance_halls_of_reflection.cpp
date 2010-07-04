@@ -35,6 +35,9 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
     uint64 m_uiLichKingGUID;
     uint64 m_uiJainaGUID;
     uint64 m_uiSylvanasGUID;
+    uint64 m_uiJainaIntroGUID;
+    uint64 m_uiSylvanasIntroGUID;
+
     uint64 m_uiCaptainsChestGUID;
     uint64 m_uiIcecrownDoorGUID;
     uint64 m_uiImpenetrableDoorGUID;
@@ -42,8 +45,6 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
     uint64 m_uiFrostmourneAltarGUID;
     uint64 m_uiShadowThroneDoorGUID;
     uint64 m_uiShadowThroneExitDoorGUID;
-    uint64 m_uiJainaIntroGUID;
-    uint64 m_uiSylvanasIntroGUID;
 
     void OpenDoor(uint64 guid)
     {
@@ -155,10 +156,17 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
             break;
         case GO_SHADOW_THRONE_DOOR:
             m_uiShadowThroneDoorGUID = pGo->GetGUID();
+            if(m_auiEncounter[3] == DONE)
+                pGo->SetGoState(GO_STATE_ACTIVE);
+            else
+                pGo->SetGoState(GO_STATE_READY);
             break;
         case GO_SHADOW_THROME_DOOR_EXIT:
             m_uiShadowThroneExitDoorGUID = pGo->GetGUID();
-            pGo->SetGoState(GO_STATE_READY);
+            if(m_auiEncounter[4] == DONE)
+                pGo->SetGoState(GO_STATE_ACTIVE);
+            else
+                pGo->SetGoState(GO_STATE_READY);
             break;
         }
     }
@@ -189,13 +197,15 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
                 OpenDoor(m_uiIcecrownDoorGUID);
             }
             break;
-        case TYPE_ESCAPE:        
-            m_auiEncounter[3] = uiData; 
-            if(uiData == NOT_STARTED)
-            {
+        case TYPE_FROST_GENERAL:
+            m_auiEncounter[3] = uiData;
+            if(uiData == DONE)
                 OpenDoor(m_uiShadowThroneDoorGUID);
+            break;
+        case TYPE_ESCAPE:        
+            m_auiEncounter[4] = uiData; 
+            if(uiData == NOT_STARTED)
                 CloseDoor(m_uiShadowThroneExitDoorGUID);
-            }
             if(uiData == DONE)
                 DoRespawnGameObject(m_uiCaptainsChestGUID);
             break;
@@ -206,10 +216,7 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
             OUT_SAVE_INST_DATA;
 
             std::ostringstream saveStream;
-
-            for(uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
-                saveStream << m_auiEncounter[i] << " ";
-
+            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3] << " " << m_auiEncounter[4];
             strSaveData = saveStream.str();
 
             SaveToDB();
@@ -232,8 +239,10 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
             return m_auiEncounter[1];
         case TYPE_MARWYN:        
             return m_auiEncounter[2];
-        case TYPE_ESCAPE:        
+        case TYPE_FROST_GENERAL:
             return m_auiEncounter[3];
+        case TYPE_ESCAPE:        
+            return m_auiEncounter[4];
         }
         return 0;
     }
@@ -242,21 +251,22 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
     {
         switch(uiData)
         {
-        case NPC_FALRYN: return  m_uiFalrynGUID;
-        case NPC_MARWYN: return  m_uiMarwynGUID;
-        case NPC_LICH_KING: return m_uiLichKingGUID;
-        case DATA_ICECROWN_DOOR: return m_uiIcecrownDoorGUID;
-        case DATA_SHADOW_DOOR: return m_uiShadowThroneDoorGUID;
+        case NPC_FALRYN:            return  m_uiFalrynGUID;
+        case NPC_MARWYN:            return  m_uiMarwynGUID;
+        case NPC_LICH_KING:         return m_uiLichKingGUID;
+        case DATA_ICECROWN_DOOR:    return m_uiIcecrownDoorGUID;
+        case DATA_SHADOW_DOOR:      return m_uiShadowThroneDoorGUID;
         case DATA_SHADOW_DOOR_EXIT: return m_uiShadowThroneExitDoorGUID;
-        case DATA_FROSTMOURNE: return m_uiFrostmourneGUID;
+        case DATA_FROSTMOURNE:      return m_uiFrostmourneGUID;
         case DATA_IMPENETRABLE_DOOR: return m_uiImpenetrableDoorGUID;
-        case DATA_FALRIC: return m_uiFalrynGUID;
-        case DATA_MARWYN: return m_uiMarwynGUID;
-        case DATA_JAINA: return m_uiJainaGUID;
-        case DATA_SYLVANAS: return m_uiSylvanasGUID;
-        case DATA_LICH_KING: return m_uiLichKingGUID;
-        case DATA_JAINA_INTRO: return m_uiJainaIntroGUID;
-        case DATA_SYLVANAS_INTRO: return m_uiSylvanasIntroGUID;
+        case DATA_FALRIC:           return m_uiFalrynGUID;
+        case DATA_MARWYN:           return m_uiMarwynGUID;
+        case DATA_JAINA:            return m_uiJainaGUID;
+        case DATA_SYLVANAS:         return m_uiSylvanasGUID;
+        case DATA_LICH_KING:        return m_uiLichKingGUID;
+        case DATA_JAINA_INTRO:      return m_uiJainaIntroGUID;
+        case DATA_SYLVANAS_INTRO:   return m_uiSylvanasIntroGUID;
+        case DATA_ALTAR:            return m_uiFrostmourneAltarGUID;
         }
         return 0;
     }
@@ -272,11 +282,10 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
         OUT_LOAD_INST_DATA(chrIn);
 
         std::istringstream loadStream(chrIn);
-
+        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3] >> m_auiEncounter[4];
+        
         for(uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
         {
-            loadStream >> m_auiEncounter[i];
-
             if (m_auiEncounter[i] != DONE)
                 m_auiEncounter[i] = NOT_STARTED;
         }

@@ -54,6 +54,8 @@ update creature set spawnMask = 0 where guid in (123745, 123584, 123548, 123585)
 UPDATE gameobject_template SET faction = 114, data10 = 1 WHERE entry = 196485;
 
 /* HALLS OF REFLECTION */
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69708', '1', '37226');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70194', '1', '37226');
 -- trash
 UPDATE `creature_template` SET `ScriptName`='mob_frostsworn_general' WHERE `entry`=36723;
 UPDATE `creature_template` SET `ScriptName`='mob_lichKing_minion' WHERE `entry` in (36940, 36941, 37069);
@@ -62,6 +64,7 @@ UPDATE `creature_template` SET `ScriptName`='mob_hallsOfReflectionSoul' WHERE `e
 UPDATE `creature_template` SET `ScriptName`='boss_marwyn' WHERE `entry`=38113;
 UPDATE `creature_template` SET `ScriptName`='boss_falric' WHERE `entry`=38112;
 -- npc
+update creature set position_x = 5550.833984, position_y = 2260.596191, position_z = 733.011414, orientation = 3.934108 where id = 37226;
 UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_hor_start' WHERE `entry` in (37221, 37223);
 UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_hor_end' WHERE `entry` in (36955, 37554);
 UPDATE `creature_template` SET `ScriptName`='npc_lich_king_hor_start' WHERE `entry`=36954;

@@ -89,6 +89,25 @@ enum
     SPELL_PAIN_AND_SUFFERING    = 74115,
     SPELL_HARVEST_SOUL          = 70070,
 
+    // temp
+    SPELL_WINTER                       = 69780,
+    SPELL_RAISE_DEAD                   = 69818,
+    SPELL_DARK_ARROW                   = 70194,
+    SPELL_ICE_BARRIER                  = 69787,
+    SPELL_DESTROY_ICE_WALL_01          = 69784, //Jaina
+    SPELL_DESTROY_ICE_WALL_02          = 70224, 
+    SPELL_DESTROY_ICE_WALL_03          = 70225, //Sylvana
+    SPELL_SUMMON_ICE_WALL              = 69784,
+    SPELL_SYLVANA_JUMP                 = 68339,
+    SPELL_SYLVANA_STEP                 = 69087,
+    SPELL_SILENCE                      = 69413,
+    SPELL_LICH_KING_CAST               = 57561,
+    SPELL_FROSTMOURNE_VISUAL           = 73220,
+
+    SPELL_EMERGE_VISUAL                = 50142, 
+    SPELL_GNOUL_JUMP                   = 70150,
+    SPELL_ABON_STRIKE                  = 40505,
+
     EQUIP_ID_FROSTMOURNE        = 36942,
 
     ACHIEV_HOR_H                = 4521,
@@ -104,61 +123,11 @@ static Locations IceWall[]=
     {5320.531f, 1753.154f, 771.022f, 0.823f},
 };
 
-static Locations RisenWitchDoctor[]=
-{
-    (5554.8,  2107.9,  731.041),
-    (5510.47, 1995.38, 735.272),
-    (5504.82, 1998.39, 735.069),
-    (5445.18, 1892.89, 749.236),
-    (5442.53, 1894.91, 748.658),
-    (5374.28, 1800.98, 761.257),
-    (5371.46, 1804.6,  760.557),
-    (5339.96, 1770.48, 766.827),
-    (5333.19, 1770.41, 767.573),
-    (5338.42, 1764.32, 768.209),
-
-};
-
-static Locations RagingGhoul[]=
-{
-    (5554.54, 2110.54, 731.016), 
-    (5556.99, 2108.53, 731.045),
-    (5555.44, 2105.85, 731.099),
-    (5552.51, 2107.56, 731.103),
-    (5509.17, 2002.13, 734.589),
-    (5510.64, 2001.35, 734.656),
-    (5513.12, 1999.87, 734.786),
-    (5506.69, 2003.8,  734.494),
-    (5446.65, 1898.22, 748.076),
-    (5449.03, 1898.23, 748.158),
-    (5449.35, 1896.17, 748.632),
-    (5445.42, 1900.73, 747.55),
-    (5443.28, 1900.52, 747.795),
-    (5375.13, 1805.89, 760.429),
-    (5375.47, 1803.07, 760.944),
-    (5372.76, 1806.39, 760.398),
-    (5373.04, 1808.72, 760.215),
-    (5377.59, 1802.5,  761.426),
-};
-
-static Locations LumberingAbomination[]=
-{
-    (5509.37, 1996.32, 735.185),
-    (5443.51, 1897.61, 748.146),
-    (5446.97, 1895.47, 748.713),
-    (5372.51, 1799.01, 761.455),
-    (5369.58, 1802.71, 760.726),
-    (5336.56, 1768.01, 767.407),
-    (5340.65, 1765.74, 767.966),
-    (5335.91, 1772.12, 767.011),
-};
-
-
 #define GOSSIP_ITEM "Let's get out of here!"
 
-struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public ScriptedAI
+struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public npc_escortAI
 {
-    boss_lich_king_hor_endAI(Creature *pCreature) : ScriptedAI(pCreature)
+    boss_lich_king_hor_endAI(Creature *pCreature) : npc_escortAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
@@ -233,7 +202,7 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public ScriptedAI
 
     void MoveInLineOfSight(Unit *pWho)
     {
-        if (!m_bHasTaunted && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsIntro && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 40) && m_creature->IsWithinLOSInMap(pWho) && m_pInstance->GetData(TYPE_MARWYN) == DONE)
+        if (!m_bHasTaunted && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsIntro && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 40) && m_creature->IsWithinLOSInMap(pWho) && m_pInstance->GetData(TYPE_FROST_GENERAL) == DONE)
         {
             m_bIsIntro = true;
             m_bHasTaunted = true;
@@ -250,6 +219,7 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public ScriptedAI
                     m_creature->Attack(pJaina, true);
                     m_creature->AddThreat(pJaina, 100.0f);
                     m_uiJainaGuid = pJaina->GetGUID();
+                    pJaina->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                 }
             }
 
@@ -262,6 +232,7 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public ScriptedAI
                     m_creature->Attack(pSylvanas, true);
                     m_creature->AddThreat(pSylvanas, 100.0f);
                     m_uiSylvanasGuid = pSylvanas->GetGUID();
+                    pSylvanas->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                 }
             }
         }  
@@ -270,7 +241,8 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public ScriptedAI
     void StartChase()
     {
         m_bIsEventInProgress = true;
-        m_creature->RemoveAurasDueToSpell(SPELL_STUN);
+        m_creature->RemoveAurasDueToSpell(SPELL_ICE_PRISON);
+        m_creature->RemoveAurasDueToSpell(SPELL_DARK_BINDING);
         if(TeamInInstance == ALLIANCE)
             if(Creature* pJaina = m_pInstance->instance->GetCreature(m_uiJainaGuid))
                 m_creature->GetMotionMaster()->MoveChase(pJaina);
@@ -307,8 +279,14 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public ScriptedAI
             return;
     }
 
+    void WaypointReached(uint32 uiWP)
+    {
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
+        npc_escortAI::UpdateAI(uiDiff);
+
         if (m_bIsIntro)
         {
             if(m_uiSpeech_Timer < uiDiff)
@@ -324,6 +302,21 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public ScriptedAI
                     m_uiSpeech_Timer = 15000;
                     break;
                 case 1:
+                    if(TeamInInstance == ALLIANCE)
+                    {
+                        if(Creature* pJaina = m_pInstance->instance->GetCreature(m_uiJainaGuid))
+                            pJaina->CastSpell(m_creature, SPELL_ICE_PRISON, false);
+                    }
+                    if(TeamInInstance == HORDE)
+                    {
+                        if(Creature* pSylvanas = m_pInstance->instance->GetCreature(m_uiSylvanasGuid))
+                            pSylvanas->CastSpell(m_creature, SPELL_DARK_BINDING, false);
+                    }
+                    //DoCast(m_creature, SPELL_STUN);
+                    ++m_uiIntro_Phase;
+                    m_uiSpeech_Timer = 5000;
+                    break;
+                case 2:
                     if(GameObject* pDoor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_SHADOW_DOOR_EXIT)))
                         m_pInstance->DoUseDoorOrButton(pDoor->GetGUID());
                     if(TeamInInstance == ALLIANCE)
@@ -331,7 +324,6 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public ScriptedAI
                         if(Creature* pJaina = m_pInstance->instance->GetCreature(m_uiJainaGuid))
                         {
                             DoScriptText(SAY_JAINA_INTRO, pJaina);
-                            pJaina->CastSpell(m_creature, SPELL_ICE_PRISON, false);
                             pJaina->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                             pJaina->GetMotionMaster()->MovePoint(0, 5577.909f, 2235.264f, 733.012f);
                             pJaina->AttackStop();
@@ -343,25 +335,22 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public ScriptedAI
                         if(Creature* pSylvanas = m_pInstance->instance->GetCreature(m_uiSylvanasGuid))
                         {
                             DoScriptText(SAY_SYLVANAS_INTRO, pSylvanas);
-                            pSylvanas->CastSpell(m_creature, SPELL_DARK_BINDING, false);
                             pSylvanas->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
                             pSylvanas->GetMotionMaster()->MovePoint(0, 5577.909f, 2235.264f, 733.012f);
                             pSylvanas->AttackStop();
                             pSylvanas->DeleteThreatList();
                         }
                     }
-                    DoCast(m_creature, SPELL_STUN);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
-                case 2:
-                    /*if(TeamInInstance == ALLIANCE)
+                case 3:
+                    if(TeamInInstance == ALLIANCE)
                         if(Creature* pJaina = m_pInstance->instance->GetCreature(m_uiJainaGuid))
                             pJaina->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                     if(TeamInInstance == HORDE)
                         if(Creature* pSylvanas = m_pInstance->instance->GetCreature(m_uiSylvanasGuid))
-                            pSylvanas->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);*/ // Remove comment after event is implemented!
-                    m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE); // Remove this after event is implemented!
+                            pSylvanas->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                     m_creature->AttackStop();
                     m_creature->DeleteThreatList();
                     CompleteQuest();
@@ -734,8 +723,9 @@ bool GossipHello_npc_slyvanas_jaina_hor_end(Player* pPlayer, Creature* pCreature
 
     ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
 
-    if(m_pInstance && m_pInstance->GetData(TYPE_ESCAPE) != DONE)
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+    // TODO: implement escort event
+    //if(m_pInstance && m_pInstance->GetData(TYPE_ESCAPE) != DONE)
+        //pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
     pPlayer->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, pCreature->GetGUID());
     return true;
