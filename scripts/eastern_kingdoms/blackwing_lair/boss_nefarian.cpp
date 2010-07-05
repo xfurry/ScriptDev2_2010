@@ -85,6 +85,7 @@ struct MANGOS_DLL_DECL boss_nefarianAI : public ScriptedAI
         TailLash_Timer = 10000;
         ClassCall_Timer = 35000;                            //35-40 seconds
         Phase3 = false;
+        m_creature->SetRespawnDelay(DAY);
     }
 
     void KilledUnit(Unit* Victim)
