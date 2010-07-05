@@ -335,9 +335,9 @@ INSERT INTO `gameobject_loot_template` VALUES
 UPDATE creature_template SET ScriptName = "boss_thorim" WHERE entry = 32865;
 UPDATE creature_template SET ScriptName = "boss_runic_colossus" WHERE entry = 32872;
 UPDATE creature_template SET ScriptName = "boss_ancient_rune_giant" WHERE entry = 32873;
+UPDATE creature_template SET ScriptName = "npc_lightning_orb" WHERE entry = 33138;
 update creature set spawnMask = 3 where id = 32873;
-UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, ScriptName = "npc_sif" WHERE entry = 33196;
-UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14 WHERE entry = 33138;
+UPDATE creature_template SET ScriptName = "npc_sif" WHERE entry = 33196;
 update `gameobject` set `position_y` = -286.67, `position_z` = 419.50 where `id` in (194312, 194313, 194314, 194315);
 UPDATE gameobject_template SET ScriptName="go_door_lever" WHERE entry = 194264;
 -- adds
