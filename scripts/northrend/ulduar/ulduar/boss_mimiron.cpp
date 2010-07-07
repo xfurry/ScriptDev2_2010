@@ -47,9 +47,13 @@ enum
     SAY_ROBOT_SLAY2     = -1603258,
     SAY_ROBOT_DEATH     = -1603259,
 
+    SPELL_JET_PACK          = 63341, // used by mimiron to change seats
+    SPELL_SELF_REPAIR       = 64383,
+
     //spells
     //leviathan
     SPELL_PROXIMITY_MINES   = 63016, // also in phase 4
+    SPELL_MINEX_SUMMON      = 65347, // just 1 mine
     MOB_PROXIMITY_MINE      = 34362,
     SPELL_EXPLOSION         = 66351,
     SPELL_EXPLOSION_H       = 63009,
@@ -58,6 +62,7 @@ enum
     SPELL_PLASMA_BLAST      = 62997,
     SPELL_PLASMA_BLAST_H    = 64529,
     SPELL_SHOCK_BLAST       = 63631, // also in phase 4
+    SPELL_FLAME_SUPRESSANT  = 64570, // hard mode
     LEVIATHAN_TURRET        = 34071,
 
     //vx001
@@ -68,6 +73,11 @@ enum
     SPELL_HEAT_WAVE         = 63677,
     SPELL_HEAT_WAVE_H       = 64533,
     SPELL_HAND_PULSE        = 64348, // only in phase 4
+    SPELL_FLAME_SUPRESS     = 65192,    // explode damage
+    SPELL_FROST_BOMB        = 64623,    // explode visual
+    SPELL_FROST_BOMB_AURA   = 64624,    // before explode
+    SPELL_FROST_BOMB_AURA2  = 64625,    // bomb grows
+    SPELL_FROST_BOMB_SUMMON = 64627,    // summon the frostbomb
     SPELL_HAND_PULSE_H      = 64536,
 
     //aerial unit
@@ -78,19 +88,20 @@ enum
     MOB_BOMB_BOT_321        = 33346,
     MOB_BOMB_BOT_500        = 34192,
     MOB_JUNK_BOT            = 33855,
-    SPELL_MAGNETIC_CORE     = 64444,
+    SPELL_MAGNETIC_CORE     = 64436, // increase dmg taken by 50%
     MOB_MAGNETIC_CORE       = 34068,
     ITEM_MAGNETIC_CORE      = 46029,
 
     //hard mode
     // summons fires
     SPELL_EMERGENCY_MODE    = 64582,
-    SPELL_FROST_BOMB        = 64627,
     MOB_FROST_BOMB          = 34149,
     MOB_EMERGENCY_FIRE_BOT  = 34147,
     SPELL_DEAFENING_SIREN   = 64616,
     SPELL_WATER_SPRAY       = 64619,
 
+    SPELL_MIMIRONS_INFERNO  = 62910,  // maybe used by rocket
+    SPELL_MIMIRONS_INFERNO2 = 62909,  // maybe hard mode
     SPELL_BERSERK           = 26662,
 
     ACHIEV_FIREFIGHTER      = 3180,
@@ -1007,7 +1018,11 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                     else
                         return;
                     if (m_pInstance)
+                    {
                         m_pInstance->SetData(TYPE_MIMIRON, IN_PROGRESS);
+                        if(m_pInstance->GetData(TYPE_MIMIRON_TP) != DONE)
+                            m_pInstance->SetData(TYPE_MIMIRON_TP, DONE);
+                    }
                     ++IntroStep;
                     IntroTimer = 15000;
                     break;

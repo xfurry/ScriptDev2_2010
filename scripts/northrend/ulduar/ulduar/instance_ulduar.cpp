@@ -38,6 +38,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint32 m_auiEncounter[MAX_ENCOUNTER];
     uint32 m_auiHardBoss[HARD_ENCOUNTER];
     uint32 m_auiUlduarKeepers[KEEPER_ENCOUNTER];
+    uint32 m_auiUlduarTeleporters[3];
     uint32 m_auiMiniBoss[6];
     uint32 mVision[3];
 
@@ -142,6 +143,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
         memset(&m_auiHardBoss, 0, sizeof(m_auiHardBoss));
         memset(&m_auiUlduarKeepers, 0, sizeof(m_auiUlduarKeepers));
+        memset(&m_auiUlduarTeleporters, 0, sizeof(m_auiUlduarTeleporters));
 
         for(uint8 i = 0; i < 6; i++)
             m_auiMiniBoss[i] = NOT_STARTED;
@@ -900,6 +902,17 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             m_auiUlduarKeepers[3] = uiData;
             break;
 
+            // teleporters
+        case TYPE_LEVIATHAN_TP:
+            m_auiUlduarTeleporters[0] = uiData;
+            break;
+        case TYPE_XT002_TP:
+            m_auiUlduarTeleporters[1] = uiData;
+            break;
+        case TYPE_MIMIRON_TP:
+            m_auiUlduarTeleporters[2] = uiData;
+            break;
+
             // mini boss
         case TYPE_RUNIC_COLOSSUS:
             m_auiMiniBoss[0] = uiData;
@@ -975,7 +988,8 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 << m_auiHardBoss[1] << " " << m_auiHardBoss[2] << " " << m_auiHardBoss[2] << " "
                 << m_auiHardBoss[4] << " " << m_auiHardBoss[5] << " " << m_auiHardBoss[6] << " "
                 << m_auiHardBoss[7] << " " << m_auiHardBoss[8] << " " << m_auiUlduarKeepers[0] << " "
-                << m_auiUlduarKeepers[1] << " " << m_auiUlduarKeepers[2] << " " << m_auiUlduarKeepers[3];
+                << m_auiUlduarKeepers[1] << " " << m_auiUlduarKeepers[2] << " " << m_auiUlduarKeepers[3] << " "
+                << m_auiUlduarTeleporters[0] << " " << m_auiUlduarTeleporters[1] << " " << m_auiUlduarTeleporters[2];
 
             m_strInstData = saveStream.str();
 
@@ -1071,6 +1085,16 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         return 0;
     }
 
+    bool CheckAchievementCriteriaMeet(uint32 criteria_id, const Player *source)
+    {
+        switch(criteria_id)
+        {
+        case ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET:
+            break;
+        }
+        return false;
+    }
+
     uint32 GetData(uint32 uiType)
     {
         switch(uiType)
@@ -1134,6 +1158,14 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case TYPE_KEEPER_MIMIRON:
             return m_auiUlduarKeepers[3];
 
+            // teleporters
+        case TYPE_LEVIATHAN_TP:
+            return m_auiUlduarTeleporters[0];
+        case TYPE_XT002_TP:
+            return m_auiUlduarTeleporters[1];
+        case TYPE_MIMIRON_TP:
+            return m_auiUlduarTeleporters[2];
+
             // mini boss
         case TYPE_RUNE_GIANT:
             return m_auiMiniBoss[1];
@@ -1181,7 +1213,8 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         >> m_auiEncounter[12] >> m_auiEncounter[13] >> m_auiHardBoss[0] >> m_auiHardBoss[1]
         >> m_auiHardBoss[2] >> m_auiHardBoss[3] >> m_auiHardBoss[4] >> m_auiHardBoss[5]
         >> m_auiHardBoss[6] >> m_auiHardBoss[7] >> m_auiHardBoss[8] >> m_auiUlduarKeepers[0]
-        >> m_auiUlduarKeepers[1] >> m_auiUlduarKeepers[2] >> m_auiUlduarKeepers[3];
+        >> m_auiUlduarKeepers[1] >> m_auiUlduarKeepers[2] >> m_auiUlduarKeepers[3] >> m_auiUlduarTeleporters[0]
+        >> m_auiUlduarTeleporters[1] >> m_auiUlduarTeleporters[2];
 
         for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
         {

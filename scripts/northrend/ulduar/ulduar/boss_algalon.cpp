@@ -50,32 +50,44 @@ enum
     ITEM_PLANETARIUM_KEY            = 45796,
     ITEM_PLANETARIUM_KEY_H          = 45798,
 
+    SPELL_ALGALON_EVENT_BEAM        = 64367,
+    SPELL_ALGALON_EVENT_CLIMAX      = 64580, // This spells are used for environment
+
     //spells to be casted
     SPELL_QUANTUM_STRIKE            = 64395, //Normal Quantum Strike
     SPELL_QUANTUM_STRIKE_H          = 64592, //Heroic Quantum Strike
     SPELL_PHASE_PUNCH               = 64412, //Phase punch 
     SPELL_PHASE_PUNCH_SHIFT         = 64417,
     SPELL_PHASE_PUNCH_TRIGGER       = 65508, 
-    SPELL_COSMIC_SMASH              = 62311, //62301, //Normal Cosmic Smash
-    SPELL_COSMIC_SMASH_H            = 64569, //64598, //Heroic Cosmic Smash
+    SPELL_COSMIC_SMASH              = 62301, //Normal Cosmic Smash
+    SPELL_COSMIC_SMASH_H            = 64598, //Heroic Cosmic Smash
+    SPELL_COSMIC_SMASH_MISSILE      = 62304,
     SPELL_BIG_BANG                  = 64443, //Normal Big Bang
     SPELL_BIG_BANG_H                = 64584, //Heroic Big Bang
-    SPELL_ASCEND                    = 70063, //64487, //Ascend to the Heavens -> changed to "the fury of frostmourne" because is's broken
+    SPELL_ASCEND                    = 64487, //Ascend to the Heavens
     SPELL_BERSERK                   = 47008, //Berserk
+    NPC_SMASH_TARGET_DUMMY          = 33105,
 
     // mobs
-    CREATURE_COLLAPSING_STAR        = 32955,    // they lose 1%hp per sec & cast black hole explosion when they die -> leave a black hole
+    NPC_COLLAPSING_STAR             = 32955,    // they lose 1%hp per sec & cast black hole explosion when they die -> leave a black hole
     SPELL_BLACK_HOLE_EXPLOSION      = 64122,
     SPELL_BLACK_HOLE_EXPLOSION_H    = 65108,
+    SPELL_BLACK_HOLE_DESPAWN        = 64391,    // dummy spell
+    SPELL_SUMMON_BLACK_HOLE         = 62189,
+    SPELL_BLACK_HOLE_VISUAL         = 64135,
+    SPELL_BLACK_HOLE_SPAWN          = 62003,
+    SPELL_BLACK_HOLE_TRIGG          = 62185,    // shifts the phase
+    SPELL_BLACK_HOLE_SHIFT          = 62168,
+    SPELL_BLACK_HOLE_DMG            = 62169,
 
-    CREATURE_BLACK_HOLE             = 32953,    // players must stay inside to avoid big bang
+    NPC_BLACK_HOLE                  = 32953,    // players must stay inside to avoid big bang
 
-    CREATURE_LIVING_CONSTELLATION   = 33052,    // if one enters a black hole they are despawned
-    SPELL_ARCANE_BARRAGE            = 64599, //Arcane Barage
-    SPELL_ARCANE_BARRAGE_H          = 64607, //Heroic Arcane Barage?
+    NPC_LIVING_CONSTELLATION        = 33052,    // if one enters a black hole they are despawned
+    SPELL_ARCANE_BARRAGE            = 64599,    //Arcane Barage
+    SPELL_ARCANE_BARRAGE_H          = 64607,    //Heroic Arcane Barage?
 
-    CREATURE_DARK_MATTER            = 33089,    // populates the black holes = 7
-    CREATURE_COSMIC_SMASH           = 33104,
+    NPC_DARK_MATTER                 = 33089,    // populates the black holes = 7
+    NPC_COSMIC_SMASH                = 33104,
 
     ACHIEV_FEED_TEARS               = 3004,
     ACHIEV_FEED_TEARS_H             = 3005,     // nobody dies in the raid lockout
@@ -84,23 +96,16 @@ enum
     ACHIEV_OBSERVED_H               = 3037,
     ACHIEV_SUPERMASSIVE             = 3003,
     ACHIEV_SUPERMASSIVE_H           = 3002,
+
+    UI_STATE_ALGALON_TIMER_ON       = 4132,
+    UI_STATE_ALGALON_TIMER_COUNT    = 4131,
 };
 
-//Positional defines
-#define LOC_Z                       417.32f  
-struct LocationsXY
+class MANGOS_DLL_DECL PhaseAura : public Aura
 {
-    float x, y;
-    uint32 id;
-};
-static LocationsXY SummonLoc[]=
-{
-    {1659.420f, -317.325f},
-    {1641.782f, -329.481f},
-    {1625.716f, -325.142f},
-    {1610.169f, -312.011f},
-    {1617.442f, -286.099f},
-    {1640.035f, -279.357f},
+public:
+    PhaseAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
+    {}
 };
 
 //Algalon
@@ -110,78 +115,73 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        DespawnTimer = 6000000;  // 1h;
-        pCreature->setFaction(35);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_bHasStarted       = false;    // flag used to check if the encounter has been started from the console
+        m_bIsInProgress     = false;    // flag used for time counter
+        m_bIsFirstTime      = true;     // flag used to show if this is the first aggro
+        m_uiDespawnTimer    = 3600000;  // 1h;
+        m_uiLastTimer       = 3600000;  // 1h;
+        m_bFeedOnTears      = true;     // flag used to check the Fead on Tears achiev
+        pCreature->SetVisibility(VISIBILITY_OFF);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
+    bool m_bIsRegularMode;   
 
-    std::list<uint64> m_lCollapsingStarGUIDList;
-    std::list<uint64> m_lLivingConstelationGUIDList;
-
-    bool m_bIsRegularMode;
-
-    uint64 BlackHoleGUID;
-
-    uint32 Ascend_Timer;
-    uint32 Berserk_Timer;
-    uint32 BigBang_Timer;
-    uint32 CosmicSmash_Timer;
-    uint32 PhasePunch_Timer;
-    uint32 QuantumStrike_Timer;
-    uint32 CollapsingStar_Timer;
-    uint32 LivingConstellationTimer;
-    uint32 PhasePunchCheckTimer;
-    uint32 DarkMaterTimer;
-    uint32 DespawnTimer;
+    uint32 m_uiBerserk_Timer;
+    uint32 m_uiBigBang_Timer;
+    uint32 m_uiCosmicSmash_Timer;
+    uint32 m_uiPhasePunch_Timer;
+    uint32 m_uiQuantumStrike_Timer;
+    uint32 m_uiCollapsingStar_Timer;
+    uint32 m_uiLivingConstellationTimer;
+    uint32 m_uiRaidCheckTimer;
+    uint32 m_uiDarkMaterTimer;
+    uint32 m_uiDespawnTimer;
+    uint32 m_uiLastTimer;
 
     // intro & outro
-    bool isOutro;
-    uint32 OutroTimer;
-    uint32 Step;
-    bool isIntro;
-    uint32 IntroTimer;
-    uint32 IntroStep;
+    bool m_bIsOutro;
+    uint32 m_uiOutroTimer;
+    uint32 m_uiOutroStep;
+    bool m_bIsIntro;
+    uint32 m_uiIntroTimer;
+    uint32 m_uiIntroStep;
 
-    uint8 phase;
-    bool isPhase2;
+    bool m_bHasStarted;
+    bool m_bIsFirstTime;
+    bool m_bIsInProgress;
 
-    bool isDespawned;
-    bool isFirstTime;
+    uint8 m_uiCombatPhase;
+    bool m_bIsPhase2;
+
+    bool m_bIsDespawned;
+    bool m_bFeedOnTears;
 
     void Reset()
     {
-        BlackHoleGUID = 0;
+        m_uiQuantumStrike_Timer     = 4000 + rand()%10000;
+        m_uiBerserk_Timer           = 360000; //6 minutes
+        m_uiCollapsingStar_Timer    = urand(15000, 20000); //Spawns between 15 to 20 seconds
+        m_uiLivingConstellationTimer = 60000;
+        m_uiBigBang_Timer           = 90000;
+        m_uiDarkMaterTimer          = 90000;
+        m_uiPhasePunch_Timer        = 8000;
+        m_uiCosmicSmash_Timer       = urand(30000, 60000);
+        m_uiRaidCheckTimer          = 1000;
 
-        Ascend_Timer        = 480000; //8 minutes
-        QuantumStrike_Timer = 4000 + rand()%10000;
-        Berserk_Timer       = 360000; //6 minutes
-        CollapsingStar_Timer = urand(15000, 20000); //Spawns between 15 to 20 seconds
-        LivingConstellationTimer = 60000;
-        BigBang_Timer       = 90000;
-        DarkMaterTimer      = 90000;
-        PhasePunch_Timer    = 8000;
-        CosmicSmash_Timer   = urand(30000, 60000);
-        PhasePunchCheckTimer = 40000;
+        m_uiCombatPhase         = 0;     // it's 0 for idle, 1 for intro and 2 for combat
+        m_bIsPhase2             = false; // flag used below 30% hp
 
-        phase = 10;
-        isPhase2 = false;
+        m_uiOutroTimer          = 10000;
+        m_uiOutroStep           = 1;
+        m_bIsIntro              = true;
+        m_uiIntroTimer          = 10000;
+        m_uiIntroStep           = 1;
+        m_bIsOutro              = false;  
 
-        OutroTimer          = 10000;
-        Step                = 1;
-        isIntro             = true;
-        IntroTimer          = 10000;
-        IntroStep           = 1;
-        isOutro             = false;  
-
-        isDespawned         = false;
-        isFirstTime         = false;
-
-        if(!isFirstTime)
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-
-        DespawnCollapsingStar();
+        m_bIsDespawned          = false; // flaged used to show that time has run out
     }
 
     void KilledUnit(Unit *victim)
@@ -197,14 +197,37 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_ALGALON, NOT_STARTED);
+        m_bIsFirstTime = false;
     }
 
     void DoOutro()
     {
         if (m_pInstance)
+        {
             m_pInstance->SetData(TYPE_ALGALON, DONE);
+            m_pInstance->DoUpdateWorldState(UI_STATE_ALGALON_TIMER_ON, 0);
+            m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_OBSERVED : ACHIEV_OBSERVED_H);
+
+            if(m_bFeedOnTears)
+                m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_FEED_TEARS : ACHIEV_FEED_TEARS_H);
+        }
 
         m_creature->ForcedDespawn();
+    }
+
+    void AttackStart(Unit* pWho)
+    {
+        if(!m_bIsInProgress)
+            return;
+
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+        }
     }
 
     void MoveInLineOfSight(Unit* pWho)
@@ -213,172 +236,163 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
             return;
 
         if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && m_creature->IsHostileTo(pWho) &&
-            pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 40) && phase > 2)
-        {
-            SetCombatMovement(false);
-            phase = 0;
-        }
+            pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 40) && m_uiCombatPhase == 0 && m_bHasStarted && m_bIsFirstTime)
+            m_uiCombatPhase = 1;
     }
 
     void StartEncounter()
     {
-        m_creature->setFaction(14);
-        isFirstTime = true;
+        m_creature->SetVisibility(VISIBILITY_ON);
+        m_bIsFirstTime  = true;
+        m_bHasStarted   = true;
+        m_bIsInProgress = false;
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
     {
-        if(uiDamage > m_creature->GetHealth())
+        if(m_creature->GetHealthPercent() < 1.0f)
         {
             uiDamage = 0;
-            isOutro = true;
+            m_bIsOutro = true;
+        }
+    }
+
+    void SummonCreature(uint32 m_uiCreatureEntry)
+    {
+        float angle = (float) rand()*360/RAND_MAX + 1;
+        float homeX = 1630.475f + urand(15, 30)*cos(angle*(M_PI/180));
+        float homeY = -286.989f + urand(15, 30)*sin(angle*(M_PI/180));
+        if(Creature* pTemp = m_creature->SummonCreature(m_uiCreatureEntry, homeX, homeY, 417.32f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 30000))
+        {
+            pTemp->SetInCombatWithZone();
+            if(pTemp->GetEntry() == NPC_DARK_MATTER)
+            {
+                SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BLACK_HOLE_SHIFT);
+                pTemp->AddAura(new PhaseAura(spell, EFFECT_INDEX_0, NULL, pTemp, pTemp));
+            }
         }
     }
 
     void Aggro(Unit* pWho)
     {
-        phase = 1;
-        if(isFirstTime)
+        // set combat phase
+        m_uiCombatPhase = 2;
+
+        if(m_bIsFirstTime)
+        {
+            m_bIsInProgress = true;
             DoScriptText(SAY_ENGAGE, m_creature);
+            if(m_pInstance)
+            {
+                m_pInstance->DoUpdateWorldState(UI_STATE_ALGALON_TIMER_ON, 1);
+                m_pInstance->DoUpdateWorldState(UI_STATE_ALGALON_TIMER_COUNT, m_uiDespawnTimer / 60000);
+            }
+        }
         else
             DoScriptText(SAY_AGGRO, m_creature);
 
         m_creature->SetInCombatWithZone();
-        SetCombatMovement(true);
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_ALGALON, IN_PROGRESS);
     }
 
-    void DespawnCollapsingStar()
-    {
-        if (m_lCollapsingStarGUIDList.empty())
-            return;
-
-        for(std::list<uint64>::iterator itr = m_lCollapsingStarGUIDList.begin(); itr != m_lCollapsingStarGUIDList.end(); ++itr)
-        {
-            if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
-            {
-                if (pTemp->isAlive())
-                    pTemp->ForcedDespawn();
-            }
-        }
-        m_lCollapsingStarGUIDList.clear();
-
-        if (m_lLivingConstelationGUIDList.empty())
-            return;
-
-        for(std::list<uint64>::iterator itr = m_lLivingConstelationGUIDList.begin(); itr != m_lLivingConstelationGUIDList.end(); ++itr)
-        {
-            if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
-            {
-                if (pTemp->isAlive())
-                    pTemp->ForcedDespawn();
-            }
-        }
-        m_lLivingConstelationGUIDList.clear();
-    }
-
-    void JustSummoned(Creature* pSummoned)
-    {
-        if (pSummoned->GetEntry() == CREATURE_COLLAPSING_STAR)
-            m_lCollapsingStarGUIDList.push_back(pSummoned->GetGUID());
-
-        if (pSummoned->GetEntry() == CREATURE_LIVING_CONSTELLATION)
-            m_lLivingConstelationGUIDList.push_back(pSummoned->GetGUID());
-    }
-
-    void SummonCollapsingStar()
-    {
-        uint8 i = urand(0, 2);
-        for(uint8 j = i; j < i + urand(3, 4); j++)
-            m_creature->SummonCreature(CREATURE_COLLAPSING_STAR, SummonLoc[j].x, SummonLoc[j].y, LOC_Z, 0, TEMPSUMMON_CORPSE_DESPAWN, 10000);  
-    }
-
     void UpdateAI(const uint32 uiDiff)
     {
         // despawn timer
-        if(DespawnTimer < uiDiff && !isDespawned)
+        if(m_uiDespawnTimer < uiDiff && !m_bIsDespawned && m_bIsInProgress)
         {
-            isDespawned = true;
-            isOutro = true;
+            m_bIsDespawned = true;
+            m_bIsOutro = true;
+            m_bIsInProgress = false;
         }
-        else DespawnTimer -= uiDiff;
+        else m_uiDespawnTimer -= uiDiff;
 
-        if(!isOutro)
+        if(m_uiDespawnTimer < m_uiLastTimer - 60000 && !m_bIsDespawned)
+        {
+            m_uiLastTimer = m_uiDespawnTimer;
+            uint32 tMinutes = m_uiDespawnTimer / 60000;
+            if(m_pInstance)
+                m_pInstance->DoUpdateWorldState(UI_STATE_ALGALON_TIMER_COUNT, tMinutes);
+        }
+
+        if(!m_bIsOutro)
         {
             // intro
-            if(phase == 0)
+            if(m_uiCombatPhase == 1)
             {
-                if(isIntro  && isFirstTime)
+                if(m_bIsIntro  && m_bIsFirstTime)
                 {
-                    switch(IntroStep)
+                    switch(m_uiIntroStep)
                     {
                     case 1:
                         DoScriptText(SAY_INTRO1, m_creature);
-                        ++IntroStep;
-                        IntroTimer = 7000;
+                        ++m_uiIntroStep;
+                        m_uiIntroTimer = 8000;
                         break;
                     case 3:
                         DoScriptText(SAY_INTRO2, m_creature);
-                        ++IntroStep;
-                        IntroTimer = 7000;
+                        ++m_uiIntroStep;
+                        m_uiIntroTimer = 6000;
                         break;
                     case 5:
                         DoScriptText(SAY_INTRO3, m_creature);
-                        ++IntroStep;
-                        IntroTimer = 10000;
+                        ++m_uiIntroStep;
+                        m_uiIntroTimer = 10000;
                         break;
                     case 7:
                         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                        isIntro = false;
-                        ++IntroStep;
-                        IntroTimer = 10000;
+                        m_bIsIntro = false;
+                        ++m_uiIntroStep;
+                        m_uiIntroTimer = 10000;
                         break;
                     }
                 }
                 else return;
 
-                if (IntroTimer <= uiDiff)
+                if (m_uiIntroTimer <= uiDiff)
                 {
-                    ++IntroStep;
-                    IntroTimer = 330000;
-                } IntroTimer -= uiDiff;
+                    ++m_uiIntroStep;
+                    m_uiIntroTimer = 330000;
+                } m_uiIntroTimer -= uiDiff;
             }
 
-            if(phase == 1)
+            // combat
+            if(m_uiCombatPhase == 2)
             {
                 if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
                     return;
 
                 // spells
-                if(QuantumStrike_Timer < uiDiff)
+                if(m_uiQuantumStrike_Timer < uiDiff)
                 {
                     DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_QUANTUM_STRIKE : SPELL_QUANTUM_STRIKE_H);
-                    QuantumStrike_Timer = 4000 + rand()%10000;
-                }else QuantumStrike_Timer -= uiDiff;
+                    m_uiQuantumStrike_Timer = 4000 + rand()%10000;
+                }else m_uiQuantumStrike_Timer -= uiDiff;
 
-                if(BigBang_Timer < uiDiff)
+                if(m_uiBigBang_Timer < uiDiff)
                 {
-                    DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_BIG_BANG : SPELL_BIG_BANG_H, true);
-                    BigBang_Timer = 90000;
-                    DarkMaterTimer = 10000;
-                }else BigBang_Timer -= uiDiff;
+                    DoCast(m_creature, m_bIsRegularMode ? SPELL_BIG_BANG : SPELL_BIG_BANG_H);
+                    m_uiBigBang_Timer = 90000;
+                    m_uiDarkMaterTimer = 1000;
+                }else m_uiBigBang_Timer -= uiDiff;
 
-                if(CosmicSmash_Timer < uiDiff)
+                if(m_uiCosmicSmash_Timer < uiDiff)
                 {
-                    DoCast(m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0), m_bIsRegularMode ? SPELL_COSMIC_SMASH : SPELL_COSMIC_SMASH_H, true);
-                    CosmicSmash_Timer = urand(30000, 60000);
-                }else CosmicSmash_Timer -= uiDiff;
+                    if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
+                        DoCast(pTarget, m_bIsRegularMode ? SPELL_COSMIC_SMASH : SPELL_COSMIC_SMASH_H);
+                    m_uiCosmicSmash_Timer = urand(30000, 60000);
+                }else m_uiCosmicSmash_Timer -= uiDiff;
 
-                if(PhasePunch_Timer < uiDiff)
+                if(m_uiPhasePunch_Timer < uiDiff)
                 {
-                    DoCast(m_creature->getVictim(),SPELL_PHASE_PUNCH);
-                    PhasePunch_Timer = 8000;
-                }else PhasePunch_Timer -= uiDiff;
+                    if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
+                        DoCast(pTarget,SPELL_PHASE_PUNCH);
+                    m_uiPhasePunch_Timer = 8000;
+                }else m_uiPhasePunch_Timer -= uiDiff;
 
-                if(PhasePunchCheckTimer < uiDiff)
+                if(m_uiRaidCheckTimer < uiDiff)
                 {
                     Map *map = m_creature->GetMap();
                     if (map->IsDungeon())
@@ -396,64 +410,51 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
                                 if(phasePunch->GetStackAmount() > 4)
                                 {
                                     i->getSource()->RemoveAurasDueToSpell(SPELL_PHASE_PUNCH);
-                                    DoCast(i->getSource(), SPELL_PHASE_PUNCH_SHIFT);
+                                    i->getSource()->CastSpell(i->getSource(), SPELL_PHASE_PUNCH_SHIFT, false);
                                 }
                             }
+                            if (!i->getSource()->isAlive())
+                                m_bFeedOnTears = false;
                         }
                     }
-                    PhasePunchCheckTimer = 1000;
-                }else PhasePunchCheckTimer -= uiDiff;
-
-                // ascent
-                if(Ascend_Timer < uiDiff)
-                {
-                    DoCast(m_creature->getVictim(),SPELL_ASCEND, true);
-                    Ascend_Timer = 480000;
-                }else Ascend_Timer -= uiDiff;
+                    m_uiRaidCheckTimer = 1000;
+                }else m_uiRaidCheckTimer -= uiDiff;
 
                 // berserk
-                if(Berserk_Timer < uiDiff)
+                if(m_uiBerserk_Timer < uiDiff)
                 {
                     DoScriptText(SAY_BERSERK, m_creature);	
-                    //DoCast(m_creature->getVictim(),SPELL_BERSERK, true);
-                    DoCast(m_creature ,SPELL_ASCEND);
-                    Berserk_Timer = 360000;
-                }else Berserk_Timer -= uiDiff;
+                    DoCast(m_creature, SPELL_BERSERK);
+                    m_uiBerserk_Timer = 360000;
+                }else m_uiBerserk_Timer -= uiDiff;
 
                 // summons
-                if(CollapsingStar_Timer < uiDiff && !isPhase2)
+                if(m_uiCollapsingStar_Timer < uiDiff && !m_bIsPhase2)
                 {
                     DoScriptText(SAY_SUMMON_STAR, m_creature);
-                    SummonCollapsingStar();
-                    CollapsingStar_Timer = 90000;
-                }else CollapsingStar_Timer -= uiDiff;
+                    SummonCreature(NPC_COLLAPSING_STAR);
+                    m_uiCollapsingStar_Timer = urand(15000, 20000);
+                }else m_uiCollapsingStar_Timer -= uiDiff;
 
-                if(LivingConstellationTimer < uiDiff && !isPhase2)
+                if(m_uiLivingConstellationTimer < uiDiff && !m_bIsPhase2)
                 {
                     for(uint8 i = 0; i < urand (1, 3); i++)
-                    {
-                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                            m_creature->SummonCreature(CREATURE_LIVING_CONSTELLATION, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
-                    }
-                    LivingConstellationTimer = 30000;
-                }else LivingConstellationTimer -= uiDiff;
+                        SummonCreature(NPC_LIVING_CONSTELLATION);
+                    m_uiLivingConstellationTimer = 30000;
+                }else m_uiLivingConstellationTimer -= uiDiff;
 
-                if(DarkMaterTimer < uiDiff && !isPhase2)
+                if(m_uiDarkMaterTimer < uiDiff && !m_bIsPhase2)
                 {
                     for(uint8 i = 0; i < 7; i++)
-                    {
-                        Creature *darkMatter = m_creature->SummonCreature(CREATURE_DARK_MATTER, SummonLoc[i].x, SummonLoc[i].y, LOC_Z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);  
-                        if(m_bIsRegularMode)
-                            darkMatter->SetMaxHealth(19550);
-                    }
-                    DarkMaterTimer = 90000;
-                }else DarkMaterTimer -= uiDiff;
+                        SummonCreature(NPC_DARK_MATTER);
+                    m_uiDarkMaterTimer = 90000;
+                }else m_uiDarkMaterTimer -= uiDiff;
 
                 // hp check
-                if(!isPhase2 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 20)
+                if(!m_bIsPhase2 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 20)
                 {
                     DoScriptText(SAY_PHASE2, m_creature);
-                    isPhase2 = true;
+                    m_bIsPhase2 = true;
                 }
 
                 DoMeleeAttackIfReady();
@@ -462,12 +463,11 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
             }
         }
         // outro
-        if(isOutro)
+        if(m_bIsOutro)
         {
-            switch(Step)
+            switch(m_uiOutroStep)
             {
             case 1:
-                m_creature->setFaction(35);
                 m_creature->RemoveAllAuras();
                 m_creature->DeleteThreatList();
                 m_creature->CombatStop(true);
@@ -475,98 +475,99 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
                 m_creature->SetHealth(m_creature->GetMaxHealth());
                 m_creature->GetMotionMaster()->MovePoint(0, 1631.970f, -302.635f, 417.321f);
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                ++Step;
-                OutroTimer = 5000;
+                ++m_uiOutroStep;
+                m_uiOutroTimer = 5000;
                 break;
             case 3:
                 // make boss kneel
                 m_creature->SetSplineFlags(SPLINEFLAG_UNKNOWN12);
-                if(isDespawned)
+                if(m_bIsDespawned)
                 {
                     DoScriptText(SAY_DESPAWN1, m_creature);
-                    ++Step;
-                    OutroTimer = 15000;
+                    ++m_uiOutroStep;
+                    m_uiOutroTimer = 15000;
                 }
                 else
                 {
                     DoScriptText(SAY_OUTRO1, m_creature);
-                    ++Step;
-                    OutroTimer = 37000;
+                    ++m_uiOutroStep;
+                    m_uiOutroTimer = 37000;
                 }
                 break;
             case 5:
-                if(isDespawned)
+                if(m_bIsDespawned)
                 {
                     DoScriptText(SAY_DESPAWN2, m_creature);
-                    ++Step;
-                    OutroTimer = 8000;
+                    ++m_uiOutroStep;
+                    m_uiOutroTimer = 8000;
                 }
                 else
                 {
                     DoScriptText(SAY_OUTRO2, m_creature);
-                    ++Step;
-                    OutroTimer = 17000;
+                    ++m_uiOutroStep;
+                    m_uiOutroTimer = 17000;
                 }
                 break;
             case 7:
-                if(isDespawned)
+                if(m_bIsDespawned)
                 {
                     DoScriptText(SAY_DESPAWN3, m_creature);
-                    ++Step;
-                    OutroTimer = 7000;
+                    ++m_uiOutroStep;
+                    m_uiOutroTimer = 7000;
                 }
                 else
                 {
                     DoScriptText(SAY_OUTRO3, m_creature);
-                    ++Step;
-                    OutroTimer = 12000;
+                    ++m_uiOutroStep;
+                    m_uiOutroTimer = 12000;
                 }
                 break;
             case 9:
-                if(isDespawned)
+                if(m_bIsDespawned)
                 {
                     DoCast(m_creature, SPELL_ASCEND);
-                    ++Step;
-                    OutroTimer = 5000;
+                    ++m_uiOutroStep;
+                    m_uiOutroTimer = 5000;
                 }
                 else
                 {
                     DoScriptText(SAY_OUTRO4, m_creature);
-                    ++Step;
-                    OutroTimer = 11000;
+                    ++m_uiOutroStep;
+                    m_uiOutroTimer = 11000;
                 }
                 break;
             case 11:
-                if(isDespawned)
+                if(m_bIsDespawned)
                 {
-                    if (m_pInstance)
-                        m_pInstance->SetData(TYPE_YOGGSARON, DONE);
+                    if(m_pInstance)
+                    {
+                        m_pInstance->DoUpdateWorldState(UI_STATE_ALGALON_TIMER_ON, 0);
+                        m_pInstance->SetData(TYPE_ALGALON, FAIL);
+                    }
                     m_creature->ForcedDespawn();
                 }
                 else
                 {
                     DoScriptText(SAY_OUTRO5, m_creature);
-                    if (m_pInstance)
-                        m_pInstance->SetData(TYPE_YOGGSARON, DONE);
-                    ++Step;
-                    OutroTimer = 13000;
+                    ++m_uiOutroStep;
+                    m_uiOutroTimer = 13000;
                 }
                 break;
             case 13:
                 DoOutro();
-                ++Step;
-                OutroTimer = 10000;
+                ++m_uiOutroStep;
+                m_uiOutroTimer = 10000;
                 break;
             }
         }
         else 
             return;
 
-        if (OutroTimer <= uiDiff)
+        if (m_uiOutroTimer <= uiDiff)
         {
-            ++Step;
-            OutroTimer = 330000;
-        } OutroTimer -= uiDiff;
+            ++m_uiOutroStep;
+            m_uiOutroTimer = 330000;
+        } m_uiOutroTimer -= uiDiff;
     }	
 };	
 
@@ -576,24 +577,35 @@ struct MANGOS_DLL_DECL mob_collapsing_starAI : public ScriptedAI
     mob_collapsing_starAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        pCreature->SetSpeedRate(MOVE_RUN, 0.5f);
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
+    bool m_bIsRegularMode;
 
-    uint32 healthTimer;
+    uint32 m_uiHealthTimer;
+    uint32 m_uiDieTimer;
+    uint32 m_uiSummonTimer;
 
     void Reset()
     {
-        healthTimer = 1000;
+        m_uiHealthTimer = 1000;
+        m_uiDieTimer    = 600000;
+        m_uiSummonTimer = 600000;
         m_creature->SetRespawnDelay(DAY);
     }
 
-    void JustDied(Unit *victim)
+    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
     {
-        m_creature->SummonCreature(CREATURE_BLACK_HOLE, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
+        if(uiDamage > m_creature->GetHealth())
+        {
+            uiDamage = 0;
+            m_creature->SetHealth(m_creature->GetMaxHealth());
+            m_uiDieTimer = 1500;
+            m_uiSummonTimer = 1000;
+            DoCast(m_creature, m_bIsRegularMode ? SPELL_BLACK_HOLE_EXPLOSION : SPELL_BLACK_HOLE_EXPLOSION_H);
+        }
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -604,13 +616,24 @@ struct MANGOS_DLL_DECL mob_collapsing_starAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if(healthTimer < uiDiff)
+        if (m_uiSummonTimer < uiDiff)
         {
-            m_creature->DeleteThreatList();
+            DoCast(m_creature, SPELL_SUMMON_BLACK_HOLE);
+            m_uiSummonTimer = 60000;
+        }
+        else m_uiSummonTimer -= uiDiff;
+
+        if (m_uiDieTimer < uiDiff)
+            m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        else
+            m_uiDieTimer -= uiDiff;
+
+        if(m_uiHealthTimer < uiDiff && m_creature->GetHealthPercent() > 1.0f)
+        {
             m_creature->GetMotionMaster()->MoveConfused();
-            m_creature->DealDamage(m_creature, (m_creature->GetMaxHealth() * 0.1), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-            healthTimer = 1000;
-        }else healthTimer -= uiDiff;
+            m_creature->DealDamage(m_creature, (m_creature->GetMaxHealth() * 0.01), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            m_uiHealthTimer = 1000;
+        }else m_uiHealthTimer -= uiDiff;
     }	
 };
 
@@ -621,19 +644,17 @@ struct MANGOS_DLL_DECL mob_living_constellationAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        pCreature->SetSpeedRate(MOVE_RUN, 0.5f);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
-    uint32 ArcaneBarrageTimer;
+    uint32 m_uiArcaneBarrageTimer;
 
     void Reset()
     {
-        ArcaneBarrageTimer = 15000;
+        m_uiArcaneBarrageTimer = 15000;
         m_creature->SetRespawnDelay(DAY);
     }
 
@@ -645,13 +666,13 @@ struct MANGOS_DLL_DECL mob_living_constellationAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (ArcaneBarrageTimer < uiDiff)
+        if (m_uiArcaneBarrageTimer < uiDiff)
         {
             if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0)){
                 DoCast(target, m_bIsRegularMode ? SPELL_ARCANE_BARRAGE : SPELL_ARCANE_BARRAGE_H);
             }
-            ArcaneBarrageTimer = 15000;
-        }else ArcaneBarrageTimer -= uiDiff;
+            m_uiArcaneBarrageTimer = 15000;
+        }else m_uiArcaneBarrageTimer -= uiDiff;
     }	
 };
 
@@ -661,21 +682,21 @@ struct MANGOS_DLL_DECL mob_black_holeAI : public ScriptedAI
     mob_black_holeAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        
         SetCombatMovement(false);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-    bool m_bIsRegularMode;
-
-    uint32 playersCheckTimer;
+    
+    bool m_bHasAura;
+    uint32 m_uiRaidCheckTimer;
 
     void Reset()
     {
-        playersCheckTimer = 1000;
-        DoCast(m_creature, m_bIsRegularMode ? SPELL_BLACK_HOLE_EXPLOSION : SPELL_BLACK_HOLE_EXPLOSION_H);
+        m_bHasAura = false;
+        m_uiRaidCheckTimer = 1000;   
+        DoCast(m_creature, SPELL_BLACK_HOLE_SPAWN);
         m_creature->SetRespawnDelay(DAY);
     }
 
@@ -687,8 +708,14 @@ struct MANGOS_DLL_DECL mob_black_holeAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (playersCheckTimer < uiDiff)
+        if (m_uiRaidCheckTimer < uiDiff)
         {
+            if(!m_bHasAura)
+            {
+                DoCast(m_creature, SPELL_BLACK_HOLE_TRIGG);
+                m_bHasAura = true;
+            }
+            
             Map *map = m_creature->GetMap();
             if (map->IsDungeon())
             {
@@ -700,20 +727,65 @@ struct MANGOS_DLL_DECL mob_black_holeAI : public ScriptedAI
                 for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                 {
                     if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
-                        DoCast(i->getSource(), SPELL_PHASE_PUNCH_SHIFT);
+                    {
+                        SpellEntry* spellPhase = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BLACK_HOLE_SHIFT);
+                        i->getSource()->AddAura(new PhaseAura(spellPhase, EFFECT_INDEX_0, NULL, i->getSource(), i->getSource()));
+                        SpellEntry* spellDmg = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BLACK_HOLE_DMG);
+                        i->getSource()->AddAura(new PhaseAura(spellDmg, EFFECT_INDEX_0, NULL, i->getSource(), i->getSource()));
+                    }
                 }
             } 
 
-            if(Creature *pConstellation = GetClosestCreatureWithEntry(m_creature, CREATURE_LIVING_CONSTELLATION, 2))
+            if(Creature *pConstellation = GetClosestCreatureWithEntry(m_creature, NPC_LIVING_CONSTELLATION, 2))
             {
-                m_creature->DealDamage(pConstellation, pConstellation->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                m_creature->ForcedDespawn();
+                pConstellation->DealDamage(pConstellation, pConstellation->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
             }
-            playersCheckTimer = 1000;
+            m_uiRaidCheckTimer = 500;
         }
-        else playersCheckTimer -= uiDiff;
+        else m_uiRaidCheckTimer -= uiDiff;
     }	
 };
+
+struct MANGOS_DLL_DECL mob_cosmic_smash_targetAI : public ScriptedAI
+{
+    mob_cosmic_smash_targetAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+        pCreature->SetDisplayId(11686);     // make invisible
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+    bool m_bIsRegularMode;
+
+    uint32 m_uiSpellTimer;
+
+    void Reset()
+    {
+        m_uiSpellTimer = 5000;
+        m_creature->SetRespawnDelay(DAY);
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (m_pInstance && m_pInstance->GetData(TYPE_ALGALON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (m_uiSpellTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_COSMIC_SMASH_MISSILE);
+            m_uiSpellTimer = 60000;
+        }else m_uiSpellTimer -= uiDiff;
+    }	
+};
+
 
 bool GOHello_go_celestial_acces(Player* pPlayer, GameObject* pGo)
 {
@@ -775,6 +847,11 @@ CreatureAI* GetAI_mob_living_constellation(Creature* pCreature)
     return new mob_living_constellationAI(pCreature);
 }
 
+CreatureAI* GetAI_mob_cosmic_smash_target(Creature* pCreature)
+{
+    return new mob_cosmic_smash_targetAI(pCreature);
+}
+
 CreatureAI* GetAI_mob_black_hole(Creature* pCreature)
 {
     return new mob_black_holeAI(pCreature);
@@ -796,6 +873,11 @@ void AddSC_boss_algalon()
     newscript = new Script;
     newscript->Name = "mob_living_constellation";
     newscript->GetAI = &GetAI_mob_living_constellation;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "mob_cosmic_smash_target";
+    newscript->GetAI = &GetAI_mob_cosmic_smash_target;
     newscript->RegisterSelf();
 
     newscript = new Script;

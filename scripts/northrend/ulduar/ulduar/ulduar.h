@@ -44,6 +44,11 @@ enum
     TYPE_KEEPER_THORIM          = 48,
     TYPE_KEEPER_MIMIRON         = 49,
 
+    // teleporters
+    TYPE_LEVIATHAN_TP           = 50,
+    TYPE_XT002_TP               = 51,
+    TYPE_MIMIRON_TP             = 52,
+
     //other-> these won't be saved to db
     TYPE_RUNE_GIANT             = 14,
     TYPE_RUNIC_COLOSSUS         = 15,
@@ -206,6 +211,9 @@ enum
 
     ACHIEV_KEEPERS              = 2890,
     ACHIEV_KEEPERS_H            = 2891,
+
+    ACHIEV_CELESTIAL_DEFENDER   = 3259,     // realm first algalon
+    SPELL_ALGALON_ACHIEV_TRIGG  = 65184,
 };
 
 #endif

@@ -265,6 +265,9 @@ UPDATE creature_template SET ScriptName = "mob_bomb_bot" WHERE entry in (33836, 
 UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, `minlevel` = 80, `maxlevel` = 80, ScriptName = "mob_emergency_bot" WHERE entry = 34147;
 UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, ScriptName = "mob_frost_bomb" WHERE entry = 34149;
 update `gameobject` set `position_x` = 2734.73 where `id` in (194789, 194956);
+-- spells
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('64444', '1', '33670');
+-- REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('62909', '1', '33350');
 -- mimiron loot fix:
 -- 10 man:
 DELETE FROM `gameobject_loot_template` WHERE (`entry`=194789);
@@ -438,6 +441,7 @@ UPDATE creature_template SET ScriptName = "boss_algalon" WHERE entry = 32871;
 UPDATE creature_template SET ScriptName = "mob_collapsing_star" WHERE entry = 32955;
 UPDATE creature_template SET ScriptName = "mob_living_constellation" WHERE entry = 33052;
 UPDATE creature_template SET ScriptName = "mob_black_hole" WHERE entry = 32953;
+UPDATE creature_template SET ScriptName = "mob_cosmic_smash_target" WHERE entry in (33105, 33104);
 update creature_template set minhealth = 39099, maxhealth = 39099 where entry = 33089;
 UPDATE gameobject_template SET flags= 6553632, ScriptName="go_celestial_acces" WHERE entry in (194628, 194752);
 

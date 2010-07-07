@@ -162,7 +162,11 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
     void Aggro(Unit *who) 
     {
         if(m_pInstance) 
+        {
             m_pInstance->SetData(TYPE_LEVIATHAN, IN_PROGRESS);
+            if(m_pInstance->GetData(TYPE_LEVIATHAN_TP) != DONE)
+                m_pInstance->SetData(TYPE_LEVIATHAN_TP, DONE);
+        }
 
         DoScriptText(SAY_AGGRO, m_creature);
     }

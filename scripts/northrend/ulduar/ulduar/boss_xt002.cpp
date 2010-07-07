@@ -477,7 +477,11 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
     void Aggro(Unit* pWho)
     {
         if (m_pInstance)
+        {
             m_pInstance->SetData(TYPE_XT002, IN_PROGRESS);
+            if(m_pInstance->GetData(TYPE_XT002_TP) != DONE)
+                m_pInstance->SetData(TYPE_XT002_TP, DONE);
+        }
 
         DoScriptText(SAY_AGGRO, m_creature);
     }

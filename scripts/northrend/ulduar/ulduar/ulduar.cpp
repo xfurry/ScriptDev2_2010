@@ -72,19 +72,24 @@ bool GoHello_ulduar_teleporter( Player *pPlayer, GameObject *pGO )
     // base camp
     pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Expedition Base Camp", GOSSIP_SENDER_MAIN, BASE_CAMP);
 
-    // TEMP
-    // formation grounds & colossal forge (this should be on Leviathan)
+    // formation grounds
+    if(pInstance->GetData(TYPE_LEVIATHAN_TP) == DONE)
     pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Formation Grounds", GOSSIP_SENDER_MAIN, GROUNDS);
-    pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Colossal Forge", GOSSIP_SENDER_MAIN, FORGE);
 
+    // colossal forge -> disabled check because of the missing leviathan
+    //if(pInstance->GetData(TYPE_LEVIATHAN) == DONE)
+        pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Colossal Forge", GOSSIP_SENDER_MAIN, FORGE);
+
+        // remove this after leviathan implemented; now ignis & razor = mandatory
     if(pInstance->GetData(TYPE_IGNIS) == DONE && pInstance->GetData(TYPE_RAZORSCALE) == DONE)
     {
-        // scrapyard & antechamber
-        if(pInstance->GetData(TYPE_XT002) == DONE)
-        {
+        // scrapyard
+        if(pInstance->GetData(TYPE_XT002_TP) == DONE)
             pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Scrapyard", GOSSIP_SENDER_MAIN, SCRAPYARD);
+
+        // antechamber
+        if(pInstance->GetData(TYPE_XT002) == DONE)
             pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Antechamber of Ulduar", GOSSIP_SENDER_MAIN, ANTECHAMBER);
-        }
     }
 
     // shattered walkway
@@ -96,7 +101,7 @@ bool GoHello_ulduar_teleporter( Player *pPlayer, GameObject *pGO )
         pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Conservatory of Life", GOSSIP_SENDER_MAIN, CONSERVATORY);
 
     // spark of imagination
-    if(pInstance->GetData(TYPE_MIMIRON) == DONE)
+    if(pInstance->GetData(TYPE_MIMIRON_TP) == DONE)
         pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Spark of Imagination", GOSSIP_SENDER_MAIN, SPARK);
 
     // prison of yogg saron
