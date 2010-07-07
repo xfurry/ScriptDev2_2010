@@ -48,6 +48,17 @@ UPDATE creature_template SET mechanic_immune_mask = 635387903, scriptname='boss_
 UPDATE creature_template SET scriptname='boss_eydis' WHERE `entry`=34496;
 UPDATE creature_template SET scriptname='mob_valkyr_orb' WHERE `entry` in (34630, 34628);
 UPDATE creature_template SET scriptname='mob_valkyr_essence' WHERE `entry` in (34567, 34568);
+-- spells
+-- tar eydis
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('65876', '1', '34496');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('67307', '1', '34496');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('67306', '1', '34496');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('67308', '1', '34496');
+-- tar fjola
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('65875', '1', '34497');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('67304', '1', '34497');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('67303', '1', '34497');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('67305', '1', '34497');
 -- Anub
 UPDATE creature_template SET scriptname='boss_anubarak_trial' WHERE `entry`=34564;
 UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, scriptname='mob_frost_sphere' WHERE `entry`=34606;
