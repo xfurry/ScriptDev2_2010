@@ -511,6 +511,8 @@ void instance_naxxramas::SetData(uint32 uiType, uint32 uiData)
         case TYPE_KELTHUZAD:
             m_auiEncounter[14] = uiData;
             DoUseDoorOrButton(m_uiKelthuzadExitDoorGUID);
+            if(uiData == DONE)
+                Immortal();
             break;
         case TYPE_IMMORTAL:
             m_auiEncounter[15] = uiData;
