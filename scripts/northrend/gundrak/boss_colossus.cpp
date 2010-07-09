@@ -59,6 +59,7 @@ struct MANGOS_DLL_DECL boss_colossusAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
+    bool m_bStartAttack;
     uint32 m_uiMightyBlowTimer;
     uint32 m_uiFreezeTimer;
 
@@ -75,9 +76,11 @@ struct MANGOS_DLL_DECL boss_colossusAI : public ScriptedAI
             m_pInstance->SetData(TYPE_COLOSSUS, NOT_STARTED);
         
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         DoCast(m_creature,SPELL_FREEZE_ANIM);
         m_uiMightyBlowTimer = 10000;
         m_uiFreezeTimer = 3000;
+        m_bStartAttack  = true;
         m_bMustDie      = false;
         m_bHasEmerged   = false;
         m_bHasSummoned  = false;
@@ -113,11 +116,10 @@ struct MANGOS_DLL_DECL boss_colossusAI : public ScriptedAI
             DoCast(m_creature,SPELL_EMERGE);
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             m_creature->RemoveAllAuras();
-            m_creature->DeleteThreatList();
             m_creature->CombatStop(true);
             m_creature->InterruptNonMeleeSpells(false);
-            m_bHasEmerged = true;
-            m_bMustDie = true;
+            m_bHasEmerged   = true;
+            m_bMustDie      = true;
             m_uiFreezeTimer = 3000;
             m_creature->SetHealth(m_creature->GetMaxHealth());
         }
@@ -127,8 +129,9 @@ struct MANGOS_DLL_DECL boss_colossusAI : public ScriptedAI
     {
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->setFaction(14);
-        m_bIsPhase = true;
+        m_bIsPhase      = true;
+        m_bStartAttack  = true;
+        m_creature->SetInCombatWithZone();
         m_creature->SetHealth(m_creature->GetMaxHealth()/2);
         if (m_creature->HasAura(SPELL_FREEZE_ANIM, EFFECT_INDEX_0))
             m_creature->RemoveAurasDueToSpell(SPELL_FREEZE_ANIM);
@@ -137,16 +140,30 @@ struct MANGOS_DLL_DECL boss_colossusAI : public ScriptedAI
         m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
     }
 
+    void AttackStart(Unit* pWho)
+    {
+        if(!m_bStartAttack)
+            return;
+
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
-        if(m_creature->GetHealthPercent() <= 50.0f && !m_bHasSummoned)
+        if(m_creature->GetHealthPercent() < 50.0f && !m_bHasSummoned)
         {
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            m_creature->setFaction(35);
             m_creature->RemoveAllAuras();
-            m_creature->DeleteThreatList();
             m_creature->CombatStop(true);
+            m_bStartAttack  = false;
             m_creature->GetMotionMaster()->MoveIdle();
             m_creature->InterruptNonMeleeSpells(false);
             DoCast(m_creature,SPELL_EMERGE);
@@ -164,6 +181,7 @@ struct MANGOS_DLL_DECL boss_colossusAI : public ScriptedAI
                 m_bHasEmerged = false;
                 if(Creature* pElemental = m_creature->SummonCreature(NPC_DRAKKARI_ELEMENTAL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
                 {
+                    pElemental->SetInCombatWithZone();
                     pElemental->AI()->AttackStart(m_creature->getVictim());
                     m_uiElementalGUID = pElemental->GetGUID();
                 }
@@ -200,21 +218,40 @@ struct MANGOS_DLL_DECL boss_drakkari_elementalAI : public ScriptedAI
     uint32 m_uiMojoPuddleTimer;
 
     bool m_bGoToColossus;
+    bool m_bStartAttack;
 
     void Reset()
     {
-        m_uiSurgeTimer = 7000;
+        m_bStartAttack      = true;
+        m_uiSurgeTimer      = 7000;
         m_uiMojoPuddleTimer = 2000;
-        m_bGoToColossus = false;
+        m_bGoToColossus     = false;
+    }
+
+    void AttackStart(Unit* pWho)
+    {
+        if(!m_bStartAttack)
+            return;
+
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
     }
 
     void JustReachedHome()
     {
         m_creature->ForcedDespawn();
-        if(Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_COLOSSUS))))
+        if(Creature* pColossus = GetClosestCreatureWithEntry(m_creature, NPC_COLOSSUS, 100.0f))
         {
             if(!pColossus->isAlive())
                 pColossus->Respawn();
+            else
+                pColossus->AI()->EnterEvadeMode();
         }
     }
 
@@ -222,6 +259,8 @@ struct MANGOS_DLL_DECL boss_drakkari_elementalAI : public ScriptedAI
     {
         if(m_pInstance && m_pInstance->GetData(TYPE_COLOSSUS) == SPECIAL)
         {
+            m_bStartAttack = true;
+            m_creature->SetInCombatWithZone();
             m_creature->SetVisibility(VISIBILITY_ON);
             m_creature->SetHealth(m_creature->GetMaxHealth()/2);
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -232,18 +271,18 @@ struct MANGOS_DLL_DECL boss_drakkari_elementalAI : public ScriptedAI
                 m_pInstance->SetData(TYPE_COLOSSUS, IN_PROGRESS);
         }
 
-        if(m_creature->GetHealthPercent() <= 50.0f && !m_bGoToColossus)
+        if(m_creature->GetHealthPercent() < 50.0f && !m_bGoToColossus)
         {
+            m_bStartAttack  = false;
             m_bGoToColossus = true;
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            DoCast(m_creature,SPELL_FREEZE_ANIM);
+            //DoCast(m_creature,SPELL_FREEZE_ANIM);
             m_creature->RemoveAllAuras();
-            m_creature->DeleteThreatList();
             m_creature->CombatStop(true);
             m_creature->InterruptNonMeleeSpells(false);
             m_creature->SetVisibility(VISIBILITY_OFF);
-            DoCast(m_creature, SPELL_MERGE);
-            if(Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_COLOSSUS))))
+            //DoCast(m_creature, SPELL_MERGE);
+            if(Creature* pColossus = GetClosestCreatureWithEntry(m_creature, NPC_COLOSSUS, 100.0f))
             {
                 if(pColossus->isAlive())
                     ((boss_colossusAI*)pColossus->AI())->StartPhase();
