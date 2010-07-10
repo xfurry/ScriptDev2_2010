@@ -1020,19 +1020,10 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
             pCreature->SetVisibility(VISIBILITY_OFF);
             pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(NPC_GORMOK)))
-            { 
-                if(!pTemp->isAlive()) 
-                    pTemp->Respawn(); 
-            }
-            else 
+            if (Creature* pGromok = pCreature->SummonCreature(NPC_GORMOK, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
             {
-                if (Creature* pGromok = pCreature->SummonCreature(NPC_GORMOK, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
-                {
-                    pGromok->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pGromok->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                    pGromok->SetInCombatWithZone();
-                }
+                pGromok->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                pGromok->GetMotionMaster()->MovePoint(0, SpawnLoc[2].x, SpawnLoc[2].y - 15, SpawnLoc[2].z);
             }
 
             if(Creature *Tirion = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(DATA_TIRION)))
@@ -1086,57 +1077,17 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
             pCreature->SetVisibility(VISIBILITY_OFF);
             if(Creature *Tirion = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(DATA_TIRION)))
                 DoScriptText(SAY_TIRION_TWINS_INTRO1, Tirion);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(DATA_FJOLA)))
-            { 
-                if(!pTemp->isAlive()) 
-                {
-                    pTemp->Respawn();
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }
-                else
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }
-            }
-            else 
+            if (Creature* pFjola = pCreature->SummonCreature(NPC_FJOLA, SpawnLoc[28].x + 5, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
             {
-                if (Creature* pFjola = pCreature->SummonCreature(NPC_FJOLA, SpawnLoc[28].x + 5, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
-                {
-                    m_pInstance->SetData64(DATA_FJOLA, pFjola->GetGUID());
-                    pFjola->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x + 5, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pFjola->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                    pFjola->SetInCombatWithZone();
-                }
-                else
-                {
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }
+                m_pInstance->SetData64(DATA_FJOLA, pFjola->GetGUID());
+                pFjola->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                pFjola->GetMotionMaster()->MovePoint(0, SpawnLoc[2].x + 10, SpawnLoc[2].y -15, SpawnLoc[2].z);
             }
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(DATA_EYDIS)))
-            { 
-                if(!pTemp->isAlive()) 
-                {
-                    pTemp->Respawn();
-                    pTemp->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pTemp->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                    pTemp->SetInCombatWithZone();
-                }
-            }
-            else 
+            if (Creature* pEydis = pCreature->SummonCreature(NPC_EYDIS, SpawnLoc[28].x - 5, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME)) 
             {
-                if (Creature* pEydis = pCreature->SummonCreature(NPC_EYDIS, SpawnLoc[28].x - 5, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME)) 
-                {
-                    m_pInstance->SetData64(DATA_EYDIS, pEydis->GetGUID());
-                    pEydis->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 5, SpawnLoc[1].y, SpawnLoc[1].z);
-                    pEydis->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-                    pEydis->SetInCombatWithZone();
-                }
+                m_pInstance->SetData64(DATA_EYDIS, pEydis->GetGUID());
+                pEydis->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+                pEydis->GetMotionMaster()->MovePoint(0, SpawnLoc[2].x - 10, SpawnLoc[2].y -15, SpawnLoc[2].z);
             }
             if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
                 m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());

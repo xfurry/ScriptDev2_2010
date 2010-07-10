@@ -186,6 +186,9 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
     uint32 m_uiBerserkTimer;
     uint32 TeamInInstance;
 
+    bool m_bStartAttack;
+    uint32 m_uiAttackStartTimer;
+
     void Reset() 
     {
         m_uiTwinSpikeTimer      = 7000;
@@ -193,7 +196,9 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         m_uiTwinPactTimer       = 900000;
         m_uiCastTimeOut         = 900000;
 
-        m_uiDoorTimer       = 5000;
+        m_bStartAttack          = false;
+        m_uiAttackStartTimer    = 10000;
+        m_uiDoorTimer           = 5000;
 
         TeamInInstance = GetFaction();
 
@@ -202,6 +207,8 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         if(m_pInstance)
             m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
 
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+
         switch(urand(0, 1))
         {
         case 0: m_bHasVortexCasted = true;  break;
@@ -209,6 +216,21 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         }
 
         m_creature->SetRespawnDelay(DAY);
+    }
+
+    void AttackStart(Unit* pWho)
+    {
+        if(!m_bStartAttack)
+            return;
+
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
     }
 
     void JustDied(Unit* pKiller)
@@ -385,6 +407,15 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_uiAttackStartTimer < uiDiff && !m_bStartAttack)
+        {
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->SetInCombatWithZone();
+            m_bStartAttack = true;
+            m_uiDoorTimer = 100;
+        }
+        else m_uiAttackStartTimer -= uiDiff;
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -570,6 +601,9 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
     uint32 m_uiBerserkTimer;
     uint32 m_uiEncounterTimer;
 
+    bool m_bStartAttack;
+    uint32 m_uiAttackStartTimer;
+
     void Reset() 
     {
         m_uiTwinSpikeTimer     = 7000;
@@ -584,8 +618,13 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         m_uiBerserkTimer        = 360000;  // 6 min
         m_uiEncounterTimer      = 0;
 
+        m_bStartAttack          = false;
+        m_uiAttackStartTimer    = 10000;
+
         if(m_pInstance)
             m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
+
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
         switch(urand(0, 1))
         {
@@ -598,6 +637,21 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         lConcentrates.clear();
 
         m_creature->SetRespawnDelay(DAY);
+    }
+
+    void AttackStart(Unit* pWho)
+    {
+        if(!m_bStartAttack)
+            return;
+
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
     }
 
     void JustDied(Unit* pKiller)
@@ -814,6 +868,14 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_uiAttackStartTimer < uiDiff && !m_bStartAttack)
+        {
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->SetInCombatWithZone();
+            m_bStartAttack = true;
+        }
+        else m_uiAttackStartTimer -= uiDiff;
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim()) 
             return;
 

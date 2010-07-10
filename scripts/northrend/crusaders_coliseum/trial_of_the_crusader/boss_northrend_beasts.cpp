@@ -205,6 +205,9 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
     std::list<Creature*> lSnobolds;
     uint8 m_uiAchievCounter;
 
+    bool m_bStartAttack;
+    uint32 m_uiAttackStartTimer;
+
     void Reset() 
     {
         m_uiFerociousButtTimer  = urand(20000,30000);
@@ -219,6 +222,9 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
         m_uiDoorTimer       = 5000;
         doorClosed          = false;
 
+        m_bStartAttack          = false;
+        m_uiAttackStartTimer    = 10000;
+
         m_uiTrampleStage    = 0;
 
         m_bMovementStarted  = false;
@@ -231,6 +237,8 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
 
         lSnobolds.clear();
         m_uiAchievCounter = 0;
+
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void JustReachedHome()
@@ -261,6 +269,21 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
     void Aggro(Unit* pWho)
     {
         m_creature->SetInCombatWithZone();
+    }
+
+    void AttackStart(Unit* pWho)
+    {
+        if(!m_bStartAttack)
+            return;
+
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
     }
 
     void JustDied(Unit* pKiller)
@@ -344,6 +367,15 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_uiAttackStartTimer < uiDiff && !m_bStartAttack)
+        {
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->SetInCombatWithZone();
+            m_bStartAttack = true;
+            m_uiDoorTimer = 100;
+        }
+        else m_uiAttackStartTimer -= uiDiff;
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -587,22 +619,20 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
     uint32 m_uiSweepTimer;
 
     uint8 phase;
-    bool startPhase;
-    uint32 phaseStartTimer;
     uint32 phaseChangeTimer;
     uint32 m_uiSubmergeTimer;
     uint32 m_uiMoveTimer;
 
     bool hasEnraged;
 
-    uint32 m_uiDoorTimer;
-    bool doorClosed;
-
     uint32 m_uiBerserkTimer;
     uint32 m_uiAchievTimer;
 
     uint32 m_uiNextBossTimer;
     bool m_bNextBoss;
+
+    bool m_bStartAttack;
+    uint32 m_uiAttackStartTimer;
 
     void Reset() 
     {
@@ -617,16 +647,14 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         m_uiSweepTimer          = urand(12000,15000);
 
         phase               = 0;    // not started yet
-        startPhase          = false;
-        phaseStartTimer     = 8000;
         phaseChangeTimer    = 45000;
         m_uiSubmergeTimer   = 60000;
         m_uiMoveTimer       = 60000;
 
         hasEnraged          = false;
 
-        m_uiDoorTimer       = 5000;
-        doorClosed          = false;
+        m_bStartAttack          = false;
+        m_uiAttackStartTimer    = 10000;
 
         //m_uiBerserkTimer    = 300000;  // 5 min
         m_uiAchievTimer     = 0;
@@ -635,6 +663,8 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         m_bNextBoss             = true;
 
         m_creature->SetRespawnDelay(DAY);
+
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void JustReachedHome()
@@ -667,6 +697,21 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         m_creature->SetInCombatWithZone();
     }
 
+    void AttackStart(Unit* pWho)
+    {
+        if(!m_bStartAttack)
+            return;
+
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            //DoStartMovement(pWho);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
+    }
+
     bool IsThereAnyTwin()
     {
         if(GetClosestCreatureWithEntry(m_creature, NPC_DREADSCALE, 180.0f))
@@ -682,9 +727,8 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
 
         if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
         {
-            pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
             pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-            pIcehowl->SetInCombatWithZone();
+            pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[2].x, SpawnLoc[2].y - 15, SpawnLoc[2].z);
             ((boss_icehowlAI*)pIcehowl->AI())->m_uiBerserkTimer = m_uiBerserkTimer;
         }
         if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
@@ -708,6 +752,26 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_uiAttackStartTimer < uiDiff && !m_bStartAttack)
+        {
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->SetInCombatWithZone();
+            m_bStartAttack = true;
+            // phase stats
+            phase = 1;
+            m_creature->StopMoving();
+            m_creature->GetMotionMaster()->Clear();
+            m_creature->GetMotionMaster()->MoveIdle();
+            SetCombatMovement(false);
+            m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+            m_creature->SetVisibility(VISIBILITY_ON);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+            // door
+            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
+                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
+        }
+        else m_uiAttackStartTimer -= uiDiff;
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -733,32 +797,6 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
         }
         else 
             m_uiNextBossTimer -= uiDiff;
-
-        if (m_uiDoorTimer < uiDiff && !doorClosed)
-        {
-            if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
-                m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
-            doorClosed = true;
-            m_uiDoorTimer = 30000;
-        }
-        else
-            m_uiDoorTimer -= uiDiff;
-
-        if (phaseStartTimer < uiDiff && !startPhase)
-        {
-            phase = 1;
-            m_creature->StopMoving();
-            m_creature->GetMotionMaster()->Clear();
-            m_creature->GetMotionMaster()->MoveIdle();
-            SetCombatMovement(false);
-            m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-            m_creature->SetVisibility(VISIBILITY_ON);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-            startPhase = true;
-            phaseStartTimer = 30000;
-        }
-        else
-            phaseStartTimer -= uiDiff;
 
         // stationary
         if(phase == 1)
@@ -998,22 +1036,20 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
     uint32 m_uiSweepTimer;
 
     uint8 phase;
-    bool startPhase;
-    uint32 phaseStartTimer;
     uint32 phaseChangeTimer;
     uint32 m_uiSubmergeTimer;
     uint32 m_uiMoveTimer;
 
     bool hasEnraged;
 
-    uint32 m_uiDoorTimer;
-    bool doorClosed;
-
     uint32 m_uiBerserkTimer;
     uint32 m_uiAchievTimer;
 
     uint32 m_uiNextBossTimer;
     bool m_bNextBoss;
+
+    bool m_bStartAttack;
+    uint32 m_uiAttackStartTimer;
 
     void Reset() 
     {
@@ -1028,16 +1064,14 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         m_uiSweepTimer          = urand(13000,15000);
 
         phase               = 0;    // not started yet
-        startPhase          = false;
-        phaseStartTimer     = 8000;
         phaseChangeTimer    = 45000;
         m_uiSubmergeTimer   = 60000;
         m_uiMoveTimer       = 60000;
 
-        hasEnraged          = false;
+        m_bStartAttack          = false;
+        m_uiAttackStartTimer    = 10000;
 
-        m_uiDoorTimer       = 5000;
-        doorClosed          = false;
+        hasEnraged          = false;
 
         //m_uiBerserkTimer    = 300000;  // 5 min
         m_uiAchievTimer     = 0;
@@ -1046,6 +1080,8 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         m_bNextBoss             = true;
 
         m_creature->SetRespawnDelay(DAY);
+
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void JustReachedHome()
@@ -1081,6 +1117,21 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         m_creature->SetInCombatWithZone();
     }
 
+    void AttackStart(Unit* pWho)
+    {
+        if(!m_bStartAttack)
+            return;
+
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
+    }
+
     bool IsThereAnyTwin()
     {
         if(GetClosestCreatureWithEntry(m_creature, NPC_ACIDMAW, 180.0f))
@@ -1096,9 +1147,8 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
 
         if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
         {
-            pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
             pIcehowl->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-            pIcehowl->SetInCombatWithZone();
+            pIcehowl->GetMotionMaster()->MovePoint(0, SpawnLoc[2].x, SpawnLoc[2].y - 15, SpawnLoc[2].z);
             ((boss_icehowlAI*)pIcehowl->AI())->m_uiBerserkTimer = m_uiBerserkTimer;
         }
         if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
@@ -1122,6 +1172,19 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+
+        if (m_uiAttackStartTimer < uiDiff && !m_bStartAttack)
+        {
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->SetInCombatWithZone();
+            m_bStartAttack = true;
+            // set the phase stats
+            phase = 2;
+            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+            SetCombatMovement(true);
+        }
+        else m_uiAttackStartTimer -= uiDiff;
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -1147,17 +1210,6 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
         }
         else 
             m_uiNextBossTimer -= uiDiff;
-
-        if (phaseStartTimer < uiDiff && !startPhase)
-        {
-            phase = 2;
-            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-            SetCombatMovement(true);
-            startPhase = true;
-            phaseStartTimer = 30000;
-        }
-        else
-            phaseStartTimer -= uiDiff;
 
         // stationary
         if(phase == 1)
@@ -1397,6 +1449,9 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
     bool m_bNextBoss;
     uint32 m_uiIceholwTimer;
 
+    bool m_bStartAttack;
+    uint32 m_uiAttackStartTimer;
+
     void Reset() 
     {
         m_uiStompTimer      = urand(20000, 25000);
@@ -1406,7 +1461,12 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
         m_uiDoorTimer       = 8000;
         doorClosed          = false;
 
+        m_bStartAttack          = false;
+        m_uiAttackStartTimer    = 10000;
+
         TeamInInstance = GetFaction();
+
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
         if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
             m_uiBerserkTimer    = 900000;   // 15 min
@@ -1461,6 +1521,21 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
         m_creature->SetInCombatWithZone();
     }
 
+    void AttackStart(Unit* pWho)
+    {
+        if(!m_bStartAttack)
+            return;
+
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
+    }
+
     uint32 GetFaction()
     {
         uint32 faction = 0;
@@ -1486,17 +1561,15 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
 
         if (Creature* pDreadscale = m_creature->SummonCreature(NPC_DREADSCALE, SpawnLoc[28].x + 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
         {
-            pDreadscale->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x + 10, SpawnLoc[1].y, SpawnLoc[1].z);
             pDreadscale->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-            pDreadscale->SetInCombatWithZone();
+            pDreadscale->GetMotionMaster()->MovePoint(0, SpawnLoc[2].x + 10, SpawnLoc[2].y - 15, SpawnLoc[2].z);
             ((boss_dreadscaleAI*)pDreadscale->AI())->m_uiBerserkTimer = m_uiBerserkTimer;
             ((boss_dreadscaleAI*)pDreadscale->AI())->m_uiNextBossTimer = m_uiIceholwTimer;
         }
         if (Creature* pAcidmaw = m_creature->SummonCreature(NPC_ACIDMAW,  552.773f, 171.971f, 394.671f, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
         {
-            //pAcidmaw->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 10, SpawnLoc[1].y, SpawnLoc[1].z);
             pAcidmaw->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-            pAcidmaw->SetInCombatWithZone();
+            //pAcidmaw->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x - 10, SpawnLoc[1].y, SpawnLoc[1].z);
             ((boss_acidmawAI*)pAcidmaw->AI())->m_uiBerserkTimer = m_uiBerserkTimer;
             ((boss_acidmawAI*)pAcidmaw->AI())->m_uiNextBossTimer = m_uiIceholwTimer;
         }
@@ -1534,6 +1607,15 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+        if (m_uiAttackStartTimer < uiDiff && !m_bStartAttack)
+        {
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->SetInCombatWithZone();
+            m_bStartAttack = true;
+            m_uiDoorTimer = 100;
+        }
+        else m_uiAttackStartTimer -= uiDiff;
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;

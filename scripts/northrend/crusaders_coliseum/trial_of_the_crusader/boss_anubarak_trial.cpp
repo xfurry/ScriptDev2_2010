@@ -637,14 +637,18 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
     mob_nerubian_burrowerAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
+
     ScriptedInstance *m_pInstance;
+    uint32 Difficulty;
 
     uint32 spellTimer;
     uint32 checkTimer;
     uint32 submergeTimer;
     bool isSubmerged;
+    uint32 m_uiShadowStrikeTimer;
 
     std::list<Creature*> lBorrower;
     uint8 m_uiBorrowerCount;
@@ -653,6 +657,7 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
     {
         spellTimer = 7000;
         checkTimer = 2000;
+        m_uiShadowStrikeTimer    = urand(15000, 20000);
         isSubmerged = false;
         lBorrower.clear();
         m_uiBorrowerCount = 0;
@@ -695,6 +700,17 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
             submergeTimer = 10000;
             isSubmerged = true;
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+        }
+
+        if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+        {
+            if(m_uiShadowStrikeTimer < uiDiff)
+            {
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                    DoCast(pTarget, SPELL_SHADOW_STRIKE);
+                m_uiShadowStrikeTimer = urand(20000, 25000);
+            }
+            else m_uiShadowStrikeTimer -= uiDiff;
         }
 
         if (spellTimer < uiDiff)

@@ -36,7 +36,6 @@ enum
     SAY_DEATH       = -1605020,
     SAY_BERSERK     = -1605025,
     EMOTE_PORTAL    = -1605138,
-    EMOTE_FLESH     = -1605139,
     EMOTE_VOLCANO   = -1605140,
 
     SAY_TIRION_JARU_OUTRO1      = -1605021,
@@ -379,7 +378,6 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
-                DoScriptText(EMOTE_FLESH, m_creature, pTarget);
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(pTarget, SPELL_INCINERATE_FLESH_10);
                 if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
