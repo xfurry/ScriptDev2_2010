@@ -145,7 +145,10 @@ struct MANGOS_DLL_DECL instance_stratholme : public ScriptedInstance
     {
         switch(pCreature->GetEntry())
         {
-            case NPC_BARON:           m_uiBaronGUID = pCreature->GetGUID(); break;
+            case NPC_BARON:           
+                m_uiBaronGUID = pCreature->GetGUID();
+                pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                break;
             case NPC_YSIDA_TRIGGER:   m_uiYsidaTriggerGUID = pCreature->GetGUID(); break;
             case NPC_CRYSTAL:         crystalsGUID.insert(pCreature->GetGUID()); break;
             case NPC_ABOM_BILE:
@@ -253,6 +256,11 @@ struct MANGOS_DLL_DECL instance_stratholme : public ScriptedInstance
                 }
                 if (uiData == DONE)
                 {
+                    // for instance reset exploit check
+                    if (Creature* pBaron = instance->GetCreature(m_uiBaronGUID))
+                        pBaron->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    DoUseDoorOrButton(m_uiZiggurat4GUID);
+                    DoUseDoorOrButton(m_uiZiggurat5GUID);
                     m_uiSlaugtherSquare_Timer = 300000;
                     debug_log("SD2: Instance Stratholme: Slaugther event will continue in 5 minutes.");
                 }
@@ -283,6 +291,8 @@ struct MANGOS_DLL_DECL instance_stratholme : public ScriptedInstance
                         SetData(TYPE_BARON_RUN,DONE);
                     }
                 }
+                if(uiData == DONE)
+                    DoUseDoorOrButton(m_uiPortGauntletGUID);
                 m_auiEncounter[5] = uiData;
                 break;
 
