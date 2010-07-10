@@ -42,6 +42,9 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint32 m_auiMiniBoss[6];
     uint32 mVision[3];
 
+    uint32 m_uiMimironPhase;
+    uint32 m_uiYoggPhase;
+
     uint64 m_uiLeviathanGUID;
     uint64 m_uiIgnisGUID;
     uint64 m_uiRazorscaleGUID;
@@ -59,10 +62,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiAlgalonGUID;
     uint64 m_uiRightArmGUID;
     uint64 m_uiLeftArmGUID;
-    uint64 m_uiSentryGUID1;
-    uint64 m_uiSentryGUID2;
-    uint64 m_uiSentryGUID3;
-    uint64 m_uiSentryGUID4;
     uint64 m_uiFeralDefenderGUID;
     uint64 m_uiElderBrightleafGUID;
     uint64 m_uiElderStonebarkGUID;
@@ -71,8 +70,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiRunicColossusGUID;
     uint64 m_uiRuneGiantGUID;
     uint64 m_uiLeviathanMkGUID;
-    uint64 m_uiVx001GUID;
-    uint64 m_uiAerialUnitGUID;
     uint64 m_uiHodirImageGUID;
     uint64 m_uiFreyaImageGUID;
     uint64 m_uiThorimImageGUID;
@@ -154,6 +151,9 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         for(uint8 i = 0; i < 3; i++)
             mVision[i] = 0;
 
+        m_uiMimironPhase        = 0;
+        m_uiYoggPhase           = 0;
+
         m_uiLeviathanGUID       = 0;
         m_uiIgnisGUID           = 0;
         m_uiRazorscaleGUID      = 0;
@@ -171,10 +171,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiRightArmGUID		= 0;
         m_uiLeftArmGUID			= 0;
         m_uiFeralDefenderGUID	= 0;
-        m_uiSentryGUID1			= 0;
-        m_uiSentryGUID2			= 0;
-        m_uiSentryGUID3			= 0;
-        m_uiSentryGUID4			= 0;
         m_uiElderBrightleafGUID = 0;
         m_uiElderStonebarkGUID  = 0;
         m_uiElderIronbrachGUID  = 0;
@@ -182,8 +178,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiRunicColossusGUID   = 0;
         m_uiRuneGiantGUID       = 0;
         m_uiLeviathanMkGUID     = 0;
-        m_uiVx001GUID           = 0;
-        m_uiAerialUnitGUID      = 0;
         m_uiHodirImageGUID      = 0;
         m_uiFreyaImageGUID      = 0;
         m_uiThorimImageGUID     = 0;
@@ -303,16 +297,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case NPC_AURIAYA:
             m_uiAuriayaGUID = pCreature->GetGUID();
             break;
-        case NPC_SANCTUM_SENTRY:
-            if (m_uiSentryGUID1 == 0)
-                m_uiSentryGUID1 = pCreature->GetGUID();
-            else if (m_uiSentryGUID2 == 0)
-                m_uiSentryGUID2 = pCreature->GetGUID();
-            else if (m_uiSentryGUID3 == 0)
-                m_uiSentryGUID3 = pCreature->GetGUID();
-            else if (m_uiSentryGUID4 == 0)
-                m_uiSentryGUID4 = pCreature->GetGUID();
-            break;
         case NPC_FERAL_DEFENDER:
             m_uiFeralDefenderGUID = pCreature->GetGUID();
             break;
@@ -321,12 +305,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case NPC_LEVIATHAN_MK:
             m_uiLeviathanMkGUID = pCreature->GetGUID();
-            break;
-        case NPC_VX001:
-            m_uiVx001GUID = pCreature->GetGUID();
-            break;
-        case NPC_AERIAL_UNIT:
-            m_uiAerialUnitGUID = pCreature->GetGUID();
             break;
         case NPC_HODIR:
             m_uiHodirGUID = pCreature->GetGUID();
@@ -930,13 +908,9 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case TYPE_LEVIATHAN_MK:
             m_auiMiniBoss[2] = uiData;
-            if (uiData == DONE)
-                CloseDoor(m_uiMimironElevatorGUID);
             break;
         case TYPE_VX001:
             m_auiMiniBoss[3] = uiData;
-            if (uiData == SPECIAL)
-                OpenDoor(m_uiMimironElevatorGUID);
             if (uiData == DONE)     // just for animation :)
             {
                 for(uint8 i = 0; i < 9; i++)
@@ -971,6 +945,12 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 OpenDoor(m_uiBrainDoor2GUID);
             else
                 CloseDoor(m_uiBrainDoor2GUID);
+            break;
+        case TYPE_MIMIRON_PHASE:
+            m_uiMimironPhase = uiData;
+            break;
+        case TYPE_YOGG_PHASE:
+            m_uiYoggPhase = uiData;
             break;
         }
 
@@ -1031,12 +1011,8 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             // Keepers
         case NPC_MIMIRON:
             return m_uiMimironGUID;
-        case DATA_LEVIATHAN_MK:
+        case NPC_LEVIATHAN_MK:
             return m_uiLeviathanMkGUID;
-        case DATA_VX001:
-            return m_uiVx001GUID;
-        case DATA_AERIAL_UNIT:
-            return m_uiAerialUnitGUID;
         case NPC_HODIR:
             return m_uiMimironGUID;
         case NPC_THORIM:
@@ -1186,6 +1162,10 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return mVision[1];
         case TYPE_VISION3:
             return mVision[2];
+        case TYPE_MIMIRON_PHASE:
+            return m_uiMimironPhase;
+        case TYPE_YOGG_PHASE:
+            return m_uiYoggPhase;
         }
 
         return 0;

@@ -59,11 +59,10 @@ enum
     TYPE_VISION2                = 20,
     TYPE_VISION3                = 21, 
     TYPE_YOGG_BRAIN             = 22,
+    TYPE_MIMIRON_PHASE          = 23,
+    TYPE_YOGG_PHASE             = 24,
 
     DATA_YOGGSARON              = 28,
-    DATA_LEVIATHAN_MK           = 54,
-    DATA_VX001                  = 55,
-    DATA_AERIAL_UNIT            = 56,
     DATA_SARA                   = 61,
     DATA_YOGG_BRAIN             = 62,
     DATA_BRAIN_DOOR1            = 65,

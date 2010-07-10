@@ -58,7 +58,7 @@ enum
     SPELL_QUANTUM_STRIKE_H          = 64592, //Heroic Quantum Strike
     SPELL_PHASE_PUNCH               = 64412, //Phase punch 
     SPELL_PHASE_PUNCH_SHIFT         = 64417,
-    SPELL_PHASE_PUNCH_TRIGGER       = 65508, 
+    SPELL_CONSTELLATION_TRIGGER     = 65508, // this should make the space effect
     SPELL_COSMIC_SMASH              = 62301, //Normal Cosmic Smash
     SPELL_COSMIC_SMASH_H            = 64598, //Heroic Cosmic Smash
     SPELL_COSMIC_SMASH_MISSILE      = 62304,
@@ -293,6 +293,7 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
             DoScriptText(SAY_AGGRO, m_creature);
 
         m_creature->SetInCombatWithZone();
+        DoCast(m_creature, SPELL_CONSTELLATION_TRIGGER);
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_ALGALON, IN_PROGRESS);
