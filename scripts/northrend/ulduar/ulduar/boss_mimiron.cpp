@@ -1010,14 +1010,6 @@ struct MANGOS_DLL_DECL boss_aerial_command_unitAI : public ScriptedAI
         if (m_creature->HasAura(SPELL_MAGNETIC_CORE, EFFECT_INDEX_0))
             return;
 
-        if(m_uiPlasmaBallTimer < uiDiff)
-        {
-            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
-                DoCast(pTarget, m_bIsRegularMode ? SPELL_PLASMA_BALL : SPELL_PLASMA_BALL_H);
-            m_uiPlasmaBallTimer = urand(3000, 5000);
-        }
-        else m_uiPlasmaBallTimer -= uiDiff;
-
         if (m_uiGroundTimer < uiDiff && m_bIsGrounded)
         {
             m_creature->GetMap()->CreatureRelocation(m_creature, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ() +  7, 0.0f);
@@ -1029,6 +1021,14 @@ struct MANGOS_DLL_DECL boss_aerial_command_unitAI : public ScriptedAI
             m_creature->InterruptNonMeleeSpells(true);
             DoCast(m_creature, SPELL_BOMB_BOT_SUMMON);
         }else m_uiGroundTimer -= uiDiff;
+
+        if(m_uiPlasmaBallTimer < uiDiff)
+        {
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
+                DoCast(pTarget, m_bIsRegularMode ? SPELL_PLASMA_BALL : SPELL_PLASMA_BALL_H);
+            m_uiPlasmaBallTimer = urand(3000, 5000);
+        }
+        else m_uiPlasmaBallTimer -= uiDiff;
 
         // spawn adds in arena, only in phase 3
         if(m_pInstance->GetData(TYPE_MIMIRON_PHASE) == PHASE_AERIAL)
@@ -1360,15 +1360,6 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                             m_uiPhaseDelayTimer = 10000;
                         }
                     }
-                    // start again 3 fires
-                    for(uint8 i = 0; i < 3; i++)
-                    {
-                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        {
-                            pTarget->InterruptNonMeleeSpells(true);
-                            pTarget->CastSpell(pTarget, SPELL_FLAMES_SUMMON, false);
-                        }
-                    }
                 }
                 else m_uiPhaseDelayTimer -= uiDiff;
 
@@ -1380,6 +1371,15 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                     m_uiPhaseDelayTimer = 10000;
                     m_uiHpCheckTimer    = 10000;
                     m_pInstance->SetData(TYPE_MIMIRON_PHASE, PHASE_VX001);
+                    // start again 3 fires
+                    for(uint8 i = 0; i < 3; i++)
+                    {
+                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                        {
+                            pTarget->InterruptNonMeleeSpells(true);
+                            pTarget->CastSpell(pTarget, SPELL_FLAMES_SUMMON, false);
+                        }
+                    }
                 }
                 else m_uiHpCheckTimer -= uiDiff;
 
@@ -1408,15 +1408,6 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                         }
                         m_uiHeadGUID = pHead->GetGUID();
                     }
-                    // start again 3 fires
-                    for(uint8 i = 0; i < 3; i++)
-                    {
-                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        {
-                            pTarget->InterruptNonMeleeSpells(true);
-                            pTarget->CastSpell(pTarget, SPELL_FLAMES_SUMMON, false);
-                        }
-                    }
                 }
                 else m_uiPhaseDelayTimer -= uiDiff;
 
@@ -1428,6 +1419,15 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                     m_uiPhaseDelayTimer = 15000;
                     m_uiHpCheckTimer    = 10000;
                     m_pInstance->SetData(TYPE_MIMIRON_PHASE, PHASE_AERIAL);
+                    // start again 3 fires
+                    for(uint8 i = 0; i < 3; i++)
+                    {
+                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                        {
+                            pTarget->InterruptNonMeleeSpells(true);
+                            pTarget->CastSpell(pTarget, SPELL_FLAMES_SUMMON, false);
+                        }
+                    }
                 }
                 else m_uiHpCheckTimer -= uiDiff;
 
@@ -1495,15 +1495,6 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                             pTank->SetHealth(pTank->GetMaxHealth() * 0.5);
                         m_pInstance->SetData(TYPE_MIMIRON_PHASE, PHASE_ROBOT);
                     }
-                    // start again 3 fires
-                    for(uint8 i = 0; i < 3; i++)
-                    {
-                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        {
-                            pTarget->InterruptNonMeleeSpells(true);
-                            pTarget->CastSpell(pTarget, SPELL_FLAMES_SUMMON, false);
-                        }
-                    }
                     m_uiRobotDelayTimer = 100000;
                 }
                 else m_uiRobotDelayTimer -= uiDiff;
@@ -1517,6 +1508,15 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                     if(Creature* pTank = m_pInstance->instance->GetCreature(m_uiTankGUID))
                         pTank->SetHealth(pTank->GetMaxHealth()* 0.5);   
                     m_pInstance->SetData(TYPE_MIMIRON_PHASE, PHASE_ROBOT);
+                    // start again 3 fires
+                    for(uint8 i = 0; i < 3; i++)
+                    {
+                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                        {
+                            pTarget->InterruptNonMeleeSpells(true);
+                            pTarget->CastSpell(pTarget, SPELL_FLAMES_SUMMON, false);
+                        }
+                    }
                     m_uiHpCheckTimer = 10000;
                 }
                 else m_uiHpCheckTimer -= uiDiff;

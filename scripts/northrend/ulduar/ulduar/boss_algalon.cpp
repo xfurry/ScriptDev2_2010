@@ -86,7 +86,8 @@ enum
     SPELL_ARCANE_BARRAGE            = 64599,    //Arcane Barage
     SPELL_ARCANE_BARRAGE_H          = 64607,    //Heroic Arcane Barage?
 
-    NPC_DARK_MATTER                 = 33089,    // populates the black holes = 7
+    NPC_DARK_MATTER                 = 33089,    // populates the black holes
+    NPC_UNLEASHED_DARK_MATTER       = 34097,    // summoned by black holes in phase 2
     NPC_COSMIC_SMASH                = 33104,
 
     ACHIEV_FEED_TEARS               = 3004,

@@ -434,6 +434,9 @@ UPDATE creature_template SET `faction_A` = 14, `faction_H` = 14, ScriptName = "m
 UPDATE creature_template SET ScriptName = "mob_sanity_well" WHERE entry = 33991;
 UPDATE creature_template SET scriptname='mob_madness_portal' WHERE `entry`=34072;
 UPDATE creature_template SET scriptname='mob_laughing_skull' WHERE `entry`=33990;
+UPDATE creature_template SET scriptname='mob_ominous_cloud' WHERE `entry`=33292;
+-- spells
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('63886', '1', '33882');
 -- Keepers
 UPDATE creature_template SET ScriptName = "keeper_hodir" WHERE entry = 33213;
 UPDATE creature_template SET ScriptName = "keeper_freya" WHERE entry = 33241;

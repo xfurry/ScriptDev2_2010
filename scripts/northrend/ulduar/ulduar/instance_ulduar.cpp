@@ -40,10 +40,10 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint32 m_auiUlduarKeepers[KEEPER_ENCOUNTER];
     uint32 m_auiUlduarTeleporters[3];
     uint32 m_auiMiniBoss[6];
-    uint32 mVision[3];
 
     uint32 m_uiMimironPhase;
     uint32 m_uiYoggPhase;
+    uint32 m_uiVisionPhase;
 
     uint64 m_uiLeviathanGUID;
     uint64 m_uiIgnisGUID;
@@ -148,11 +148,9 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         for(uint8 i = 0; i < 9; i++)
             m_uiMimironTelGUID[i] = 0;
 
-        for(uint8 i = 0; i < 3; i++)
-            mVision[i] = 0;
-
         m_uiMimironPhase        = 0;
         m_uiYoggPhase           = 0;
+        m_uiVisionPhase         = 0;
 
         m_uiLeviathanGUID       = 0;
         m_uiIgnisGUID           = 0;
@@ -811,15 +809,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case TYPE_YOGGSARON:
             m_auiEncounter[12] = uiData;
             DoUseDoorOrButton(m_uiYoggGateGUID);
-            if (uiData == IN_PROGRESS)
-                CloseDoor(m_uiYoggGateGUID);
-            else
-            {
-                OpenDoor(m_uiYoggGateGUID);
-                CloseDoor(m_uiBrainDoor3GUID);
-                CloseDoor(m_uiBrainDoor1GUID);
-                CloseDoor(m_uiBrainDoor2GUID);
-            }
             break;
 
             // Celestial Planetarium
@@ -924,33 +913,15 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             m_auiMiniBoss[5] = uiData;
             break;
 
-            //visions
-        case TYPE_VISION1:
-            mVision[0] = uiData;
-            if (uiData == DONE)
-                OpenDoor(m_uiBrainDoor3GUID);
-            else
-                CloseDoor(m_uiBrainDoor3GUID);
-            break;
-        case TYPE_VISION2:
-            mVision[1] = uiData;
-            if (uiData == DONE)
-                OpenDoor(m_uiBrainDoor1GUID);
-            else
-                CloseDoor(m_uiBrainDoor1GUID);
-            break;
-        case TYPE_VISION3:
-            mVision[2] = uiData;
-            if (uiData == DONE)
-                OpenDoor(m_uiBrainDoor2GUID);
-            else
-                CloseDoor(m_uiBrainDoor2GUID);
-            break;
+            //phases
         case TYPE_MIMIRON_PHASE:
             m_uiMimironPhase = uiData;
             break;
         case TYPE_YOGG_PHASE:
             m_uiYoggPhase = uiData;
+            break;
+        case TYPE_VISION_PHASE:
+            m_uiVisionPhase = uiData;
             break;
         }
 
@@ -1031,11 +1002,11 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return m_uiElderStonebarkGUID;
         case NPC_VEZAX:
             return m_uiVezaxGUID;
-        case DATA_YOGGSARON:
+        case NPC_YOGGSARON:
             return m_uiYoggSaronGUID;
-        case DATA_SARA:
+        case NPC_SARA:
             return m_uiSaraGUID;
-        case DATA_YOGG_BRAIN:
+        case NPC_YOGG_BRAIN:
             return m_uiYoggBrainGUID;
         case NPC_ALGALON:
             return m_uiAlgalonGUID;
@@ -1049,13 +1020,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             // celestial door
         case GO_CELESTIAL_DOOR:
             return m_uiCelestialDoorGUID;
-            // madness chamber doors
-        case DATA_BRAIN_DOOR1:
-            return m_uiBrainDoor1GUID;
-        case DATA_BRAIN_DOOR2:
-            return m_uiBrainDoor2GUID;
-        case DATA_BRAIN_DOOR3:
-            return m_uiBrainDoor3GUID;
         }
 
         return 0;
@@ -1156,16 +1120,12 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case TYPE_YOGG_BRAIN:
             return m_auiMiniBoss[5];
 
-        case TYPE_VISION1:
-            return mVision[0];
-        case TYPE_VISION2:
-            return mVision[1];
-        case TYPE_VISION3:
-            return mVision[2];
         case TYPE_MIMIRON_PHASE:
             return m_uiMimironPhase;
         case TYPE_YOGG_PHASE:
             return m_uiYoggPhase;
+        case TYPE_VISION_PHASE:
+            return m_uiVisionPhase;
         }
 
         return 0;

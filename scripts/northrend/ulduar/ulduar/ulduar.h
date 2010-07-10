@@ -55,19 +55,10 @@ enum
     TYPE_LEVIATHAN_MK           = 16,
     TYPE_VX001                  = 17,
     TYPE_AERIAL_UNIT            = 18,
-    TYPE_VISION1                = 19,
-    TYPE_VISION2                = 20,
-    TYPE_VISION3                = 21, 
     TYPE_YOGG_BRAIN             = 22,
     TYPE_MIMIRON_PHASE          = 23,
     TYPE_YOGG_PHASE             = 24,
-
-    DATA_YOGGSARON              = 28,
-    DATA_SARA                   = 61,
-    DATA_YOGG_BRAIN             = 62,
-    DATA_BRAIN_DOOR1            = 65,
-    DATA_BRAIN_DOOR2            = 66,
-    DATA_BRAIN_DOOR3            = 67,
+    TYPE_VISION_PHASE           = 25,
 
     // siege
     NPC_LEVIATHAN               = 33113,
@@ -213,6 +204,7 @@ enum
 
     ACHIEV_CELESTIAL_DEFENDER   = 3259,     // realm first algalon
     SPELL_ALGALON_ACHIEV_TRIGG  = 65184,
+    ACHIEV_DEATHS_DEMISE        = 3117,     // realm first yogg
 };
 
 #endif

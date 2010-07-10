@@ -233,6 +233,8 @@ INSERT INTO `script_texts` (`entry`, `content_default`, `content_loc1`, `content
 (-1603326,'Your fate is sealed. The end of days is finally upon you and ALL who inhabit this miserable little seedling. Uulwi ifis halahs gag erh\'ongg w\'ssh.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15761,'1',NULL,NULL,'yogg death'),
 (-1603327,'Your will is no longer you own...',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15759,'4',NULL,NULL,'yogg insanity1'),
 (-1603328,'Destroy them minion, your master commands it!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15760,'4',NULL,NULL,'yogg insanity2'),
+(-1603372,'Portals open into Yogg-Saron\'s mind!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_vision_blast'),
+(-1603373,'The illusion shatters and a path to the central chamber opens!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_shatter_blast'),
 -- Visions:
 -- lich king v3
 (-1603330,'Your resilience is admirable.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,15598,'0',NULL,NULL,'v1 lich king1'),
