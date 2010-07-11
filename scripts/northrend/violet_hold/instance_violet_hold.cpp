@@ -491,7 +491,7 @@ void instance_violet_hold::SetRandomBosses()
             if (!uiPosition)
             {
                 m_lRandomBossList.erase(itr);
-                 break;
+                break;
             }
         }
     }
