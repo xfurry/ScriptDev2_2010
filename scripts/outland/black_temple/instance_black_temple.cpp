@@ -204,7 +204,7 @@ struct MANGOS_DLL_DECL instance_black_temple : public ScriptedInstance
 
     bool CanPreMotherDoorOpen()
     {
-        if (m_auiEncounter[2] == DONE && m_auiEncounter[3] == DONE && m_auiEncounter[4] == DONE /*&& m_auiEncounter[5] == DONE Removed because the event sometimes gets bugged*/)
+        if (m_auiEncounter[2] == DONE && m_auiEncounter[3] == DONE && m_auiEncounter[4] == DONE && m_auiEncounter[5] == DONE)
         {
             debug_log("SD2: Black Temple: door to Mother Shahraz can open");
             return true;
