@@ -102,11 +102,109 @@ enum
     UI_STATE_ALGALON_TIMER_COUNT    = 4131,
 };
 
+//Positional defines 
+struct LocationsXY
+{
+    float x, y;
+    uint32 id;
+};
+
+static LocationsXY PositionLoc[]=
+{
+    {621.633301f, -228.671371f, },
+    {564.140198f, -222.049149f, },
+    {591.629761f, -209.629761f, },
+    {587.629761f, -179.022522f, },
+};
+
 class MANGOS_DLL_DECL PhaseAura : public Aura
 {
 public:
     PhaseAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
     {}
+};
+
+//Black hole
+struct MANGOS_DLL_DECL mob_black_holeAI : public ScriptedAI
+{
+    mob_black_holeAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        
+        SetCombatMovement(false);
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+    
+    bool m_bHasAura;
+    uint32 m_uiRaidCheckTimer;
+    bool m_bIsPhase2;
+	uint32 m_uiSummonTimer;
+
+    void Reset()
+    {
+        m_bHasAura			= false;
+        m_uiRaidCheckTimer	= 1000; 
+		m_bIsPhase2			= false;
+		m_uiSummonTimer		= 5000;
+        DoCast(m_creature, SPELL_BLACK_HOLE_SPAWN);
+        m_creature->SetRespawnDelay(DAY);
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (m_pInstance && m_pInstance->GetData(TYPE_ALGALON) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+		if (m_uiSummonTimer < uiDiff && m_bIsPhase2)
+		{
+			if(Creature* pTemp = m_creature->SummonCreature(NPC_UNLEASHED_DARK_MATTER, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+				pTemp->SetInCombatWithZone();
+			m_uiSummonTimer = urand(10000, 15000);
+		}
+		else m_uiSummonTimer -= uiDiff;
+
+        if (m_uiRaidCheckTimer < uiDiff && !m_bIsPhase2)
+        {
+            if(!m_bHasAura)
+            {
+                DoCast(m_creature, SPELL_BLACK_HOLE_TRIGG);
+                m_bHasAura = true;
+            }
+            
+            Map *map = m_creature->GetMap();
+            if (map->IsDungeon())
+            {
+                Map::PlayerList const &PlayerList = map->GetPlayers();
+
+                if (PlayerList.isEmpty())
+                    return;
+
+                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                {
+                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
+                    {
+                        SpellEntry* spellPhase = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BLACK_HOLE_SHIFT);
+                        i->getSource()->AddAura(new PhaseAura(spellPhase, EFFECT_INDEX_0, NULL, i->getSource(), i->getSource()));
+                        SpellEntry* spellDmg = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BLACK_HOLE_DMG);
+                        i->getSource()->AddAura(new PhaseAura(spellDmg, EFFECT_INDEX_0, NULL, i->getSource(), i->getSource()));
+                    }
+                }
+            } 
+
+            if(Creature *pConstellation = GetClosestCreatureWithEntry(m_creature, NPC_LIVING_CONSTELLATION, 2))
+            {
+                pConstellation->DealDamage(pConstellation, pConstellation->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            }
+            m_uiRaidCheckTimer = 500;
+        }
+        else m_uiRaidCheckTimer -= uiDiff;
+    }	
 };
 
 //Algalon
@@ -453,10 +551,29 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
                 }else m_uiDarkMaterTimer -= uiDiff;
 
                 // hp check
-                if(!m_bIsPhase2 && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 20)
+                if(!m_bIsPhase2 && m_creature->GetHealthPercent() < 20)
                 {
                     DoScriptText(SAY_PHASE2, m_creature);
                     m_bIsPhase2 = true;
+
+                    std::list<Creature*> lAdds;
+                    GetCreatureListWithEntryInGrid(lAdds, m_creature, NPC_COLLAPSING_STAR, DEFAULT_VISIBILITY_INSTANCE);
+                    GetCreatureListWithEntryInGrid(lAdds, m_creature, NPC_BLACK_HOLE, DEFAULT_VISIBILITY_INSTANCE);
+
+                    if (!lAdds.empty())
+                    {
+                        for(std::list<Creature*>::iterator iter = lAdds.begin(); iter != lAdds.end(); ++iter)
+                        {
+                            if ((*iter) && (*iter)->isAlive())
+                                (*iter)->ForcedDespawn();
+                        }
+                    }
+
+                    for (uint8 i = 0; i < 4; ++i)
+                    {
+                        if(Creature* pTemp = m_creature->SummonCreature(NPC_BLACK_HOLE, PositionLoc[i].x, PositionLoc[i].y, m_creature->GetPositionZ(), 0, TEMPSUMMON_MANUAL_DESPAWN, 0))
+							((mob_black_holeAI*)pTemp->AI())->m_bIsPhase2 = true;
+                    }
                 }
 
                 DoMeleeAttackIfReady();
@@ -675,77 +792,6 @@ struct MANGOS_DLL_DECL mob_living_constellationAI : public ScriptedAI
             }
             m_uiArcaneBarrageTimer = 15000;
         }else m_uiArcaneBarrageTimer -= uiDiff;
-    }	
-};
-
-//Black hole
-struct MANGOS_DLL_DECL mob_black_holeAI : public ScriptedAI
-{
-    mob_black_holeAI(Creature *pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        
-        SetCombatMovement(false);
-        Reset();
-    }
-
-    ScriptedInstance* m_pInstance;
-    
-    bool m_bHasAura;
-    uint32 m_uiRaidCheckTimer;
-
-    void Reset()
-    {
-        m_bHasAura = false;
-        m_uiRaidCheckTimer = 1000;   
-        DoCast(m_creature, SPELL_BLACK_HOLE_SPAWN);
-        m_creature->SetRespawnDelay(DAY);
-    }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (m_pInstance && m_pInstance->GetData(TYPE_ALGALON) != IN_PROGRESS) 
-            m_creature->ForcedDespawn();
-
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        if (m_uiRaidCheckTimer < uiDiff)
-        {
-            if(!m_bHasAura)
-            {
-                DoCast(m_creature, SPELL_BLACK_HOLE_TRIGG);
-                m_bHasAura = true;
-            }
-            
-            Map *map = m_creature->GetMap();
-            if (map->IsDungeon())
-            {
-                Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                if (PlayerList.isEmpty())
-                    return;
-
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
-                    {
-                        SpellEntry* spellPhase = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BLACK_HOLE_SHIFT);
-                        i->getSource()->AddAura(new PhaseAura(spellPhase, EFFECT_INDEX_0, NULL, i->getSource(), i->getSource()));
-                        SpellEntry* spellDmg = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BLACK_HOLE_DMG);
-                        i->getSource()->AddAura(new PhaseAura(spellDmg, EFFECT_INDEX_0, NULL, i->getSource(), i->getSource()));
-                    }
-                }
-            } 
-
-            if(Creature *pConstellation = GetClosestCreatureWithEntry(m_creature, NPC_LIVING_CONSTELLATION, 2))
-            {
-                pConstellation->DealDamage(pConstellation, pConstellation->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-            }
-            m_uiRaidCheckTimer = 500;
-        }
-        else m_uiRaidCheckTimer -= uiDiff;
     }	
 };
 
