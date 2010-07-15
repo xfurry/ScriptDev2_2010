@@ -79,3 +79,17 @@ INSERT INTO `creature_ai_scripts` VALUES ('90081', '29181', '14', '0', '100', '3
 INSERT INTO `creature_ai_scripts` VALUES ('90082', '29181', '14', '0', '100', '3', '10000', '20', '5000', '10000', '11', '25817', '6', '1', '0', '0', '0', '0', '0', '0', '0', '0', 'Rayne - SPELL_TRANQUILITY');
 INSERT INTO `creature_ai_scripts` VALUES ('90083', '29181', '0', '0', '100', '3', '10000', '20000', '10000', '20000', '11', '20678', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'Rayne - SPELL_STARFALL');
 INSERT INTO `creature_ai_scripts` VALUES ('90084', '29181', '0', '0', '100', '3', '10000', '20000', '10000', '20000', '11', '21807', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'Rayne - SPELL_WRATH');
+
+-- Eye of Acherus
+UPDATE creature_template SET modelid_A = 16925, modelid_H = 16925, scale = 2, flags_extra = 0 WHERE entry IN (28525,28542,28543,28544);
+
+UPDATE quest_template SET ReqSpellCast1 = 51859, ReqSpellCast2 = 51859, ReqSpellCast3 = 51859, ReqSpellCast4 = 51859 WHERE entry = 12641;
+
+REPLACE INTO creature_template_addon (`entry`,`moveflags`,`auras`) VALUES (28511,33562624,''),(28525,0,'64328 0'),(28542,0,'64328 0'),(28543,0,'64328 0'),(28544,0,'64328 0');
+
+REPLACE INTO spell_script_target (`entry`,`type`,`targetEntry`) VALUES (51859,1,28525),(51859,1,28542),(51859,1,28543),(51859,1,28544);
+
+DELETE FROM creature_addon WHERE guid IN (SELECT guid FROM creature WHERE id IN (28511,28525,28542,28543,28544));
+
+UPDATE creature_template SET ScriptName = 'npc_eye_of_acherus' WHERE entry = 28511;
+UPDATE gameobject_template SET ScriptName = 'go_eye_of_acherus', data10 = 0 WHERE entry = 191609;

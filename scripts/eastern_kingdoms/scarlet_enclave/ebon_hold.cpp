@@ -3294,83 +3294,48 @@ struct MANGOS_DLL_DECL npc_eye_of_acherusAI : public ScriptedAI
     npc_eye_of_acherusAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         m_creature->SetActiveObjectState(true);
-        Reset();
-    }
-
-    uint64 EyeGuid;
-    uint32 StartTimer;
-    bool Active;
-
-    void Reset()
-    {
-        EyeGuid = 0;
+        m_creature->SetLevel(55); //else one hack
         StartTimer = 2000;
         Active = false;
     }
 
-	void JustDied(Unit*u)
-	{
-        if(m_creature->GetCharmer()->GetTypeId()!= TYPEID_PLAYER)return;
-        Player* pl = ((Player*)m_creature->GetCharmer());
+    uint32 StartTimer;
+    bool Active;
 
-            m_creature->GetMap()->CreatureRelocation(m_creature, 2325.0f, -5660.0f, 427.0f, 3.83f);
-            pl->RemoveAurasDueToSpell(51852);
-            pl->InterruptSpell(CURRENT_CHANNELED_SPELL);
-            pl->SetClientControl(m_creature, 0);
-            pl->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
-            pl->SetCharm(NULL);
-            //pl->SetFarSightGUID(0);
-            pl->SetMover(NULL);
-            pl->RemovePetActionBar();
-            m_creature->SetCharmerGUID(0);
-	}
-
-    void AttackStart(Unit *)
-    {
-        m_creature->AttackStop();
-        m_creature->SetInCombatState(false)	;
-    }
+    void Reset(){}
+    void AttackStart(Unit *) {}
+    void MoveInLineOfSight(Unit*) {}
 
     void MovementInform(uint32 uiType, uint32 uiPointId)
     {
-        if (uiType != POINT_MOTION_TYPE)
+        if (uiType != POINT_MOTION_TYPE && uiPointId == 0)
             return;
 
-        if (uiPointId == 0)
-        {
-        Unit *Eye1 = Unit::GetUnit((*m_creature), m_creature->GetGUID());
-        if (Eye1)
-            {
-            char * text1 = "The Eye of Acherus is in your control";
-            Eye1->MonsterTextEmote(text1, Eye1->GetGUID(), true);
-            //m_creature->RemoveMonsterMoveFlag(MONSTER_MOVE_SPLINE_FLY);
-            m_creature->SetSpeedRate(MOVE_FLIGHT, 2.8f, true);
+            char * text = "The Eye of Acherus is in your control";
+            m_creature->MonsterTextEmote(text, m_creature->GetGUID(), true);
             m_creature->CastSpell(m_creature, 51890, true);
-            }
-        }
-
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (StartTimer < uiDiff && !Active)
+        if(m_creature->isCharmed())
         {
-            EyeGuid = m_creature->GetGUID();
-            Unit *Eye = Unit::GetUnit((*m_creature), EyeGuid);
-            if (Eye)
+            if (StartTimer < uiDiff && !Active)
             {
+                m_creature->CastSpell(m_creature, 51892, true);
                 char * text = "The Eye of Acherus launches towards its destination";
-                Eye->MonsterTextEmote(text, Eye->GetGUID(), true);
-                //m_creature->SetMonsterMoveFlags(MONSTER_MOVE_SPLINE_FLY);
-                m_creature->SetSpeedRate(MOVE_FLIGHT, 6.8f, true);
-                m_creature->SetSpeedRate(MOVE_WALK, 6.8f, true);
+                m_creature->MonsterTextEmote(text, m_creature->GetGUID(), true);
+                m_creature->SetSpeedRate(MOVE_FLIGHT, 6.4f,true);
                 m_creature->GetMotionMaster()->MovePoint(0, 1711.0f, -5820.0f, 147.0f);
                 Active = true;
             }
+            else StartTimer -= uiDiff;
         }
-		else StartTimer -= uiDiff;
-
-		DoMeleeAttackIfReady();
+        else
+        {
+            m_creature->CleanupsBeforeDelete();
+            m_creature->AddObjectToRemoveList();
+        }
     }
 };
 
@@ -3386,7 +3351,7 @@ CreatureAI* GetAI_npc_eye_of_acherus(Creature* pCreature)
 bool GOHello_go_eye_of_acherus(Player *player, GameObject* _GO)
 {
     if (player->GetQuestStatus(12641) == QUEST_STATUS_INCOMPLETE)
-     player->CastSpell(player, 51852, true);
+     player->CastSpell(player, 51852, false);
 
     return true;
 }
