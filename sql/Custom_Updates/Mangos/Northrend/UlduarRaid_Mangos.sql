@@ -7,6 +7,8 @@ UPDATE creature_template SET ScriptName = "mob_defense_turret" WHERE entry = 331
 -- Ignis
 UPDATE creature_template SET mechanic_immune_mask=617299803, scriptname='boss_ignis' WHERE entry=33118;
 UPDATE creature_template SET ScriptName = "mob_iron_construct" WHERE entry = 33121;
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('64474', '1', '33118');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('64475', '1', '33118');
 UPDATE creature_template SET minlevel=80, maxlevel=80, faction_h=1925, faction_a=1925, scale=0.5, scriptname='mob_scorch_target' WHERE entry=33221;
 
 -- Razorscale
@@ -198,6 +200,12 @@ UPDATE creature_template SET ScriptName = "boss_elder_stonebark" WHERE entry = 3
 UPDATE creature_template SET ScriptName = "mob_iron_roots" WHERE entry in (33088, 33168);
 UPDATE creature_template SET ScriptName = "mob_freya_ground" WHERE entry in (33215, 33228, 33170, 33050, 34129);
 UPDATE creature_template SET ScriptName = "mob_freya_spawned" WHERE entry in (32916, 32919, 33202, 33203, 32918);
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('62525', '1', '32906');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('62524', '1', '32906');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('62521', '1', '32906');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('62385', '1', '32906');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('62387', '1', '32906');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('62386', '1', '32906');
 
 -- Hodir
 UPDATE creature_template SET ScriptName = "boss_hodir" WHERE entry = 32845;
@@ -378,6 +386,8 @@ update `creature` set `position_y` = -437.73 where `guid` = 129861;
 update `creature` set `position_y` = -434.64 where `guid` = 129862;
 update `creature` set `position_y` = -434.64 where `guid` = 129863;
 update `creature` set `position_y` = -434.64 where `guid` = 129391;
+
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('62565', '1', '32865');
 
 -- Vezax
 UPDATE creature_template SET unit_flags = 0, ScriptName = "boss_vezax" WHERE entry = 33271;

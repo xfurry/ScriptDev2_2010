@@ -274,11 +274,7 @@ struct MANGOS_DLL_DECL boss_flame_leviathan : public ScriptedAI
 
         if(m_uiGatheringSpeedTimer < uiDiff)
         {
-            // increase aura buff
-            if (m_creature->HasAura(SPELL_GATHERING_SPEED))
-                m_creature->GetAura(SPELL_GATHERING_SPEED, EFFECT_INDEX_0)->modStackAmount(+1);
-            else
-                DoCast(m_creature, SPELL_GATHERING_SPEED);
+            DoCast(m_creature, SPELL_GATHERING_SPEED);
             m_uiGatheringSpeedTimer = urand(50000, 60000);
         }
         else m_uiGatheringSpeedTimer -= uiDiff;

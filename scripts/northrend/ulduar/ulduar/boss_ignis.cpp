@@ -48,6 +48,8 @@ enum
     SPELL_SCORCH				= 62546,
     SPELL_SCORCH_H				= 63474,
     BUFF_STRENGHT_OF_CREATOR	= 64473,
+	SPELL_STRENGHT_OF_CREATOR2	= 64474,
+	SPELL_STRENGHT_OF_CREATOR3	= 64475,
     SPELL_HASTE					= 66045,
     SPELL_ENRAGE                = 26662,
     //iron construct
@@ -165,7 +167,7 @@ struct MANGOS_DLL_DECL mob_iron_constructAI : public ScriptedAI
                     if (pTemp->GetAura(BUFF_STRENGHT_OF_CREATOR, EFFECT_INDEX_0)->GetStackAmount() == 1)
                         pTemp->RemoveAurasDueToSpell(BUFF_STRENGHT_OF_CREATOR);
                     else
-                        pTemp->GetAura(BUFF_STRENGHT_OF_CREATOR, EFFECT_INDEX_0)->modStackAmount(-1);
+						pTemp->CastSpell(pTemp, SPELL_STRENGHT_OF_CREATOR2, false);
                 }
             }
         }
@@ -468,11 +470,7 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
 
             m_uiSummon_Timer = 40000;
 
-            // increase aura buff
-            if (m_creature->HasAura(BUFF_STRENGHT_OF_CREATOR))
-                m_creature->GetAura(BUFF_STRENGHT_OF_CREATOR, EFFECT_INDEX_0)->modStackAmount(+1);
-            else
-                DoCast(m_creature, BUFF_STRENGHT_OF_CREATOR);
+            DoCast(m_creature, BUFF_STRENGHT_OF_CREATOR);
         }else m_uiSummon_Timer -= uiDiff;
 
         if (m_uiScorch_Timer < uiDiff)

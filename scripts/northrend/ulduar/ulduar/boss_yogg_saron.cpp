@@ -201,6 +201,7 @@ enum
 
     MOB_IMMORTAL_GUARDIAN       = 33988,
     SPELL_EMPOWERED             = 65294,    //starts with 9 stacks and loses 1 stak at 10% hp
+	SPELL_EMPOWERED_AURA		= 64161,
 
     SPELL_BERSERK               = 64166,    //extinguish all life
 
@@ -417,7 +418,7 @@ static VisionLocXY SkullIcecrownLoc[]=
 class MANGOS_DLL_DECL SanityAura : public Aura
 {
 public:
-    SanityAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
+	SanityAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, SpellAuraHolder *holder, Unit *target, Unit *caster) : Aura(spell, eff, bp, holder, target, caster, NULL)
     {}
 };
 struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
@@ -649,13 +650,13 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
             {
                 if (i->getSource()->isAlive())
                 {
-                    if(i->getSource()->HasAura(SPELL_SANITY, EFFECT_INDEX_0))
+                   /* if(i->getSource()->HasAura(SPELL_SANITY, EFFECT_INDEX_0))
                         i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0)->SetStackAmount(100);
                     else
                     {
                         if(i->getSource()->AddAura(new SanityAura(spell, EFFECT_INDEX_0, NULL, i->getSource(), m_creature)))
                             i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0)->SetStackAmount(100);
-                    }
+                    }*/
                 }
             }
         }
@@ -1929,12 +1930,6 @@ struct MANGOS_DLL_DECL keeper_mimironAI : public ScriptedAI
 /*
 *   Guardians
 */
-class MANGOS_DLL_DECL EmpoweredAura : public Aura
-{
-public:
-    EmpoweredAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
-    {}
-};
 struct MANGOS_DLL_DECL mob_immortal_guardianAI : public ScriptedAI
 {
     mob_immortal_guardianAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -1977,12 +1972,7 @@ struct MANGOS_DLL_DECL mob_immortal_guardianAI : public ScriptedAI
 
     void Aggro(Unit *who) 
     {
-        if(!m_creature->HasAura(SPELL_EMPOWERED, EFFECT_INDEX_0))
-        {
-            SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_EMPOWERED);
-            m_creature->AddAura(new EmpoweredAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature));
-            m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0)->SetStackAmount(9);
-        }
+		DoCast(m_creature, SPELL_EMPOWERED);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -1997,30 +1987,16 @@ struct MANGOS_DLL_DECL mob_immortal_guardianAI : public ScriptedAI
         {
             if(m_creature->GetHealthPercent() < m_uiHealth)
             {
-                if(m_creature->HasAura(SPELL_EMPOWERED, EFFECT_INDEX_0))
-                {
-                    if(Aura *aura = m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0))
-                    {
-                        m_uiStack = aura->GetStackAmount();
-                        m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0)->SetStackAmount(m_uiStack - 1);
-                        m_uiHealth -= 10;
-                    }
-                }
+				DoCast(m_creature, SPELL_EMPOWERED_AURA);
+                m_uiHealth -= 10;
             }
         }
 
         // empowering shadows
         if(m_creature->GetHealthPercent() > m_uiHealth + 10)
         {
-            if(m_creature->HasAura(SPELL_EMPOWERED, EFFECT_INDEX_0))
-            {
-                if(Aura *aura = m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0))
-                {
-                    m_uiStack = aura->GetStackAmount();
-                    m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0)->SetStackAmount(m_uiStack + 1);
-                    m_uiHealth += 10;
-                }
-            }
+			DoCast(m_creature, SPELL_EMPOWERED);
+            m_uiHealth += 10;
         }
 
         DoMeleeAttackIfReady();
@@ -2386,14 +2362,11 @@ struct MANGOS_DLL_DECL mob_sanity_wellAI : public ScriptedAI
 
     uint32 m_uiAuraDelayTimer;
     bool m_bHasAura;
-    uint32 m_uiRangeCheckTimer;
-    uint32 m_uiStack;
 
     void Reset()
     {
         m_uiAuraDelayTimer  = 1000;
         m_bHasAura          = false;
-        m_uiRangeCheckTimer = 2000;
         DoCast(m_creature, SPELL_SANITY_WELL_VISUAL);
         m_creature->SetRespawnDelay(DAY);
     }
@@ -2415,36 +2388,6 @@ struct MANGOS_DLL_DECL mob_sanity_wellAI : public ScriptedAI
             m_bHasAura = true;
         }
         else m_uiAuraDelayTimer -= uiDiff;
-
-        if (m_uiRangeCheckTimer < uiDiff)
-        {
-            Map *map = m_creature->GetMap();
-            if (map->IsDungeon())
-            {
-                Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                if (PlayerList.isEmpty())
-                    return;
-
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
-                    {
-                        // increase sanity
-                        if(i->getSource()->HasAura(SPELL_SANITY, EFFECT_INDEX_0))
-                        {
-                            if(Aura *aura = i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0))
-                            {
-                                m_uiStack = aura->GetStackAmount();
-                                i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0)->SetStackAmount(m_uiStack - 1);
-                            }
-                        }
-                    }
-                }
-            } 
-            m_uiRangeCheckTimer = 2000;
-        }
-        else m_uiRangeCheckTimer -= uiDiff;
     }
 };
 

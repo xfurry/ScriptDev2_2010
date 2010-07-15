@@ -489,13 +489,6 @@ CreatureAI* GetAI_mob_dark_rune_honor_guard(Creature* pCreature)
     return new mob_dark_rune_honor_guardAI(pCreature);
 }
 
-class MANGOS_DLL_DECL DominionAura : public Aura
-{
-public:
-    DominionAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
-    {}
-};
-
 struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
 {
     boss_thorimAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -938,10 +931,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                     m_creature->RemoveAurasDueToSpell(SPELL_SHEAT_OF_LIGHTNING);
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     if(!m_bIsHardMode)
-                    {
-                        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_TOUTCH_OF_DOMINION);
-                        m_creature->AddAura(new DominionAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature));
-                    }
+						DoCast(m_creature, SPELL_TOUTCH_OF_DOMINION);
                     if(m_bIsHardMode)
                     {
                         if(Creature* Sif = m_pInstance->instance->GetCreature(m_uiSifGUID))

@@ -117,13 +117,6 @@ static LocationsXY PositionLoc[]=
     {587.629761f, -179.022522f, },
 };
 
-class MANGOS_DLL_DECL PhaseAura : public Aura
-{
-public:
-    PhaseAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
-    {}
-};
-
 //Black hole
 struct MANGOS_DLL_DECL mob_black_holeAI : public ScriptedAI
 {
@@ -175,26 +168,6 @@ struct MANGOS_DLL_DECL mob_black_holeAI : public ScriptedAI
                 DoCast(m_creature, SPELL_BLACK_HOLE_TRIGG);
                 m_bHasAura = true;
             }
-            
-            Map *map = m_creature->GetMap();
-            if (map->IsDungeon())
-            {
-                Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                if (PlayerList.isEmpty())
-                    return;
-
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
-                    {
-                        SpellEntry* spellPhase = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BLACK_HOLE_SHIFT);
-                        i->getSource()->AddAura(new PhaseAura(spellPhase, EFFECT_INDEX_0, NULL, i->getSource(), i->getSource()));
-                        SpellEntry* spellDmg = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BLACK_HOLE_DMG);
-                        i->getSource()->AddAura(new PhaseAura(spellDmg, EFFECT_INDEX_0, NULL, i->getSource(), i->getSource()));
-                    }
-                }
-            } 
 
             if(Creature *pConstellation = GetClosestCreatureWithEntry(m_creature, NPC_LIVING_CONSTELLATION, 2))
             {
@@ -366,10 +339,7 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
         {
             pTemp->SetInCombatWithZone();
             if(pTemp->GetEntry() == NPC_DARK_MATTER)
-            {
-                SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BLACK_HOLE_SHIFT);
-                pTemp->AddAura(new PhaseAura(spell, EFFECT_INDEX_0, NULL, pTemp, pTemp));
-            }
+				pTemp->CastSpell(pTemp, SPELL_BLACK_HOLE_SHIFT, false);
         }
     }
 

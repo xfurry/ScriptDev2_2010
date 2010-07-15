@@ -625,13 +625,6 @@ CreatureAI* GetAI_mob_frost_sphere(Creature* pCreature)
     return new mob_frost_sphereAI (pCreature);
 }
 
-class MANGOS_DLL_DECL SpiderFrenzyAura : public Aura
-{
-public:
-    SpiderFrenzyAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
-    {}
-};
-
 struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
 {
     mob_nerubian_burrowerAI(Creature *pCreature) : ScriptedAI(pCreature)
@@ -645,7 +638,6 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
     uint32 Difficulty;
 
     uint32 spellTimer;
-    uint32 checkTimer;
     uint32 submergeTimer;
     bool isSubmerged;
     uint32 m_uiShadowStrikeTimer;
@@ -656,12 +648,11 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
     void Reset()
     {
         spellTimer = 7000;
-        checkTimer = 2000;
         m_uiShadowStrikeTimer    = urand(15000, 20000);
         isSubmerged = false;
         lBorrower.clear();
         m_uiBorrowerCount = 0;
-        DoCast(m_creature, SPELL_SPIDER_FRENZY);
+        DoCast(m_creature, SPELL_SPIDER_FRENZY_TRIG);
         m_creature->SetRespawnDelay(DAY);
     }
 
@@ -719,29 +710,6 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
                 DoCast(pTarget, SPELL_EXPOSE_WEAKNESS);
             spellTimer = 10000;
         }else spellTimer -= uiDiff;
-
-        if (checkTimer < uiDiff)
-        {
-            lBorrower.clear();
-            m_uiBorrowerCount = 0;
-            GetCreatureListWithEntryInGrid(lBorrower, m_creature, NPC_NERUBIAN_BURROWER, 12.0f);
-            if(!lBorrower.empty())
-            {
-                for(std::list<Creature*>::iterator iter = lBorrower.begin(); iter != lBorrower.end(); ++iter)
-                {
-                    if ((*iter) && (*iter)->isAlive())
-                        m_uiBorrowerCount += 1;
-                }
-            }
-
-            if(m_uiBorrowerCount > 1)
-            {
-                SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_SPIDER_FRENZY);
-                if(m_creature->AddAura(new SpiderFrenzyAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
-                    m_creature->GetAura(SPELL_SPIDER_FRENZY, EFFECT_INDEX_0)->SetStackAmount(m_uiBorrowerCount - 1);
-            }
-            checkTimer = 2000;
-        }else checkTimer -= uiDiff;
 
         if (submergeTimer < uiDiff && isSubmerged)
         {

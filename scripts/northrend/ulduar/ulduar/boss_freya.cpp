@@ -59,6 +59,9 @@ enum
 
     /* BOSS SPELLS */
     SPELL_ATTUNED_TO_NATURE        = 62519, //increases healing, start at 150 stacks
+	SPELL_ATTUNED_10_STACKS		   = 62525,
+	SPELL_ATTUNED_2_STACKS		   = 62524,
+	SPELL_ATTUNED_25_STACKS		   = 62521,
     SPELL_TOUCH_OF_EONAR           = 62528, //heals Freya, 6k per second
     SPELL_TOUCH_OF_EONAR_H         = 62892, //heals Freya, 24k per second
     SPELL_SUNBEAM                  = 62623,
@@ -203,21 +206,6 @@ enum
     ACHIEV_KNOCK_KNOCK_WOOD_H       = 3186,
     ACHIEV_KNOCK_KNOCK_KNOCK_WOOD   = 3179,
     ACHIEV_KNOCK_KNOCK_KNOCK_WOOD_H = 3187, 
-};
-
-class MANGOS_DLL_DECL AttunedToNatureAura : public Aura
-{
-public:
-    AttunedToNatureAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
-    {}
-};
-
-// brightleaf aura
-class MANGOS_DLL_DECL FreyaAura : public Aura
-{
-public:
-    FreyaAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
-    {}
 };
 
 // Iron roots
@@ -663,12 +651,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
 
     void Aggro(Unit *who) 
     {
-        SpellEntry* spell = (SpellEntry *)GetSpellStore()->LookupEntry(SPELL_ATTUNED_TO_NATURE);
-        int32 bp = 8;
-        if(!m_creature->HasAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0))
-            m_creature->AddAura(new AttunedToNatureAura(spell, EFFECT_INDEX_0, &bp, m_creature, m_creature));
-        m_creature->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->SetStackAmount(150);
-
+		DoCast(m_creature, SPELL_ATTUNED_TO_NATURE);
         DoCast(m_creature, m_bIsRegularMode ? SPELL_TOUCH_OF_EONAR : SPELL_TOUCH_OF_EONAR_H);
 
         if(m_pInstance) 
@@ -682,9 +665,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                 {
                     pBrightleaf->CastSpell(pBrightleaf, SPELL_DRAINED_OF_POWER, false);
                     pBrightleaf->CastSpell(m_creature, SPELL_EFFECT_BRIGHTLEAF, false);
-                    SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_BRIGHTLEAFS_ESSENCE);
-                    if(m_creature->AddAura(new FreyaAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
-                        m_creature->GetAura(SPELL_BRIGHTLEAFS_ESSENCE, EFFECT_INDEX_0)->SetStackAmount(1);
+					DoCast(m_creature, SPELL_BRIGHTLEAFS_ESSENCE);
                     m_bIsBrightleafAlive = true;
                     m_uiAchievProgress += 1;
                 }
@@ -699,9 +680,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                 {
                     pIronbranch->CastSpell(pIronbranch, SPELL_DRAINED_OF_POWER, false);
                     pIronbranch->CastSpell(m_creature, SPELL_EFFECT_IRONBRANCH, false);
-                    SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_IRONBRANCH_ESSENCE);
-                    if(m_creature->AddAura(new FreyaAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
-                        m_creature->GetAura(SPELL_IRONBRANCH_ESSENCE, EFFECT_INDEX_0)->SetStackAmount(1);
+					DoCast(m_creature, SPELL_IRONBRANCH_ESSENCE);
                     m_bIsIronbranchAlive = true;
                     m_uiAchievProgress += 1;
                 }
@@ -716,9 +695,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                 {
                     pStonebark->CastSpell(pStonebark, SPELL_DRAINED_OF_POWER, false);
                     pStonebark->CastSpell(m_creature, SPELL_EFFECT_STONEBARK, false);
-                    SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_STONEBARKS_ESSENCE);
-                    if(m_creature->AddAura(new FreyaAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
-                        m_creature->GetAura(SPELL_STONEBARKS_ESSENCE, EFFECT_INDEX_0)->SetStackAmount(1);
+					DoCast(m_creature, SPELL_STONEBARKS_ESSENCE);
                     m_bIsStonebarkAlive = true;
                     m_uiAchievProgress += 1;
                 }
@@ -883,8 +860,8 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                     {
                         m_bWaveCheck = false;
                         // 10 stacks for each mob
-                        if(m_creature->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-30))
-                            m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
+						for(uint8 i = 0; i < 3; ++i)
+							DoCast(m_creature, SPELL_ATTUNED_10_STACKS);
                     }
                     else
                     {
@@ -1331,25 +1308,16 @@ struct MANGOS_DLL_DECL mob_freya_spawnedAI : public ScriptedAI
     void JustDied(Unit* Killer)
     {
         if (m_bAncientConservator)
-            ReduceStack(30);
+		{
+			if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
+				pFreya->CastSpell(pFreya, SPELL_ATTUNED_25_STACKS, false);
+		}
 
         if (m_bDetonatingLasher)
-            ReduceStack(2);
-        // for this the stacks are reduced from main script
-        //if(m_bAncientWaterSpirit || m_bSnaplasher || m_bStormLasher)
-            //ReduceStack(10);
-    }
-    
-    void ReduceStack(uint8 uiCount)
-    {
-        if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
-        {
-            if(!pFreya->HasAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0))
-                return;
-
-            if(pFreya->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-uiCount))
-                pFreya->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
-        }
+		{
+			if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
+				pFreya->CastSpell(pFreya, SPELL_ATTUNED_2_STACKS, false);
+		}
     }
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)

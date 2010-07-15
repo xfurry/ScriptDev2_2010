@@ -159,13 +159,6 @@ enum icehowl
     ACHIEV_UPPER_BACK_PAIN_H    = 3813,
 };
 
-class MANGOS_DLL_DECL RisingAngerAura : public Aura
-{
-public:
-    RisingAngerAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
-    {}
-};
-
 struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
 {
     boss_icehowlAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -1595,9 +1588,7 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(pTarget, SPELL_SNOBOLLED, true);
-                SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_RISING_ANGER);
-                if(m_creature->AddAura(new RisingAngerAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
-                    m_creature->GetAura(SPELL_RISING_ANGER, EFFECT_INDEX_0)->SetStackAmount(m_uiSnoboldNo);
+				DoCast(m_creature, SPELL_RISING_ANGER);
                 if(Creature *pSnobold = m_creature->SummonCreature(NPC_SNOBOLD_VASSAL, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                     pSnobold->AddThreat(pTarget,0.0f);
             }

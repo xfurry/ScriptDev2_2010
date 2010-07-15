@@ -59,13 +59,6 @@ enum Spells
     MOB_FROZEN_ORB_STALKER      = 38461,    // 1 in 10 mode and 3 in 25 mode
 };
 
-class MANGOS_DLL_DECL WhiteoutAura : public Aura
-{
-public:
-    WhiteoutAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
-    {}
-};
-
 struct MANGOS_DLL_DECL boss_toravonAI : public ScriptedAI
 {
     boss_toravonAI(Creature *pCreature) : ScriptedAI(pCreature)
@@ -80,7 +73,6 @@ struct MANGOS_DLL_DECL boss_toravonAI : public ScriptedAI
     
     uint32 m_uiFrozenOrbTimer;
     uint32 m_uiWhiteOutTimer;
-    uint8 m_uiWhiteoutStacks;
     uint8 m_uiMaxOrbs;
     uint32 m_uiFreezingGroundTimer;
 
@@ -89,7 +81,6 @@ struct MANGOS_DLL_DECL boss_toravonAI : public ScriptedAI
         m_uiFrozenOrbTimer      = 11000;
         m_uiWhiteOutTimer       = 13000;
         m_uiFreezingGroundTimer = 15000; 
-        m_uiWhiteoutStacks      = 1;
         m_uiMaxOrbs             = m_bIsRegularMode ? 1 : 3;
     }
 
@@ -113,28 +104,6 @@ struct MANGOS_DLL_DECL boss_toravonAI : public ScriptedAI
             m_pInstance->SetData(TYPE_TORAVON, IN_PROGRESS);
     }
 
-    void DoWhiteout(uint8 m_uiStacks)
-    {
-        Map *map = m_creature->GetMap();
-        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(m_bIsRegularMode ? SPELL_WHITEOUT : SPELL_WHITEOUT_H);
-        if (map->IsDungeon())
-        {
-            Map::PlayerList const &PlayerList = map->GetPlayers();
-
-            if (PlayerList.isEmpty())
-                return;
-
-            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-            {
-                if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()) < 80.0f)
-                {
-                    if(i->getSource()->AddAura(new WhiteoutAura(spell, EFFECT_INDEX_0, NULL, i->getSource(), i->getSource())))
-                        i->getSource()->GetAura(m_bIsRegularMode ? SPELL_WHITEOUT : SPELL_WHITEOUT_H, EFFECT_INDEX_0)->SetStackAmount(m_uiStacks);
-                }
-            }
-        } 
-    }
-
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -154,8 +123,7 @@ struct MANGOS_DLL_DECL boss_toravonAI : public ScriptedAI
 
         if(m_uiWhiteOutTimer < uiDiff)
         {
-            DoWhiteout(m_uiWhiteoutStacks);
-            m_uiWhiteoutStacks += 1;
+			DoCast(m_creature, m_bIsRegularMode ? SPELL_WHITEOUT : SPELL_WHITEOUT_H);
             DoCast(m_creature, SPELL_WHITEOUT_VISUAL);
             m_uiWhiteOutTimer = 38000;
         }

@@ -92,7 +92,7 @@ enum
     SPELL_ERUPTION              = 66252,    // 3 infernals
     SPELL_ERUPTION_HC           = 67069,    // unlimited infernals
 
-    SPELL_NETHER_POWER          = 67108,    // 5 10man, 10 25man
+    SPELL_NETHER_POWER          = 67009,    // 5 10man, 10 25man
 
     SPELL_BERSERK               = 26662,
 
@@ -196,13 +196,6 @@ CreatureAI* GetAI_npc_jaina(Creature* pCreature)
 ## boss_jaraxxus
 ######*/
 
-class MANGOS_DLL_DECL NetherPowerAura : public Aura
-{
-public:
-    NetherPowerAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
-    {}
-};
-
 struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 {
     boss_jaraxxusAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -298,9 +291,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
             m_creature->SetInCombatWith(pWho);
             pWho->SetInCombatWith(m_creature);
             DoStartMovement(pWho);
-            SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_NETHER_POWER);
-            if(m_creature->AddAura(new NetherPowerAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
-                m_creature->GetAura(SPELL_NETHER_POWER, EFFECT_INDEX_0)->SetStackAmount(m_uiMaxNetherPower);
+			DoCast(m_creature, SPELL_NETHER_POWER);
         }
     }
 
@@ -471,9 +462,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 
         if (m_uiNetherPowerTimer < uiDiff)
         {
-            SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_NETHER_POWER);
-            if(m_creature->AddAura(new NetherPowerAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature)))
-                m_creature->GetAura(SPELL_NETHER_POWER, EFFECT_INDEX_0)->SetStackAmount(m_uiMaxNetherPower);
+            DoCast(m_creature, SPELL_NETHER_POWER);
             m_uiNetherPowerTimer = 40000;
         }
         else

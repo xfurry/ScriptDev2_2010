@@ -261,14 +261,6 @@ enum VespText
     SAY_VESPERON_SPECIAL_2                  = -1615040
 };
 
-
-class MANGOS_DLL_DECL TwilightAura : public Aura
-{
-public:
-    TwilightAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, Unit *target, Unit *caster) : Aura(spell, eff, bp, target, caster, NULL)
-    {}
-};
-
 /*######
 ## Boss Sartharion
 ######*/
@@ -1021,10 +1013,7 @@ struct MANGOS_DLL_DECL mob_tenebronAI : public dummy_dragonAI
                     if(Creature* pEgg = m_creature->SummonCreature(m_uiEggId, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 1000))
                         m_lEggsGUIDList.push_back(pEgg->GetGUID());
                     if(Creature* pWhelp = m_creature->SummonCreature(m_uiWhelpId, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
-                    {
-                        m_lWhelpsGUIDList.push_back(pWhelp->GetGUID());
-                        pWhelp->AddAura(new TwilightAura(spell, EFFECT_INDEX_0, NULL, pWhelp, pWhelp));
-                    }
+						pWhelp->CastSpell(pWhelp, SPELL_TWILIGHT_SHIFT_ENTER, false);
                 }
             }
             m_uiSummonEggTimer = 60000;
@@ -1354,8 +1343,7 @@ struct MANGOS_DLL_DECL mob_acolyte_of_shadronAI : public ScriptedAI
 
     void Reset()
     {
-        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_TWILIGHT_SHIFT_ENTER);
-        m_creature->AddAura(new TwilightAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature));
+		DoCast(m_creature, SPELL_TWILIGHT_SHIFT_ENTER);
     }
 
     void DoCastResidue()
@@ -1437,8 +1425,7 @@ struct MANGOS_DLL_DECL mob_acolyte_of_vesperonAI : public ScriptedAI
 
     void Reset()
     {    
-        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_TWILIGHT_SHIFT_ENTER);
-        m_creature->AddAura(new TwilightAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature));
+        DoCast(m_creature, SPELL_TWILIGHT_SHIFT_ENTER);
     }
 
     void DoCastResidue()
@@ -1555,8 +1542,7 @@ struct MANGOS_DLL_DECL mob_twilight_eggsAI : public ScriptedAI
         m_uiSummonTimer = 14000;
         m_uiDieTimer    = 15000;
 
-        SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_TWILIGHT_SHIFT_ENTER);
-        m_creature->AddAura(new TwilightAura(spell, EFFECT_INDEX_0, NULL, m_creature, m_creature));
+        DoCast(m_creature, SPELL_TWILIGHT_SHIFT_ENTER);
     }
 
     void JustDied(Unit* killer)
