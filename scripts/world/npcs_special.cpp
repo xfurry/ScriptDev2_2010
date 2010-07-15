@@ -1757,6 +1757,435 @@ CreatureAI* GetAI_npc_training_dummy(Creature* pCreature)
 {
     return new npc_training_dummyAI(pCreature);
 }
+
+/*######
+## npc_mirror_image
+######*/
+
+enum MirrorImageSpells
+{
+    SPELL_CLONE_CASTER    = 45204,
+    SPELL_CLONE_CASTER_1  = 69837,
+//    SPELL_CLONE_CASTER_1  = 58836,
+    SPELL_CLONE_THREAT    = 58838,
+    SPELL_FIREBLAST       = 59637,
+    SPELL_FROSTBOLT       = 59638,
+    SPELL_FROSTSHIELD     = 43008,
+    SPELL_FIRESHIELD      = 43046,
+    SPELL_ICEBLOCK        = 65802,
+    SPELL_ICERING         = 42917,
+};
+
+struct MANGOS_DLL_DECL npc_mirror_imageAI : public ScriptedAI
+{
+    npc_mirror_imageAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+
+    uint32 m_uiFrostboltTimer;
+    uint32 m_uiFrostringTimer;
+    uint32 m_uiFireblastTimer;
+    bool inCombat;
+    Unit *owner;
+    float angle;
+    bool blocked;
+    bool movement;
+
+    void Reset() 
+    {
+     owner = m_creature->GetOwner();
+     if (!owner) return;
+
+     m_creature->SetLevel(owner->getLevel());
+     m_creature->setFaction(owner->getFaction());
+
+     m_creature->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+     m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 2048);
+     m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
+     m_creature->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE);
+
+     m_uiFrostboltTimer = urand(4000,9000);
+     m_uiFrostboltTimer = urand(5000,12000);
+     m_uiFireblastTimer = urand(4000,9000);
+     inCombat = false;
+     blocked = false;
+     movement = false;
+
+
+     if (owner && !m_creature->hasUnitState(UNIT_STAT_FOLLOW))
+        {
+            angle = m_creature->GetAngle(owner);
+            m_creature->GetMotionMaster()->Clear(false);
+            m_creature->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST + 3.0f, angle);
+        }
+
+      if(owner->IsPvP())
+                 m_creature->SetPvP(true);
+      if(owner->IsFFAPvP())
+                 m_creature->SetFFAPvP(true);
+    }
+
+    void AttackStart(Unit* pWho)
+    {
+      if (!pWho) return;
+
+      if (m_creature->Attack(pWho, true))
+        {
+            m_creature->clearUnitState(UNIT_STAT_FOLLOW);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            m_creature->AddThreat(pWho, 100.0f);
+            DoStartMovement(pWho, 30.0f);
+            SetCombatMovement(true);
+            inCombat = true;
+        }
+    }
+
+    void EnterEvadeMode()
+    {
+     if (m_creature->IsInEvadeMode() || !m_creature->isAlive())
+          return;
+
+        inCombat = false;
+
+        m_creature->AttackStop();
+        m_creature->CombatStop(true);
+        if (owner && !m_creature->hasUnitState(UNIT_STAT_FOLLOW))
+        {
+            m_creature->GetMotionMaster()->Clear(false);
+            m_creature->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST + 3.0f,angle);
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!owner || !owner->isAlive()) m_creature->ForcedDespawn();
+
+        if (owner && !m_creature->HasAura(SPELL_CLONE_CASTER))
+            m_creature->CastSpell(m_creature, SPELL_CLONE_CASTER, true, NULL, NULL, owner->GetGUID());
+
+        if (owner && !m_creature->HasAura(SPELL_CLONE_CASTER_1))
+                 m_creature->CastSpell(m_creature, SPELL_CLONE_CASTER_1, true, NULL, NULL, owner->GetGUID());
+
+        if (owner && !m_creature->HasAura(SPELL_CLONE_THREAT))
+                 m_creature->CastSpell(m_creature, SPELL_CLONE_THREAT, true, NULL, NULL, owner->GetGUID());
+
+        if (owner && owner->HasAura(SPELL_FROSTSHIELD) && !m_creature->HasAura(SPELL_FROSTSHIELD))
+                 m_creature->CastSpell(m_creature, SPELL_FROSTSHIELD, false);
+
+        if (owner && owner->HasAura(SPELL_FIRESHIELD) && !m_creature->HasAura(SPELL_FIRESHIELD))
+                 m_creature->CastSpell(m_creature, SPELL_FIRESHIELD, false);
+
+        if (!m_creature->getVictim())
+            if (owner && owner->getVictim())
+                AttackStart(owner->getVictim());
+
+        if (m_creature->getVictim() && m_creature->getVictim() != owner->getVictim())
+                AttackStart(owner->getVictim());
+
+        if (inCombat && !m_creature->getVictim())
+        {
+            EnterEvadeMode();
+            return;
+        }
+
+        if (!inCombat) return;
+
+        if (m_creature->IsWithinDistInMap(m_creature->getVictim(),30.0f))
+        {
+            movement = false;
+            if (m_uiFrostboltTimer <= diff)
+            {
+                DoCastSpellIfCan(m_creature->getVictim(),SPELL_FROSTBOLT);
+                m_uiFrostboltTimer = urand(4000,8000);
+            } else m_uiFrostboltTimer -= diff;
+
+            if (m_uiFireblastTimer <= diff)
+            {
+                DoCastSpellIfCan(m_creature->getVictim(),SPELL_FIREBLAST);
+                m_uiFireblastTimer = urand(4000,8000);
+            } else m_uiFireblastTimer -= diff;
+
+            if (m_uiFrostringTimer <= diff && m_creature->IsWithinDistInMap(m_creature->getVictim(),5.0f))
+            {
+                DoCastSpellIfCan(m_creature->getVictim(),SPELL_ICERING);
+                m_uiFrostringTimer = urand(4000,8000);
+            } else m_uiFrostboltTimer -= diff;
+
+            if (!blocked && m_creature->GetHealthPercent() < 10.0f)
+            {
+                DoCastSpellIfCan(m_creature,SPELL_ICEBLOCK);
+                blocked = true;
+            }
+        } else if (!movement) {
+                                  DoStartMovement(m_creature->getVictim(), 30.0f);
+                                  movement = true;
+                               }
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_mirror_image(Creature* pCreature)
+{
+    return new npc_mirror_imageAI(pCreature);
+};
+
+/*####
+ ## npc_snake_trap_serpents - Summonned snake id are 19921 and 19833
+ ####*/
+
+#define SPELL_MIND_NUMBING_POISON    25810   //Viper
+#define SPELL_CRIPPLING_POISON       30981   //Viper
+#define SPELL_DEADLY_POISON          34655   //Venomous Snake
+
+#define MOB_VIPER 19921
+#define MOB_VENOM_SNIKE 19833
+
+struct MANGOS_DLL_DECL npc_snake_trap_serpentsAI : public ScriptedAI
+{
+    npc_snake_trap_serpentsAI(Creature *c) : ScriptedAI(c) {Reset();}
+
+    uint32 SpellTimer;
+    Unit* Owner;
+
+    void Reset()
+    {
+        SpellTimer = 500;
+        Owner = m_creature->GetCharmerOrOwner();
+        if (!Owner) return;
+
+        m_creature->SetLevel(Owner->getLevel());
+        m_creature->setFaction(Owner->getFaction());
+    }
+
+    void AttackStart(Unit* pWho)
+    {
+      if (!pWho) return;
+
+      if (m_creature->Attack(pWho, true))
+         {
+            m_creature->SetInCombatWith(pWho);
+            m_creature->AddThreat(pWho, 100.0f);
+            SetCombatMovement(true);
+            m_creature->GetMotionMaster()->MoveChase(pWho);
+         }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!m_creature->getVictim())
+        {
+            if (Owner && Owner->getVictim())
+                AttackStart(Owner->getVictim());
+            return;
+        }
+
+        if (SpellTimer <= diff)
+        {
+            if (m_creature->GetEntry() == MOB_VIPER ) //Viper - 19921
+            {
+                if (!urand(0,2)) //33% chance to cast
+                {
+                    uint32 spell;
+                    if (urand(0,1))
+                        spell = SPELL_MIND_NUMBING_POISON;
+                    else
+                        spell = SPELL_CRIPPLING_POISON;
+                    DoCast(m_creature->getVictim(), spell);
+                }
+
+                SpellTimer = urand(3000, 5000);
+            }
+            else if (m_creature->GetEntry() == MOB_VENOM_SNIKE ) //Venomous Snake - 19833
+            {
+                if (urand(0,1) == 0) //80% chance to cast
+                    DoCast(m_creature->getVictim(), SPELL_DEADLY_POISON);
+                SpellTimer = urand(2500, 4500);
+            }
+        }
+        else SpellTimer -= diff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_snake_trap_serpents(Creature* pCreature)
+{
+    return new npc_snake_trap_serpentsAI(pCreature);
+}
+
+struct MANGOS_DLL_DECL npc_rune_blade : public ScriptedAI
+{
+    npc_rune_blade(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+
+    Unit* owner;
+
+    void Reset()
+    {
+        owner = m_creature->GetOwner();
+        if (!owner || owner->GetTypeId() != TYPEID_PLAYER)
+            return;
+
+        // Cannot be Selected or Attacked
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+
+        m_creature->SetLevel(owner->getLevel());
+        m_creature->setFaction(owner->getFaction());
+
+        // Add visible weapon
+        if (Item const * item = ((Player *)owner)->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND))
+            m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, item->GetProto()->ItemId);
+
+        // Add stats scaling
+        int32 damageDone=owner->CalculateDamage(BASE_ATTACK, true); // might be average damage instead ?
+        int32 meleeSpeed=owner->m_modAttackSpeedPct[BASE_ATTACK];
+        m_creature->CastCustomSpell(m_creature, 51906, &damageDone, &meleeSpeed, NULL, true);
+
+        // Visual Glow
+        m_creature->CastSpell(m_creature, 53160, true);
+
+        SetCombatMovement(true);
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!owner) return;
+
+        if (!m_creature->getVictim())
+        {
+            if (owner->getVictim())
+                AttackStart(owner->getVictim());
+        }
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_rune_blade(Creature* pCreature)
+{
+    return new npc_rune_blade(pCreature);
+}
+
+/*######
+## npc_experience_eliminator
+######*/
+
+#define GOSSIP_ITEM_STOP_XP_GAIN "I don't want to gain experience anymore."
+#define GOSSIP_CONFIRM_STOP_XP_GAIN "Are you sure you want to stop gaining experience?"
+#define GOSSIP_ITEM_START_XP_GAIN "I want to be able to gain experience again."
+#define GOSSIP_CONFIRM_START_XP_GAIN "Are you sure you want to be able to gain experience once again?"
+
+bool GossipHello_npc_experience_eliminator(Player* pPlayer, Creature* pCreature)
+{
+pPlayer->ADD_GOSSIP_ITEM_EXTENDED(GOSSIP_ICON_CHAT, pPlayer->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED) ? GOSSIP_ITEM_START_XP_GAIN : GOSSIP_ITEM_STOP_XP_GAIN,
+GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1,
+pPlayer->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED) ? GOSSIP_CONFIRM_START_XP_GAIN : GOSSIP_CONFIRM_STOP_XP_GAIN, 100000, false);
+
+    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_experience_eliminator(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    if(uiAction == GOSSIP_ACTION_INFO_DEF+1)
+    {
+        // cheater(?) passed through client limitations
+        if(pPlayer->GetMoney() < 100000)
+            return true;
+
+        pPlayer->ModifyMoney(-100000);
+
+        if(pPlayer->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED))
+            pPlayer->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED);
+        else
+            pPlayer->SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED);
+    }
+    pPlayer->CLOSE_GOSSIP_MENU();
+    return true;
+}
+
+/*########
+# mob_death_knight_gargoyle AI
+#########*/
+
+// UPDATE `creature_template` SET `ScriptName` = 'mob_death_knight_gargoyle' WHERE `entry` = '27829';
+
+enum GargoyleSpells
+{
+    SPELL_GARGOYLE_STRIKE = 43802      // Don't know if this is the correct spell, it does about 700-800 damage points
+};
+
+struct MANGOS_DLL_DECL mob_death_knight_gargoyle : public ScriptedAI
+{
+    mob_death_knight_gargoyle(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        bLocked = false;
+        Reset();
+    }
+    uint64 m_uiCreatorGUID;
+    uint32 m_uiGargoyleStrikeTimer;
+    float fDist;
+    float fAngle;
+    bool bLocked;
+
+    void Reset()
+    {
+        m_uiGargoyleStrikeTimer = urand(1000, 2000);
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (!bLocked)
+        {
+            m_uiCreatorGUID = m_creature->GetCreatorGUID();
+            if (Player* pOwner = (Player*)Unit::GetUnit(*m_creature, m_uiCreatorGUID))
+            {
+                fDist = m_creature->GetDistance(pOwner);
+                fAngle = m_creature->GetAngle(pOwner);
+            }
+            bLocked = true;
+        }
+
+        Player* pOwner = (Player*)Unit::GetUnit(*m_creature, m_uiCreatorGUID);
+        if (!pOwner || !pOwner->IsInWorld())
+        {
+            m_creature->ForcedDespawn();
+            return;
+        }
+
+        uint64 targetGUID = 0;
+
+        if (pOwner->getVictim())
+            targetGUID = pOwner->getVictim()->GetGUID();
+
+        Unit* pTarget = Unit::GetUnit(*m_creature, targetGUID);
+
+        if (!pTarget || !m_creature->CanInitiateAttack() || !pTarget->isTargetableForAttack() ||
+        !m_creature->IsHostileTo(pTarget) || !pTarget->isInAccessablePlaceFor(m_creature))
+        {
+            if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() != FOLLOW_MOTION_TYPE)
+            {
+                m_creature->InterruptNonMeleeSpells(false);
+                m_creature->GetMotionMaster()->Clear();
+                m_creature->GetMotionMaster()->MoveFollow(pOwner, fDist, fAngle);
+            }
+            return;
+        }
+
+        if (m_uiGargoyleStrikeTimer <= uiDiff)
+        {
+            if (DoCastSpellIfCan(pTarget, SPELL_GARGOYLE_STRIKE, 0, pOwner->GetGUID()) == CAST_OK)
+                m_uiGargoyleStrikeTimer = urand(1000, 2000);
+        }
+        else m_uiGargoyleStrikeTimer -= uiDiff;
+    }
+};
+
+CreatureAI* GetAI_mob_death_knight_gargoyle(Creature* pCreature)
+{
+    return new mob_death_knight_gargoyle(pCreature);
+}
+
 void AddSC_npcs_special()
 {
     Script* newscript;
@@ -1850,5 +2279,31 @@ void AddSC_npcs_special()
 	newscript = new Script;
     newscript->Name = "npc_training_dummy";
     newscript->GetAI = &GetAI_npc_training_dummy;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "npc_mirror_image";
+    newscript->GetAI = &GetAI_npc_mirror_image;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_snake_trap_serpents";
+    newscript->GetAI = &GetAI_npc_snake_trap_serpents;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_runeblade";
+    newscript->GetAI = &GetAI_npc_rune_blade;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "npc_experience_eliminator";
+    newscript->pGossipHello = &GossipHello_npc_experience_eliminator;
+    newscript->pGossipSelect = &GossipSelect_npc_experience_eliminator;
+    newscript->RegisterSelf();
+	
+    newscript = new Script;
+    newscript->Name = "mob_death_knight_gargoyle";
+    newscript->GetAI = &GetAI_mob_death_knight_gargoyle;
     newscript->RegisterSelf();
 }
