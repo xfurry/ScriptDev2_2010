@@ -574,6 +574,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
     uint32 m_uiEnrageTimer;
 
     bool m_bIsHardMode;
+	bool m_bHasAura;
     
     uint32 m_uiNatureBombTimer;
     uint32 m_uiLifebindersGiftTimer;
@@ -627,6 +628,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
 
         m_uiAchievProgress              = 0;
         m_bNature                       = false;
+		m_bHasAura						= false;
 
         if(m_pInstance) 
         {
@@ -652,7 +654,6 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
     void Aggro(Unit *who) 
     {
 		DoCast(m_creature, SPELL_ATTUNED_TO_NATURE);
-        DoCast(m_creature, m_bIsRegularMode ? SPELL_TOUCH_OF_EONAR : SPELL_TOUCH_OF_EONAR_H);
 
         if(m_pInstance) 
         {
@@ -665,7 +666,6 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                 {
                     pBrightleaf->CastSpell(pBrightleaf, SPELL_DRAINED_OF_POWER, false);
                     pBrightleaf->CastSpell(m_creature, SPELL_EFFECT_BRIGHTLEAF, false);
-					DoCast(m_creature, SPELL_BRIGHTLEAFS_ESSENCE);
                     m_bIsBrightleafAlive = true;
                     m_uiAchievProgress += 1;
                 }
@@ -680,7 +680,6 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                 {
                     pIronbranch->CastSpell(pIronbranch, SPELL_DRAINED_OF_POWER, false);
                     pIronbranch->CastSpell(m_creature, SPELL_EFFECT_IRONBRANCH, false);
-					DoCast(m_creature, SPELL_IRONBRANCH_ESSENCE);
                     m_bIsIronbranchAlive = true;
                     m_uiAchievProgress += 1;
                 }
@@ -695,7 +694,6 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                 {
                     pStonebark->CastSpell(pStonebark, SPELL_DRAINED_OF_POWER, false);
                     pStonebark->CastSpell(m_creature, SPELL_EFFECT_STONEBARK, false);
-					DoCast(m_creature, SPELL_STONEBARKS_ESSENCE);
                     m_bIsStonebarkAlive = true;
                     m_uiAchievProgress += 1;
                 }
@@ -848,6 +846,18 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
                 return;
 
+			if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+			{
+				if(natureAura->GetStackAmount() < 150 && !m_bHasAura)
+				{
+					m_bHasAura = true;
+					natureAura->SetStackAmount(150);
+				}
+			}
+
+			if(!m_creature->HasAura(m_bIsRegularMode ? SPELL_TOUCH_OF_EONAR : SPELL_TOUCH_OF_EONAR_H))
+				DoCast(m_creature, m_bIsRegularMode ? SPELL_TOUCH_OF_EONAR : SPELL_TOUCH_OF_EONAR_H);
+
             if(m_uiThreeWaveCheckTimer < uiDiff && m_bWaveCheck)
             {
                 Creature* pWaterSpirit = m_pInstance->instance->GetCreature(m_uiWaterSpiritGUID);
@@ -859,9 +869,11 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                     if(!pWaterSpirit->isAlive() && !pStormLasher->isAlive() && !pSnapLasher->isAlive())
                     {
                         m_bWaveCheck = false;
-                        // 10 stacks for each mob
-						for(uint8 i = 0; i < 3; ++i)
-							DoCast(m_creature, SPELL_ATTUNED_10_STACKS);
+						if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+						{
+							if(natureAura->ModStackAmount(-30))
+								m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
+						}
                     }
                     else
                     {
@@ -882,6 +894,9 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             // Hardmode
             if(m_bIsBrightleafAlive)
             {
+				if(!m_creature->HasAura(SPELL_BRIGHTLEAFS_ESSENCE, EFFECT_INDEX_0))
+					DoCast(m_creature, SPELL_BRIGHTLEAFS_ESSENCE);
+
                 if(m_uiUnstableEnergyTimer < uiDiff)
                 {
                     //DoCast(m_creature, m_bIsRegularMode ? SPELL_UNSTABLE_ENERGY_FREYA : SPELL_UNSTABLE_ENERGY_FREYA_H);
@@ -902,6 +917,9 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
 
             if(m_bIsIronbranchAlive)
             {
+				if(!m_creature->HasAura(SPELL_IRONBRANCH_ESSENCE, EFFECT_INDEX_0))
+					DoCast(m_creature, SPELL_IRONBRANCH_ESSENCE);
+
                 if(m_uiStrenghtenIronRootsTimer < uiDiff)
                 {
                     if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
@@ -916,6 +934,9 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
 
             if(m_bIsStonebarkAlive)
             {
+				if(!m_creature->HasAura(SPELL_STONEBARKS_ESSENCE, EFFECT_INDEX_0))
+					DoCast(m_creature, SPELL_STONEBARKS_ESSENCE);
+
                 if(m_uiGroundTremorTimer < uiDiff)
                 {
                     DoScriptText(EMOTE_GROUND_TREMMOR, m_creature);
@@ -1310,13 +1331,25 @@ struct MANGOS_DLL_DECL mob_freya_spawnedAI : public ScriptedAI
         if (m_bAncientConservator)
 		{
 			if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
-				pFreya->CastSpell(pFreya, SPELL_ATTUNED_25_STACKS, false);
+			{
+				if(SpellAuraHolder* natureAura = pFreya->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+				{
+					if(natureAura->ModStackAmount(-25))
+						m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
+				}
+			}
 		}
 
         if (m_bDetonatingLasher)
 		{
 			if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
-				pFreya->CastSpell(pFreya, SPELL_ATTUNED_2_STACKS, false);
+			{
+				if(SpellAuraHolder* natureAura = pFreya->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+				{
+					if(natureAura->ModStackAmount(-2))
+						m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
+				}
+			}
 		}
     }
 

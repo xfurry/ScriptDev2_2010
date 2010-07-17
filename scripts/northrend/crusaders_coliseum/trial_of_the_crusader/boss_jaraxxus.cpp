@@ -92,7 +92,7 @@ enum
     SPELL_ERUPTION              = 66252,    // 3 infernals
     SPELL_ERUPTION_HC           = 67069,    // unlimited infernals
 
-    SPELL_NETHER_POWER          = 67009,    // 5 10man, 10 25man
+    SPELL_NETHER_POWER          = 67108,    // 5 10man, 10 25man
 
     SPELL_BERSERK               = 26662,
 
@@ -230,6 +230,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
     std::list<Creature*> lMistres;
 
     uint8 m_uiAchievCounter;
+	bool m_bHasAura;
 
     void Reset() 
     {
@@ -250,6 +251,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         lFlames.clear();
         lMistres.clear();
         m_uiAchievCounter   = 0;
+		m_bHasAura			= false;
     }
 
     void JustReachedHome()
@@ -361,8 +363,17 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
     void UpdateAI(const uint32 uiDiff)
     {
         //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if(SpellAuraHolder* netherAura = m_creature->GetSpellAuraHolder(SPELL_NETHER_POWER))
+		{
+			if(netherAura->GetStackAmount() < m_uiMaxNetherPower && !m_bHasAura)
+			{
+				m_bHasAura = true;
+				netherAura->SetStackAmount(m_uiMaxNetherPower);
+			}
+		}
 
         // spells
         if (m_uiIncinerateFleshTimer < uiDiff)
@@ -460,11 +471,12 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         else
             m_uiLegionFlameTimer -= uiDiff;
 
-        if (m_uiNetherPowerTimer < uiDiff)
-        {
-            DoCast(m_creature, SPELL_NETHER_POWER);
-            m_uiNetherPowerTimer = 40000;
-        }
+		if (m_uiNetherPowerTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_NETHER_POWER);
+			m_bHasAura = true;
+			m_uiNetherPowerTimer = 40000;
+		}
         else
             m_uiNetherPowerTimer -= uiDiff;
 

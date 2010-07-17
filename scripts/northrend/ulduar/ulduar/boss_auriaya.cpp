@@ -84,6 +84,7 @@ struct MANGOS_DLL_DECL mob_seeping_feral_essenceAI : public ScriptedAI
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         SetCombatMovement(false);
+		pCreature->SetDisplayId(11686);     // make invisible
         Reset();
     }
 
@@ -221,12 +222,15 @@ struct MANGOS_DLL_DECL mob_feral_defenderAI : public ScriptedAI
     bool m_bIsRush;
     bool m_bIsDead;
 
+	bool m_bHasAura;
+
     void Reset()
     {
         m_uiPounce_Timer        = 5000;
         m_uiRush_Start_Timer    = 9000;
         m_bIsRush               = false;
         m_bIsDead               = false;
+		m_bHasAura				= false;
         m_creature->SetRespawnDelay(DAY);
     }
 
@@ -253,10 +257,11 @@ struct MANGOS_DLL_DECL mob_feral_defenderAI : public ScriptedAI
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             if (m_creature->HasAura(SPELL_FERAL_ESSENCE))
             {
-                if (m_creature->GetAura(SPELL_FERAL_ESSENCE, EFFECT_INDEX_0)->GetStackAmount() == 1)
-                    m_creature->RemoveAurasDueToSpell(SPELL_FERAL_ESSENCE);
-                else
-                    DoCast(m_creature, SPELL_FERAL_ESSENCE);
+				if(SpellAuraHolder* strenght = m_creature->GetSpellAuraHolder(SPELL_FERAL_ESSENCE))
+				{
+					if(strenght->ModStackAmount(-1))
+						m_creature->RemoveAurasDueToSpell(SPELL_FERAL_ESSENCE);
+				}
 
                 m_uiRevive_Delay = urand(30000, 45000);
                 m_bIsDead = true;
@@ -272,7 +277,16 @@ struct MANGOS_DLL_DECL mob_feral_defenderAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (m_uiPounce_Timer < diff)
+		if(SpellAuraHolder* essence = m_creature->GetSpellAuraHolder(SPELL_FERAL_ESSENCE))
+		{
+			if(essence->GetStackAmount() < 9 && !m_bHasAura)
+			{
+				m_bHasAura = true;
+				essence->SetStackAmount(9);
+			}
+		}
+
+		if (m_uiPounce_Timer < diff)
         {
             if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {

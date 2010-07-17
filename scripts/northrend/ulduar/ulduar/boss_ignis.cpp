@@ -162,12 +162,13 @@ struct MANGOS_DLL_DECL mob_iron_constructAI : public ScriptedAI
         {
             if (pTemp->isAlive())
             {
-                if (pTemp->HasAura(BUFF_STRENGHT_OF_CREATOR))
-                {
-                    if (pTemp->GetAura(BUFF_STRENGHT_OF_CREATOR, EFFECT_INDEX_0)->GetStackAmount() == 1)
-                        pTemp->RemoveAurasDueToSpell(BUFF_STRENGHT_OF_CREATOR);
-                    else
-						pTemp->GetAura(BUFF_STRENGHT_OF_CREATOR, EFFECT_INDEX_0)->GetModifier()->m_amount -= 1;
+				if (pTemp->HasAura(BUFF_STRENGHT_OF_CREATOR))
+				{
+					if(SpellAuraHolder* strenght = pTemp->GetSpellAuraHolder(BUFF_STRENGHT_OF_CREATOR))
+					{
+						if(strenght->ModStackAmount(-1))
+							pTemp->RemoveAurasDueToSpell(BUFF_STRENGHT_OF_CREATOR);
+					}
                 }
             }
         }

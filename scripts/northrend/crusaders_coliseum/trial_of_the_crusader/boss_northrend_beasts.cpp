@@ -1587,6 +1587,7 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
+				m_creature->InterruptNonMeleeSpells(true);
                 DoCast(pTarget, SPELL_SNOBOLLED, true);
 				DoCast(m_creature, SPELL_RISING_ANGER);
                 if(Creature *pSnobold = m_creature->SummonCreature(NPC_SNOBOLD_VASSAL, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
