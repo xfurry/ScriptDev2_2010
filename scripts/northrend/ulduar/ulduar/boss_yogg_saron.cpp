@@ -171,6 +171,7 @@ enum
     SPELL_SHATTERED_ILLUSION    = 64173,
     SPELL_INDUCE_MADNESS        = 64059,
     SPELL_ILLUSION_ROOM         = 63988,    // reduce speed
+	SPELL_ILLUSION_CANCEL		= 63993,
 
 
     // tentacules
@@ -453,6 +454,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
         m_uiSanityTimer             = 10000;
         m_uiKeepersActive           = 0;
 
+		// phase 3
         m_uiLunaticGazaTimer        = 20000;
         m_uiShadowBeaconTimer       = 15000;
         m_uiEmpoweringShadowsTimer  = 60000;
@@ -620,6 +622,8 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                     (*iter)->ForcedDespawn();
             }
         }
+
+		m_uiSummonTimer = urand(3000, 7000);
     }
 
     void StartThirdPhase()
@@ -627,6 +631,8 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
         DoScriptText(SAY_PHASE3, m_creature);
         m_creature->RemoveAurasDueToSpell(SPELL_SHADOWY_BARRIER_YOGG);
         m_creature->SetHealth(m_creature->GetMaxHealth() * 0.3);
+
+		m_uiSummonTimer = urand(15000, 20000);
 
         if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SARA)))
             pSara->ForcedDespawn();
@@ -716,12 +722,41 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
         return *iter;
     }
 
-    void SummonPortals()
-    {
-        uint8 maxPortals = m_bIsRegularMode ? 4 : 10;
-        for(uint8 i = 0; i < maxPortals; i++)
-            m_creature->SummonCreature(MOB_DESCEND_INTO_MADNESS, YoggPortalLoc[i].x, YoggPortalLoc[i].y, YoggPortalLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-    }
+	void SummonTentacles()
+	{
+		float homeZ = 0;
+		float creatureDist = 0;
+		// set tentacle entry
+		uint32 m_uiTentacles[] = {MOB_CONSTRICTOR_TENTACLE, MOB_CORRUPTOR_TENTACLE, MOB_CRUSHER_TENTACLE};
+		uint32 m_uiEntry = urand(0, 2);
+		if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, MOB_CRUSHER_TENTACLE, 100.0f))
+		{
+			if(pTemp->isAlive())
+				m_uiEntry = urand(0, 1);
+		}		
+		uint32 m_uiTentacleEntry = m_uiTentacles[m_uiEntry];
+
+		// set distance
+		switch(urand(0, 1))
+		{
+		case 0:
+			creatureDist = urand(20, 30);
+			homeZ = 326 + creatureDist * 0.05f;
+			break;
+		case 1:
+			creatureDist = urand(30, 45);
+			homeZ = 328 + creatureDist * 0.05f;
+			break;
+		}
+
+		// set coordonates
+		float angle = (float) rand()*360/RAND_MAX + 1;
+		float homeX = m_creature->GetPositionX() + creatureDist*cos(angle*(M_PI/180));
+		float homeY = m_creature->GetPositionY() + creatureDist*sin(angle*(M_PI/180));
+		// summon tentacle
+		if(Creature *pTemp = m_creature->SummonCreature(m_uiTentacleEntry, homeX, homeY, homeZ, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
+			pTemp->SetInCombatWithZone();
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -746,76 +781,13 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                 }
                 else m_uiSanityTimer -= uiDiff;
 
-                /*if (descentTimer < uiDiff)
+				// summon tentacles
+				if (m_uiSummonTimer < uiDiff)
                 {
-                if(vision < 3)
-                {
-                if (Creature* pYogg = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGGSARON))))
-                DoScriptText(SAY_VISION, pYogg);
-                /*
-                for (uint8 i = 0; i < maxPlayers; i++)
-                {
-                Unit *pTemp = Unit::GetUnit((*m_creature),(SelectRandomPlayer(PlayerList)));
-                if (pTemp && pTemp->isAlive() && m_creature->GetDistance(pTemp) < 100)
-                ((Player*)(pTemp))->TeleportTo(pTemp->GetMapId(), TeleportLoc[vision].x, TeleportLoc[vision].y, TeleportLoc[vision].z, pTemp->GetOrientation());
+                    SummonTentacles();
+                    m_uiSummonTimer = urand(10000, 15000);
                 }
-
-                SummonPortals();
-                SetDestination(vision);
-                if (Creature* pYoggBrain = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGG_BRAIN))))
-                {
-                if(pYoggBrain->isAlive())
-                ((boss_brain_of_yogg_saronAI*)pYoggBrain->AI())->StartVisions();
-                vision += 1;
-                }
-
-                }
-                descentTimer = 90000;
-                }else descentTimer -= uiDiff;
-
-                if (summonTimer < uiDiff)
-                {
-                uint8 i = urand(0, 11);
-                switch(urand(0, 4))
-                {
-                case 0:
-                case 1:
-                if(Creature *pTemp = m_creature->SummonCreature(MOB_CONSTRICTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                {
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                {
-                pTemp->AddThreat(pTarget,1000.0f);
-                pTemp->AI()->AttackStart(pTarget);
-                }
-                }
-                break;
-                case 2:
-                if(!GetClosestCreatureWithEntry(m_creature, MOB_CRUSHER_TENTACLE, 100.0f))
-                {
-                if(Creature *pTemp = m_creature->SummonCreature(MOB_CRUSHER_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                {
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                {
-                pTemp->AddThreat(pTarget,1000.0f);
-                pTemp->AI()->AttackStart(pTarget);
-                }
-                }
-                break;
-                }
-                case 3:
-                case 4:
-                if(Creature *pTemp = m_creature->SummonCreature(MOB_CORRUPTOR_TENTACLE, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                {
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                {
-                pTemp->AddThreat(pTarget,1000.0f);
-                pTemp->AI()->AttackStart(pTarget);
-                }
-                }
-                break;
-                }
-                summonTimer = urand(10000, 15000);
-                }else summonTimer -= uiDiff;*/
+                else m_uiSummonTimer -= uiDiff;
 
                 break;
             }
@@ -823,16 +795,8 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
             {
                 if (m_uiSummonTimer < uiDiff)
                 {
-                    uint8 i = urand(0, 11);
-                    if(Creature *pTemp = m_creature->SummonCreature(MOB_IMMORTAL_GUARDIAN, SummonLoc[i].x, SummonLoc[i].y, SummonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
-                    {
-                        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        {
-                            pTemp->AddThreat(pTarget,0.0f);
-                            pTemp->AI()->AttackStart(pTarget);
-                            pTemp->SetInCombatWithZone();
-                        }
-                    }
+                    if(Creature *pTemp = m_creature->SummonCreature(MOB_IMMORTAL_GUARDIAN, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+						pTemp->SetInCombatWithZone();
                     m_uiSummonTimer = 40000;
                 }
                 else m_uiSummonTimer -= uiDiff;
@@ -922,7 +886,12 @@ struct MANGOS_DLL_DECL mob_madness_portalAI : public ScriptedAI
                     {
                         i->getSource()->TeleportTo(i->getSource()->GetMapId(), TeleportLoc[m_uiDestination].x, TeleportLoc[m_uiDestination].y, TeleportLoc[m_uiDestination].z, i->getSource()->GetOrientation());
                         if(m_uiDestination < 3)
+						{
+							i->getSource()->CastSpell(i->getSource(), SPELL_ILLUSION_ROOM, false);
                             m_creature->ForcedDespawn();
+						}
+						else
+							i->getSource()->RemoveAurasDueToSpell(SPELL_ILLUSION_ROOM);
                     }
                 }
             } 
@@ -1321,7 +1290,6 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
         // End phase after 30%
         if(m_creature->GetHealthPercent() < 30 && !m_bIsPhaseFinished)
         {
-            SummonPortals();
             if(m_pInstance) 
             {
                 m_pInstance->SetData(TYPE_YOGG_BRAIN, DONE);
@@ -1341,6 +1309,7 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
                 if(!IsThereAnyAdd(VoiceOfYogg))
                 {
                     SummonPortals();
+					m_pInstance->SetData(TYPE_VISION_PHASE, PHASE_VISION_RETURN);
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     m_uiTentacleCheckTimer = 300000;
                 }
@@ -1370,7 +1339,6 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        pCreature->ApplySpellImmune(SPELL_DARK_VOLLEY, IMMUNITY_DAMAGE, SPELL_SCHOOL_MASK_SHADOW, true);
         m_bIsIntroDone = false;
         Reset();
     }
@@ -1399,12 +1367,16 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 
     // phase 2
     uint32 m_uiPsychosisTimer;
+	uint32 m_uiPortalsTimer;
     uint32 m_uiMaladyTimer;
     uint32 m_uiBrainLinkTimer;
     uint32 m_uiDeathRayTimer;
     uint32 m_uiBrainLinkEndTimer;
     uint32 m_uiBrainLinkTickTimer;
     bool m_bIsBrainLink;
+
+	uint32 m_uiFirstVision;
+	uint32 m_uiSecondVision;
 
     uint64 m_uiLinkTarget1GUID;
     uint64 m_uiLinkTarget2GUID;
@@ -1430,6 +1402,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         m_uiOutroStep           = 1;
 
         // phase 2
+		m_uiPortalsTimer		= 60000;
         m_uiPsychosisTimer      = 15000;     
         m_uiMaladyTimer         = 20000;
         m_uiBrainLinkTimer      = 25000;
@@ -1437,6 +1410,9 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         m_uiBrainLinkTickTimer  = 1000;
         m_uiBrainLinkEndTimer   = 0;
         m_bIsBrainLink          = false;
+
+		m_uiFirstVision			= 0;
+		m_uiSecondVision		= 0;
 
         m_uiLinkTarget1GUID     = 0;
         m_uiLinkTarget2GUID     = 0;
@@ -1473,22 +1449,6 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         }
     }
 
-    void SpellHit(Unit *caster, const SpellEntry *spell)
-    {
-        uint32 spellId = m_bIsRegularMode ? SPELL_SHADOW_NOVA : SPELL_SHADOW_NOVA_H;
-        uint32 maxHealth = m_bIsRegularMode ? 21994 : 27500;
-        if(spell->Id == spellId && caster->GetEntry() == MOB_GUARDIAN_OF_YOGG)
-        {
-            if(m_creature->GetHealth() > maxHealth)
-                m_creature->DealDamage(m_creature, m_bIsRegularMode ? urand(20000, 21994) : urand(25000, 27500), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_SHADOW, NULL, false);
-            else
-            {
-                m_bIsOutro = true;
-                m_creature->SetHealth(m_creature->GetMaxHealth());
-            }
-        }
-    }
-
     void MoveInLineOfSight(Unit* pWho)
     {
         // start intro speech
@@ -1497,22 +1457,6 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
             if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsIntro && !m_bIsIntroDone &&
                 pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 110) && m_creature->IsWithinLOSInMap(pWho))
                 m_bIsIntro = true;
-        }
-
-        // set to raid faction: ugly workaround
-        if(m_pInstance->GetData(TYPE_YOGG_PHASE) == PHASE_SARA && !m_bIsRegularMode && !m_bIsFactionSet)
-        {
-            if(pWho->getFaction() == 1 || pWho->getFaction() == 3 || pWho->getFaction() == 4 || pWho->getFaction() == 115 || pWho->getFaction() == 1629)
-            {
-                m_bIsFactionSet = true;
-                m_creature->setFaction(1);
-            }
-
-            if(pWho->getFaction() == 2 || pWho->getFaction() == 5 || pWho->getFaction() == 6 || pWho->getFaction() == 116 || pWho->getFaction() == 1610)
-            {
-                m_bIsFactionSet = true;
-                m_creature->setFaction(2);
-            }
         }
     }
 
@@ -1535,7 +1479,69 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 
     void DoBrainLink()
     {
+		// workaround here
     }
+
+	void SummonPortals()
+    {
+        uint8 maxPortals = m_bIsRegularMode ? 4 : 10;
+        for(uint8 i = 0; i < maxPortals; i++)
+            m_creature->SummonCreature(MOB_DESCEND_INTO_MADNESS, YoggPortalLoc[i].x, YoggPortalLoc[i].y, YoggPortalLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+    }
+
+	uint32 GetCurrentVision()
+	{
+		switch(urand(0, 2))
+		{
+		case 0:
+			return PHASE_VISION_STORMWIND;
+			break;
+		case 1:
+			return PHASE_VISION_WYRMREST;
+			break;
+		case 2:
+			return PHASE_VISION_ICECROWN;
+			break;
+		}
+
+		return 0;
+	}
+
+	void SetVisionPhase()
+	{
+		uint32 m_uiVisionType = 0;
+
+		// set random different destination
+		if(m_uiFirstVision == 0 && m_uiSecondVision == 0)
+		{
+			m_uiVisionType = GetCurrentVision();
+			m_uiFirstVision = m_uiVisionType;
+		}
+		else if(m_uiSecondVision == 0)
+		{
+			do m_uiVisionType = GetCurrentVision();
+			while(m_uiVisionType != m_uiFirstVision);
+			m_uiSecondVision = m_uiVisionType;
+		}
+		else
+		{
+			do m_uiVisionType = GetCurrentVision();
+			while(m_uiVisionType != m_uiFirstVision && m_uiVisionType != m_uiSecondVision);
+		}
+		
+		// set instance data for vision
+		if(m_uiVisionType != 0)
+			m_pInstance->SetData(TYPE_VISION_PHASE, m_uiVisionType);
+
+		// summon portals
+		SummonPortals();
+		// start the vision
+		if (Creature* pYoggBrain = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGG_BRAIN))))
+		{
+			if(pYoggBrain->isAlive())
+				((boss_brain_of_yogg_saronAI*)pYoggBrain->AI())->StartVisions();
+		}
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -1614,9 +1620,14 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                         if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
                         {
                             if (Unit* pTarget = pYogg->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                                DoCast(pTarget, SPELL_SARAS_FERVOR);
-                        }
-                        m_uiSarasFervorTimer = urand(20000, 30000);
+							{
+								if(pTarget != m_creature)
+								{
+									DoCast(pTarget, SPELL_SARAS_FERVOR);
+									m_uiSarasFervorTimer = urand(20000, 30000);
+								}
+							}
+                        } 
                     }else m_uiSarasFervorTimer -= uiDiff;
 
                     if (m_uiSarasBlessingTimer < uiDiff)
@@ -1624,9 +1635,14 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                         if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
                         {
                             if (Unit* pTarget = pYogg->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                                DoCast(pTarget, SPELL_SARAS_BLESSING);
+							{
+								if(pTarget != m_creature)
+								{
+									DoCast(pTarget, SPELL_SARAS_BLESSING);
+									m_uiSarasBlessingTimer = urand(20000, 30000);
+								}
+							}
                         }
-                        m_uiSarasBlessingTimer = urand(20000, 30000);
                     }else m_uiSarasBlessingTimer -= uiDiff;
 
                     if (m_uiSarasAngerTimer < uiDiff)
@@ -1663,6 +1679,8 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                         }
                         m_creature->setFaction(14);
                         m_creature->SetInCombatWithZone();
+						SetCombatMovement(false);
+						m_creature->GetMotionMaster()->MoveIdle();
                         m_creature->SetDisplayId(MODEL_SARA_VALKYR);
                         DoCast(m_creature, SPELL_SHADOWY_BARRIER);
                         m_creature->SetHealth(m_creature->GetMaxHealth());
@@ -1706,6 +1724,16 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                     m_uiPhaseYellTimer = 30000 + urand(5000, 10000);
                 }
                 else m_uiPhaseYellTimer -= uiDiff;
+
+				// summon madness portals
+				if (m_uiPortalsTimer < uiDiff)
+				{
+					SetVisionPhase();
+					if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
+						DoScriptText(SAY_VISION, pYogg);
+					m_uiPortalsTimer = 90000;
+				}
+				else m_uiPortalsTimer -= uiDiff;
 
                 if (m_uiPsychosisTimer < uiDiff)
                 {
@@ -1758,7 +1786,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                             float angle = (float) rand()*360/RAND_MAX + 1;
                             float homeX = pYogg->GetPositionX() + urand(20, 40)*cos(angle*(M_PI/180));
                             float homeY = pYogg->GetPositionY() + urand(20, 40)*sin(angle*(M_PI/180));
-                            m_creature->SummonCreature(MOB_DEATH_ORB, homeX, homeY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
+                            m_creature->SummonCreature(MOB_DEATH_ORB, homeX, homeY, pYogg->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
                         }
                     }
                     //DoCast(m_creature, SPELL_DEATH_RAY);
@@ -2028,20 +2056,36 @@ struct MANGOS_DLL_DECL mob_guardian_of_yogg_saronAI : public ScriptedAI
         m_creature->SetRespawnDelay(DAY);
     }
 
-    void DamageTaken(Unit *done_by, uint32 &uiDamage)
-    {
-        if(uiDamage > m_creature->GetHealth())
-        {
-            uiDamage = 0;
-            if(!m_bHasCasted)
-            {
-                DoCast(m_creature, m_bIsRegularMode ? SPELL_SHADOW_NOVA : SPELL_SHADOW_NOVA_H);
-                m_bHasCasted = true;
-                m_uiDieTimer = 500;
-                m_creature->SetHealth(m_creature->GetMaxHealth());
-            }
-        }
-    }
+	void DamageTaken(Unit *done_by, uint32 &uiDamage)
+	{
+		if(uiDamage > m_creature->GetHealth())
+		{
+			uiDamage = 0;
+			if(!m_bHasCasted)
+			{
+				DoCast(m_creature, m_bIsRegularMode ? SPELL_SHADOW_NOVA : SPELL_SHADOW_NOVA_H);
+				m_bHasCasted = true;
+				m_uiDieTimer = 500;
+				m_creature->SetHealth(m_creature->GetMaxHealth());
+
+				// workaround for dmg Sara
+				if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SARA)))
+				{
+					if(m_creature->IsWithinDist2d(pSara->GetPositionX(), pSara->GetPositionY(), 15.0f))
+					{
+						uint32 maxHealth = m_bIsRegularMode ? 21994 : 27500;
+						if(pSara->GetHealth() > maxHealth)
+							pSara->DealDamage(pSara, m_bIsRegularMode ? urand(20000, 21994) : urand(25000, 27500), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_SHADOW, NULL, false);
+						else
+						{
+							((boss_saraAI*)pSara->AI())->m_bIsOutro = true;
+							pSara->SetHealth(pSara->GetMaxHealth());
+						}
+					}
+				}
+			}
+		}
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -2055,9 +2099,9 @@ struct MANGOS_DLL_DECL mob_guardian_of_yogg_saronAI : public ScriptedAI
         {
             if(m_creature->getVictim() == pSara)
             {
-                m_creature->AddThreat(pSara, -1000.0f);
-                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                    m_creature->AddThreat(pTarget, 1000.0f);
+                m_creature->AddThreat(pSara, -100000.0f);
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_BOTTOMAGGRO, 0))
+                    m_creature->AddThreat(pTarget, 1000000.0f);
             }
         }
 
@@ -2397,6 +2441,7 @@ struct MANGOS_DLL_DECL mob_laughing_skullAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         pCreature->SetDisplayId(SKULL_DISPLAY_ID);
         pCreature->setFaction(14);
         SetCombatMovement(false);
@@ -2447,6 +2492,7 @@ struct MANGOS_DLL_DECL mob_ominous_cloudAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         SetCombatMovement(false);
         pCreature->setFaction(14);
         Reset();
