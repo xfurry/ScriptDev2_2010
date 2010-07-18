@@ -362,7 +362,7 @@ UPDATE creature_template SET ScriptName = "npc_lightning_orb" WHERE entry = 3313
 update creature set spawnMask = 3 where id = 32873;
 UPDATE creature_template SET ScriptName = "npc_sif" WHERE entry = 33196;
 update `gameobject` set `position_y` = -286.67, `position_z` = 419.50 where `id` in (194312, 194313, 194314, 194315);
-UPDATE gameobject_template SET ScriptName="go_door_lever" WHERE entry = 194264;
+UPDATE gameobject_template SET flags = 6553632, ScriptName="go_thorim_lever" WHERE entry = 194264;
 -- adds
 UPDATE creature_template SET ScriptName = "mob_dark_rune_acolyte" WHERE entry = 33110;
 UPDATE creature_template SET ScriptName = "mob_dark_rune_champion" WHERE entry = 32876;

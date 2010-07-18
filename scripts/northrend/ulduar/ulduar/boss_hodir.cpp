@@ -158,6 +158,7 @@ struct MANGOS_DLL_DECL mob_icicleAI : public ScriptedAI
     {
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         SetCombatMovement(false);
+		pCreature->setFaction(14);
         Reset();
     }
 
@@ -168,6 +169,11 @@ struct MANGOS_DLL_DECL mob_icicleAI : public ScriptedAI
         DoCast(m_creature, SPELL_ICICLE);
         m_uiSpellDelayTimer = 500;
     }
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
 
     void UpdateAI(const uint32 diff)
     { 
@@ -203,6 +209,7 @@ struct MANGOS_DLL_DECL mob_npc_flashFreezeAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         pCreature->SetDisplayId(25865);     // invisible
+		pCreature->GetMotionMaster()->MoveIdle();
         SetCombatMovement(false);
         Reset();
     }
@@ -485,7 +492,7 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
                 DoScriptText(EMOTE_FLASH_FREEZE, m_creature);
                 DoScriptText(SAY_FLASH_FREEZE, m_creature);
                 DoCast(m_creature, SPELL_FLASH_FREEZE);
-                m_uiFlashFreezeTimer = urand(50000, 60000);
+                m_uiFlashFreezeTimer = 50000;
                 m_uiFlashFreezeCastTimer = 9000;
             }
             else m_uiFlashFreezeTimer -= uiDiff;

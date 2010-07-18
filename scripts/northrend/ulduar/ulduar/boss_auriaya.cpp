@@ -263,7 +263,7 @@ struct MANGOS_DLL_DECL mob_feral_defenderAI : public ScriptedAI
 						m_creature->RemoveAurasDueToSpell(SPELL_FERAL_ESSENCE);
 				}
 
-                m_uiRevive_Delay = urand(30000, 45000);
+                m_uiRevive_Delay = 35000;
                 m_bIsDead = true;
             }
         }
@@ -462,7 +462,7 @@ struct MANGOS_DLL_DECL boss_auriayaAI : public ScriptedAI
         {
             DoScriptText(EMOTE_SCREECH, m_creature);
             DoCast(m_creature, SPELL_FEAR);
-            m_uiFear_Timer = urand(35000, 45000);
+            m_uiFear_Timer = 35000;
             m_uiSentinel_Blast_Timer = 2500;
         }else m_uiFear_Timer -= uiDiff;
 
@@ -488,8 +488,9 @@ struct MANGOS_DLL_DECL boss_auriayaAI : public ScriptedAI
 
         if (m_uiSonic_Screech_Timer < uiDiff)
         {
+			m_creature->InterruptNonMeleeSpells(true);
             DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_SONIC_SCREECH : SPELL_SONIC_SCREECH_H);
-            m_uiSonic_Screech_Timer = urand(40000, 50000);
+            m_uiSonic_Screech_Timer = 27000;
         }else m_uiSonic_Screech_Timer -= uiDiff;
 
         if (m_uiSwarm_Timer < uiDiff)
@@ -509,7 +510,7 @@ struct MANGOS_DLL_DECL boss_auriayaAI : public ScriptedAI
                     }
                 }
             }
-            m_uiSwarm_Timer = urand(40000, 50000);
+            m_uiSwarm_Timer = 35000;
         }else m_uiSwarm_Timer -= uiDiff;
 
         if (m_uiEnrage_Timer < uiDiff && !m_bHasBerserk)

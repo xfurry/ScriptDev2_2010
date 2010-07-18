@@ -323,7 +323,7 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
         m_uiFlame_Jets_Timer    = 20000;
         m_uiSlag_Pot_Timer      = 25000;
         m_uiSlag_Pot_Dmg_Timer  = 26000;
-        m_uiScorch_Timer        = 14000;
+        m_uiScorch_Timer        = 13000;
         m_uiSummon_Timer        = 10000;
         m_uiEnrageTimer         = 600000;   // 10 MIN
         m_uiPotDmgCount         = 0;
@@ -424,7 +424,7 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
         {
             DoScriptText(EMOTE_FLAMEJETS, m_creature);
             DoCast(m_creature, m_bIsRegularMode ? SPELL_FLAME_JETS : SPELL_FLAME_JETS_H);
-            m_uiFlame_Jets_Timer = 30000;
+            m_uiFlame_Jets_Timer = 35000;
         }else m_uiFlame_Jets_Timer -= uiDiff;   
 
         if (m_uiSlag_Pot_Timer < uiDiff)
@@ -471,6 +471,7 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
 
             m_uiSummon_Timer = 40000;
 
+			m_creature->InterruptNonMeleeSpells(true);
             DoCast(m_creature, BUFF_STRENGHT_OF_CREATOR);
         }else m_uiSummon_Timer -= uiDiff;
 

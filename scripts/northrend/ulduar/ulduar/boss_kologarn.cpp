@@ -187,7 +187,7 @@ struct MANGOS_DLL_DECL boss_left_armAI : public ScriptedAI
                 DoScriptText(SAY_SHOCKWEAVE, pTemp);
 
             DoCast(m_creature, m_bIsRegularMode ? SPELL_SHOCKWAVE : SPELL_SHOCKWAVE_H);
-            m_uiShockwave_Timer = 30000;
+            m_uiShockwave_Timer = 17000;
         }else m_uiShockwave_Timer -= diff;
 
         DoMeleeAttackIfReady();
@@ -541,7 +541,7 @@ struct MANGOS_DLL_DECL boss_kologarnAI : public ScriptedAI
                         }
                     }
                     m_bIsLeftDead = true;
-                    m_uiRespawnLeftTimer = 50000;
+                    m_uiRespawnLeftTimer = 47000;
                 }
             }
             if (Creature* rArm = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_RIGHT_ARM))))
@@ -569,7 +569,7 @@ struct MANGOS_DLL_DECL boss_kologarnAI : public ScriptedAI
                         }
                     }
                     m_bIsRightDead = true;
-                    m_uiRespawnRightTimer = 50000;
+                    m_uiRespawnRightTimer = 47000;
                 }
             }
 

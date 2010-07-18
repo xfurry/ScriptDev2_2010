@@ -883,7 +883,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
                 {
                     if (Creature* pOrb = SelectRandomOrb())
                         DoCast(pOrb, SPELL_CHARGE_ORB);
-                    m_uiChargeOrbTimer = 10000;
+                    m_uiChargeOrbTimer = 20000;
                 }
                 else m_uiChargeOrbTimer -= uiDiff; 
 
@@ -1501,7 +1501,7 @@ void AddSC_boss_thorim()
     newscript->RegisterSelf();
 
     newscript = new Script;
-    newscript->Name = "go_door_lever";
+    newscript->Name = "go_thorim_lever";
     newscript->pGOHello = &GOHello_go_door_lever;
     newscript->RegisterSelf();
 }

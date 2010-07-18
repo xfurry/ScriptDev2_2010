@@ -106,7 +106,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         m_bHasSimphon           = false;
         m_bIsAnimusAlive        = false;
 
-        m_uiSurgeTimer          = urand(60000, 70000);
+        m_uiSurgeTimer          = 60000;
         m_uiMarkTimer           = urand(10000, 35000);
         m_uiCrashTimer          = 10000;
         m_uiSimphonTimer        = 1000;
@@ -282,7 +282,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
             DoScriptText(SAY_SURGE, m_creature);
             DoScriptText(EMOTE_SURGE, m_creature);
             DoCast(m_creature, SPELL_SURGE_OF_DARKNESS);
-            m_uiSurgeTimer = urand(60000, 70000);
+            m_uiSurgeTimer = 60000;
         }
         else m_uiSurgeTimer -= uiDiff; 
 

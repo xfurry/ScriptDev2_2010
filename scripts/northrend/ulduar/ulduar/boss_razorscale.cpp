@@ -181,6 +181,7 @@ struct MANGOS_DLL_DECL npc_expedition_commanderAI : public ScriptedAI
                 case 0:
                     if(Creature* pEngineer = GetClosestCreatureWithEntry(m_creature, NPC_EXP_ENGINEER, 50.0f))
                         DoScriptText(SAY_AGGRO1, pEngineer);
+					GetRazorDown();
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 5000;
                     break;
@@ -196,7 +197,6 @@ struct MANGOS_DLL_DECL npc_expedition_commanderAI : public ScriptedAI
                     m_uiSpeech_Timer = 5000;
                     break;
                 case 3:
-                    GetRazorDown();
                     m_bIsIntro = false;
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
@@ -522,7 +522,7 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
 		m_uiWave3_spawn     = urand(5000, 10000);
 		m_uiBerserk_Timer   = 600000;   // 10 min
 		m_uiTimetoground    = 80000;
-        m_uiRepairHarpoonTimer = urand(50000, 60000);
+        m_uiRepairHarpoonTimer = 53000;
         m_uiHarpoonsRepaired = 0;
         m_uiMaxHarpoons     = m_bIsRegularMode ? 2 : 4;
         for(int i = 0; i < m_uiMaxHarpoons; i++)
@@ -605,7 +605,7 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
                 if ((*iter))
                 {
                     (*iter)->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
-                    (*iter)->SetUInt32Value(GAMEOBJECT_DISPLAYID, 8631);
+                    //(*iter)->SetUInt32Value(GAMEOBJECT_DISPLAYID, 8631);
                 }
             }
         }
@@ -653,11 +653,11 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
             if(GameObject* pHarpoon = m_pInstance->instance->GetGameObject(m_uiHarpoonsGUID[m_uiHarpoonsRepaired]))
             {
                 pHarpoon->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
-                pHarpoon->SetUInt32Value(GAMEOBJECT_DISPLAYID, 8245);
+                //pHarpoon->SetUInt32Value(GAMEOBJECT_DISPLAYID, 8245);
                 m_uiHarpoonsRepaired += 1;
             }
             DoScriptText(EMOTE_HARPOON, m_creature);
-            m_uiRepairHarpoonTimer = urand(20000, 25000);
+            m_uiRepairHarpoonTimer = 20000;
         }
         else m_uiRepairHarpoonTimer -= uiDiff;
 

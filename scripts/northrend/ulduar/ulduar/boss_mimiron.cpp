@@ -363,7 +363,7 @@ struct MANGOS_DLL_DECL boss_leviathan_mkAI : public ScriptedAI
                     DoScriptText(EMOTE_PLASMA_BLAST, m_creature);
                     if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
                         DoCast(pTarget, m_bIsRegularMode ? SPELL_PLASMA_BLAST : SPELL_PLASMA_BLAST_H);
-                    m_uiPlasmaBlastTimer = 35000;
+                    m_uiPlasmaBlastTimer = 30000;
                 }
                 else m_uiPlasmaBlastTimer -= uiDiff;
 
@@ -374,7 +374,7 @@ struct MANGOS_DLL_DECL boss_leviathan_mkAI : public ScriptedAI
                         if(!m_creature->IsWithinDistInMap(pTarget, 15))
                         {
                             DoCast(pTarget, m_bIsRegularMode ? SPELL_NAPALM_SHELL : SPELL_NAPALM_SHELL_H);
-                            m_uiNapalmTimer = urand (5000, 10000);
+                            m_uiNapalmTimer = 7000;
                         }
                     }
                 }
@@ -400,7 +400,7 @@ struct MANGOS_DLL_DECL boss_leviathan_mkAI : public ScriptedAI
             if(m_uiShockBlastTimer < uiDiff)
             {
                 DoCast(m_creature, SPELL_SHOCK_BLAST);
-                m_uiShockBlastTimer = 40000;
+                m_uiShockBlastTimer = 50000;
             }
             else m_uiShockBlastTimer -= uiDiff;
 
@@ -768,7 +768,7 @@ struct MANGOS_DLL_DECL boss_vx001AI : public ScriptedAI
                     m_creature->InterruptNonMeleeSpells(true);
                     DoCast(m_creature, SPELL_FLAME_SUPRESS);
                     SuppressFires();
-                    m_uiFlameSuppressTimer = urand(15000, 20000);
+                    m_uiFlameSuppressTimer = urand(9000, 10000);
                 }
                 else m_uiFlameSuppressTimer -= uiDiff;
             }
@@ -1182,6 +1182,8 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
             m_pInstance->SetData(TYPE_MIMIRON_PHASE, PHASE_IDLE);
             m_pInstance->SetData(TYPE_MIMIRON_HARD, NOT_STARTED);
         }
+
+		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void JustReachedHome()
@@ -1280,8 +1282,6 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                     case 7:
                         if(Creature* pTank = m_pInstance->instance->GetCreature(m_uiTankGUID))
                         {
-                            ((boss_leviathan_mkAI*)pTank->AI())->m_bStartAttack = true;
-                            pTank->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                             if(m_bIsHardMode)
                             {
                                 pTank->CastSpell(pTank, SPELL_EMERGENCY_MODE, false);
@@ -1292,6 +1292,8 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                             {
                                 if(m_pInstance)
                                     m_pInstance->SetData(TYPE_MIMIRON_PHASE, PHASE_LEVIATHAN);
+								((boss_leviathan_mkAI*)pTank->AI())->m_bStartAttack = true;
+								pTank->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                                 pTank->SetInCombatWithZone();
                                 m_uiBerserkTimer        = 900000;   // 15 min
                                 m_bIsIntro = false;
@@ -1303,13 +1305,15 @@ struct MANGOS_DLL_DECL boss_mimironAI : public ScriptedAI
                     case 9:
                         if(m_bIsHardMode)
                         {
+							if(m_pInstance)
+                                m_pInstance->SetData(TYPE_MIMIRON_PHASE, PHASE_LEVIATHAN);
                             if(Creature* pTank = m_pInstance->instance->GetCreature(m_uiTankGUID))
                             {
                                 pTank->SetHealth(pTank->GetMaxHealth()+ (pTank->GetMaxHealth() * 0.3));
+								((boss_leviathan_mkAI*)pTank->AI())->m_bStartAttack = true;
+								pTank->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                                 pTank->SetInCombatWithZone();
                             }
-                            if(m_pInstance)
-                                m_pInstance->SetData(TYPE_MIMIRON_PHASE, PHASE_LEVIATHAN);
                             m_uiSelfDestructTimer   = 460000;  // 8 min
                             m_bIsIntro = false;
                             ++m_uiIntroStep;
@@ -1686,7 +1690,7 @@ struct MANGOS_DLL_DECL leviathan_turretAI : public ScriptedAI
                 if (Unit* pTarget = pTank->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
                     DoCast(pTarget, m_bIsRegularMode ? SPELL_PLASMA_BLAST : SPELL_PLASMA_BLAST_H);
             }
-            m_uiPlasmaBlastTimer = 35000;
+            m_uiPlasmaBlastTimer = 30000;
         }
         else m_uiPlasmaBlastTimer -= uiDiff;
 
@@ -1699,7 +1703,7 @@ struct MANGOS_DLL_DECL leviathan_turretAI : public ScriptedAI
                     if(!pTank->IsWithinDistInMap(pTarget, 15))
                     {
                         DoCast(pTarget, m_bIsRegularMode ? SPELL_NAPALM_SHELL : SPELL_NAPALM_SHELL_H);
-                        m_uiNapalmShellTimer = urand (5000, 10000);
+                        m_uiNapalmShellTimer = 7000;
                     }
                 }
             }

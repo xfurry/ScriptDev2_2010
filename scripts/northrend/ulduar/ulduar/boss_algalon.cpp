@@ -335,7 +335,7 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
         float angle = (float) rand()*360/RAND_MAX + 1;
         float homeX = 1630.475f + urand(15, 30)*cos(angle*(M_PI/180));
         float homeY = -286.989f + urand(15, 30)*sin(angle*(M_PI/180));
-        if(Creature* pTemp = m_creature->SummonCreature(m_uiCreatureEntry, homeX, homeY, 417.32f, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 30000))
+        if(Creature* pTemp = m_creature->SummonCreature(m_uiCreatureEntry, homeX, homeY, 417.32f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
         {
             pTemp->SetInCombatWithZone();
             if(pTemp->GetEntry() == NPC_DARK_MATTER)
@@ -459,7 +459,7 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
                 {
                     if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
                         DoCast(pTarget,SPELL_PHASE_PUNCH);
-                    m_uiPhasePunch_Timer = 8000;
+                    m_uiPhasePunch_Timer = 15000;
                 }else m_uiPhasePunch_Timer -= uiDiff;
 
                 if(m_uiRaidCheckTimer < uiDiff)

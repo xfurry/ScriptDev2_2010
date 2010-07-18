@@ -382,7 +382,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
         // spell timers
         m_uiLight_Bomb_Timer    = 5000;     // 7 seconds the first 14 secs all after(7 secs in 25man)
         m_uiGravity_Bomb_Timer  = 30000;    // 11 seconds first 18 secs all after(11 secs in 25man)
-        m_uiTanctrum_Timer      = 38000;    // 38 seconds first 40 secs all after
+        m_uiTanctrum_Timer      = 35000;    // 38 seconds first 40 secs all after
         m_uiEnrage_Timer        = 600000;   // 10 min
         m_uiRange_Check_Timer   = 1000;
         m_uiVoidZoneTimer       = 60000;
@@ -551,7 +551,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
         {
             DoCast(m_creature, SPELL_TANCTRUM);
             DoScriptText(SAY_TANCTRUM, m_creature);
-            m_uiTanctrum_Timer = 40000;
+            m_uiTanctrum_Timer = 60000;
         }else m_uiTanctrum_Timer -= uiDiff;
 
         // enrage timer

@@ -792,7 +792,7 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
                 DoCast(m_creature, SPELL_RUNE_OF_POWER);
                 break;
             }
-			m_uiRune_Power_Timer = 55000;
+			m_uiRune_Power_Timer = 30000;
 		}else m_uiRune_Power_Timer -= uiDiff;
 
         // level2 spells
@@ -801,7 +801,7 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
             DoScriptText(SAY_MOLGEIM_DEATH_RUNE, m_creature);
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				DoCast(pTarget, m_bIsRegularMode ? SPELL_RUNE_OF_DEATH : SPELL_RUNE_OF_DEATH_H);
-			m_uiRune_Death_Timer = 60000;
+			m_uiRune_Death_Timer = 30000;
 		}else m_uiRune_Death_Timer -= uiDiff;
 
         // level 3 spells

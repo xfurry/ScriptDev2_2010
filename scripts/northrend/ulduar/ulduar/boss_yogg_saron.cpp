@@ -1731,7 +1731,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 					SetVisionPhase();
 					if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
 						DoScriptText(SAY_VISION, pYogg);
-					m_uiPortalsTimer = 90000;
+					m_uiPortalsTimer = 85000;
 				}
 				else m_uiPortalsTimer -= uiDiff;
 
