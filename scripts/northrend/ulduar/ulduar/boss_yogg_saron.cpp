@@ -1972,11 +1972,13 @@ struct MANGOS_DLL_DECL mob_immortal_guardianAI : public ScriptedAI
 
     uint32 m_uiStack;
     uint32 m_uiHealth;
+	bool m_bHasAura;
 
     void Reset()
     {
         m_uiStack   = 0;
         m_uiHealth  = 90;
+		m_bHasAura	= false;
         m_creature->SetRespawnDelay(DAY);
     }
 
@@ -2011,11 +2013,24 @@ struct MANGOS_DLL_DECL mob_immortal_guardianAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
+		if(SpellAuraHolder* empoweredAura = m_creature->GetSpellAuraHolder(SPELL_EMPOWERED))
+		{
+			if(empoweredAura->GetStackAmount() < 9 && !m_bHasAura)
+			{
+				m_bHasAura = true;
+				empoweredAura->SetStackAmount(9);
+			}
+		}
+
         if(m_creature->GetHealthPercent() > 10)
         {
             if(m_creature->GetHealthPercent() < m_uiHealth)
             {
-				DoCast(m_creature, SPELL_EMPOWERED_AURA);
+				if(SpellAuraHolder* empoweredAura = m_creature->GetSpellAuraHolder(SPELL_EMPOWERED))
+				{
+					if(empoweredAura->ModStackAmount(-1))
+						m_creature->RemoveAurasDueToSpell(SPELL_EMPOWERED);
+				}
                 m_uiHealth -= 10;
             }
         }
