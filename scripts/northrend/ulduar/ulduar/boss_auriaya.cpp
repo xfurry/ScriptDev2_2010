@@ -84,6 +84,7 @@ struct MANGOS_DLL_DECL mob_seeping_feral_essenceAI : public ScriptedAI
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         SetCombatMovement(false);
+		pCreature->setFaction(14);
 		pCreature->SetDisplayId(11686);     // make invisible
         Reset();
     }
@@ -461,6 +462,7 @@ struct MANGOS_DLL_DECL boss_auriayaAI : public ScriptedAI
         if (m_uiFear_Timer < uiDiff)
         {
             DoScriptText(EMOTE_SCREECH, m_creature);
+			m_creature->InterruptNonMeleeSpells(true);
             DoCast(m_creature, SPELL_FEAR);
             m_uiFear_Timer = 35000;
             m_uiSentinel_Blast_Timer = 2500;
