@@ -85,6 +85,7 @@ enum
     NPC_THORIM                  = 32865,
     NPC_RUNIC_COLOSSUS          = 32872,
     NPC_RUNE_GIANT              = 32873,
+	NPC_JORMUNGAR_BEHEMOTH		= 32882,
     NPC_FREYA                   = 32906,
     NPC_BRIGHTLEAF              = 32915,
     NPC_IRONBRACH               = 32913,

@@ -69,6 +69,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiSaroniteAnimusGUID;
     uint64 m_uiRunicColossusGUID;
     uint64 m_uiRuneGiantGUID;
+	uint64 m_uiJormungarGUID;
     uint64 m_uiLeviathanMkGUID;
     uint64 m_uiHodirImageGUID;
     uint64 m_uiFreyaImageGUID;
@@ -175,6 +176,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiSaroniteAnimusGUID  = 0;
         m_uiRunicColossusGUID   = 0;
         m_uiRuneGiantGUID       = 0;
+		m_uiJormungarGUID		= 0;
         m_uiLeviathanMkGUID     = 0;
         m_uiHodirImageGUID      = 0;
         m_uiFreyaImageGUID      = 0;
@@ -316,6 +318,9 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case NPC_RUNE_GIANT:
             m_uiRuneGiantGUID = pCreature->GetGUID();
             break;
+		case NPC_JORMUNGAR_BEHEMOTH:
+			m_uiJormungarGUID = pCreature->GetGUID();
+			break;
         case NPC_FREYA:
             m_uiFreyaGUID = pCreature->GetGUID();
             break;
@@ -515,6 +520,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case GO_DOOR_LEVER:
             m_uiThorimLeverGUID = pGo->GetGUID();
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
             break;
 
             // Prison
@@ -992,6 +998,8 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             return m_uiRuneGiantGUID;
         case NPC_RUNIC_COLOSSUS:
             return m_uiRunicColossusGUID;
+		case NPC_JORMUNGAR_BEHEMOTH:
+			return m_uiJormungarGUID;
         case NPC_FREYA:
             return m_uiFreyaGUID;
         case NPC_BRIGHTLEAF:

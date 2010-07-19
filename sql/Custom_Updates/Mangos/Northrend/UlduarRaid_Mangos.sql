@@ -359,6 +359,7 @@ UPDATE creature_template SET ScriptName = "boss_thorim" WHERE entry = 32865;
 UPDATE creature_template SET ScriptName = "boss_runic_colossus" WHERE entry = 32872;
 UPDATE creature_template SET ScriptName = "boss_ancient_rune_giant" WHERE entry = 32873;
 UPDATE creature_template SET ScriptName = "npc_lightning_orb" WHERE entry = 33138;
+UPDATE creature_template SET ScriptName = "mob_thorim_preadds" WHERE entry in (32885, 32883, 32907, 32908, 32882);
 update creature set spawnMask = 3 where id = 32873;
 UPDATE creature_template SET ScriptName = "npc_sif" WHERE entry = 33196;
 update `gameobject` set `position_y` = -286.67, `position_z` = 419.50 where `id` in (194312, 194313, 194314, 194315);
@@ -370,8 +371,8 @@ UPDATE creature_template SET ScriptName = "mob_dark_rune_commoner" WHERE entry =
 UPDATE creature_template SET ScriptName = "mob_dark_rune_warbringer" WHERE entry = 32877;
 UPDATE creature_template SET ScriptName = "mob_dark_rune_ring_guard" WHERE entry = 32874;
 UPDATE creature_template SET ScriptName = "mob_dark_rune_honor_guard" WHERE entry = 33125;
-delete from gameobject where id = 194264; 
-insert into gameobject VALUES (110010,194264,603,3,65535,2173.276, -252.805, 420.146, 3.027,0,0,0,0,604800,0,1);
+#delete from gameobject where id = 194264; 
+#insert into gameobject VALUES (110010,194264,603,3,65535,2173.276, -252.805, 420.146, 3.027,0,0,0,0,604800,0,1);
 update `creature` set `phaseMask` = 128 where `id` in (32907, 32883); 	-- horde soldiers: phase 128 for aly: 65535
 update `creature` set `phaseMask` = 64 where `id` in (32885, 32908);	-- alliance soldiers: phase 64 for horde
 -- reset pos to some creatures 
@@ -513,6 +514,6 @@ update gameobject set spawntimesecs = -604800 where id in (195046, 195047, 19430
 
 -- Mobs
 UPDATE creature_template SET ScriptName = "generic_creature" WHERE entry in (34086, 34085, 34069, 33237, 34234, 33236, 33264, 34164, 34196, 34199, 34198, 
-34190, 34197, 33699, 34134, 34135, 34133, 33430, 33528, 33431, 33527, 33526, 33525, 33355, 33354, 34193, 34183, 32908, 32885, 32907, 32883, 33110, 
-32878, 33822, 33818, 33824, 33823, 33772, 33838, 33819, 33820, 32882, 32875, 33346, 34057);
+34190, 34197, 33699, 34134, 34135, 34133, 33430, 33528, 33431, 33527, 33526, 33525, 33355, 33354, 34193, 34183, 33110, 
+32878, 33822, 33818, 33824, 33823, 33772, 33838, 33819, 33820, 32875, 33346, 34057);
 
