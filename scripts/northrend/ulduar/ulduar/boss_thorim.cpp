@@ -85,6 +85,12 @@ enum
     MOB_DARK_RUNE_EVOKER            = 32878,
     MOB_DARK_RUNE_WARBRINGER        = 32877,
 
+	// traps
+	NPC_TRAP_BUNNY					= 33725,
+	NPC_TRAP_BUNNY2					= 33054,
+	SPELL_PARALYTIC_FIELD			= 63540,
+	SPELL_PARALYTIC_FIELD2			= 62241,
+
     // mobs spells
     // acolyte
     SPELL_GREATER_HEAL              = 62334,
@@ -192,6 +198,53 @@ static LocationsXY OrbLoc[]=
     {2225.91f, -431.68f, 412.17f},
     {2228.26f, -266.46f, 412.17f},
 };
+
+// trap bunny
+struct MANGOS_DLL_DECL mob_thorim_trap_bunnyAI : public ScriptedAI
+{
+    mob_thorim_trap_bunnyAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		SetCombatMovement(false);
+		pCreature->setFaction(14);
+        Reset();
+	}
+
+	bool m_bHasStunAura;
+	uint32 m_uiAuraExpireTimer;
+
+    void Reset()
+    {
+		m_bHasStunAura = false;
+    }
+
+	void MoveInLineOfSight(Unit* pWho)
+	{
+		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bHasStunAura &&
+			pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 12) && m_creature->IsWithinLOSInMap(pWho))
+		{
+			m_bHasStunAura = true;
+			m_uiAuraExpireTimer = 15000;
+			DoCast(m_creature, SPELL_PARALYTIC_FIELD);
+		}
+	}
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+    {
+		if(m_uiAuraExpireTimer < uiDiff && m_bHasStunAura)
+			m_bHasStunAura = false;
+		else m_uiAuraExpireTimer -= uiDiff;
+	}
+};
+
+CreatureAI* GetAI_mob_thorim_trap_bunny(Creature* pCreature)
+{
+    return new mob_thorim_trap_bunnyAI(pCreature);
+}
 
 // dark rune acolyte
 struct MANGOS_DLL_DECL mob_dark_rune_acolyteAI : public ScriptedAI
@@ -1694,5 +1747,10 @@ void AddSC_boss_thorim()
 	newscript = new Script;
     newscript->Name = "mob_thorim_preadds";
     newscript->GetAI = &GetAI_mob_thorim_preadds;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_thorim_trap_bunny";
+    newscript->GetAI = &GetAI_mob_thorim_trap_bunny;
     newscript->RegisterSelf();
 }

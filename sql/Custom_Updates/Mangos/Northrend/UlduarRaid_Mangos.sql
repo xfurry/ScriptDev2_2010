@@ -359,6 +359,7 @@ UPDATE creature_template SET ScriptName = "boss_thorim" WHERE entry = 32865;
 UPDATE creature_template SET ScriptName = "boss_runic_colossus" WHERE entry = 32872;
 UPDATE creature_template SET ScriptName = "boss_ancient_rune_giant" WHERE entry = 32873;
 UPDATE creature_template SET ScriptName = "npc_lightning_orb" WHERE entry = 33138;
+UPDATE creature_template SET ScriptName = "mob_thorim_trap_bunny" WHERE entry in (33725, 33054);
 UPDATE creature_template SET ScriptName = "mob_thorim_preadds" WHERE entry in (32885, 32883, 32907, 32908, 32882);
 update creature set spawnMask = 3 where id = 32873;
 UPDATE creature_template SET ScriptName = "npc_sif" WHERE entry = 33196;
