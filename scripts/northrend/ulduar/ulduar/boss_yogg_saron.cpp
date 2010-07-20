@@ -169,6 +169,7 @@ enum
     // brain's chamber
     MOB_BRAIN_OF_YOGG_SARON     = 33890,
     SPELL_SHATTERED_ILLUSION    = 64173,
+	MOB_PRESENCE_OF_YOGG		= 29224,
     SPELL_INDUCE_MADNESS        = 64059,
     SPELL_ILLUSION_ROOM         = 63988,    // reduce speed
 	SPELL_ILLUSION_CANCEL		= 63993,
@@ -444,6 +445,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
     uint32 m_uiEmpoweringShadowsTimer;
     uint32 m_uiSummonTimer;
     uint32 m_uiDeafeningRoarTimer;
+	bool m_bIsShatter;
 
     uint32 m_uiAchievTimer;
 
@@ -461,6 +463,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
         m_uiSummonTimer             = 40000;
         m_uiDeafeningRoarTimer      = 30000;
         m_uiAchievTimer             = 0;
+		m_bIsShatter				= false;
         m_uiBerserkTimer            = 900000;   // 15 min
 
         m_creature->SetVisibility(VISIBILITY_OFF);
@@ -491,7 +494,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
     {
         m_creature->SetInCombatWithZone();
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        StartSanity();
+        //StartSanity();
 
         if(m_pInstance)
         {
@@ -775,14 +778,14 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
             {
                 if (m_uiSanityTimer < uiDiff)
                 {
-                    DoCastSanity();
-                    DoCast(m_creature, SPELL_SANITY);
+                    //DoCastSanity();
+                    //DoCast(m_creature, SPELL_SANITY);
                     m_uiSanityTimer = 20000;
                 }
                 else m_uiSanityTimer -= uiDiff;
 
 				// summon tentacles
-				if (m_uiSummonTimer < uiDiff)
+				if (m_uiSummonTimer < uiDiff && !m_bIsShatter)
                 {
                     SummonTentacles();
                     m_uiSummonTimer = urand(10000, 15000);
@@ -797,22 +800,22 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                 {
                     if(Creature *pTemp = m_creature->SummonCreature(MOB_IMMORTAL_GUARDIAN, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
 						pTemp->SetInCombatWithZone();
-                    m_uiSummonTimer = 40000;
+                    m_uiSummonTimer = 30000;
                 }
                 else m_uiSummonTimer -= uiDiff;
 
                 if (m_uiLunaticGazaTimer < uiDiff)
                 {
                     DoCast(m_creature, SPELL_LUNATIC_GAZE_YOGG);
-                    m_uiLunaticGazaTimer = 30000;
+                    m_uiLunaticGazaTimer = urand(10000, 13000);
                 }
                 else m_uiLunaticGazaTimer -= uiDiff;
 
                 if (m_uiEmpoweringShadowsTimer < uiDiff)
                 {
                     if (Creature* pGuardian = SelectRandomGuardian(80.0f))
-                        DoCast(pGuardian, m_bIsRegularMode ? SPELL_EMPOWERING_SHADOWS : SPELL_EMPOWERING_SHADOWS_H);
-                    m_uiEmpoweringShadowsTimer = 60000;
+                        DoCast(pGuardian, SPELL_SHADOW_BEACON);
+                    m_uiEmpoweringShadowsTimer = 45000;
                 }
                 else m_uiEmpoweringShadowsTimer -= uiDiff;
 
@@ -976,7 +979,11 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
         if(uiDamage > 0 && !m_bHasShattered)
         {
             if (Creature* pYogg = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGGSARON))))
-                pYogg->CastSpell(pYogg, SPELL_SHATTERED_ILLUSION, false);
+			{
+				((boss_yogg_saronAI*)pYogg->AI())->m_bIsShatter = true;
+				// spell bugged
+				//pYogg->CastSpell(pYogg, SPELL_SHATTERED_ILLUSION, false);
+			}
             m_bHasShattered = true;
         }
     }
@@ -1297,7 +1304,11 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
             }
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             if (Creature* pYogg = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGGSARON))))
+			{
                 ((boss_yogg_saronAI*)pYogg->AI())->StartThirdPhase();
+				pYogg->RemoveAurasDueToSpell(SPELL_SHATTERED_ILLUSION);
+			}
+			m_creature->CastStop();
             m_bIsPhaseFinished = true;
         }
 
@@ -1324,7 +1335,11 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
         if (m_uiMadnessTimer < uiDiff)
         {
             if (Creature* pYogg = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGGSARON))))
-                pYogg->RemoveAurasDueToSpell(SPELL_SHATTERED_ILLUSION);
+			{
+				((boss_yogg_saronAI*)pYogg->AI())->m_bIsShatter = false;
+				((boss_yogg_saronAI*)pYogg->AI())->m_uiSummonTimer = urand(5000, 8000);
+				pYogg->RemoveAurasDueToSpell(SPELL_SHATTERED_ILLUSION);
+			}
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             m_bIsVisionFinished = true;
             m_uiMadnessTimer = 300000;
@@ -1359,6 +1374,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
     uint32 m_uiSarasFervorTimer;
     uint32 m_uiSarasBlessingTimer;
     uint32 m_uiSarasAngerTimer;
+	uint32 m_uiAllVisions;
 
     // transition
     bool m_bIsOutro;
@@ -1395,6 +1411,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
         m_uiSarasFervorTimer    = urand(10000, 15000);
         m_uiSarasBlessingTimer  = urand(15000, 20000);
         m_uiSarasAngerTimer     = urand(20000, 25000);
+		m_uiAllVisions			= 0;
 
         // transition
         m_bIsOutro              = false;
@@ -1520,13 +1537,13 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 		else if(m_uiSecondVision == 0)
 		{
 			do m_uiVisionType = GetCurrentVision();
-			while(m_uiVisionType != m_uiFirstVision);
+			while(m_uiVisionType == m_uiFirstVision);
 			m_uiSecondVision = m_uiVisionType;
 		}
 		else
 		{
 			do m_uiVisionType = GetCurrentVision();
-			while(m_uiVisionType != m_uiFirstVision && m_uiVisionType != m_uiSecondVision);
+			while(m_uiVisionType == m_uiFirstVision || m_uiVisionType == m_uiSecondVision);
 		}
 		
 		// set instance data for vision
@@ -1541,6 +1558,8 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 			if(pYoggBrain->isAlive())
 				((boss_brain_of_yogg_saronAI*)pYoggBrain->AI())->StartVisions();
 		}
+		// increase the vision no.
+		m_uiAllVisions += 1;
 	}
 
     void UpdateAI(const uint32 uiDiff)
@@ -1726,7 +1745,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                 else m_uiPhaseYellTimer -= uiDiff;
 
 				// summon madness portals
-				if (m_uiPortalsTimer < uiDiff)
+				if (m_uiPortalsTimer < uiDiff && m_uiAllVisions < 3)
 				{
 					SetVisionPhase();
 					if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
@@ -2279,7 +2298,8 @@ struct MANGOS_DLL_DECL mob_constrictor_tentacleAI : public ScriptedAI
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
-                pTarget->CastSpell(pTarget, m_bIsRegularMode ? SPELL_SQUEEZE : SPELL_SQUEEZE_H, false);
+				// spell needs vehicles
+                //pTarget->CastSpell(pTarget, m_bIsRegularMode ? SPELL_SQUEEZE : SPELL_SQUEEZE_H, false);
                 m_uiVictimGUID = pTarget->GetGUID();
             }
             m_uiSqueezeTimer = 30000;
@@ -2523,6 +2543,7 @@ struct MANGOS_DLL_DECL mob_ominous_cloudAI : public ScriptedAI
         m_uiRangeCheckTimer = 1000;
         m_bSummonGuardian   = false;
         DoCast(m_creature, SPELL_OMINOUS_CLOUD_VISUAL);
+		m_creature->SetRespawnDelay(DAY);
     }
 
     void AttackStart(Unit* pWho)
