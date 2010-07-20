@@ -126,6 +126,49 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
         }
     }
 
+	void SummonColdFlame()
+	{
+		// coordonatele de baza
+        /*float startX = m_creature->GetPositionX();  // pozitia X a bossului
+        float startY = m_creature->GetPositionY();  // pozitia Y a bossului
+        float endX = target->GetPositionX();        // pozitia X a targetului
+        float endY = target->GetPositionY();        // pozitia Y a targetului
+        float localZ = m_creature->GetPositionZ();  // pozitia pe axa Z
+        float defDist = 10.0f;              // distanta definita dintre spikes
+        if(startX > endX || startY > endY)  // to be removed when formula implemented!!!
+            defDist = -10.0f;
+        float tarDist = sqrtf(pow((startX - startY), 2) + pow((endX - endY), 2));   // distanta dintre boss si target
+        float maxSpikes = tarDist/defDist;  // numarul de spikes calculat ca raport intre dinstanta dintre boss is target / distanta dintre spikes
+
+        // definim un triunghi virtual intre boss si axe
+        float dYa = sqrtf(pow((startX - startY), 2) + pow((startX - 0), 2)); // distanta de la boss la axa OX
+        float dYb = sqrtf(pow((endX - endY), 2) + pow((endX - 0), 2));      // distanta de la target la axa OX
+        float dXa = sqrtf(pow((startX - startY), 2) + pow((0 - startY), 2));// distnata de la boss la axa OY
+        float dXb = sqrtf(pow((endX - endY), 2) + pow((0 - endY), 2));      // distanta de la target la axa OY
+        float dX = dXb - dXa;   // distanta pe X dintre target si boss -> semnul determina directia
+        float dY = dYb - dYa;   // distanta pe Y dintre target si boss
+
+        // calculam sin de unghiul dintre segmentul AB si axa ox
+        float sinY = dY/tarDist;
+        float cosX = dX/tarDist;
+
+        // in functie de sin si cos se calculeaza cat trebuie adaugat pe fiecare axa pentru a obtine coordonatele punctului
+        float xAdd = sinY*defDist;
+        float yAdd = cosX*defDist;
+
+        // summon
+        for(uint8 i = 0; i < (uint8)maxSpikes; i++)
+        {
+            //if(Creature* pSpike = m_creature->SummonCreature(NPC_SPIKE, startX + i*xAdd, startY + i*yAdd, localZ, 0, TEMPSUMMON_TIMED_DESPAWN, 1000))
+            if(Creature* pSpike = m_creature->SummonCreature(NPC_SPIKE, startX + i*defDist, startY + i*defDist, localZ, 0, TEMPSUMMON_TIMED_DESPAWN, 1000))
+            {
+                pSpike->AddThreat(target, 0.0f);
+                if(pSpike->HasAura(SPELL_PERMAFROST, EFFECT_INDEX_0))
+                    return;
+            }
+        }*/
+	}
+
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
