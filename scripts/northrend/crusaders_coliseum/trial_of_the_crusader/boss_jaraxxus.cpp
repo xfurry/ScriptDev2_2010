@@ -236,9 +236,9 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
     {
         m_uiFelFireballTimer        = urand(20000, 25000);
         m_uiFelLightningTimer       = urand(5000, 8000);
-        m_uiIncinerateFleshTimer    = urand(15000, 20000);
-        m_uiLegionFlameTimer        = 30000;
-        m_uiSummonTimer             = 30000;
+        m_uiIncinerateFleshTimer    = 15000;
+        m_uiLegionFlameTimer        = 20000;
+        m_uiSummonTimer             = 20000;
         m_bVolcanoSummon            = true;
         m_uiNetherPowerTimer        = 40000;
         if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
@@ -389,7 +389,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     DoCast(pTarget, SPELL_INCINERATE_FLESH_25HC);
             }
-            m_uiIncinerateFleshTimer = urand(15000, 20000);
+            m_uiIncinerateFleshTimer = 25000;
         }
         else
             m_uiIncinerateFleshTimer -= uiDiff;
@@ -466,7 +466,7 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_LEGION_FLAME);
-            m_uiLegionFlameTimer = urand(20000, 30000);
+            m_uiLegionFlameTimer = 30000;
         }
         else
             m_uiLegionFlameTimer -= uiDiff;

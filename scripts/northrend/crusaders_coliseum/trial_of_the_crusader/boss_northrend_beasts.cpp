@@ -869,7 +869,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
                     if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                         DoCast(pTarget, SPELL_PARALYTIC_SPRAY_25HC);
                 }
-                m_uiParaliticSprayTimer = urand(7000,13000);
+                m_uiParaliticSprayTimer = 21000;
             }
             else
                 m_uiParaliticSprayTimer -= uiDiff;
@@ -979,7 +979,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
             if (m_uiAcidSpewTimer < uiDiff)
             {
                 DoCast(m_creature, SPELL_ACID_SPEW_TRIG);
-                m_uiAcidSpewTimer = 3000+rand()%2000;
+                m_uiAcidSpewTimer = 21000;
             }
             else
                 m_uiAcidSpewTimer -= uiDiff;
@@ -1282,7 +1282,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
                     if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                         DoCast(pTarget, SPELL_BURNING_SPRAY_25HC);
                 }
-                m_uiBurningSprayTimer = urand(7000,13000);
+                m_uiBurningSprayTimer = 21000;
             }
             else
                 m_uiBurningSprayTimer -= uiDiff;
@@ -1385,7 +1385,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
             if (m_uiMoltenSpewTimer < uiDiff)
             {
                 DoCast(m_creature, SPELL_MOLTEN_SPEW_TRIG);
-                m_uiMoltenSpewTimer = urand(7000,13000);
+                m_uiMoltenSpewTimer = 21000;
             }
             else
                 m_uiMoltenSpewTimer -= uiDiff;
@@ -1658,7 +1658,7 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
                 DoCast(m_creature, SPELL_STOMP_10HC);
             if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 DoCast(m_creature, SPELL_STOMP_25HC);
-            m_uiStompTimer = urand(20000, 25000);
+            m_uiStompTimer = 20000;
         }
         else
             m_uiStompTimer -= uiDiff;

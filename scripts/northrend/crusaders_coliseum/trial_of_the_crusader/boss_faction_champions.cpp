@@ -661,7 +661,8 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
         
         if(CCTimer < diff)
         {
-            RemoveCC();
+			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+				RemoveCC();
             CCTimer = 8000+rand()%2000;
         }
         else CCTimer -= diff;

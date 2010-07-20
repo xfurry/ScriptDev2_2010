@@ -151,13 +151,13 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
         m_uiFreezingSlashTimer      = 20000 + rand()%5000;
         m_uiPenetratingColdTimer    = 10000;
         m_uiPursuingSpikesTimer     = 30000;
-        m_uiPhaseTimer              = 90000;
+        m_uiPhaseTimer              = 80000;
         m_uiFrostSphereTimer        = 30000;
         m_uiBorrowerTimer           = 10000;
         m_uiScarabTimer             = 5000;
         SwarmTickTimer              = 3000;
 
-        m_uiBerserkTimer    = 600000;  // 10 min
+        m_uiBerserkTimer    = 570000;  // 9.30 min
 
         m_creature->SetVisibility(VISIBILITY_ON);
 
@@ -285,7 +285,7 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
                     DoCast(m_creature, SPELL_PENETRATING_COLD_10);
                 if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     DoCast(m_creature, SPELL_PENETRATING_COLD_25);
-                m_uiPenetratingColdTimer = urand(20000, 25000);
+                m_uiPenetratingColdTimer = 15000;
             }
             else
                 m_uiPenetratingColdTimer -= uiDiff;
@@ -314,7 +314,7 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
                             pTemp->SetInCombatWithZone();
                     }
                 }
-                m_uiBorrowerTimer = 50000 + urand(1000, 10000);
+                m_uiBorrowerTimer = 45000;
             }
             else
                 m_uiBorrowerTimer -= uiDiff;
@@ -358,7 +358,7 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
                 DoScriptText(SAY_SUBMERGE, m_creature);
                 m_uiScarabTimer = 10000;
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-                m_uiPhaseTimer = 60000;
+                m_uiPhaseTimer = 65000;
             }
             else
                 m_uiPhaseTimer -= uiDiff;
@@ -440,9 +440,9 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
                 m_uiBorrowerTimer           = 10000;
                 m_uiFreezingSlashTimer      = 20000 + rand()%5000;
-                m_uiPenetratingColdTimer    = 10000;
+                m_uiPenetratingColdTimer    = 15000;
                 m_uiFrostSphereTimer        = 30000;
-                m_uiPhaseTimer              = 90000;
+                m_uiPhaseTimer              = 80000;
             }
             else
                 m_uiPhaseTimer -= uiDiff;
@@ -516,49 +516,8 @@ struct MANGOS_DLL_DECL boss_anubarak_trialAI : public ScriptedAI
     // needs update!
     void DoSpikes(Unit* target)
     {
-
         if(Creature* pSpike = m_creature->SummonCreature(NPC_SPIKE, target->GetPositionX() + urand(5, 10), target->GetPositionY() + urand(5, 10), target->GetPositionZ(), 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
             pSpike->AddThreat(target, 1000.0f);
-
-        // coordonatele de baza
-        /*float startX = m_creature->GetPositionX();  // pozitia X a bossului
-        float startY = m_creature->GetPositionY();  // pozitia Y a bossului
-        float endX = target->GetPositionX();        // pozitia X a targetului
-        float endY = target->GetPositionY();        // pozitia Y a targetului
-        float localZ = m_creature->GetPositionZ();  // pozitia pe axa Z
-        float defDist = 10.0f;              // distanta definita dintre spikes
-        if(startX > endX || startY > endY)  // to be removed when formula implemented!!!
-            defDist = -10.0f;
-        float tarDist = sqrtf(pow((startX - startY), 2) + pow((endX - endY), 2));   // distanta dintre boss si target
-        float maxSpikes = tarDist/defDist;  // numarul de spikes calculat ca raport intre dinstanta dintre boss is target / distanta dintre spikes
-
-        // definim un triunghi virtual intre boss si axe
-        float dYa = sqrtf(pow((startX - startY), 2) + pow((startX - 0), 2)); // distanta de la boss la axa OX
-        float dYb = sqrtf(pow((endX - endY), 2) + pow((endX - 0), 2));      // distanta de la target la axa OX
-        float dXa = sqrtf(pow((startX - startY), 2) + pow((0 - startY), 2));// distnata de la boss la axa OY
-        float dXb = sqrtf(pow((endX - endY), 2) + pow((0 - endY), 2));      // distanta de la target la axa OY
-        float dX = dXb - dXa;   // distanta pe X dintre target si boss -> semnul determina directia
-        float dY = dYb - dYa;   // distanta pe Y dintre target si boss
-
-        // calculam sin de unghiul dintre segmentul AB si axa ox
-        float sinY = dY/tarDist;
-        float cosX = dX/tarDist;
-
-        // in functie de sin si cos se calculeaza cat trebuie adaugat pe fiecare axa pentru a obtine coordonatele punctului
-        float xAdd = sinY*defDist;
-        float yAdd = cosX*defDist;
-
-        // summon
-        for(uint8 i = 0; i < (uint8)maxSpikes; i++)
-        {
-            //if(Creature* pSpike = m_creature->SummonCreature(NPC_SPIKE, startX + i*xAdd, startY + i*yAdd, localZ, 0, TEMPSUMMON_TIMED_DESPAWN, 1000))
-            if(Creature* pSpike = m_creature->SummonCreature(NPC_SPIKE, startX + i*defDist, startY + i*defDist, localZ, 0, TEMPSUMMON_TIMED_DESPAWN, 1000))
-            {
-                pSpike->AddThreat(target, 0.0f);
-                if(pSpike->HasAura(SPELL_PERMAFROST, EFFECT_INDEX_0))
-                    return;
-            }
-        }*/
     }
 };
 
@@ -578,11 +537,8 @@ struct MANGOS_DLL_DECL mob_frost_sphereAI : public ScriptedAI
     }
     ScriptedInstance *m_pInstance;
 
-    uint32 spellTimer;
-
     void Reset()
     {
-        spellTimer = 10000;
         m_creature->SetRespawnDelay(DAY);
         m_creature->SetSpeedRate(MOVE_RUN, 0.1f);
         m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
@@ -595,7 +551,6 @@ struct MANGOS_DLL_DECL mob_frost_sphereAI : public ScriptedAI
         {
             uiDamage = 0;
             DoCast(m_creature, SPELL_PERMAFROST);
-            spellTimer = 1000;
             m_creature->SetHealth(0);
             m_creature->SetStandState(UNIT_STAND_STATE_DEAD);
         }
@@ -605,18 +560,6 @@ struct MANGOS_DLL_DECL mob_frost_sphereAI : public ScriptedAI
     {
         if (m_pInstance && m_pInstance->GetData(TYPE_ANUBARAK) != IN_PROGRESS) 
             m_creature->ForcedDespawn();
-
-        //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        /*
-        if (spellTimer < uiDiff)
-        {
-        m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        spellTimer = 10000;
-        }else spellTimer -= uiDiff;
-        */
     }
 };
 
@@ -652,7 +595,8 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
         isSubmerged = false;
         lBorrower.clear();
         m_uiBorrowerCount = 0;
-        DoCast(m_creature, SPELL_SPIDER_FRENZY_TRIG);
+		// spell should be cast on creature
+        //DoCast(m_creature, SPELL_SPIDER_FRENZY_TRIG);
         m_creature->SetRespawnDelay(DAY);
     }
 
@@ -699,7 +643,7 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
             {
                 if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     DoCast(pTarget, SPELL_SHADOW_STRIKE);
-                m_uiShadowStrikeTimer = urand(20000, 25000);
+                m_uiShadowStrikeTimer = urand(15000, 20000);
             }
             else m_uiShadowStrikeTimer -= uiDiff;
         }
