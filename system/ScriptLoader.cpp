@@ -336,6 +336,7 @@ extern void AddSC_boss_saurfang();
 extern void AddSC_boss_festergut();
 extern void AddSC_boss_rotface();
 extern void AddSC_boss_professor_putricide();
+extern void AddSC_boss_sindragosa();
 extern void AddSC_boss_anubrekhan();                        //naxxramas
 extern void AddSC_boss_four_horsemen();
 extern void AddSC_boss_faerlina();
@@ -833,6 +834,7 @@ void AddScripts()
     AddSC_boss_festergut();
     AddSC_boss_rotface();
     AddSC_boss_professor_putricide();	
+	AddSC_boss_sindragosa();
     AddSC_boss_anubrekhan();                                //naxxramas
     AddSC_boss_four_horsemen();
     AddSC_boss_faerlina();

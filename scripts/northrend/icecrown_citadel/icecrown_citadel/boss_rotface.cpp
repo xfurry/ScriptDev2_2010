@@ -109,10 +109,13 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
 
         m_uiOozeTargetGUID          = 0;
         m_uiBigOozeGUID             = 0;
-
-        if(m_pInstance)
-            m_pInstance->SetData(TYPE_ROTFACE, NOT_STARTED);
     }
+
+	void JustReachedHome()
+	{
+		if(m_pInstance)
+            m_pInstance->SetData(TYPE_ROTFACE, NOT_STARTED);
+	}
 
     void Aggro(Unit *who) 
     {

@@ -638,13 +638,13 @@ struct MANGOS_DLL_DECL mob_vengeful_shadeAI : public ScriptedAI
         if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 5))
         {
             if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                DoCast(m_creature, SPELL_VENGEFUL_BLAST_10);
+                DoCast(m_creature->getVictim(), SPELL_VENGEFUL_BLAST_10);
             if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                DoCast(m_creature, SPELL_VENGEFUL_BLAST_25);
+                DoCast(m_creature->getVictim(), SPELL_VENGEFUL_BLAST_25);
             if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                DoCast(m_creature, SPELL_VENGEFUL_BLAST_10HC);
+                DoCast(m_creature->getVictim(), SPELL_VENGEFUL_BLAST_10HC);
             if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                DoCast(m_creature, SPELL_VENGEFUL_BLAST_25HC);
+                DoCast(m_creature->getVictim(), SPELL_VENGEFUL_BLAST_25HC);
             deathTimer = 500;
         }
 

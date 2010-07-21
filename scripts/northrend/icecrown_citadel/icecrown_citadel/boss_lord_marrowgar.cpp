@@ -43,11 +43,14 @@ enum
     SPELL_COLDFLAME_25      = 70823,
     SPELL_COLDFLAME_10HC    = 70824,
     SPELL_COLDFLAME_25HC    = 70825,
+	SPELL_COLDFLAME_SUMMON	= 69138,
     SPELL_COLDFLAME         = 69147,
+	SPELL_COLDFLAME_TRIG	= 69145,
     NPC_COLDFLAME           = 36672,
     SPELL_BONE_SPIKE        = 69057,    // just 1 spell??
     NPC_BONESPIKE           = 38711,
     SPELL_IMPALED           = 69065,
+	SPELL_BONE_STOMR_AURA	= 69076,
     SPELL_BONE_STORM_10     = 69075,
     SPELL_BONE_STORM_25     = 70834,
     SPELL_BONE_STORM_10HC   = 70835,
@@ -79,7 +82,7 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
     {
         m_uiSaberLash_Timer = 1000;
         m_uiColdFlame_Timer = 15000;
-        m_uiBoneSpike_Timer = 30000;
+        m_uiBoneSpike_Timer = 15000;
         m_uiBoneStorm_Timer = 45000;
         m_uiBerserkTimer    = 600000;  // 10 min
     }
@@ -177,15 +180,8 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
         if (m_uiBoneStorm_Timer < uiDiff)
         {
             DoScriptText(SAY_BONESTORM, m_creature);
-
-            if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                DoCast(m_creature->getVictim(), SPELL_BONE_STORM_10);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                DoCast(m_creature->getVictim(), SPELL_BONE_STORM_25);
-            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                DoCast(m_creature->getVictim(), SPELL_BONE_STORM_10HC);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                DoCast(m_creature->getVictim(), SPELL_BONE_STORM_25HC);
+			m_creature->InterruptNonMeleeSpells(true);
+			DoCast(m_creature, SPELL_BONE_STOMR_AURA);
             m_uiBoneStorm_Timer = 90000;
         }
         else m_uiBoneStorm_Timer -= uiDiff;
@@ -199,29 +195,28 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
                 case 2: DoScriptText(SAY_BONESPIKE3, m_creature); break;
             }
 
-            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
-                DoCastSpellIfCan(target, SPELL_BONE_SPIKE);
-
-                float fPosX, fPosY, fPosZ;
-                target->GetPosition(fPosX, fPosY, fPosZ);
-
-                m_creature->SummonCreature(NPC_BONESPIKE, fPosX, fPosY, fPosZ, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
+                DoCast(pTarget, SPELL_BONE_SPIKE);
+				m_creature->SummonCreature(NPC_BONESPIKE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
             }
             m_uiSaberLash_Timer = 4000;
-            m_uiBoneSpike_Timer = 30000;
+            m_uiBoneSpike_Timer = 20000;
         }
         else m_uiBoneSpike_Timer -= uiDiff;
 
         if (m_uiColdFlame_Timer < uiDiff)
         {
-            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			//DoCast(m_creature, SPELL_COLDFLAME_SUMMON);
+			SummonColdFlame();
+			// fix this!!
+            /*if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 float fPosX, fPosY, fPosZ;
                 target->GetPosition(fPosX, fPosY, fPosZ);
 
                 m_creature->SummonCreature(NPC_COLDFLAME, fPosX, fPosY, fPosZ, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
-            }
+            }*/
             m_uiColdFlame_Timer = 15000;
         }
         else m_uiColdFlame_Timer -= uiDiff;
@@ -232,7 +227,7 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
                 DoCast(m_creature->getVictim(), SPELL_BONE_SLICE_10);
             if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 DoCast(m_creature->getVictim(), SPELL_BONE_SLICE_25);
-            m_uiSaberLash_Timer = 1000;
+            m_uiSaberLash_Timer = urand(2000, 4000);
         }
         else m_uiSaberLash_Timer -= uiDiff;
 
@@ -259,57 +254,29 @@ struct MANGOS_DLL_DECL mob_coldflameAI : public ScriptedAI
 {
     mob_coldflameAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-        Difficulty = pCreature->GetMap()->GetDifficulty();
+		pCreature->SetDisplayId(11686);     // make invisible
+		pCreature->setFaction(14);
+		SetCombatMovement(false);
         Reset();
     }
 
     ScriptedInstance *m_pInstance;
-    uint32 Difficulty;
-    uint32 m_uiRangeCheck_Timer;
-    float fPosX, fPosY, fPosZ;
 
     void Reset()
     {
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->GetPosition(fPosX, fPosY, fPosZ);
-        m_creature->GetRandomPoint(fPosX, fPosY, fPosZ, urand(150, 200), fPosX, fPosY, fPosZ);
-        m_creature->GetMotionMaster()->MovePoint(1, fPosX, fPosY, fPosZ);
-        SetCombatMovement(false);
-        m_creature->SetSpeedRate(MOVE_RUN, 0.8f);
-
-        if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-            DoCast(m_creature, SPELL_COLDFLAME_10);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-            DoCast(m_creature, SPELL_COLDFLAME_25);
-        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-            DoCast(m_creature, SPELL_COLDFLAME_10HC);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-            DoCast(m_creature, SPELL_COLDFLAME_25HC);
-    }
-
-    void MovementInform(uint32 type, uint32 id)
-    {
-        if(!m_pInstance) return;
-        if(type != POINT_MOTION_TYPE) return;
-        if(id != 1)
-             m_creature->GetMotionMaster()->MovePoint(1, fPosX, fPosY, fPosZ);
-             else m_creature->ForcedDespawn();
+		DoCast(m_creature, SPELL_COLDFLAME_TRIG);
     }
 
     void AttackStart(Unit *who)
     {
-        //ignore all attackstart commands
         return;
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        //bsw->timedCast(SPELL_COLD_FLAME_0, uiDiff);
-//        bsw->timedCast(SPELL_COLD_FLAME, uiDiff);
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
     }
 };
 
@@ -377,7 +344,6 @@ struct MANGOS_DLL_DECL mob_bone_spikeAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
     }
-
 };
 
 CreatureAI* GetAI_mob_bone_spike(Creature* pCreature)

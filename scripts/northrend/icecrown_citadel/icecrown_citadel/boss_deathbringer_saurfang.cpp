@@ -131,8 +131,8 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
     {
         m_uiBloodBeast_Timer    = 40000;
         m_uiRuneOfBlood_Timer   = 30000;
-        m_uiBoilingBlood_Timer  = 60000;
-        m_uiBloodNova_Timer     = 15000;
+        m_uiBoilingBlood_Timer  = 18000;
+        m_uiBloodNova_Timer     = 20000;
         m_uiBerserkTimer        = 480000;  // 8 min
 
         m_creature->SetPower(POWER_RAGE,0); 
@@ -200,7 +200,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if ((m_creature->GetHealthPercent() < 30.0f) && (!m_creature->HasAura(SPELL_FRENZY)))
+        if (m_creature->GetHealthPercent() < 30.0f && !m_creature->HasAura(SPELL_FRENZY))
             DoCast(m_creature, SPELL_FRENZY);
 
         if (m_creature->GetPower(m_creature->getPowerType()) == m_creature->GetMaxPower(m_creature->getPowerType()))
@@ -223,8 +223,8 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
             else if (Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
                 m_uiMaxBloodbeasts = 5;
 
-            for(uint8 i = 0; i < m_uiMaxBloodbeasts; i++)
-                //DoCast(m_creature, SPELL_CALL_BLOOD_BEASTS);
+			DoCast(m_creature, SPELL_CALL_BLOOD_BEASTS);
+            for(uint8 i = 0; i < m_uiMaxBloodbeasts - 1; i++)
                 m_creature->SummonCreature(NPC_BLOOD_BEAST, m_creature->GetPositionX() + urand(0, 10), m_creature->GetPositionY() + urand(0, 3), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
 
             m_uiBloodBeast_Timer = 40000;
@@ -258,7 +258,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     DoCast(target, SPELL_BOILING_BLOOD_25HC);
             }
-            m_uiBoilingBlood_Timer = 60000;
+            m_uiBoilingBlood_Timer = 15000;
         }
         else m_uiBoilingBlood_Timer -= uiDiff;
 
@@ -275,7 +275,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     DoCast(target, SPELL_BLOOD_NOVA_25HC);
             }
-            m_uiBloodNova_Timer = 15000;
+            m_uiBloodNova_Timer = 20000;
         }
         else m_uiBloodNova_Timer -= uiDiff;
 

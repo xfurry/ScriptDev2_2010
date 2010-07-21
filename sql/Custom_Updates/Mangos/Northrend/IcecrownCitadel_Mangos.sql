@@ -42,6 +42,8 @@ UPDATE creature_template SET ScriptName = 'boss_blood_queen_lanathel' WHERE entr
 
 -- Valithria Dreamwalker
 -- Sindragosa
+update creature_template set scriptName = 'miniboss_spinestalker' where entry = 37534;
+update creature_template set scriptName = 'miniboss_rimefang' where entry = 37533;
 -- Lich King
 
 -- Minibossed: Stinky, Precious, Svalna

@@ -96,11 +96,14 @@ struct MANGOS_DLL_DECL boss_festergutAI : public ScriptedAI
         m_uiGastricCheckTimer   = 1000;
         m_uiInhaleStage         = 0;
 
-        m_uiBerserkTimer        = 300000;  // 5 min
-
-        if(m_pInstance)
-            m_pInstance->SetData(TYPE_FESTERGUT, NOT_STARTED);
+        m_uiBerserkTimer        = 300000;  // 5 min 
     }
+
+	void JustReachedHome()
+	{
+		if(m_pInstance)
+            m_pInstance->SetData(TYPE_FESTERGUT, NOT_STARTED);
+	}
 
     void Aggro(Unit *who) 
     {

@@ -724,7 +724,7 @@ struct MANGOS_DLL_DECL mob_deathbound_wardAI : public ScriptedAI
 	void MoveInLineOfSight(Unit* pWho)
 	{
 		// sometimes it doesn't attack, maybe wrong aura
-		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bStartAttack /*&& pWho->HasAura(SPELL_SPIRIT_ALARM)*/ && 
+		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bStartAttack && pWho->HasAura(SPELL_SPIRIT_ALARM) && 
 			pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 80) && m_creature->IsWithinLOSInMap(pWho))
 		{
 			m_bStartAttack = true;
