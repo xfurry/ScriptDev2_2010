@@ -131,8 +131,11 @@ enum
     MOB_DARK_RUNE_ACOLYTE           = 33110,
     MOB_IRON_RING_GUARD             = 32874,
     MINIBOSS_RUNIC_COLOSSUS         = 32872,
-    SPELL_SMASH_LEFT                = 62339,
-    SPELL_SMASH_RIGHT               = 62414,
+    SPELL_SMASH						= 62339,
+    //SPELL_SMASH_RIGHT               = 62414,
+	SPELL_RUNIC_SMASH				= 62058,
+	SPELL_RUNIC_SMASH2				= 62057,
+	SPELL_RUNIC_SMASH_DMG			= 62465,
     SPELL_RUNIC_BARRIER             = 62338,
     SPELL_CHARGE                    = 62613,
     SPELL_CHARGE_H                  = 62614,
@@ -1219,8 +1222,8 @@ struct MANGOS_DLL_DECL boss_runic_colossusAI : public ScriptedAI
     uint32 m_uiSpellTimer;
     uint32 m_uiRunicBarrierTimer;
     uint32 m_uiSmashTimer;
+	uint64 m_uiSmashTargetGUID;
     bool m_bIsSmash;
-    bool m_bIsRight;
     bool m_bMustSmash;
 
     void Reset()
@@ -1228,8 +1231,8 @@ struct MANGOS_DLL_DECL boss_runic_colossusAI : public ScriptedAI
         m_uiSpellTimer = urand(5000, 10000);
         m_uiRunicBarrierTimer = 15000;
         m_uiSmashTimer  = 3000;
+		m_uiSmashTargetGUID	= 0;
         m_bIsSmash  = false;
-        m_bIsRight  = true;
         m_bMustSmash = true;
 
         if(m_pInstance) 
@@ -1247,6 +1250,7 @@ struct MANGOS_DLL_DECL boss_runic_colossusAI : public ScriptedAI
         if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) &&
             !m_bIsSmash && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 70) && m_creature->IsWithinLOSInMap(pWho))
         {
+			m_uiSmashTargetGUID = pWho->GetGUID();
             m_creature->GetMotionMaster()->MoveIdle();
             m_bIsSmash = true;
         }
@@ -1261,21 +1265,12 @@ struct MANGOS_DLL_DECL boss_runic_colossusAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if(m_uiSmashTimer < uiDiff && m_bIsSmash && m_bMustSmash)
-        {
-            if(m_bIsRight)
-            {
-                // find spell ids!!!
-                //DoCast(m_creature, SPELL_SMASH_RIGHT);
-                m_bIsRight = false;
-            }
-            else
-            {
-                //DoCast(m_creature, SPELL_SMASH_LEFT);
-                m_bIsRight = true;
-            }
-            m_uiSmashTimer = 10000;
-        }
+		if(m_uiSmashTimer < uiDiff && m_bIsSmash && m_bMustSmash)
+		{
+			if(Unit* pTarget = Unit::GetUnit(*m_creature, m_uiSmashTargetGUID))
+				DoCast(pTarget, SPELL_RUNIC_SMASH_DMG);
+			m_uiSmashTimer = 10000;
+		}
         else m_uiSmashTimer -= uiDiff;
 
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -1286,7 +1281,7 @@ struct MANGOS_DLL_DECL boss_runic_colossusAI : public ScriptedAI
             switch(urand(0, 1))
             {
             case 0:
-                DoCast(m_creature, SPELL_SMASH_LEFT);
+                DoCast(m_creature, SPELL_SMASH);
                 break;
             case 1:
                 if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))

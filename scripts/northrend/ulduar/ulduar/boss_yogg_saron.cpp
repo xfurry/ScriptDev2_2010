@@ -118,7 +118,6 @@ enum
     SPELL_SARAS_FERVOR          = 63138,
     SPELL_SARAS_BLESSING        = 63134,
     SPELL_SARAS_ANGER           = 63147,
-    SPELL_DAMAGE_IMMUNE         = 34311,
 
     MOB_GUARDIAN_OF_YOGG        = 33136,
     SPELL_DARK_VOLLEY           = 63038,
@@ -164,12 +163,11 @@ enum
     MOB_DESCEND_INTO_MADNESS    = 34072,
     SPELL_LUNATIC_GAZE          = 64167,    //affects players which take the portal to madness
     NPC_LAUGHING_SKULL          = 33990,
-    SKULL_DISPLAY_ID            = 25206, 
+    SKULL_DISPLAY_ID            = 25206,
 
     // brain's chamber
     MOB_BRAIN_OF_YOGG_SARON     = 33890,
     SPELL_SHATTERED_ILLUSION    = 64173,
-	MOB_PRESENCE_OF_YOGG		= 29224,
     SPELL_INDUCE_MADNESS        = 64059,
     SPELL_ILLUSION_ROOM         = 63988,    // reduce speed
 	SPELL_ILLUSION_CANCEL		= 63993,
@@ -1064,9 +1062,7 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
                             }
                         }
                         for(uint8 i = 0; i < 3; i++)
-                        {
                             m_creature->SummonCreature(NPC_LAUGHING_SKULL, SkullKeepLoc[i].x, SkullKeepLoc[i].y, SkullKeepLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-                        }
                         ++m_uiVisionPhase;
                         m_uiSpeechTimer = 1000;
                         break;
@@ -1166,9 +1162,7 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
                             }
                         }
                         for(uint8 i = 0; i < 3; i++)
-                        {
                             m_creature->SummonCreature(NPC_LAUGHING_SKULL, SkullDragonLoc[i].x, SkullDragonLoc[i].y, SkullDragonLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-                        }
                         ++m_uiVisionPhase;
                         m_uiSpeechTimer = 1000;
                         break;
@@ -1236,9 +1230,7 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
                             }
                         }
                         for(uint8 i = 0; i < 4; i++)
-                        {
                             m_creature->SummonCreature(NPC_LAUGHING_SKULL, SkullIcecrownLoc[i].x, SkullIcecrownLoc[i].y, SkullIcecrownLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-                        }
                         ++m_uiVisionPhase;
                         m_uiSpeechTimer = 1000;
                         break;
@@ -2474,7 +2466,6 @@ struct MANGOS_DLL_DECL mob_laughing_skullAI : public ScriptedAI
 {
     mob_laughing_skullAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         pCreature->SetDisplayId(SKULL_DISPLAY_ID);
@@ -2484,40 +2475,19 @@ struct MANGOS_DLL_DECL mob_laughing_skullAI : public ScriptedAI
         Reset();
     }
 
-    ScriptedInstance *m_pInstance;
-
-    uint32 checkTimer;
-
     void Reset()
     {
-        checkTimer = 2000;
         m_creature->SetRespawnDelay(DAY);
+		DoCast(m_creature, SPELL_LUNATIC_GAZE);
     }
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        if (checkTimer < uiDiff)
-        {
-            Map *map = m_creature->GetMap();
-            if (map->IsDungeon())
-            {
-                Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                if (PlayerList.isEmpty())
-                    return;
-
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 4)
-                        DoCast(i->getSource(), SPELL_LUNATIC_GAZE);
-                }
-            } 
-            checkTimer = 2000;
-        }
-        else checkTimer -= uiDiff;
     }
 };
 
