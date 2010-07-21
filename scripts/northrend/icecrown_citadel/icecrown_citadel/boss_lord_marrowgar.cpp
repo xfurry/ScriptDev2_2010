@@ -45,12 +45,12 @@ enum
     SPELL_COLDFLAME_25HC    = 70825,
 	SPELL_COLDFLAME_SUMMON	= 69138,
     SPELL_COLDFLAME         = 69147,
-	SPELL_COLDFLAME_TRIG	= 69145,
+	SPELL_COLDFLAME_TRIG	= 69147,	// 69145,
     NPC_COLDFLAME           = 36672,
     SPELL_BONE_SPIKE        = 69057,    // just 1 spell??
     NPC_BONESPIKE           = 38711,
     SPELL_IMPALED           = 69065,
-	SPELL_BONE_STOMR_AURA	= 69076,
+	SPELL_BONE_STORM_AURA	= 69076,
     SPELL_BONE_STORM_10     = 69075,
     SPELL_BONE_STORM_25     = 70834,
     SPELL_BONE_STORM_10HC   = 70835,
@@ -73,18 +73,37 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
 
     uint32 m_uiSaberLash_Timer;
     uint32 m_uiColdFlame_Timer;
+	uint32 m_uiColdFlames;
+	uint32 m_uiColdFlameTickTimer;
     uint32 m_uiBoneSpike_Timer;
     uint32 m_uiBoneStorm_Timer;
     uint32 m_uiBerserkTimer;
     bool m_bHasTaunted;
+	bool m_bIsColdFlame;
+
+	// coords for coldflame summon
+	float m_fTargetX;
+	float m_fTargetY;
+
+	float m_fCurrentX;
+	float m_fCurrentY;
 
     void Reset()
     {
-        m_uiSaberLash_Timer = 1000;
-        m_uiColdFlame_Timer = 15000;
-        m_uiBoneSpike_Timer = 15000;
-        m_uiBoneStorm_Timer = 45000;
-        m_uiBerserkTimer    = 600000;  // 10 min
+        m_uiSaberLash_Timer		= 1000;
+        m_uiColdFlame_Timer		= urand(7000, 13000);
+        m_uiBoneSpike_Timer		= 15000;
+        m_uiBoneStorm_Timer		= 45000;
+        m_uiBerserkTimer		= 600000;  // 10 min
+
+		m_bIsColdFlame			= false;
+		m_uiColdFlameTickTimer	= 1000;
+		m_uiColdFlames			= 0;
+
+		m_fTargetX				= 0;
+		m_fTargetY				= 0;
+		m_fCurrentX				= 0;
+		m_fCurrentY				= 0;
     }
 
     void Aggro(Unit* pWho)
@@ -129,25 +148,19 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
         }
     }
 
-	void SummonColdFlame()
+	void SummonColdFlame(float fDist)
 	{
 		// coordonatele de baza
-        /*float startX = m_creature->GetPositionX();  // pozitia X a bossului
-        float startY = m_creature->GetPositionY();  // pozitia Y a bossului
-        float endX = target->GetPositionX();        // pozitia X a targetului
-        float endY = target->GetPositionY();        // pozitia Y a targetului
-        float localZ = m_creature->GetPositionZ();  // pozitia pe axa Z
-        float defDist = 10.0f;              // distanta definita dintre spikes
-        if(startX > endX || startY > endY)  // to be removed when formula implemented!!!
-            defDist = -10.0f;
-        float tarDist = sqrtf(pow((startX - startY), 2) + pow((endX - endY), 2));   // distanta dintre boss si target
-        float maxSpikes = tarDist/defDist;  // numarul de spikes calculat ca raport intre dinstanta dintre boss is target / distanta dintre spikes
+        if(m_fCurrentX > m_fTargetX || m_fCurrentY > m_fTargetY)  // to be removed when formula implemented!!!
+            fDist = -fDist;
+        float tarDist = sqrtf(pow((m_fCurrentX - m_fCurrentY), 2) + pow((m_fTargetX - m_fTargetY), 2));   // distanta dintre boss si target
+        float maxSpikes = tarDist/fDist;  // numarul de spikes calculat ca raport intre dinstanta dintre boss is target / distanta dintre spikes
 
         // definim un triunghi virtual intre boss si axe
-        float dYa = sqrtf(pow((startX - startY), 2) + pow((startX - 0), 2)); // distanta de la boss la axa OX
-        float dYb = sqrtf(pow((endX - endY), 2) + pow((endX - 0), 2));      // distanta de la target la axa OX
-        float dXa = sqrtf(pow((startX - startY), 2) + pow((0 - startY), 2));// distnata de la boss la axa OY
-        float dXb = sqrtf(pow((endX - endY), 2) + pow((0 - endY), 2));      // distanta de la target la axa OY
+		float dYa = sqrtf(pow((m_fCurrentX - m_fCurrentY), 2) + pow((m_fCurrentX - 0), 2)); // distanta de la boss la axa OX
+		float dYb = sqrtf(pow((m_fTargetX - m_fTargetY), 2) + pow((m_fTargetX - 0), 2));      // distanta de la target la axa OX
+        float dXa = sqrtf(pow((m_fCurrentX - m_fCurrentY), 2) + pow((0 - m_fCurrentY), 2));// distnata de la boss la axa OY
+        float dXb = sqrtf(pow((m_fTargetX - m_fTargetY), 2) + pow((0 - m_fTargetY), 2));      // distanta de la target la axa OY
         float dX = dXb - dXa;   // distanta pe X dintre target si boss -> semnul determina directia
         float dY = dYb - dYa;   // distanta pe Y dintre target si boss
 
@@ -156,20 +169,16 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
         float cosX = dX/tarDist;
 
         // in functie de sin si cos se calculeaza cat trebuie adaugat pe fiecare axa pentru a obtine coordonatele punctului
-        float xAdd = sinY*defDist;
-        float yAdd = cosX*defDist;
+        float xAdd = sinY*fDist;
+        float yAdd = cosX*fDist;
 
         // summon
-        for(uint8 i = 0; i < (uint8)maxSpikes; i++)
-        {
-            //if(Creature* pSpike = m_creature->SummonCreature(NPC_SPIKE, startX + i*xAdd, startY + i*yAdd, localZ, 0, TEMPSUMMON_TIMED_DESPAWN, 1000))
-            if(Creature* pSpike = m_creature->SummonCreature(NPC_SPIKE, startX + i*defDist, startY + i*defDist, localZ, 0, TEMPSUMMON_TIMED_DESPAWN, 1000))
-            {
-                pSpike->AddThreat(target, 0.0f);
-                if(pSpike->HasAura(SPELL_PERMAFROST, EFFECT_INDEX_0))
-                    return;
-            }
-        }*/
+		m_creature->SummonCreature(NPC_COLDFLAME, m_fCurrentX, m_fCurrentX, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 5000);
+		m_uiColdFlames += 1;
+
+		// add new coords
+		m_fCurrentX = m_fCurrentX + xAdd;
+		m_fCurrentY = m_fCurrentY + yAdd;
 	}
 
     void UpdateAI(const uint32 uiDiff)
@@ -177,14 +186,68 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
+		// berserk
+        if (m_uiBerserkTimer < uiDiff)
+        {
+            DoCast(m_creature, SPELL_BERSERK);
+            DoScriptText(SAY_ENRAGE, m_creature);
+            m_uiBerserkTimer = 60000;
+        }
+        else
+            m_uiBerserkTimer -= uiDiff;
+
         if (m_uiBoneStorm_Timer < uiDiff)
         {
             DoScriptText(SAY_BONESTORM, m_creature);
 			m_creature->InterruptNonMeleeSpells(true);
-			DoCast(m_creature, SPELL_BONE_STOMR_AURA);
+			DoCast(m_creature, SPELL_BONE_STORM_AURA);
             m_uiBoneStorm_Timer = 90000;
         }
         else m_uiBoneStorm_Timer -= uiDiff;
+
+		// start the line of flame
+        if (m_uiColdFlame_Timer < uiDiff)
+        {
+			//DoCast(m_creature, SPELL_COLDFLAME_SUMMON);
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            {
+				m_fTargetX = pTarget->GetPositionX();
+				m_fTargetY = pTarget->GetPositionY();
+				m_fCurrentX = m_creature->GetPositionX();
+				m_fCurrentY = m_creature->GetPositionY();
+				SummonColdFlame(10.0f);
+				m_uiColdFlames			= 0;
+				m_uiColdFlameTickTimer	= 1000;
+				m_bIsColdFlame			= true;
+			}
+			if(m_creature->HasAura(SPELL_BONE_STORM_AURA, EFFECT_INDEX_0))
+				m_uiColdFlame_Timer = urand(3000, 6000);
+			else
+				m_uiColdFlame_Timer	= urand(10000, 15000);
+        }
+        else m_uiColdFlame_Timer -= uiDiff;
+
+		// summon a line of flame periodicaly
+		if(m_uiColdFlameTickTimer < uiDiff && m_bIsColdFlame && m_uiColdFlames < 10)
+		{
+			SummonColdFlame(10.0f);
+			if(m_creature->HasAura(SPELL_BONE_STORM_AURA, EFFECT_INDEX_0))
+				m_uiColdFlameTickTimer = 500;
+			else
+				m_uiColdFlameTickTimer = 1000;
+		}
+		else m_uiColdFlameTickTimer -= uiDiff;
+
+		// stop summning cold flame
+		if(m_uiColdFlames == 10 && m_bIsColdFlame)
+		{
+			m_uiColdFlames = 0;
+			m_bIsColdFlame = false;
+		}
+
+		// return in bonestorm
+		if(m_creature->HasAura(SPELL_BONE_STORM_AURA))
+			return;
 
         if (m_uiBoneSpike_Timer < uiDiff)
         {
@@ -198,28 +261,12 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(pTarget, SPELL_BONE_SPIKE);
-				m_creature->SummonCreature(NPC_BONESPIKE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
+				//m_creature->SummonCreature(NPC_BONESPIKE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
             }
             m_uiSaberLash_Timer = 4000;
-            m_uiBoneSpike_Timer = 20000;
+            m_uiBoneSpike_Timer = 18000;
         }
         else m_uiBoneSpike_Timer -= uiDiff;
-
-        if (m_uiColdFlame_Timer < uiDiff)
-        {
-			//DoCast(m_creature, SPELL_COLDFLAME_SUMMON);
-			SummonColdFlame();
-			// fix this!!
-            /*if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-            {
-                float fPosX, fPosY, fPosZ;
-                target->GetPosition(fPosX, fPosY, fPosZ);
-
-                m_creature->SummonCreature(NPC_COLDFLAME, fPosX, fPosY, fPosZ, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 10000);
-            }*/
-            m_uiColdFlame_Timer = 15000;
-        }
-        else m_uiColdFlame_Timer -= uiDiff;
 
         if (m_uiSaberLash_Timer < uiDiff)
         {
@@ -230,16 +277,6 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
             m_uiSaberLash_Timer = urand(2000, 4000);
         }
         else m_uiSaberLash_Timer -= uiDiff;
-
-        // berserk
-        if (m_uiBerserkTimer < uiDiff)
-        {
-            DoCast(m_creature, SPELL_BERSERK);
-            DoScriptText(SAY_ENRAGE, m_creature);
-            m_uiBerserkTimer = 60000;
-        }
-        else
-            m_uiBerserkTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }

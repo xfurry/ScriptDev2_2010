@@ -408,6 +408,11 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             case TYPE_DEATHWHISPER:
                 m_auiEncounter[1] = uiData;
                 DoUseDoorOrButton(m_uiDeathwhisperGateGUID);
+				if(uiData == DONE)
+				{
+					if(GameObject* pLift = instance->GetGameObject(m_uiDeathwhisperElevatorGUID))
+						pLift->SetGoState(GO_STATE_ACTIVE);
+				}
                 break;
             case TYPE_GUNSHIP_BATTLE:
                 m_auiEncounter[2] = uiData;
