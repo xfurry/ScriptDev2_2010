@@ -5,6 +5,6 @@ UPDATE `creature_template` SET `modelid_A` = 11686, `modelid_H` = 11686, `Script
 -- Rune blade
 UPDATE `creature_template` SET `modelid_A` = 11686, `modelid_H` = 11686, `ScriptName`='npc_runeblade' WHERE `entry` = 27893;
 -- Gargoyle
-UPDATE `creature_template` SET `ScriptName` = 'mob_death_knight_gargoyle' WHERE `entry` = 27829;
+UPDATE `creature_template` SET `ScriptName` = 'npc_death_knight_gargoyle' WHERE `entry` = 27829;
 -- XP eliminator
 UPDATE `creature_template` SET `ScriptName` = 'npc_experience_eliminator' WHERE `entry` in (35364, 35365);
