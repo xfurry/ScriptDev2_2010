@@ -3225,7 +3225,7 @@ bool GossipSelect_npc_highlord_darion_mograine(Player* pPlayer, Creature* pCreat
         case GOSSIP_ACTION_INFO_DEF+1:
             pPlayer->CLOSE_GOSSIP_MENU();
             ((npc_highlord_darion_mograineAI*)pCreature->AI())->uiStep = 1;
-            ((npc_highlord_darion_mograineAI*)pCreature->AI())->Start(true, false, pPlayer->GetGUID());
+            ((npc_highlord_darion_mograineAI*)pCreature->AI())->Start(true, pPlayer->GetGUID());
         break;
     }
     return true;

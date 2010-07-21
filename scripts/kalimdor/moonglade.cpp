@@ -376,7 +376,7 @@ bool QuestAccept_npc_keeper_remulos(Player* pPlayer, Creature* pCreature, const 
         pCreature->SetHealth(1523420);
         if (npc_keeper_remulosAI* pEscortAI = dynamic_cast<npc_keeper_remulosAI*>(pCreature->AI()))
         {
-            pEscortAI->Start(false, false, pPlayer->GetGUID(), pQuest);
+            pEscortAI->Start(false, pPlayer->GetGUID(), pQuest);
             pEscortAI->SetRun();
             DoScriptText(SAY_REMULOS_1,pCreature,pPlayer);
         }

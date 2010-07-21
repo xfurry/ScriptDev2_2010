@@ -739,7 +739,7 @@ bool GossipSelect_npc_slyvanas_jaina_hor_end(Player* pPlayer, Creature* pCreatur
     {
     case GOSSIP_ACTION_INFO_DEF+1:
         if (npc_sylvanas_jaina_hor_endAI* pEscortAI = dynamic_cast<npc_sylvanas_jaina_hor_endAI*>(pCreature->AI()))
-            pEscortAI->Start(false, true, pPlayer->GetGUID());
+            pEscortAI->Start(false, pPlayer->GetGUID());
         if(Creature *pLichKing = ((Creature*)Unit::GetUnit((*pCreature), m_pInstance->GetData64(DATA_LICH_KING))))
             ((boss_lich_king_hor_endAI*)pLichKing->AI())->StartChase();
         pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
