@@ -681,6 +681,9 @@ enum
 	SPELL_SABER_LASH					= 71021,
 	SPELL_DISRUPTING_SHOUT				= 71022,
 	SPELL_SPIRIT_ALARM					= 70547,
+	SPELL_SPIRIT_ALARM2					= 70536,
+	SPELL_SPIRIT_ALARM3					= 70545,
+	SPELL_SPIRIT_ALARM4					= 70546,
 };
 
 /*######
@@ -724,9 +727,10 @@ struct MANGOS_DLL_DECL mob_deathbound_wardAI : public ScriptedAI
 	void MoveInLineOfSight(Unit* pWho)
 	{
 		// sometimes it doesn't attack, maybe wrong aura
-		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bStartAttack && pWho->HasAura(SPELL_SPIRIT_ALARM) && 
+		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bStartAttack && (pWho->HasAura(SPELL_SPIRIT_ALARM) || pWho->HasAura(SPELL_SPIRIT_ALARM2) || pWho->HasAura(SPELL_SPIRIT_ALARM3) || pWho->HasAura(SPELL_SPIRIT_ALARM4)) && 
 			pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 80) && m_creature->IsWithinLOSInMap(pWho))
 		{
+			m_creature->CallForHelp(60.0f);
 			m_bStartAttack = true;
 			m_creature->SetInCombatWithZone();
 		}

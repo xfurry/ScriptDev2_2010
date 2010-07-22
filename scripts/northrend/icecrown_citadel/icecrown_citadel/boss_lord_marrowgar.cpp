@@ -45,7 +45,7 @@ enum
     SPELL_COLDFLAME_25HC    = 70825,
 	SPELL_COLDFLAME_SUMMON	= 69138,
     SPELL_COLDFLAME         = 69147,
-	SPELL_COLDFLAME_TRIG	= 69147,	// 69145,
+	SPELL_COLDFLAME_TRIG	= 69145,
     NPC_COLDFLAME           = 36672,
     SPELL_BONE_SPIKE        = 69057,    // just 1 spell??
     NPC_BONESPIKE           = 38711,
@@ -77,6 +77,7 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
 	uint32 m_uiColdFlameTickTimer;
     uint32 m_uiBoneSpike_Timer;
     uint32 m_uiBoneStorm_Timer;
+	uint32 m_uiStormEndTimer;
     uint32 m_uiBerserkTimer;
     bool m_bHasTaunted;
 	bool m_bIsColdFlame;
@@ -151,9 +152,9 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
 	void SummonColdFlame(float fDist)
 	{
 		// coordonatele de baza
-        if(m_fCurrentX > m_fTargetX || m_fCurrentY > m_fTargetY)  // to be removed when formula implemented!!!
+        /*if(m_fCurrentX > m_fTargetX || m_fCurrentY > m_fTargetY)  // to be removed when formula implemented!!!
             fDist = -fDist;
-        float tarDist = sqrtf(pow((m_fCurrentX - m_fCurrentY), 2) + pow((m_fTargetX - m_fTargetY), 2));   // distanta dintre boss si target
+        float tarDist = sqrtf(pow((m_fCurrentX - m_fTargetX), 2) + pow((m_fCurrentY - m_fTargetY), 2));   // distanta dintre boss si target
         float maxSpikes = tarDist/fDist;  // numarul de spikes calculat ca raport intre dinstanta dintre boss is target / distanta dintre spikes
 
         // definim un triunghi virtual intre boss si axe
@@ -178,10 +179,66 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
 
 		// add new coords
 		m_fCurrentX = m_fCurrentX + xAdd;
-		m_fCurrentY = m_fCurrentY + yAdd;
+		m_fCurrentY = m_fCurrentY + yAdd;*/
+
+
+		///////////////////////////////////////////////////
+
+		/** mutate in functia principala */
+		// distanta dintre boss si target
+		float tarDist = sqrtf(pow((m_fCurrentX - m_fTargetX), 2) + pow((m_fCurrentY - m_fTargetY), 2));
+		// panta dreptei ce uneste boss-ul cu target-ul
+		float m = (m_fTargetY - m_fCurrentY)/(m_fTargetX - m_fCurrentX);
+		// pentru a intelege ce se intampla mai jos imaginati-va ca dreapta ce uneste boss-ul cu targetul face parte dintr-un triunghi dreptunghic
+		float cateta_alaturata = m_fTargetX - m_fCurrentX;
+		float cos = cateta_alaturata/tarDist; // este constant si ne vom folosi de el pentru a calcula urmatoarele pct de spawn in functie de fDist
+		/**
+		* Am ales ca factor de incrementare 5. Adica am presupus 
+		* ca npc-ul NPC_COLDFLAME va fi spawnat din 5 in 5 yards.
+		* Totusi mai corect ar fi ca factorul de incrementare sa
+		* fie lungimea npc-ului NPC_COLDFLAME. Si-n plus nu sunt
+		* sigur daca 1 unitate float = 1 yard??? Probabil ca trebuie
+		* adaugat si-un timer.
+		*/
+		for(float fDist=5; fDist<=50; fDist+=5)
+			SummonColdFlame(cos, fDist, m);
+		/** mutate in functia principala */
 	}
 
-    void UpdateAI(const uint32 uiDiff)
+	void SummonColdFlame(float cos, float fDist, float m)
+	{
+		float cateta_alaturata_calculata = cos * fDist;
+		float x_to_spawn = cateta_alaturata_calculata + m_fCurrentX;
+		float y_to_spawn = m*(x_to_spawn - m_fCurrentX) + m_fCurrentY;
+
+		// summon
+		m_creature->SummonCreature(NPC_COLDFLAME, x_to_spawn, y_to_spawn, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 5000);
+	}
+
+	/*
+	void SummonColdFlame(float fDist)
+	{
+		// distanta dintre boss si target
+		float tarDist = sqrtf(pow((m_fCurrentX - m_fTargetX), 2) + pow((m_fCurrentY - m_fTargetY), 2));
+		// panta dreptei ce uneste boss-ul cu target-ul
+		float m = (m_fTargetY - m_fCurrentY)/(m_fTargetX - m_fCurrentX);
+
+		// pentru a intelege ce se intampla mai jos imaginati-va ca dreapta ce uneste boss-ul cu targetul face parte dintr-untriunghi dreptunghic
+		float cateta_alaturata = m_fTargetX - m_fCurrentX;
+		float cos = cateta_alaturata/tarDist; // este constant si ne vom folosi de el pentru a calcula urmatoarele pct de spawn in functie de fDist
+		float cateta_alaturata_calculata = cos * fDist;
+		float x_to_spawn = cateta_alaturata_calculata + m_fCurrentX;
+		float y_to_spawn = m*x_to_spawn - m*m_fCurrentX + m_fCurrentY;
+
+		// summon
+		m_creature->SummonCreature(NPC_COLDFLAME, x_to_spawn, y_to_spawn, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 5000);
+
+		// add new coords
+		m_fCurrentX = x_to_spawn;
+		m_fCurrentY = y_to_spawn;
+	}*/
+
+	void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -202,8 +259,15 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
 			m_creature->InterruptNonMeleeSpells(true);
 			DoCast(m_creature, SPELL_BONE_STORM_AURA);
             m_uiBoneStorm_Timer = 90000;
+			m_uiStormEndTimer	= 23000;
+			m_uiColdFlame_Timer = 5000;
+			//m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT, IMMUNE_TO_SILENCE_AND_STUN_AND_FEAR_MASK, true);
         }
         else m_uiBoneStorm_Timer -= uiDiff;
+
+		if (m_uiStormEndTimer < uiDiff && m_creature->HasAura(SPELL_BONE_STORM_AURA, EFFECT_INDEX_0))
+			m_creature->RemoveAurasDueToSpell(SPELL_BONE_STORM_AURA);
+		else m_uiStormEndTimer -= uiDiff;
 
 		// start the line of flame
         if (m_uiColdFlame_Timer < uiDiff)
@@ -215,22 +279,22 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
 				m_fTargetY = pTarget->GetPositionY();
 				m_fCurrentX = m_creature->GetPositionX();
 				m_fCurrentY = m_creature->GetPositionY();
-				SummonColdFlame(10.0f);
+				SummonColdFlame(5.0f);
 				m_uiColdFlames			= 0;
 				m_uiColdFlameTickTimer	= 1000;
 				m_bIsColdFlame			= true;
 			}
 			if(m_creature->HasAura(SPELL_BONE_STORM_AURA, EFFECT_INDEX_0))
-				m_uiColdFlame_Timer = urand(3000, 6000);
+				m_uiColdFlame_Timer = 1000;
 			else
-				m_uiColdFlame_Timer	= urand(10000, 15000);
+				m_uiColdFlame_Timer	= urand(8000, 10000);
         }
         else m_uiColdFlame_Timer -= uiDiff;
 
 		// summon a line of flame periodicaly
 		if(m_uiColdFlameTickTimer < uiDiff && m_bIsColdFlame && m_uiColdFlames < 10)
 		{
-			SummonColdFlame(10.0f);
+			//SummonColdFlame(10.0f);
 			if(m_creature->HasAura(SPELL_BONE_STORM_AURA, EFFECT_INDEX_0))
 				m_uiColdFlameTickTimer = 500;
 			else
@@ -261,7 +325,7 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 DoCast(pTarget, SPELL_BONE_SPIKE);
-				//m_creature->SummonCreature(NPC_BONESPIKE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
+				m_creature->SummonCreature(NPC_BONESPIKE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
             }
             m_uiSaberLash_Timer = 4000;
             m_uiBoneSpike_Timer = 18000;
@@ -274,7 +338,7 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
                 DoCast(m_creature->getVictim(), SPELL_BONE_SLICE_10);
             if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 DoCast(m_creature->getVictim(), SPELL_BONE_SLICE_25);
-            m_uiSaberLash_Timer = urand(2000, 4000);
+            m_uiSaberLash_Timer = urand(1000, 2000);
         }
         else m_uiSaberLash_Timer -= uiDiff;
 
@@ -303,9 +367,9 @@ struct MANGOS_DLL_DECL mob_coldflameAI : public ScriptedAI
     ScriptedInstance *m_pInstance;
 
     void Reset()
-    {
+	{
 		DoCast(m_creature, SPELL_COLDFLAME_TRIG);
-    }
+	}
 
     void AttackStart(Unit *who)
     {
