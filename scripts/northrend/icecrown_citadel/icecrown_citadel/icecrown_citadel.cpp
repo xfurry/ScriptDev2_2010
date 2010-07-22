@@ -630,7 +630,6 @@ struct MANGOS_DLL_DECL mob_nerubar_broodkeeperAI : public ScriptedAI
 
 	void MoveInLineOfSight(Unit* pWho)
 	{
-		// doesn't work
 		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bStartAttack && 
 			pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDist3d(pWho->GetPositionX(), pWho->GetPositionY(), pWho->GetPositionZ(), 70) && m_creature->IsWithinLOSInMap(pWho))
 		{
@@ -726,7 +725,6 @@ struct MANGOS_DLL_DECL mob_deathbound_wardAI : public ScriptedAI
 
 	void MoveInLineOfSight(Unit* pWho)
 	{
-		// sometimes it doesn't attack, maybe wrong aura
 		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bStartAttack && (pWho->HasAura(SPELL_SPIRIT_ALARM) || pWho->HasAura(SPELL_SPIRIT_ALARM2) || pWho->HasAura(SPELL_SPIRIT_ALARM3) || pWho->HasAura(SPELL_SPIRIT_ALARM4)) && 
 			pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 80) && m_creature->IsWithinLOSInMap(pWho))
 		{
@@ -2351,6 +2349,17 @@ struct MANGOS_DLL_DECL mob_vengefull_fleshreaperAI : public ScriptedAI
 		DoCast(pWho, SPELL_LEAPING_FACE_MAUL);
 	}
 
+	// not sure if I must use this
+	void MoveInLineOfSight(Unit* pWho)
+	{
+		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && (pWho->HasAura(SPELL_SPIRIT_ALARM) || pWho->HasAura(SPELL_SPIRIT_ALARM2) || pWho->HasAura(SPELL_SPIRIT_ALARM3) || pWho->HasAura(SPELL_SPIRIT_ALARM4)) && 
+			pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 80) && m_creature->IsWithinLOSInMap(pWho))
+		{
+			m_creature->CallForHelp(60.0f);
+			m_creature->SetInCombatWithZone();
+		}
+	}
+
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -2617,8 +2626,24 @@ void AddSC_icecrown_citadel()
     newscript->RegisterSelf();
 
 	// ### Plagueworks Trash ###
+
+	newscript = new Script;
+    newscript->Name = "mob_blighted_abomination";
+    newscript->GetAI = &GetAI_mob_blighted_abomination;
+    newscript->RegisterSelf();
+
 	newscript = new Script;
     newscript->Name = "mob_plague_scientist";
     newscript->GetAI = &GetAI_mob_plague_scientist;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_vengefull_fleshreaper";
+    newscript->GetAI = &GetAI_mob_vengefull_fleshreaper;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_decaying_colossus";
+    newscript->GetAI = &GetAI_mob_decaying_colossus;
     newscript->RegisterSelf();
 }
