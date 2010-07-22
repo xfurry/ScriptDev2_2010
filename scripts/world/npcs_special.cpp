@@ -1749,6 +1749,7 @@ struct MANGOS_DLL_DECL npc_training_dummyAI : public Scripted_NoMovementAI
 
     npc_training_dummyAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
+		SetCombatMovement(false);
         Reset();
     }
 
@@ -1756,6 +1757,11 @@ struct MANGOS_DLL_DECL npc_training_dummyAI : public Scripted_NoMovementAI
     {
         combat_timer = 0;
     }
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
 
     void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
     {

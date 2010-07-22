@@ -8,3 +8,5 @@ UPDATE `creature_template` SET `modelid_A` = 11686, `modelid_H` = 11686, `Script
 UPDATE `creature_template` SET `ScriptName` = 'npc_death_knight_gargoyle' WHERE `entry` = 27829;
 -- XP eliminator
 UPDATE `creature_template` SET `ScriptName` = 'npc_experience_eliminator' WHERE `entry` in (35364, 35365);
+-- Training dummy
+UPDATE `creature_template` SET `ScriptName` = 'npc_training_dummy' WHERE `entry` in (31144, 32666, 32546, 32542, 30527, 31146);
