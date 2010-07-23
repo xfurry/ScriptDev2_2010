@@ -447,6 +447,7 @@ UPDATE creature_template SET ScriptName = "mob_sanity_well" WHERE entry = 33991;
 UPDATE creature_template SET scriptname='mob_madness_portal' WHERE `entry`=34072;
 UPDATE creature_template SET scriptname='mob_laughing_skull' WHERE `entry`=33990;
 UPDATE creature_template SET scriptname='mob_ominous_cloud' WHERE `entry`=33292;
+update creature set spawnMask = 3 where id = 33292;
 -- spells
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('63886', '1', '33882');
 -- Keepers
