@@ -322,7 +322,7 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
                 case 2: DoScriptText(SAY_BONESPIKE3, m_creature); break;
             }
 
-            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
             {
                 DoCast(pTarget, SPELL_BONE_SPIKE);
 				m_creature->SummonCreature(NPC_BONESPIKE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);
