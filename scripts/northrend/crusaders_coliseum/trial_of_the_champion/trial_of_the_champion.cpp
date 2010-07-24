@@ -378,11 +378,11 @@ struct MANGOS_DLL_DECL npc_toc5_announcerAI: public ScriptedAI
                             m_uiIntroTimer = 1000;
                             break;
                         case 1:
-                            if(Creature* pTemp = m_creature->SummonCreature(m_uiChamp1Entry, 738.665771f, 661.031433f, 412.394623f, 4.698702f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000))
+                            if(Creature* pTemp = m_creature->SummonCreature(m_uiChamp1Entry, 738.665771f, 661.031433f, 412.394623f, 4.698702f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300000))
                                 m_uiChamp1GUID = pTemp->GetGUID();
-                            if(Creature* pTemp = m_creature->SummonCreature(m_uiChamp2Entry, 746.864441f, 660.918762f, 411.695465f, 4.698700f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000))
+                            if(Creature* pTemp = m_creature->SummonCreature(m_uiChamp2Entry, 746.864441f, 660.918762f, 411.695465f, 4.698700f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300000))
                                 m_uiChamp2GUID = pTemp->GetGUID();
-                            if(Creature* pTemp = m_creature->SummonCreature(m_uiChamp3Entry, 754.360779f, 660.816162f, 412.395996f, 4.698700f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000))
+                            if(Creature* pTemp = m_creature->SummonCreature(m_uiChamp3Entry, 754.360779f, 660.816162f, 412.395996f, 4.698700f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300000))
                                 m_uiChamp3GUID = pTemp->GetGUID();
                             ++m_uiIntroStep;
                             m_uiIntroTimer = 2000;
