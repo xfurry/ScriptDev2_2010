@@ -619,11 +619,13 @@ struct MANGOS_DLL_DECL mob_vengeful_shadeAI : public ScriptedAI
     ScriptedInstance *m_pInstance;
     uint32 Difficulty;
 
-    uint32 deathTimer;
+    uint32 m_uiDeathTimer;
+	bool m_bHasCasted;
 
     void Reset()
     {
-        deathTimer = 600000;
+        m_uiDeathTimer	= 600000;
+		m_bHasCasted	= false;
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -635,7 +637,7 @@ struct MANGOS_DLL_DECL mob_vengeful_shadeAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 5))
+        if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 5) && !m_bHasCasted)
         {
             if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                 DoCast(m_creature->getVictim(), SPELL_VENGEFUL_BLAST_10);
@@ -645,14 +647,14 @@ struct MANGOS_DLL_DECL mob_vengeful_shadeAI : public ScriptedAI
                 DoCast(m_creature->getVictim(), SPELL_VENGEFUL_BLAST_10HC);
             if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 DoCast(m_creature->getVictim(), SPELL_VENGEFUL_BLAST_25HC);
-            deathTimer = 500;
+
+            m_uiDeathTimer = 500;
+			m_bHasCasted = true;
         }
 
-        if (deathTimer < uiDiff)
-        {
+        if (m_uiDeathTimer < uiDiff)
             m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-            deathTimer = 10000;
-        }else deathTimer -= uiDiff;
+        else m_uiDeathTimer -= uiDiff;
     }
 };
 

@@ -102,7 +102,7 @@ enum
     NPC_VOLATILE_OOZE               = 37697,
     NPC_GAS_BOMB                    = 38159,
     NPC_MALLEABLE_OOZE              = 38556,
-    NPC_SLIME_PUDDLE                = 38234,
+    NPC_SLIME_PUDDLE                = 38234, 
 };
 
 struct MANGOS_DLL_DECL boss_professor_putricideAI : public ScriptedAI

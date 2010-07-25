@@ -2438,14 +2438,608 @@ CreatureAI* GetAI_mob_decaying_colossus(Creature* pCreature)
 ##########################################
 ########################################*/
 
-// Valkyr herald
-// Darkfallen archmage
-// Darkfallen blood knight
-// Darkfallen noble
-// Darkfallen advisor
-// Darkfallen lieutenant
-// Darkfallen tactitian
-// Darkfallen commander
+enum
+{
+	SPELL_SEVERED_ESSENCE_10		= 71906,
+	SPELL_SEVERED_ESSENCE_25		= 71942,
+};
+
+/*######
+## Val'kyr Herald
+######*/
+struct MANGOS_DLL_DECL mob_valkyr_heraldAI : public ScriptedAI
+{
+	mob_valkyr_heraldAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		Difficulty = pCreature->GetMap()->GetDifficulty();
+		Reset();
+	}
+
+	uint32 Difficulty;
+
+	uint32 m_uiSeveredEssenceTimer;
+
+	void Reset()
+	{
+		m_uiSeveredEssenceTimer = urand(5000, 9000);
+	}
+
+	void MoveInLineOfSight(Unit* pWho)
+	{
+		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && pWho->GetTypeId() == TYPEID_PLAYER && 
+			m_creature->IsWithinDist3d(pWho->GetPositionX(), pWho->GetPositionY(), pWho->GetPositionZ(), 100) && m_creature->IsWithinLOSInMap(pWho))
+			m_creature->SetInCombatWithZone();
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if (m_uiSeveredEssenceTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(m_creature, SPELL_SEVERED_ESSENCE_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(m_creature, SPELL_SEVERED_ESSENCE_25);
+			}
+			m_uiSeveredEssenceTimer = urand(5000, 9000);
+		}
+		else m_uiSeveredEssenceTimer -= uiDiff;
+
+		DoMeleeAttackIfReady();
+	}
+};
+
+CreatureAI* GetAI_mob_valkyr_herald(Creature* pCreature)
+{
+	return new mob_valkyr_heraldAI(pCreature);
+}
+enum
+{
+	SPELL_AMPLIFY_MAGIC_10		    = 70408,
+	SPELL_AMPLIFY_MAGIC_25	   	    = 72336,
+	SPELL_BLAST_WAVE_10		        = 70407,
+	SPELL_BLAST_WAVE_25	   			= 71151,
+	SPELL_FIREBALL_10				= 70409,
+	SPELL_FIREBALL_25	   			= 71153,
+	SPELL_POLYMORPH_SPIDER		    = 70410,
+	SPELL_SIPHON_ESSENCE	   	    = 70299,
+};
+
+/*######
+## Darkfallen Archmage
+######*/
+struct MANGOS_DLL_DECL mob_darkfallen_archmageAI : public ScriptedAI
+{
+	mob_darkfallen_archmageAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		Difficulty = pCreature->GetMap()->GetDifficulty();
+		Reset();
+	}
+
+	uint32 Difficulty;
+
+	uint32 m_uiAmplifyMagicTimer;
+	uint32 m_uiBlastWaveTimer;
+	uint32 m_uiFireballTimer;
+	uint32 m_uiPolymorphSpiderTimer;
+	uint32 m_uiSiphonEssenceTimer;
+
+	void Reset()
+	{
+		m_uiAmplifyMagicTimer     = urand(5000, 9000);
+		m_uiBlastWaveTimer        = urand(7000, 11000);
+		m_uiFireballTimer         = urand(9000, 13000);
+		m_uiPolymorphSpiderTimer  = 10000;
+		m_uiSiphonEssenceTimer    = 15000;
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if (m_uiAmplifyMagicTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(m_creature, SPELL_AMPLIFY_MAGIC_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(m_creature, SPELL_AMPLIFY_MAGIC_25);
+			}
+			m_uiAmplifyMagicTimer = urand(5000, 9000);
+		}
+		else m_uiAmplifyMagicTimer -= uiDiff;
+
+		if (m_uiBlastWaveTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(m_creature, SPELL_BLAST_WAVE_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(m_creature, SPELL_BLAST_WAVE_25);
+			}
+			m_uiBlastWaveTimer = urand(7000, 10000);
+		}
+		else m_uiBlastWaveTimer -= uiDiff;
+
+		if (m_uiFireballTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(m_creature, SPELL_FIREBALL_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(m_creature, SPELL_FIREBALL_25);
+			}
+			m_uiFireballTimer = urand(9000, 13000);
+		}
+		else m_uiFireballTimer -= uiDiff;
+
+		if (m_uiPolymorphSpiderTimer < uiDiff)
+		{
+
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCastSpellIfCan(pTarget, SPELL_POLYMORPH_SPIDER);
+
+			m_uiPolymorphSpiderTimer = 10000;
+		}
+		else m_uiPolymorphSpiderTimer -= uiDiff;
+
+		if (m_uiSiphonEssenceTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCastSpellIfCan(pTarget, SPELL_SIPHON_ESSENCE);
+			m_uiSiphonEssenceTimer = 15000;
+		}
+		else m_uiSiphonEssenceTimer -= uiDiff;
+
+
+
+		DoMeleeAttackIfReady();
+	}
+};
+
+CreatureAI* GetAI_mob_darkfallen_archmage(Creature* pCreature)
+{
+	return new mob_darkfallen_archmageAI(pCreature);	
+}
+
+enum
+{
+	SPELL_BLOOD_MIRROR   		    = 70450,
+	SPELL_UNHOLY_STRIKE		        = 70437,
+	SPELL_VAMPIRIC_AURA	   			= 71736,
+
+
+};
+
+/*######
+## Darkfallen Blood Knight
+######*/
+struct MANGOS_DLL_DECL mob_darkfallen_blood_knightAI : public ScriptedAI
+{
+	mob_darkfallen_blood_knightAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		Reset();
+	}
+
+
+	uint32 m_uiBloodMirrorTimer;
+	uint32 m_uiSiphonEssenceTimer;
+	uint32 m_uiUnholyStrikeTimer;
+	uint32 m_uiVampiricAuraTimer;
+
+	void Reset()
+	{
+		m_uiBloodMirrorTimer      = urand(5000, 9000);
+		m_uiSiphonEssenceTimer    = urand(7000, 11000);
+		m_uiUnholyStrikeTimer     = urand(9000, 13000);
+		m_uiVampiricAuraTimer     = 10000;
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if (m_uiBloodMirrorTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_BLOOD_MIRROR);
+			m_uiBloodMirrorTimer = urand(5000, 9000);
+		}
+		else m_uiBloodMirrorTimer -= uiDiff;
+
+		if (m_uiSiphonEssenceTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_SIPHON_ESSENCE);
+			m_uiSiphonEssenceTimer = urand(7000, 10000);
+		}
+		else m_uiSiphonEssenceTimer -= uiDiff;
+
+		if (m_uiUnholyStrikeTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_UNHOLY_STRIKE);
+			m_uiUnholyStrikeTimer = urand(9000, 13000);
+		}
+		else m_uiUnholyStrikeTimer -= uiDiff;
+
+		if (m_uiVampiricAuraTimer < uiDiff)
+		{
+
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCastSpellIfCan(pTarget, SPELL_VAMPIRIC_AURA);
+
+			m_uiVampiricAuraTimer = 10000;
+		}
+		else m_uiVampiricAuraTimer -= uiDiff;
+
+
+		DoMeleeAttackIfReady();
+	}
+};
+
+CreatureAI* GetAI_mob_darkfallen_blood_knight(Creature* pCreature)
+{
+	return new mob_darkfallen_blood_knightAI(pCreature);	
+}
+
+enum
+{
+
+	SPELL_CHAINS_OF_SHADOW	   	    = 70645,
+	SPELL_SHADOW_B_10	        = 72960,
+	SPELL_SHADOW_B_25 			= 72961,
+};
+
+/*######
+## Darkfallen Noble
+######*/
+struct MANGOS_DLL_DECL mob_darkfallen_nobleAI : public ScriptedAI
+{
+	mob_darkfallen_nobleAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		Difficulty = pCreature->GetMap()->GetDifficulty();
+		Reset();
+	}
+
+	uint32 Difficulty;
+
+	uint32 m_uiChainsOfShadowTimer;
+	uint32 m_uiShadowBoltTimer;
+	uint32 m_uiSiphonEssenceTimer;
+
+	void Reset()
+	{
+		m_uiChainsOfShadowTimer   = urand(5000, 9000);
+		m_uiShadowBoltTimer       = urand(7000, 11000);
+		m_uiSiphonEssenceTimer    = urand(9000, 13000);
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if (m_uiChainsOfShadowTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_CHAINS_OF_SHADOW);
+			m_uiChainsOfShadowTimer = urand(5000, 9000);
+		}
+		else m_uiChainsOfShadowTimer -= uiDiff;
+
+		if (m_uiShadowBoltTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(m_creature, SPELL_SHADOW_B_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(m_creature, SPELL_SHADOW_B_25);
+			}
+			m_uiShadowBoltTimer = urand(7000, 10000);
+		}
+		else m_uiShadowBoltTimer -= uiDiff;
+
+		if (m_uiSiphonEssenceTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_SIPHON_ESSENCE);
+			m_uiSiphonEssenceTimer = urand(9000, 13000);
+		}
+		else m_uiSiphonEssenceTimer -= uiDiff;
+
+		DoMeleeAttackIfReady();
+	}
+};
+
+CreatureAI* GetAI_mob_darkfallen_noble(Creature* pCreature)
+{
+	return new mob_darkfallen_nobleAI(pCreature);	
+}
+enum
+{
+
+
+	SPELL_LICH_SLAP_10  	        = 72057,
+	SPELL_LICH_SLAP_25 	     		= 72421,
+	SPELL_SHROUD_OF_PROTECTION	    = 72065,
+	SPELL_SHROUD_OF_SPELL_WARDING   = 72066,
+};
+
+/*######
+## Darkfallen Advisor
+######*/
+struct MANGOS_DLL_DECL mob_darkfallen_advisorAI : public ScriptedAI
+{
+	mob_darkfallen_advisorAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		Difficulty = pCreature->GetMap()->GetDifficulty();
+		Reset();
+	}
+
+	uint32 Difficulty;
+
+	uint32 m_uiLichSlapTimer;
+	uint32 m_uiShroudOfProtectionTimer;
+	uint32 m_uiShroudOfSpellWardingTimer;
+
+	void Reset()
+	{
+		m_uiLichSlapTimer                = urand(5000, 9000);
+		m_uiShroudOfProtectionTimer       = urand(7000, 11000);
+		m_uiShroudOfSpellWardingTimer    = urand(9000, 13000);
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if (m_uiShroudOfProtectionTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_SHROUD_OF_PROTECTION);
+			m_uiShroudOfProtectionTimer = urand(7000, 11000);
+		}
+		else m_uiShroudOfProtectionTimer -= uiDiff;
+
+		if (m_uiLichSlapTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(m_creature, SPELL_LICH_SLAP_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(m_creature, SPELL_LICH_SLAP_25);
+			}
+			m_uiLichSlapTimer = urand(5000, 9000);
+		}
+		else m_uiLichSlapTimer -= uiDiff;
+
+		if (m_uiShroudOfSpellWardingTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_SHROUD_OF_SPELL_WARDING);
+			m_uiShroudOfSpellWardingTimer = urand(9000, 13000);
+		}
+		else m_uiShroudOfSpellWardingTimer -= uiDiff;
+
+		DoMeleeAttackIfReady();
+	}
+};
+
+CreatureAI* GetAI_mob_darkfallen_advisor(Creature* pCreature)
+{
+	return new mob_darkfallen_advisorAI(pCreature);	
+}
+enum
+{
+
+
+	SPELL_REND_FLASH_10  	        = 70435,
+	SPELL_REND_FLASH_25      		= 71154,
+	SPELL_VAMPIRIC_CURSE    	    = 70423,
+};
+
+/*######
+## Darkfallen Lieutenant
+######*/
+struct MANGOS_DLL_DECL mob_darkfallen_lieutenantAI : public ScriptedAI
+{
+	mob_darkfallen_lieutenantAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		Difficulty = pCreature->GetMap()->GetDifficulty();
+		Reset();
+	}
+
+	uint32 Difficulty;
+
+	uint32 m_uiRendFlashTimer;
+	uint32 m_uiVampiricCurseTimer;
+
+	void Reset()
+	{
+		m_uiRendFlashTimer               = urand(5000, 9000);
+		m_uiVampiricCurseTimer           = urand(7000, 11000);
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if (m_uiVampiricCurseTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_VAMPIRIC_CURSE);
+			m_uiVampiricCurseTimer = urand(7000, 11000);
+		}
+		else m_uiVampiricCurseTimer -= uiDiff;
+
+		if (m_uiRendFlashTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(m_creature, SPELL_REND_FLASH_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(m_creature, SPELL_REND_FLASH_25);
+			}
+			m_uiRendFlashTimer = urand(5000, 9000);
+		}
+		else m_uiRendFlashTimer -= uiDiff;
+
+		DoMeleeAttackIfReady();
+	}
+};
+
+CreatureAI* GetAI_mob_darkfallen_lieutenant(Creature* pCreature)
+{
+	return new mob_darkfallen_lieutenantAI(pCreature);	
+}
+enum
+{
+
+
+	SPELL_BLOOD_SAP      	        = 70432,
+	SPELL_SHADOWSTEP        		= 70431,
+};
+
+/*######
+## Darkfallen Tactician
+######*/
+struct MANGOS_DLL_DECL mob_darkfallen_tacticianAI : public ScriptedAI
+{
+	mob_darkfallen_tacticianAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		Reset();
+	}
+
+
+	uint32 m_uiBloodSapTimer;
+	uint32 m_uiUnholyStrikeTimer;
+	uint32 m_uiShadowstepTimer;
+
+	void Reset()
+	{
+		m_uiBloodSapTimer                = urand(5000, 9000);
+		m_uiShadowstepTimer              = urand(7000, 11000);
+		m_uiUnholyStrikeTimer            = urand(9000, 15000);
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if (m_uiBloodSapTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_BLOOD_SAP);
+			m_uiBloodSapTimer = urand(5000, 9000);
+		}
+		else m_uiBloodSapTimer -= uiDiff;
+
+		if (m_uiShadowstepTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_SHADOWSTEP);
+			m_uiShadowstepTimer = urand(7000, 11000);
+		}
+		else m_uiShadowstepTimer -= uiDiff;
+
+		if (m_uiUnholyStrikeTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_UNHOLY_STRIKE);
+			m_uiUnholyStrikeTimer = urand(9000, 15000);
+		}
+		else m_uiUnholyStrikeTimer -= uiDiff;
+
+		DoMeleeAttackIfReady();
+	}
+};
+
+CreatureAI* GetAI_mob_darkfallen_tactician(Creature* pCreature)
+{
+	return new mob_darkfallen_tacticianAI(pCreature);	
+}
+
+enum
+{
+
+
+	SPELL_BATTLE_SHOUT     	        = 70750,
+	SPELL_VAMPIRE_RUSH_10        	= 70449,
+	SPELL_VAMPIRE_RUSH_25      	    = 71155,
+};
+
+/*######
+## Darkfallen Commander
+######*/
+struct MANGOS_DLL_DECL mob_darkfallen_commanderAI : public ScriptedAI
+{
+	mob_darkfallen_commanderAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		Difficulty = pCreature->GetMap()->GetDifficulty();
+		Reset();
+	}
+
+	uint32 Difficulty;
+	uint32 m_uiBattleShoutTimer;
+	uint32 m_uiVampireRushTimer;
+
+	void Reset()
+	{
+		m_uiBattleShoutTimer                = urand(5000, 9000);
+		m_uiVampireRushTimer                = urand(7000, 11000);
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if (m_uiBattleShoutTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(m_creature, SPELL_BATTLE_SHOUT);
+			m_uiBattleShoutTimer = urand(5000, 9000);
+		}
+		else m_uiBattleShoutTimer -= uiDiff;
+
+		if (m_uiVampireRushTimer < uiDiff)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(m_creature, SPELL_VAMPIRE_RUSH_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(m_creature, SPELL_VAMPIRE_RUSH_25);
+			}
+			m_uiVampireRushTimer = urand(7000, 11000);
+		}
+		else m_uiVampireRushTimer -= uiDiff;
+
+		DoMeleeAttackIfReady();
+	}
+};
+
+CreatureAI* GetAI_mob_darkfallen_commander(Creature* pCreature)
+{
+	return new mob_darkfallen_commanderAI(pCreature);
+}
 
 /*########################################
 ##########################################
@@ -2645,5 +3239,46 @@ void AddSC_icecrown_citadel()
 	newscript = new Script;
     newscript->Name = "mob_decaying_colossus";
     newscript->GetAI = &GetAI_mob_decaying_colossus;
+    newscript->RegisterSelf();
+
+	// ### Crimson Halls ###
+	newscript = new Script;
+    newscript->Name = "mob_valkyr_herald";
+    newscript->GetAI = &GetAI_mob_valkyr_herald;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_darkfallen_archmage";
+    newscript->GetAI = &GetAI_mob_darkfallen_archmage;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_darkfallen_blood_knight";
+    newscript->GetAI = &GetAI_mob_darkfallen_blood_knight;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_darkfallen_noble";
+    newscript->GetAI = &GetAI_mob_darkfallen_noble;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_darkfallen_advisor";
+    newscript->GetAI = &GetAI_mob_darkfallen_advisor;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_darkfallen_lieutenant";
+    newscript->GetAI = &GetAI_mob_darkfallen_lieutenant;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_darkfallen_tactician";
+    newscript->GetAI = &GetAI_mob_darkfallen_tactician;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_darkfallen_commander";
+    newscript->GetAI = &GetAI_mob_darkfallen_commander;
     newscript->RegisterSelf();
 }

@@ -50,6 +50,15 @@ update creature_template set scriptName = 'miniboss_rimefang' where entry = 3753
 UPDATE creature_template SET ScriptName = 'miniboss_stinky' WHERE entry = 37025;
 UPDATE creature_template SET ScriptName = 'miniboss_precious' WHERE entry = 37217;
 
+-- Crimson halls trash:
+update creature_template set scriptName = 'mob_valkyr_herald' where entry = 37098;
+update creature_template set scriptName = 'mob_darkfallen_archmage' where entry = 37664;
+update creature_template set scriptName = 'mob_darkfallen_blood_knight' where entry = 37595;
+update creature_template set scriptName = 'mob_darkfallen_noble' where entry = 37663;
+update creature_template set scriptName = 'mob_darkfallen_advisor' where entry = 37571;
+update creature_template set scriptName = 'mob_darkfallen_lieutenant' where entry = 37665;
+update creature_template set scriptName = 'mob_darkfallen_tactician' where entry = 37666;
+update creature_template set scriptName = 'mob_darkfallen_commander' where entry = 37662;
 -- Plagueworks trash:
 update creature_template set scriptName = 'mob_plague_scientist' where entry = 37023;
 update creature_template set scriptName = 'mob_blighted_abomination' where entry = 37022;

@@ -69,9 +69,10 @@ enum BossSpells
     SPELL_OOZE_EXPLOSION_25     = 73029,
     SPELL_OOZE_EXPLOSION_25HC   = 73030,
 
-    NPC_BIG_OOZE                = 36899,
+    NPC_BIG_OOZE                = 36899,	
     NPC_SMALL_OOZE              = 36897,
-    NPC_STICKY_OOZE             = 37006,
+    NPC_STICKY_OOZE             = 37006,	// casted by big / small ooze
+	NPC_OOZE_PUDDLE				= 37690,	// used for ooze flood
 };
 
 struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
@@ -157,6 +158,7 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
                 case 1: DoScriptText(SAY_SLIME_FLOW2, pPutricide); break;
                 }
             }
+			// fix this! should be casted near a pipe
             if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
@@ -285,12 +287,15 @@ struct MANGOS_DLL_DECL mob_small_oozeAI : public ScriptedAI
     void Reset()
     {
         m_uiStickyOozeTimer = 10000;
-
+		m_creature->SetRespawnDelay(DAY);
         DoCast(m_creature, SPELL_WEAK_RADIATING_OOZE);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if (m_pInstance && m_pInstance->GetData(TYPE_ROTFACE) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -326,11 +331,14 @@ struct MANGOS_DLL_DECL mob_big_oozeAI : public ScriptedAI
 
     uint32 m_uiStickyOozeTimer;
     uint32 m_uiDieTimer;
+	bool m_bHasCasted;
 
     void Reset()
     {
         m_uiStickyOozeTimer = 10000;
         m_uiDieTimer        = 600000;
+		m_bHasCasted		= false;
+		m_creature->SetRespawnDelay(DAY);
 
         if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
             DoCast(m_creature, SPELL_RADIATING_OOZE_10);
@@ -344,6 +352,9 @@ struct MANGOS_DLL_DECL mob_big_oozeAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if (m_pInstance && m_pInstance->GetData(TYPE_ROTFACE) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -357,12 +368,10 @@ struct MANGOS_DLL_DECL mob_big_oozeAI : public ScriptedAI
             m_uiStickyOozeTimer -= uiDiff;
 
         if(m_uiDieTimer < uiDiff)
-        {
             m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }
         else m_uiDieTimer -= uiDiff;
 
-        if(m_creature->HasAura(SPELL_UNSTABLE_OOZE, EFFECT_INDEX_0))
+        if(m_creature->HasAura(SPELL_UNSTABLE_OOZE, EFFECT_INDEX_0) && !m_bHasCasted)
         {
             if(m_creature->GetAura(SPELL_UNSTABLE_OOZE, EFFECT_INDEX_0)->GetStackAmount() == 5)
             {
@@ -380,7 +389,8 @@ struct MANGOS_DLL_DECL mob_big_oozeAI : public ScriptedAI
                     DoScriptText(SAY_OOZE_EXPLODE, pRotface);
                     ((boss_rotfaceAI*)pRotface->AI())->m_uiOozeCount = 0;
                 }
-                m_uiDieTimer = 4200;
+				m_bHasCasted	= true;
+                m_uiDieTimer	= 4200;
             }
         }
 
@@ -398,6 +408,9 @@ struct MANGOS_DLL_DECL mob_sticky_oozeAI : public ScriptedAI
     mob_sticky_oozeAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+		pCreature->SetDisplayId(11686);     // make invisible
+        pCreature->setFaction(14);
+        SetCombatMovement(false);
         Reset();
     }
 
@@ -405,11 +418,15 @@ struct MANGOS_DLL_DECL mob_sticky_oozeAI : public ScriptedAI
 
     void Reset()
     {
+		m_creature->SetRespawnDelay(DAY);
         DoCast(m_creature, SPELL_STICKY_OOZE_TRIG);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if (m_pInstance && m_pInstance->GetData(TYPE_ROTFACE) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
     }
