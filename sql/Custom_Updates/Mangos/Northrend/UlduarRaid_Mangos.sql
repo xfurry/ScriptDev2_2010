@@ -1,4 +1,4 @@
-/* ULDUAR */
+﻿/* ULDUAR */
 
 -- Flame Leviathan
 UPDATE creature_template SET ScriptName = "boss_flame_leviathan" WHERE entry = 33113;
@@ -286,9 +286,9 @@ REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('651
 -- insert two new boxes
 DELETE FROM `gameobject` WHERE `id` in (194957, 194958);
 INSERT INTO `gameobject` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`position_x`,`position_y`,`position_z`,`orientation`,`rotation0`,`rotation1`,`rotation2`,`rotation3`,`spawntimesecs`,`animprogress`,`state`) VALUES
-(110002, 194957, 603, 1, 65535, 2734.73, 2568.98, 364.314, 0.0139475, 0, 0, 0.00697369, 0.999976, -604800, 100, 1);
+(110004, 194957, 603, 1, 65535, 2734.73, 2568.98, 364.314, 0.0139475, 0, 0, 0.00697369, 0.999976, -604800, 100, 1);
 INSERT INTO `gameobject` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`position_x`,`position_y`,`position_z`,`orientation`,`rotation0`,`rotation1`,`rotation2`,`rotation3`,`spawntimesecs`,`animprogress`,`state`) VALUES
-(110003, 194958, 603, 2, 65535, 2734.73, 2568.98, 364.314, 0.0139475, 0, 0, 0.00697369, 0.999976, -604800, 100, 1);
+(110005, 194958, 603, 2, 65535, 2734.73, 2568.98, 364.314, 0.0139475, 0, 0, 0.00697369, 0.999976, -604800, 100, 1);
 -- 10 man:
 DELETE FROM `gameobject_loot_template` WHERE (`entry`=194789);
 INSERT INTO `gameobject_loot_template` VALUES 
@@ -518,4 +518,3 @@ update gameobject set spawntimesecs = -604800 where id in (195046, 195047, 19430
 UPDATE creature_template SET ScriptName = "generic_creature" WHERE entry in (34086, 34085, 34069, 33237, 34234, 33236, 33264, 34164, 34196, 34199, 34198, 
 34190, 34197, 33699, 34134, 34135, 34133, 33430, 33528, 33431, 33527, 33526, 33525, 33355, 33354, 34193, 34183, 33110, 
 32878, 33822, 33818, 33824, 33823, 33772, 33838, 33819, 33820, 32875, 33346, 34057);
-
