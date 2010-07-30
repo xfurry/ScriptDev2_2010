@@ -24,7 +24,7 @@ enum
 
     TYPE_ATTEMPTS               = 13,
 
-	// lower spier
+	// lower spire
     NPC_MARROWGAR               = 36612,
     NPC_DEATHWHISPER            = 36855,
     NPC_SAURFANG                = 37813,
@@ -41,6 +41,9 @@ enum
 	NPC_SINDRAGOSA				= 36853,
 	NPC_RIMEFANG				= 37533,
 	NPC_SPLINESTALKER			= 37534,
+	// frozen throne
+	NPC_TIRION_FINAL			= 38995,
+	NPC_LICH_KING				= 36597,
 
     // Outer citadel
     GO_RAID_EXIT                = 201583,

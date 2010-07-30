@@ -45,7 +45,10 @@ UPDATE creature_template SET ScriptName = 'boss_blood_queen_lanathel' WHERE entr
 update creature_template set scriptName = 'boss_sindragosa' where entry = 36853;
 update creature_template set scriptName = 'miniboss_spinestalker' where entry = 37534;
 update creature_template set scriptName = 'miniboss_rimefang' where entry = 37533;
+
 -- Lich King
+update creature_template set scriptName = 'boss_the_lich_king' where entry = 36597;
+update creature_template set npcflag = 1, scriptName = 'npc_tirion_final' where entry = 38995;
 
 -- Minibossed: Stinky, Precious, Svalna
 UPDATE creature_template SET ScriptName = 'miniboss_stinky' WHERE entry = 37025;

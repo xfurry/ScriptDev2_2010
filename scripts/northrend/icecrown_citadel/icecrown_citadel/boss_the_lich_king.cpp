@@ -169,6 +169,12 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_LICH_KING, FAIL);
+
+		if (Creature* pTirion = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TIRION_FINAL))))
+		{
+			if(pTirion->isAlive())
+				pTirion->SetVisibility(VISIBILITY_ON);
+		}
     }
 
     //boss yells, when player dies
@@ -203,6 +209,11 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
             List.clear();
         }
     }
+
+	void JustSummoned(Creature* pSummoned)
+	{
+		pSummoned->SetInCombatWithZone();
+	}
 
     // boss event
     void UpdateAI(const uint32 uiDiff)
@@ -393,10 +404,117 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
     }
 };
 
-//boss event register (1)
 CreatureAI* GetAI_boss_the_lich_king(Creature* pCreature)
 {
     return new boss_the_lich_kingAI(pCreature);
+}
+
+#define GOSSIP_START     "Start event!"
+
+// Tirion 
+struct MANGOS_DLL_DECL npc_tirion_finalAI : public ScriptedAI
+{
+    npc_tirion_finalAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+
+    bool m_bHasPlayerNear;
+    bool m_bIsIntro;
+    uint64 m_uiPlayerGUID;
+    uint32 m_uiSpeech_Timer;
+    uint32 m_uiIntro_Phase;
+
+    void Reset()
+    {
+        m_uiPlayerGUID      = 0;
+        m_uiSpeech_Timer    = 3000;
+        m_bIsIntro          = false;
+        m_uiIntro_Phase     = 0;
+    }
+
+    void BeginEvent(Player* pPlayer)
+    {
+        m_uiPlayerGUID      = pPlayer->GetGUID();
+        m_bIsIntro          = true;
+        m_uiSpeech_Timer    = 3000;
+        m_uiIntro_Phase     = 0;
+
+		// start here
+		if (Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_LICH_KING))))
+		{
+			if(pLichKing->isAlive())
+			{
+				pLichKing->GetMotionMaster()->MovePoint(0, 497.83f, -2125.89f, 1040.86f);
+				pLichKing->SetInCombatWithZone();
+				pLichKing->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+			}
+		}
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if(m_bIsIntro)
+        {
+            if(m_uiSpeech_Timer < uiDiff)
+            {
+                switch(m_uiIntro_Phase)
+                {
+                case 0:
+                    ++m_uiIntro_Phase;
+                    m_uiSpeech_Timer = 5000;
+                    break;
+                case 1:
+                    ++m_uiIntro_Phase;
+                    m_uiSpeech_Timer = 7000;
+                    break;
+                case 2:
+                    ++m_uiIntro_Phase;
+                    m_uiSpeech_Timer = 5000;
+                    break;
+                case 3:
+                    m_bIsIntro = false;
+                    ++m_uiIntro_Phase;
+                    m_uiSpeech_Timer = 10000;
+                    break;
+                default:
+                    m_uiSpeech_Timer = 100000;
+                }
+            }else m_uiSpeech_Timer -= uiDiff;
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_tirion_final(Creature* pCreature)
+{
+    return new npc_tirion_finalAI(pCreature);
+}
+
+bool GossipHello_npc_tirion_final(Player* pPlayer, Creature* pCreature)
+{
+    ScriptedInstance* pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
+
+    if(pInstance->GetData(TYPE_LICH_KING) != DONE)
+	    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_START, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+    pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_tirion_final(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
+    {
+        pPlayer->CLOSE_GOSSIP_MENU();
+        //pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+		pCreature->SetVisibility(VISIBILITY_OFF);
+        ((npc_tirion_finalAI*)pCreature->AI())->BeginEvent(pPlayer);
+    }
+
+    return true;
 }
 
 /* 
@@ -445,6 +563,13 @@ void AddSC_boss_the_lich_king()
     NewScript = new Script;
     NewScript->Name = "boss_the_lich_king";
     NewScript->GetAI = &GetAI_boss_the_lich_king;
+    NewScript->RegisterSelf();
+
+	NewScript = new Script;
+    NewScript->Name = "npc_tirion_final";
+    NewScript->GetAI = &GetAI_npc_tirion_final;
+    NewScript->pGossipHello = &GossipHello_npc_tirion_final;
+    NewScript->pGossipSelect = &GossipSelect_npc_tirion_final;
     NewScript->RegisterSelf();
 
     NewScript = new Script;

@@ -89,6 +89,9 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 	uint64 m_uiRimefangGUID;
 	uint64 m_uiSplinestalkerGUID;
 
+	// frozen throne
+	uint64 m_uiTirionFinalGUID;
+
     // loot
     uint64 m_uiDeathbringersCacheGUID;
     uint64 m_uiGunshipArmoryGUID;
@@ -142,6 +145,10 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 		m_uiRimefangGUID				= 0;
 		m_uiSplinestalkerGUID			= 0;
 
+		// frozen throne
+		m_uiLichKingGUID				= 0;
+		m_uiTirionFinalGUID				= 0;
+
         // loot
         m_uiDeathbringersCacheGUID      = 0;
         m_uiGunshipArmoryGUID           = 0;
@@ -164,6 +171,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             case NPC_LANATHEL:      m_uiLanathelGUID        = pCreature->GetGUID(); break;
 			case NPC_SPLINESTALKER:	m_uiSplinestalkerGUID	= pCreature->GetGUID(); break;
 			case NPC_RIMEFANG:		m_uiRimefangGUID		= pCreature->GetGUID(); break;
+			case NPC_LICH_KING:		m_uiLichKingGUID		= pCreature->GetGUID(); break;
+			case NPC_TIRION_FINAL:  m_uiTirionFinalGUID		= pCreature->GetGUID(); break;
         }
     }
 
@@ -606,6 +615,10 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 				return m_uiRimefangGUID;
 			case NPC_SPLINESTALKER:
 				return m_uiSplinestalkerGUID;
+			case NPC_LICH_KING:
+				return m_uiLichKingGUID;
+			case NPC_TIRION_FINAL:
+				return m_uiTirionFinalGUID;
         }
         return 0;
     }
