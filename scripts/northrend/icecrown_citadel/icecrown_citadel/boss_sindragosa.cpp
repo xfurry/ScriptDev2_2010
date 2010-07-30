@@ -24,6 +24,44 @@ EndScriptData */
 #include "precompiled.h"
 #include "icecrown_citadel.h"
 
+const float posSindragosa[4] = {4453.670f, 2484.251f, 224.797f, 3.15f};
+
+struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
+{
+	boss_sindragosaAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+		Reset();
+	}
+
+	ScriptedInstance* m_pInstance;
+
+	void Reset()
+	{
+		m_creature->SetRespawnDelay(DAY);
+	} 
+
+	void JustReachedHome()
+	{
+		// respawn minibosses
+		if (Creature* pSplinestalker = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SPLINESTALKER))))
+		{
+			if(!pSplinestalker->isAlive())
+				pSplinestalker->Respawn();
+		}
+		if (Creature* pRimefang = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_RIMEFANG))))
+		{
+			if(!pRimefang->isAlive())
+				pRimefang->Respawn();
+		}
+		m_creature->ForcedDespawn();
+	}
+};
+
+CreatureAI* GetAI_boss_sindragosa(Creature* pCreature)
+{
+    return new boss_sindragosaAI(pCreature);
+}
 
 enum
 {
@@ -52,11 +90,39 @@ struct MANGOS_DLL_DECL miniboss_rimefangAI : public ScriptedAI
 	{
 		m_uiFrost_BreathTimer = 13000;
 		m_uiIcy_BlastTimer = 10000;
+
+		// make fly
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
 	} 
 
 	void Aggro(Unit* pWho)
 	{
 		DoCast(m_creature, SPELL_FROST_AURA);
+
+		// make land
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
+        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
+	}
+
+	void MoveInLineOfSight(Unit* pWho)
+	{
+		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && pWho->GetTypeId() == TYPEID_PLAYER && 
+			m_creature->IsWithinDist3d(pWho->GetPositionX(), pWho->GetPositionY(), pWho->GetPositionZ(), 60))
+			m_creature->SetInCombatWithZone();
+	}
+
+	void JustDied(Unit* pKiller)
+	{
+		// check if splinestalker is alive && summon Sindragosa
+		if (Creature* pSplinestalker = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SPLINESTALKER))))
+		{
+			if(!pSplinestalker->isAlive())
+			{
+				if(Creature* pSindragosa = m_creature->SummonCreature(NPC_SINDRAGOSA, posSindragosa[0], posSindragosa[1], posSindragosa[2], posSindragosa[3], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 600000))
+					pSindragosa->SetInCombatWithZone();
+			}
+		}
 	}
 
 	void UpdateAI(const uint32 uiDiff)
@@ -120,6 +186,37 @@ struct MANGOS_DLL_DECL miniboss_spinestalkerAI : public ScriptedAI
 		m_uiBellowing_RoarTimer = urand(10000, 20000);
 		m_uiCleaveTimer			= urand(4000, 7000);
 		m_uiTail_SweepTimer		= urand(8000, 13000);
+
+		// make fly
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
+	}
+
+	void Aggro(Unit* pWho)
+	{
+		// make land
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
+        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
+	}
+
+	void MoveInLineOfSight(Unit* pWho)
+	{
+		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && pWho->GetTypeId() == TYPEID_PLAYER && 
+			m_creature->IsWithinDist3d(pWho->GetPositionX(), pWho->GetPositionY(), pWho->GetPositionZ(), 60))
+			m_creature->SetInCombatWithZone();
+	}
+
+	void JustDied(Unit* pKiller)
+	{
+		// check if rimefang is alive && summon Sindragosa
+		if (Creature* pRimefang = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_RIMEFANG))))
+		{
+			if(!pRimefang->isAlive())
+			{
+				if(Creature* pSindragosa = m_creature->SummonCreature(NPC_SINDRAGOSA, posSindragosa[0], posSindragosa[1], posSindragosa[2], posSindragosa[3], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 600000))
+					pSindragosa->SetInCombatWithZone();
+			}
+		}
 	}
 
 	void UpdateAI(const uint32 uiDiff)
@@ -163,6 +260,11 @@ CreatureAI* GetAI_miniboss_spinestalker(Creature* pCreature)
 void AddSC_boss_sindragosa()
 {
     Script* NewScript;
+	NewScript = new Script;
+    NewScript->Name = "boss_sindragosa";
+    NewScript->GetAI = &GetAI_boss_sindragosa;
+    NewScript->RegisterSelf();
+
     NewScript = new Script;
     NewScript->Name = "miniboss_spinestalker";
     NewScript->GetAI = &GetAI_miniboss_spinestalker;
