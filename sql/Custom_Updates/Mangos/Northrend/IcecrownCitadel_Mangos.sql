@@ -54,6 +54,24 @@ update creature_template set npcflag = 1, scriptName = 'npc_tirion_final' where 
 UPDATE creature_template SET ScriptName = 'miniboss_stinky' WHERE entry = 37025;
 UPDATE creature_template SET ScriptName = 'miniboss_precious' WHERE entry = 37217;
 
+-- Frostwing
+update creature_template set scriptName = 'miniboss_sister_svalna' where entry = 37126;
+update creature_template set scriptName = 'mob_crok_scourgebane' where entry = 37129;
+update creature_template set scriptName = 'mob_captain_arnath' where entry = 37122;
+update creature_template set scriptName = 'mob_captain_brandon' where entry = 37123;
+update creature_template set scriptName = 'mob_captain_grondel' where entry = 37124;
+update creature_template set scriptName = 'mob_captain_rupert' where entry = 37125;
+update creature_template set scriptName = 'mob_ymirjar_battlemaiden' where entry = 37132;
+update creature_template set scriptName = 'mob_ymirjar_deathbringer' where entry = 38125;
+update creature_template set scriptName = 'mob_ymirjar_warlord' where entry = 37133;
+update creature_template set scriptName = 'mob_ymirjar_huntress' where entry = 37134;
+update creature_template set scriptName = 'mob_risen_archmage' where entry = 37868;
+update creature_template set scriptName = 'mob_blazing_skeleton' where entry = 36791;
+update creature_template set scriptName = 'mob_suppresser' where entry = 37863;
+update creature_template set scriptName = 'mob_blistering_zombie' where entry = 37934;
+update creature_template set scriptName = 'mob_gluttonous_abomination' where entry = 37886;
+update creature_template set scriptName = 'mob_frostwarden_handler' where entry = 37531;
+update creature_template set scriptName = 'mob_frostwarden_whelp' where entry = 37532;
 -- Crimson halls trash:
 update creature_template set scriptName = 'mob_valkyr_herald' where entry = 37098;
 update creature_template set scriptName = 'mob_darkfallen_archmage' where entry = 37664;
