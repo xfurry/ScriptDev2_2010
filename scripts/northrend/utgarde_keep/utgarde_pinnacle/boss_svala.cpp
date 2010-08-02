@@ -45,7 +45,6 @@ enum
 
     NPC_SVALA_SORROW            = 26668,
     NPC_ARTHAS_IMAGE            = 29280,
-    NPC_CHANNELER               = 27281,
 
     SPELL_ARTHAS_VISUAL         = 54134,
 
@@ -56,23 +55,8 @@ enum
 
     SPELL_RITUAL_OF_SWORD       = 48276,
     SPELL_CALL_FLAMES           = 48258,
-    SPELL_BOLT                  = 39252,
     SPELL_SINISTER_STRIKE       = 15667,
-    SPELL_SINISTER_STRIKE_H     = 59409,
-
-    //channelers spells
-    SPELL_PARALYZE              = 48278,
-    SPELL_SHADOWS               = 59407,
-
-    ACHIEV_THE_INCREDIBLE_HULK  = 2043,     //needs script support
-};
-
-float fCoord[4][4] =
-{
-    {296.498169f,-346.462433f,90.547546f,0},
-    {299.563782f,-343.736572f,90.559288f,3.93f},
-    {293.811676f,-343.331238f,90.529503f,5.340091f},
-    {296.490417f,-349.221039f,90.5550446f,1.578029f},
+    SPELL_SINISTER_STRIKE_H     = 59409
 };
 
 /*######
@@ -85,7 +69,6 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_bIsIntroDone = false;
         Reset();
     }
@@ -99,28 +82,9 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
     uint32 m_uiIntroTimer;
     uint32 m_uiIntroCount;
 
-    bool   m_bIsSacrifice;
-    uint32 m_uiSinisterStrikeTimer;
-    uint32 m_uiCallFlamesTimer;
-    uint32 m_uiSacrificeTimer;
-    uint32 m_uiSacrificeEndTimer;
-
-    uint64 m_uiPlayerGUID;
-    uint64 m_uiAddsGUID[3];
-
     void Reset()
     {
         pArthas = NULL;
-
-        m_uiPlayerGUID;
-        for(uint8 i=0; i<3; ++i)
-            m_uiAddsGUID[i] = 0;
-
-        m_bIsSacrifice = false;
-        m_uiSinisterStrikeTimer = urand(10000,20000);
-        m_uiCallFlamesTimer = urand(15000,25000);
-        m_uiSacrificeTimer = 20000;
-        m_uiSacrificeEndTimer = 120000;
 
         m_uiIntroTimer = 2500;
         m_uiIntroCount = 0;
@@ -275,75 +239,6 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
             return;
         }
 
-        if(m_uiSacrificeEndTimer < uiDiff && m_bIsSacrifice)
-        {
-            for(uint8 i=0; i<3; ++i)
-            {
-                Unit* pAdd = Unit::GetUnit(*m_creature, m_uiAddsGUID[i]);
-                if(pAdd && pAdd->isAlive())
-                {
-                    Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiPlayerGUID);
-                    if(pPlayer)
-                        m_creature->DealDamage(pPlayer, pPlayer->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-
-                    for(uint8 k=0; k<3; ++k)
-                    {
-                        Unit* pAdd = Unit::GetUnit(*m_creature, m_uiAddsGUID[i]);
-                        if(pAdd && pAdd->isAlive())
-                        {
-                            pAdd->SetVisibility(VISIBILITY_OFF);
-                            pAdd->setFaction(35);
-                        }
-                        m_uiAddsGUID[k] = 0;
-                    }
-                    m_bIsSacrifice = false;
-                    return;
-                }
-            }
-            m_uiPlayerGUID = 0;
-            m_bIsSacrifice = false;
-        }else m_uiSacrificeEndTimer -= uiDiff;
-
-        if(m_uiSinisterStrikeTimer < uiDiff)
-        {
-            if(m_creature->getVictim())
-                m_creature->CastSpell(m_creature->getVictim(), m_bIsRegularMode ? SPELL_SINISTER_STRIKE : SPELL_SINISTER_STRIKE_H, false);
-            m_uiSinisterStrikeTimer = urand(10000,20000);
-        }else m_uiSinisterStrikeTimer -= uiDiff;
-
-        if(m_uiCallFlamesTimer < uiDiff)
-        {
-            std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
-            for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
-            {
-                Unit *TargetedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());  
-                if(TargetedPlayer && TargetedPlayer->isAlive())
-                    m_creature->CastSpell(TargetedPlayer, SPELL_BOLT, true);
-            }
-            m_uiCallFlamesTimer = urand(15000,25000);
-        }else m_uiCallFlamesTimer -= uiDiff;
-
-        if(m_uiSacrificeTimer < uiDiff)
-        {
-            m_uiPlayerGUID = 0;
-            if(Unit* pPlayer = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-            {
-                m_uiPlayerGUID = pPlayer->GetGUID();
-                DoTeleportPlayer(pPlayer, fCoord[0][0], fCoord[0][1], fCoord[0][2], pPlayer->GetOrientation());
-                m_uiSacrificeEndTimer = 8000;
-
-                for(uint8 i=0; i<3; ++i)
-                    if(Creature* pAdd = m_creature->SummonCreature(NPC_CHANNELER, fCoord[i][0], fCoord[i][1], fCoord[i][2], fCoord[i][3], TEMPSUMMON_TIMED_DESPAWN, 9000))
-                    {
-                        m_uiAddsGUID[i] = pAdd->GetGUID();
-                        pAdd->AI()->AttackStart(pPlayer);
-                        pAdd->CastSpell(pPlayer, SPELL_PARALYZE, false);
-                    }
-            }
-            m_bIsSacrifice = true;
-            m_uiSacrificeTimer = 20000;
-        }else m_uiSacrificeTimer -= uiDiff;
-
         DoMeleeAttackIfReady();
     }
 };
@@ -351,43 +246,6 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
 CreatureAI* GetAI_boss_svala(Creature* pCreature)
 {
     return new boss_svalaAI(pCreature);
-}
-
-/*######
-## npc_svala_channeler
-######*/
-struct MANGOS_DLL_DECL npc_svala_channelerAI : public Scripted_NoMovementAI
-{
-    npc_svala_channelerAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        Reset();
-    }
-
-    ScriptedInstance* m_pInstance;
-    bool m_bIsRegularMode;
-
-    void Reset() {}
-
-    void DamageTaken(Unit* pDoneBy, uint32& uiDamage) 
-    {
-        if(!pDoneBy)
-            return;
-
-        m_creature->CastSpell(pDoneBy, SPELL_SHADOWS, false);
-    }
-
-    void UpdateAI(const uint32 uiDiff) 
-    {
-       if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-    }
-};
-
-CreatureAI* GetAI_npc_svala_channeler(Creature* pCreature)
-{
-    return new npc_svala_channelerAI(pCreature);
 }
 
 bool AreaTrigger_at_svala_intro(Player* pPlayer, AreaTriggerEntry* pAt)
