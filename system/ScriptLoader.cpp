@@ -151,9 +151,10 @@ extern void AddSC_boss_felmyst();
 extern void AddSC_boss_kiljaden();
 extern void AddSC_boss_muru_entropius();
 extern void AddSC_instance_sunwell_plateau();
-extern void AddSC_boss_ironaya();                           //uldaman
-extern void AddSC_uldaman();
+extern void AddSC_boss_archaedas();                         //uldaman
+extern void AddSC_boss_ironaya();
 extern void AddSC_instance_uldaman();
+extern void AddSC_uldaman();
 extern void AddSC_boss_akilzon();                           //zulaman
 extern void AddSC_boss_halazzi();
 extern void AddSC_boss_janalai();
@@ -234,6 +235,7 @@ extern void AddSC_boss_landslide();
 extern void AddSC_boss_noxxion();
 extern void AddSC_boss_ptheradras();
 extern void AddSC_boss_onyxia();                            //onyxias_lair
+extern void AddSC_instance_onyxias_lair();
 extern void AddSC_boss_amnennar_the_coldbringer();          //razorfen_downs
 extern void AddSC_razorfen_downs();
 extern void AddSC_instance_razorfen_kraul();                //razorfen_kraul
@@ -650,9 +652,10 @@ void AddScripts()
     AddSC_boss_kiljaden();
     AddSC_boss_muru_entropius();
     AddSC_instance_sunwell_plateau();
-    AddSC_boss_ironaya();                                   //uldaman
-    AddSC_uldaman();
+    AddSC_boss_archaedas();                                 //uldaman
+    AddSC_boss_ironaya();
     AddSC_instance_uldaman();
+    AddSC_uldaman();
     AddSC_boss_akilzon();                                   //zulaman
     AddSC_boss_halazzi();
     AddSC_boss_janalai();
@@ -733,6 +736,7 @@ void AddScripts()
     AddSC_boss_noxxion();
     AddSC_boss_ptheradras();
     AddSC_boss_onyxia();                                    //onyxias_lair
+    AddSC_instance_onyxias_lair();
     AddSC_boss_amnennar_the_coldbringer();                  //razorfen_downs
     AddSC_razorfen_downs();
     AddSC_instance_razorfen_kraul();                        //razorfen_kraul

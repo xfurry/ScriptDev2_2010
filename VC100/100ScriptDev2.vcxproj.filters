@@ -726,6 +726,9 @@
     <ClCompile Include="..\scripts\eastern_kingdoms\sunwell_plateau\instance_sunwell_plateau.cpp">
       <Filter>scripts\eastern_kingdoms\sunwell_plateau</Filter>
     </ClCompile>
+    <ClCompile Include="..\scripts\eastern_kingdoms\uldaman\boss_archaedas.cpp">
+      <Filter>scripts\eastern_kingdoms\uldaman</Filter>
+    </ClCompile>
     <ClCompile Include="..\scripts\eastern_kingdoms\uldaman\boss_ironaya.cpp">
       <Filter>scripts\eastern_kingdoms\uldaman</Filter>
     </ClCompile>
@@ -943,6 +946,9 @@
       <Filter>scripts\kalimdor\maraudon</Filter>
     </ClCompile>
     <ClCompile Include="..\scripts\kalimdor\onyxias_lair\boss_onyxia.cpp">
+      <Filter>scripts\kalimdor\onyxias_lair</Filter>
+    </ClCompile>
+    <ClCompile Include="..\scripts\kalimdor\onyxias_lair\instance_onyxias_lair.cpp">
       <Filter>scripts\kalimdor\onyxias_lair</Filter>
     </ClCompile>
     <ClCompile Include="..\scripts\kalimdor\razorfen_downs\boss_amnennar_the_coldbringer.cpp">
@@ -1685,6 +1691,9 @@
     </ClInclude>
     <ClInclude Include="..\scripts\kalimdor\caverns_of_time\old_hillsbrad\old_hillsbrad.h">
       <Filter>scripts\kalimdor\caverns_of_time\old_hillsbrad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scripts\kalimdor\onyxias_lair\onyxias_lair.h">
+      <Filter>scripts\kalimdor\onyxias_lair</Filter>
     </ClInclude>
     <ClInclude Include="..\scripts\kalimdor\razorfen_kraul\razorfen_kraul.h">
       <Filter>scripts\kalimdor\razorfen_kraul</Filter>

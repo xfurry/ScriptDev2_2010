@@ -1116,6 +1116,10 @@
 					Name="uldaman"
 					>
 					<File
+						RelativePath="..\scripts\eastern_kingdoms\uldaman\boss_archaedas.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\scripts\eastern_kingdoms\uldaman\boss_ironaya.cpp"
 						>
 					</File>
@@ -1521,6 +1525,14 @@
 					>
 					<File
 						RelativePath="..\scripts\kalimdor\onyxias_lair\boss_onyxia.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\kalimdor\onyxias_lair\instance_onyxias_lair.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\kalimdor\onyxias_lair\onyxias_lair.h"
 						>
 					</File>
 				</Filter>
