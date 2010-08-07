@@ -15,202 +15,320 @@
  */
 /* ScriptData
 SDName: ruby_sanctum mobs
-SD%Complete: 10%
-SDComment: by notagain, corrected by /dev/rsa
+SD%Complete:
+SDComment:
 SDCategory: ruby_sanctum
 EndScriptData */
 
 #include "precompiled.h"
 #include "ruby_sanctum.h"
 
-static Locations SpawnLoc[]=
+/*######
+### Trash mobs
+###### */
+
+// charscale invoker 40417
+enum
 {
-    {3155.540039f, 342.391998f, 84.596802f},   // 0 - start point
-    {3152.329834f, 359.41757f, 85.301605f},    // 1 - second say
-    {3152.078369f, 383.939178f, 86.337875f},   // 2 - other says and staying
-    {3155.190703f, 538.717708f, 72.889038f},   // 3 - Halion spawn point
+	SPELL_FLAME_WAVE			= 75413,
+	SPELL_SCORCH				= 75412,
 };
 
-struct MANGOS_DLL_DECL mob_xerestraszaAI : public ScriptedAI
+struct MANGOS_DLL_DECL mob_charscale_invokerAI : public ScriptedAI
 {
-    mob_xerestraszaAI(Creature *pCreature) : ScriptedAI(pCreature)
+    mob_charscale_invokerAI(Creature* pCreature) : ScriptedAI(pCreature) 
     {
-        pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Reset();
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();         
     }
+ 
+	ScriptedInstance* m_pInstance;
 
-    ScriptedInstance* pInstance;
-    uint32 nextEvent;
-    uint32 nextPoint;
-    uint32 UpdateTimer;
-    bool movementstarted;
-    bool onSessionEvent;
-
+    uint32 m_uiFlameWaveTimer;
+	uint32 m_uiScorchTimer;
+    bool m_uiAggro;
+ 
+    void Aggro(Unit* who)
+    {
+        m_creature->CallAssistance();
+    }
+ 
     void Reset()
     {
-        if(!pInstance) return;
-        nextEvent = 0;
-        nextPoint = 0;
-        movementstarted = false;
-        UpdateTimer = 2000;
-        m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
-        m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-        pInstance->SetData(TYPE_XERESTRASZA, NOT_STARTED);
-        m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
-        m_creature->SetSpeedRate(MOVE_WALK, 0.8f);
-        m_creature->SetRespawnDelay(7*DAY);
-   }
-
-    void MovementInform(uint32 type, uint32 id)
+        m_uiAggro = false;
+        m_uiFlameWaveTimer = 10000;
+        m_uiScorchTimer = 3000;
+    }
+ 
+    void UpdateAI(const uint32 uiDiff)
     {
-        if (type != POINT_MOTION_TYPE || !movementstarted) return;
-        if (id == nextPoint) 
+        if (m_pInstance && !m_uiAggro)
         {
-            movementstarted = false;
-            pInstance->SetData(TYPE_EVENT,nextEvent);
-            m_creature->GetMotionMaster()->MovementExpired();
-        }
-    }
-
-    void StartMovement(uint32 id, uint32 _nextEvent)
-    {
-        nextPoint = id;
-        nextEvent = _nextEvent;
-        m_creature->GetMotionMaster()->Clear();
-        m_creature->GetMotionMaster()->MovePoint(id, SpawnLoc[id].x, SpawnLoc[id].y, SpawnLoc[id].z);
-        pInstance->SetData(TYPE_EVENT,0);
-        movementstarted = true;
-    }
-
-    void AttackStart(Unit *who)
-    {
-        //ignore all attackstart commands
-        return;
-    }
-
-    void MoveInLineOfSight(Unit *who)
-    {
-        if(!pInstance || !who || who->GetTypeId() != TYPEID_PLAYER) 
-            return;
-
-        if (pInstance->GetData(TYPE_BALTHARUS) != DONE
-            || pInstance->GetData(TYPE_XERESTRASZA) != NOT_STARTED) return;
-
-        if(!who->IsWithinDistInMap(m_creature, 60.0f)) return;
-
-        pInstance->SetData(TYPE_XERESTRASZA, IN_PROGRESS);
-        pInstance->SetData(TYPE_EVENT, 30);
-        onSessionEvent = true;
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if(!pInstance) return;
-
-        if (pInstance->GetData(TYPE_EVENT_NPC) == NPC_XERESTRASZA)
-        {
-            UpdateTimer = pInstance->GetData(TYPE_EVENT_TIMER);
-            if (UpdateTimer <= diff)
+			if (m_pInstance->GetData(TYPE_ZARITHRIAN) == IN_PROGRESS)
             {
-            debug_log("EventMGR: creature %u received signal %u ",m_creature->GetEntry(),pInstance->GetData(TYPE_EVENT));
-            switch (pInstance->GetData(TYPE_EVENT))
+				if (Unit* pZarithrian = Unit::GetUnit(*m_creature,m_pInstance->GetData64(NPC_ZARITHRIAN)))
                 {
-// Xerestrasza intro
-                    case 10:
-                          UpdateTimer = 7000;
-                          pInstance->SetData(TYPE_EVENT, 20);
-                          break;
-                    case 20:
-                          DoScriptText(-1666000,m_creature);
-                          pInstance->SetData(TYPE_EVENT,0);
-                          break;
-// Xerestrasza event
-                    case 30:
-                          DoScriptText(-1666001,m_creature);
-                          StartMovement(1,40);
-                          break;
-                    case 40:
-                          DoScriptText(-1666002,m_creature);
-                          StartMovement(2,50);
-                          break;
-                    case 50:
-                          DoScriptText(-1666003,m_creature);
-                          UpdateTimer = 12000;
-                          pInstance->SetData(TYPE_EVENT,60);
-                          break;
-                    case 60:
-                          DoScriptText(-1666004,m_creature);
-                          UpdateTimer = 12000;
-                          pInstance->SetData(TYPE_EVENT,70);
-                          break;
-                    case 70:
-                          DoScriptText(-1666005,m_creature);
-                          UpdateTimer = 10000;
-                          pInstance->SetData(TYPE_EVENT,80);
-                          break;
-                    case 80:
-                          DoScriptText(-1666006,m_creature);
-                          UpdateTimer = 10000;
-                          pInstance->SetData(TYPE_EVENT,90);
-                          break;
-                    case 90:
-                          DoScriptText(-1666007,m_creature);
-                          UpdateTimer = 10000;
-                          pInstance->SetData(TYPE_EVENT,100);
-                          break;
-                    case 100:
-                          DoScriptText(-1666008,m_creature);
-                          UpdateTimer = 4000;
-                          pInstance->SetData(TYPE_EVENT,110);
-                          break;
-                    case 110:
-                          UpdateTimer = 2000;
-                          pInstance->SetData(TYPE_EVENT,0);
-                          pInstance->SetData(TYPE_XERESTRASZA, DONE);
-                          m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
-                          m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-                          break;
-// Halion spawn
-                    case 200:
+                    if (pZarithrian->getVictim())
                     {
-                          Unit* Halion = Unit::GetUnit((*m_creature), pInstance->GetData64(NPC_HALION_REAL));
-                          if (pInstance->GetData(TYPE_BALTHARUS) == DONE &&
-                              pInstance->GetData(TYPE_RAGEFIRE) == DONE &&
-                              pInstance->GetData(TYPE_XERESTRASZA) == DONE &&
-                              pInstance->GetData(TYPE_ZARITHIAN) == DONE &&
-                              pInstance->GetData(TYPE_HALION) != DONE
-                              && !Halion)
-                              m_creature->SummonCreature(NPC_HALION_REAL, SpawnLoc[3].x, SpawnLoc[3].y, SpawnLoc[3].z, 6.23f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, HOUR*2*IN_MILLISECONDS);
+                        m_creature->AI()->AttackStart(pZarithrian->getVictim());
+                        m_uiAggro = true;
                     }
-                          UpdateTimer = 4000;
-                          pInstance->SetData(TYPE_EVENT,210);
-                          break;
-                    case 210:
-                          UpdateTimer = 2000;
-                          pInstance->SetData(TYPE_EVENT,0);
-                          break;
-
-                    default:
-                          break;
                 }
-             } else UpdateTimer -= diff;
-             pInstance->SetData(TYPE_EVENT_TIMER, UpdateTimer);
+            }
         }
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+ 
+        if (m_uiFlameWaveTimer <= uiDiff)
+        {
+			m_creature->InterruptNonMeleeSpells(true);
+			DoCast(m_creature, SPELL_FLAME_WAVE);
+            m_uiFlameWaveTimer = 10000;
+        }else m_uiFlameWaveTimer -= uiDiff;
+ 
+        if (m_uiScorchTimer <= uiDiff)
+        {
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(pTarget, SPELL_SCORCH);
+            m_uiScorchTimer = 3000;
+        }else m_uiScorchTimer -= uiDiff;
+ 
+        DoMeleeAttackIfReady();
+    }
+};
+ 
+CreatureAI* GetAI_mob_charscale_invoker(Creature* pCreature)
+{
+    return new mob_charscale_invokerAI(pCreature);
+}
 
+// charscale assaulter	40419
+enum
+{
+	SPELL_CLEAVE				= 15284,
+	SPELL_SHOCKWAVE				= 75417,
+};
+
+struct MANGOS_DLL_DECL mob_charscale_assaulterAI : public ScriptedAI
+{
+    mob_charscale_assaulterAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();         
+    }
+ 
+	ScriptedInstance* m_pInstance;
+
+    uint32 m_uiCleaveTimer;
+	uint32 m_uiSchockwaveTimer;
+    bool m_uiAggro;
+ 
+    void Aggro(Unit* who)
+    {
+        m_creature->CallAssistance();
+    }
+ 
+    void Reset()
+    {
+        m_uiAggro = false;
+        m_uiSchockwaveTimer = 10000;
+        m_uiCleaveTimer = 3000;
+    }
+ 
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (m_pInstance && !m_uiAggro)
+        {
+			if (m_pInstance->GetData(TYPE_ZARITHRIAN) == IN_PROGRESS)
+            {
+				if (Unit* pZarithrian = Unit::GetUnit(*m_creature,m_pInstance->GetData64(NPC_ZARITHRIAN)))
+                {
+                    if (pZarithrian->getVictim())
+                    {
+                        m_creature->AI()->AttackStart(pZarithrian->getVictim());
+                        m_uiAggro = true;
+                    }
+                }
+            }
+        }
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+ 
+        if (m_uiSchockwaveTimer <= uiDiff)
+        {
+			m_creature->InterruptNonMeleeSpells(true);
+			DoCast(m_creature, SPELL_SHOCKWAVE);
+            m_uiSchockwaveTimer = 10000;
+        }else m_uiSchockwaveTimer -= uiDiff;
+ 
+        if (m_uiCleaveTimer <= uiDiff)
+        {
+			DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            m_uiCleaveTimer = 3000;
+        }else m_uiCleaveTimer -= uiDiff;
+ 
+        DoMeleeAttackIfReady();
     }
 };
 
-CreatureAI* GetAI_mob_xerestrasza(Creature* pCreature)
+CreatureAI* GetAI_mob_charscale_assaulter(Creature* pCreature)
 {
-    return new mob_xerestraszaAI(pCreature);
+    return new mob_charscale_assaulterAI(pCreature);
+}
+
+// charscale commander	40423
+enum
+{
+	SPELL_MORTAL_STRIKE			= 13737,
+	SPELL_RALLYING_SHOUT		= 75414,
+};
+
+struct MANGOS_DLL_DECL mob_charscale_commanderAI : public ScriptedAI
+{
+    mob_charscale_commanderAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();         
+    }
+ 
+	ScriptedInstance* m_pInstance;
+
+    uint32 m_uiMortalStrikeTimer;
+    bool m_uiAggro;
+ 
+    void Aggro(Unit* who)
+    {
+        m_creature->CallAssistance();
+		DoCast(m_creature, SPELL_RALLYING_SHOUT);
+    }
+ 
+    void Reset()
+    {
+        m_uiAggro = false;
+        m_uiMortalStrikeTimer = 3000;
+    }
+ 
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (m_pInstance && !m_uiAggro)
+        {
+			if (m_pInstance->GetData(TYPE_ZARITHRIAN) == IN_PROGRESS)
+            {
+				if (Unit* pZarithrian = Unit::GetUnit(*m_creature,m_pInstance->GetData64(NPC_ZARITHRIAN)))
+                {
+                    if (pZarithrian->getVictim())
+                    {
+                        m_creature->AI()->AttackStart(pZarithrian->getVictim());
+                        m_uiAggro = true;
+                    }
+                }
+            }
+        }
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+ 
+        if (m_uiMortalStrikeTimer <= uiDiff)
+        {
+			DoCast(m_creature->getVictim(), SPELL_MORTAL_STRIKE);
+            m_uiMortalStrikeTimer = 3000;
+        }else m_uiMortalStrikeTimer -= uiDiff;
+ 
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_mob_charscale_commander(Creature* pCreature)
+{
+    return new mob_charscale_commanderAI(pCreature);
+}
+
+// charscale elite	40421
+enum
+{
+	SPELL_SKULL_CRACK			= 15621,
+};
+
+struct MANGOS_DLL_DECL mob_charscale_eliteAI : public ScriptedAI
+{
+    mob_charscale_eliteAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+        Reset();         
+    }
+ 
+	ScriptedInstance* m_pInstance;
+
+    uint32 m_uiSkullCrackTimer;
+    bool m_uiAggro;
+ 
+    void Aggro(Unit* who)
+    {
+        m_creature->CallAssistance();
+    }
+ 
+    void Reset()
+    {
+        m_uiAggro = false;
+        m_uiSkullCrackTimer = 3000;
+    }
+ 
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (m_pInstance && !m_uiAggro)
+        {
+			if (m_pInstance->GetData(TYPE_ZARITHRIAN) == IN_PROGRESS)
+            {
+				if (Unit* pZarithrian = Unit::GetUnit(*m_creature,m_pInstance->GetData64(NPC_ZARITHRIAN)))
+                {
+                    if (pZarithrian->getVictim())
+                    {
+                        m_creature->AI()->AttackStart(pZarithrian->getVictim());
+                        m_uiAggro = true;
+                    }
+                }
+            }
+        }
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+ 
+        if (m_uiSkullCrackTimer <= uiDiff)
+        {
+			DoCast(m_creature->getVictim(), SPELL_SKULL_CRACK);
+            m_uiSkullCrackTimer = 10000;
+        }else m_uiSkullCrackTimer -= uiDiff;
+ 
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_mob_charscale_elite(Creature* pCreature)
+{
+    return new mob_charscale_eliteAI(pCreature);
 }
 
 void AddSC_ruby_sanctum()
 {
     Script *newscript;
 
-    newscript = new Script;
-    newscript->Name = "mob_xerestrasza";
-    newscript->GetAI = &GetAI_mob_xerestrasza;
+    
+
+	newscript = new Script;
+    newscript->Name = "mob_charscale_invoker";
+    newscript->GetAI = &GetAI_mob_charscale_invoker;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_charscale_assaulter";
+    newscript->GetAI = &GetAI_mob_charscale_assaulter;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_charscale_commander";
+    newscript->GetAI = &GetAI_mob_charscale_commander;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_charscale_elite";
+    newscript->GetAI = &GetAI_mob_charscale_elite;
     newscript->RegisterSelf();
 }

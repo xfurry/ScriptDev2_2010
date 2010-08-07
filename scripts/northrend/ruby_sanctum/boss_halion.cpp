@@ -77,8 +77,6 @@ enum
     //Summons
     NPC_METEOR_STRIKE                           = 40029, //casts "impact zone" then meteor
     NPC_METEORFLAME                             = 36673, //meteor flame
-    NPC_SHADOW_PULSAR_N                         = 40083, //spinning orb N spawn
-    NPC_SHADOW_PULSAR_S                         = 40100, //spinning orb S spawn
 
     //SAYS
     SAY_HALION_SPAWN                = -1666100, //17499 Meddlesome insects, you're too late! The Ruby Sanctum is lost.
@@ -141,6 +139,8 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
     boss_halion_realAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+		// unit disabled
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         Reset();
     }
 
@@ -154,14 +154,10 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
             return;
 
         p_phase = 0;
-        if (m_creature->isAlive()) pInstance->SetData(TYPE_HALION, NOT_STARTED);
-       // resetTimers();
     }
 
     void MoveInLineOfSight(Unit* pWho) 
     {
-        ScriptedAI::MoveInLineOfSight(pWho);
-
         if (intro || !pInstance) return;
             else
             {
@@ -176,7 +172,6 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
             return;
 
         pInstance->SetData(TYPE_HALION, FAIL);
-        pInstance->SetData(DATA_HEALTH_HALION_P, m_creature->GetMaxHealth());
     }
 
     void JustDied(Unit* pKiller)
@@ -190,7 +185,6 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
                 pInstance->SetData(TYPE_HALION, DONE);
         else
             pInstance->SetData(TYPE_HALION, SPECIAL);
-        pInstance->SetData(DATA_HEALTH_HALION_P, 0);
     }
 
     void KilledUnit(Unit* pVictim)
@@ -214,7 +208,6 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
         m_creature->SetInCombatWithZone();
         pInstance->SetData(TYPE_HALION, IN_PROGRESS);     
         DoScriptText(-1666101,m_creature);
-        pInstance->SetData(DATA_HEALTH_HALION_P, m_creature->GetMaxHealth());
     }
 
     void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
@@ -225,26 +218,14 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
             return;
         if (pDoneBy->GetGUID() == m_creature->GetGUID())
             return;
-
-        pInstance->SetData(DATA_HEALTH_HALION_P, m_creature->GetHealth() >= uiDamage ? m_creature->GetHealth() - uiDamage : 0);
-  pInstance->SetData(DATA_P_1, m_creature->GetHealth() >= uiDamage ? m_creature->GetHealth() - uiDamage : 0);
     }
 
-    void UpdateAI(const uint32 uiDiff)
+    /*void UpdateAI(const uint32 uiDiff)
     {
         if (!pInstance)
             return;
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
-
-        if (m_creature->GetHealth() > pInstance->GetData(DATA_HEALTH_HALION_T) && pInstance->GetData(DATA_HEALTH_HALION_T) != 0)
-            m_creature->SetHealth(pInstance->GetData(DATA_HEALTH_HALION_T));
-
-        if (m_creature->GetHealthPercent() < 99.5f && p_phase == 0)
-        {
-            pInstance->DoRespawnGameObject(pInstance->GetData64(GO_HALION_FIRE_RING),MINUTE*5);
-            p_phase = 1;
-        }
 
         if (m_creature->GetHealthPercent() < 75.0f && p_phase == 1)
         {
@@ -265,7 +246,7 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
             case 1: //PHASE 1 PHYSICAL REALM
                 //timedCast(SPELL_FLAME_BREATH_0, uiDiff);
                 //timedCast(SPELL_FIERY_COMBUSTION, uiDiff);
-                /* Meteor Needs Test */
+                /* Meteor Needs Test 
                 if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
                 {
                     DoCast(m_creature, SPELL_METEOR);
@@ -273,9 +254,6 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
                         DoScriptText(-1666106,m_creature,pTarget);
                         float fPosX, fPosY, fPosZ;
                         m_creature->GetPosition(fPosX, fPosY, fPosZ);
-      pInstance->SetData(DATA_X, fPosX);
-      pInstance->SetData(DATA_Y, fPosY);
-      pInstance->SetData(DATA_Z, fPosZ);
 
                         //if (Unit* pMeteor = doSummon(NPC_METEOR_STRIKE, fPosX, fPosY, fPosZ))
                             //pMeteor->AddThreat(pTarget, 100.0f);
@@ -334,7 +312,7 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
                 break;
         }
         DoMeleeAttackIfReady();
-    }
+    }*/
 };
 
 CreatureAI* GetAI_boss_halion_real(Creature* pCreature)
@@ -373,7 +351,6 @@ struct MANGOS_DLL_DECL boss_halion_twilightAI : public ScriptedAI
             return;
 
         pInstance->SetData(TYPE_HALION, FAIL);
-        pInstance->SetData(DATA_HEALTH_HALION_T, m_creature->GetMaxHealth());
     }
 
     void JustDied(Unit* pKiller)
@@ -382,7 +359,6 @@ struct MANGOS_DLL_DECL boss_halion_twilightAI : public ScriptedAI
             return;
 
         DoScriptText(-1666104,m_creature);
-        pInstance->SetData(DATA_HEALTH_HALION_T, 0);
     }
 
     void KilledUnit(Unit* pVictim)
@@ -404,13 +380,9 @@ struct MANGOS_DLL_DECL boss_halion_twilightAI : public ScriptedAI
             return;
 
         m_creature->SetInCombatWithZone();
-        pInstance->SetData(DATA_HEALTH_HALION_T, m_creature->GetMaxHealth());
 
         if (t_phase == 0)
             t_phase = 2;
-
-  //turn on the orb cutting
-  pInstance->SetData(DATA_ORB, 1);
     }
 
     void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
@@ -421,9 +393,6 @@ struct MANGOS_DLL_DECL boss_halion_twilightAI : public ScriptedAI
             return;
         if(pDoneBy->GetGUID() == m_creature->GetGUID())
             return;
-
-        pInstance->SetData(DATA_HEALTH_HALION_T, m_creature->GetHealth() >= uiDamage ? m_creature->GetHealth() - uiDamage : 0);
-  pInstance->SetData(DATA_T_1, m_creature->GetHealth() >= uiDamage ? m_creature->GetHealth() - uiDamage : 0);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -431,8 +400,6 @@ struct MANGOS_DLL_DECL boss_halion_twilightAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (m_creature->GetHealth() > pInstance->GetData(DATA_HEALTH_HALION_P) && pInstance->GetData(DATA_HEALTH_HALION_P) != 0)
-            m_creature->SetHealth(pInstance->GetData(DATA_HEALTH_HALION_P));
 
         if (m_creature->GetHealthPercent() < 50.0f && t_phase == 2)
         {
@@ -461,7 +428,7 @@ struct MANGOS_DLL_DECL boss_halion_twilightAI : public ScriptedAI
                 //timedCast(SPELL_DARK_BREATH_0, uiDiff);
                 //timedCast(SPELL_SOUL_CONSUMPTION, uiDiff);
                 //needs test
-    switch (pInstance->GetData(DATA_P_BUFF))
+    switch (9)
     {
      case 0:
       DoCast(m_creature, SPELL_CORPOREALITY_EVEN);
@@ -577,9 +544,9 @@ struct MANGOS_DLL_DECL mob_halion_meteorAI : public ScriptedAI
   {
    DoCast(m_creature, SPELL_METEOR_LAND);
    
-   switch (DATA_RND) 
+   switch (urand(0,1)) 
    {
-    case 0:
+    /*case 0:
       m_creature->SummonCreature(NPC_METEORFLAME, DATA_X + m_xflame[0][0], DATA_Y + m_xflame[0][1], DATA_Z, 0.0f, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 8000);
       m_creature->SummonCreature(NPC_METEORFLAME, DATA_X + m_xflame[1][0], DATA_Y + m_xflame[1][1], DATA_Z, 0.0f, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 8000);
       m_creature->SummonCreature(NPC_METEORFLAME, DATA_X + m_xflame[2][0], DATA_Y + m_xflame[2][1], DATA_Z, 0.0f, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 8000);
@@ -634,7 +601,7 @@ struct MANGOS_DLL_DECL mob_halion_meteorAI : public ScriptedAI
       m_creature->SummonCreature(NPC_METEORFLAME, DATA_X + m_xflame[9][6], DATA_Y + m_xflame[9][7], DATA_Z, 0.0f, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 8000);
       m_creature->SummonCreature(NPC_METEORFLAME, DATA_X + m_xflame[10][6], DATA_Y + m_xflame[10][7], DATA_Z, 0.0f, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 8000);
       m_creature->SummonCreature(NPC_METEORFLAME, DATA_X + m_xflame[11][6], DATA_Y + m_xflame[11][7], DATA_Z, 0.0f, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 8000);
-     break;
+     break;*/
              };
    
     }  
@@ -710,7 +677,7 @@ struct MANGOS_DLL_DECL mob_halion_orb_0AI : public ScriptedAI
         return;
     }
 
-    void UpdateAI(const uint32 uiDiff)
+    /*void UpdateAI(const uint32 uiDiff)
     {
         //TODO
   //MOVEMENT 16 point circle
@@ -727,9 +694,8 @@ struct MANGOS_DLL_DECL mob_halion_orb_0AI : public ScriptedAI
    
   if (tick == 30) // cutting using other orb as target
   {
-   if (pInstance->GetData(DATA_ORB) == 1)
+  /* if (pInstance->GetData(DATA_ORB) == 1)
    {
-    Creature *temp = m_creature->SummonCreature(NPC_ORB1, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 1200000);
 
     if (temp)
     {
@@ -751,7 +717,7 @@ struct MANGOS_DLL_DECL mob_halion_orb_0AI : public ScriptedAI
    tick = 0;
   }
 
-    }
+    }*/
 };
 CreatureAI* GetAI_mob_halion_orb_0(Creature* pCreature)
 {
@@ -900,7 +866,7 @@ struct MANGOS_DLL_DECL mob_halion_controlAI : public ScriptedAI
         return;
     }
  
- void UpdateAI(const uint32 diff)
+ /*void UpdateAI(const uint32 diff)
     {
   //corporeality get damage every second
   if (timer < diff)
@@ -1019,7 +985,7 @@ struct MANGOS_DLL_DECL mob_halion_controlAI : public ScriptedAI
 
    timer3 = 3000;
         }else timer3 -= diff;
-    }
+    }*/
 };
 
 CreatureAI* GetAI_mob_halion_control(Creature* pCreature)
