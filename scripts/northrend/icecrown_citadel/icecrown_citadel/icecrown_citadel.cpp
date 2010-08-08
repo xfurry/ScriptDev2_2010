@@ -252,17 +252,7 @@ CreatureAI* GetAI_miniboss_precious(Creature* pCreature)
     return new miniboss_preciousAI(pCreature);
 }
 
-/*######
-## Val'kyr Herald: TODO;
-######*/
 
-/*######
-## Decaying Colossus: TODO;
-######*/
-
-/*######
-## sister svalna: TODO;
-######*/
 
 /*######
 ## trash mobs
@@ -2478,13 +2468,10 @@ struct MANGOS_DLL_DECL mob_valkyr_heraldAI : public ScriptedAI
 
 		if (m_uiSeveredEssenceTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-					DoCast(m_creature, SPELL_SEVERED_ESSENCE_10);
-				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-					DoCast(m_creature, SPELL_SEVERED_ESSENCE_25);
-			}
+			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+				DoCast(m_creature, SPELL_SEVERED_ESSENCE_10);
+			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				DoCast(m_creature, SPELL_SEVERED_ESSENCE_25);
 			m_uiSeveredEssenceTimer = urand(5000, 9000);
 		}
 		else m_uiSeveredEssenceTimer -= uiDiff;
@@ -2544,27 +2531,20 @@ struct MANGOS_DLL_DECL mob_darkfallen_archmageAI : public ScriptedAI
 
 		if (m_uiAmplifyMagicTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-
-				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-					DoCast(m_creature, SPELL_AMPLIFY_MAGIC_10);
-				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-					DoCast(m_creature, SPELL_AMPLIFY_MAGIC_25);
-			}
+			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+				DoCast(m_creature, SPELL_AMPLIFY_MAGIC_10);
+			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				DoCast(m_creature, SPELL_AMPLIFY_MAGIC_25);
 			m_uiAmplifyMagicTimer = urand(5000, 9000);
 		}
 		else m_uiAmplifyMagicTimer -= uiDiff;
 
 		if (m_uiBlastWaveTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-					DoCast(m_creature, SPELL_BLAST_WAVE_10);
-				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-					DoCast(m_creature, SPELL_BLAST_WAVE_25);
-			}
+			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+				DoCast(m_creature, SPELL_BLAST_WAVE_10);
+			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				DoCast(m_creature, SPELL_BLAST_WAVE_25);
 			m_uiBlastWaveTimer = urand(7000, 10000);
 		}
 		else m_uiBlastWaveTimer -= uiDiff;
@@ -2574,9 +2554,9 @@ struct MANGOS_DLL_DECL mob_darkfallen_archmageAI : public ScriptedAI
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
 				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-					DoCast(m_creature, SPELL_FIREBALL_10);
+					DoCast(pTarget, SPELL_FIREBALL_10);
 				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-					DoCast(m_creature, SPELL_FIREBALL_25);
+					DoCast(pTarget, SPELL_FIREBALL_25);
 			}
 			m_uiFireballTimer = urand(9000, 13000);
 		}
@@ -2584,10 +2564,8 @@ struct MANGOS_DLL_DECL mob_darkfallen_archmageAI : public ScriptedAI
 
 		if (m_uiPolymorphSpiderTimer < uiDiff)
 		{
-
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				DoCastSpellIfCan(pTarget, SPELL_POLYMORPH_SPIDER);
-
 			m_uiPolymorphSpiderTimer = 10000;
 		}
 		else m_uiPolymorphSpiderTimer -= uiDiff;
@@ -2599,8 +2577,6 @@ struct MANGOS_DLL_DECL mob_darkfallen_archmageAI : public ScriptedAI
 			m_uiSiphonEssenceTimer = 15000;
 		}
 		else m_uiSiphonEssenceTimer -= uiDiff;
-
-
 
 		DoMeleeAttackIfReady();
 	}
@@ -2616,8 +2592,6 @@ enum
 	SPELL_BLOOD_MIRROR   		    = 70450,
 	SPELL_UNHOLY_STRIKE		        = 70437,
 	SPELL_VAMPIRIC_AURA	   			= 71736,
-
-
 };
 
 /*######
@@ -2630,18 +2604,20 @@ struct MANGOS_DLL_DECL mob_darkfallen_blood_knightAI : public ScriptedAI
 		Reset();
 	}
 
-
 	uint32 m_uiBloodMirrorTimer;
 	uint32 m_uiSiphonEssenceTimer;
 	uint32 m_uiUnholyStrikeTimer;
-	uint32 m_uiVampiricAuraTimer;
 
 	void Reset()
 	{
 		m_uiBloodMirrorTimer      = urand(5000, 9000);
 		m_uiSiphonEssenceTimer    = urand(7000, 11000);
 		m_uiUnholyStrikeTimer     = urand(9000, 13000);
-		m_uiVampiricAuraTimer     = 10000;
+	}
+
+	void Aggro(Unit* pWho)
+	{
+		DoCast(m_creature, SPELL_VAMPIRIC_AURA);
 	}
 
 	void UpdateAI(const uint32 uiDiff)
@@ -2652,7 +2628,7 @@ struct MANGOS_DLL_DECL mob_darkfallen_blood_knightAI : public ScriptedAI
 		if (m_uiBloodMirrorTimer < uiDiff)
 		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_BLOOD_MIRROR);
+				DoCast(pTarget, SPELL_BLOOD_MIRROR);
 			m_uiBloodMirrorTimer = urand(5000, 9000);
 		}
 		else m_uiBloodMirrorTimer -= uiDiff;
@@ -2660,29 +2636,17 @@ struct MANGOS_DLL_DECL mob_darkfallen_blood_knightAI : public ScriptedAI
 		if (m_uiSiphonEssenceTimer < uiDiff)
 		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_SIPHON_ESSENCE);
+				DoCast(pTarget, SPELL_SIPHON_ESSENCE);
 			m_uiSiphonEssenceTimer = urand(7000, 10000);
 		}
 		else m_uiSiphonEssenceTimer -= uiDiff;
 
 		if (m_uiUnholyStrikeTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_UNHOLY_STRIKE);
+			DoCast(m_creature->getVictim(), SPELL_UNHOLY_STRIKE);
 			m_uiUnholyStrikeTimer = urand(9000, 13000);
 		}
 		else m_uiUnholyStrikeTimer -= uiDiff;
-
-		if (m_uiVampiricAuraTimer < uiDiff)
-		{
-
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCastSpellIfCan(pTarget, SPELL_VAMPIRIC_AURA);
-
-			m_uiVampiricAuraTimer = 10000;
-		}
-		else m_uiVampiricAuraTimer -= uiDiff;
-
 
 		DoMeleeAttackIfReady();
 	}
@@ -2695,8 +2659,7 @@ CreatureAI* GetAI_mob_darkfallen_blood_knight(Creature* pCreature)
 
 enum
 {
-
-	SPELL_CHAINS_OF_SHADOW	   	    = 70645,
+	SPELL_CHAINS_OF_SHADOW	   	= 70645,
 	SPELL_SHADOW_B_10	        = 72960,
 	SPELL_SHADOW_B_25 			= 72961,
 };
@@ -2733,7 +2696,7 @@ struct MANGOS_DLL_DECL mob_darkfallen_nobleAI : public ScriptedAI
 		if (m_uiChainsOfShadowTimer < uiDiff)
 		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_CHAINS_OF_SHADOW);
+				DoCast(pTarget, SPELL_CHAINS_OF_SHADOW);
 			m_uiChainsOfShadowTimer = urand(5000, 9000);
 		}
 		else m_uiChainsOfShadowTimer -= uiDiff;
@@ -2743,9 +2706,9 @@ struct MANGOS_DLL_DECL mob_darkfallen_nobleAI : public ScriptedAI
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
 				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-					DoCast(m_creature, SPELL_SHADOW_B_10);
+					DoCast(pTarget, SPELL_SHADOW_B_10);
 				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-					DoCast(m_creature, SPELL_SHADOW_B_25);
+					DoCast(pTarget, SPELL_SHADOW_B_25);
 			}
 			m_uiShadowBoltTimer = urand(7000, 10000);
 		}
@@ -2754,7 +2717,7 @@ struct MANGOS_DLL_DECL mob_darkfallen_nobleAI : public ScriptedAI
 		if (m_uiSiphonEssenceTimer < uiDiff)
 		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_SIPHON_ESSENCE);
+				DoCast(pTarget, SPELL_SIPHON_ESSENCE);
 			m_uiSiphonEssenceTimer = urand(9000, 13000);
 		}
 		else m_uiSiphonEssenceTimer -= uiDiff;
@@ -2769,8 +2732,6 @@ CreatureAI* GetAI_mob_darkfallen_noble(Creature* pCreature)
 }
 enum
 {
-
-
 	SPELL_LICH_SLAP_10  	        = 72057,
 	SPELL_LICH_SLAP_25 	     		= 72421,
 	SPELL_SHROUD_OF_PROTECTION	    = 72065,
@@ -2791,13 +2752,13 @@ struct MANGOS_DLL_DECL mob_darkfallen_advisorAI : public ScriptedAI
 	uint32 Difficulty;
 
 	uint32 m_uiLichSlapTimer;
-	uint32 m_uiShroudOfProtectionTimer;
+	bool m_bHasProtection;
 	uint32 m_uiShroudOfSpellWardingTimer;
 
 	void Reset()
 	{
 		m_uiLichSlapTimer                = urand(5000, 9000);
-		m_uiShroudOfProtectionTimer       = urand(7000, 11000);
+		m_bHasProtection				 = false;
 		m_uiShroudOfSpellWardingTimer    = urand(9000, 13000);
 	}
 
@@ -2806,22 +2767,20 @@ struct MANGOS_DLL_DECL mob_darkfallen_advisorAI : public ScriptedAI
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
 			return;
 
-		if (m_uiShroudOfProtectionTimer < uiDiff)
+		if (!m_bHasProtection && m_creature->GetHealthPercent() < 10.0f)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_SHROUD_OF_PROTECTION);
-			m_uiShroudOfProtectionTimer = urand(7000, 11000);
+			m_bHasProtection = true;
+			DoCast(m_creature, SPELL_SHROUD_OF_PROTECTION);
 		}
-		else m_uiShroudOfProtectionTimer -= uiDiff;
 
 		if (m_uiLichSlapTimer < uiDiff)
 		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
 				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-					DoCast(m_creature, SPELL_LICH_SLAP_10);
+					DoCast(pTarget, SPELL_LICH_SLAP_10);
 				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-					DoCast(m_creature, SPELL_LICH_SLAP_25);
+					DoCast(pTarget, SPELL_LICH_SLAP_25);
 			}
 			m_uiLichSlapTimer = urand(5000, 9000);
 		}
@@ -2829,9 +2788,8 @@ struct MANGOS_DLL_DECL mob_darkfallen_advisorAI : public ScriptedAI
 
 		if (m_uiShroudOfSpellWardingTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_SHROUD_OF_SPELL_WARDING);
-			m_uiShroudOfSpellWardingTimer = urand(9000, 13000);
+			DoCast(m_creature, SPELL_SHROUD_OF_SPELL_WARDING);
+			m_uiShroudOfSpellWardingTimer = 30000;
 		}
 		else m_uiShroudOfSpellWardingTimer -= uiDiff;
 
@@ -2843,10 +2801,9 @@ CreatureAI* GetAI_mob_darkfallen_advisor(Creature* pCreature)
 {
 	return new mob_darkfallen_advisorAI(pCreature);	
 }
+
 enum
 {
-
-
 	SPELL_REND_FLASH_10  	        = 70435,
 	SPELL_REND_FLASH_25      		= 71154,
 	SPELL_VAMPIRIC_CURSE    	    = 70423,
@@ -2881,21 +2838,18 @@ struct MANGOS_DLL_DECL mob_darkfallen_lieutenantAI : public ScriptedAI
 
 		if (m_uiVampiricCurseTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_VAMPIRIC_CURSE);
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
+				DoCast(pTarget, SPELL_VAMPIRIC_CURSE);
 			m_uiVampiricCurseTimer = urand(7000, 11000);
 		}
 		else m_uiVampiricCurseTimer -= uiDiff;
 
 		if (m_uiRendFlashTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-					DoCast(m_creature, SPELL_REND_FLASH_10);
-				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-					DoCast(m_creature, SPELL_REND_FLASH_25);
-			}
+			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+				DoCast(m_creature->getVictim(), SPELL_REND_FLASH_10);
+			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				DoCast(m_creature->getVictim(), SPELL_REND_FLASH_25);
 			m_uiRendFlashTimer = urand(5000, 9000);
 		}
 		else m_uiRendFlashTimer -= uiDiff;
@@ -2910,8 +2864,6 @@ CreatureAI* GetAI_mob_darkfallen_lieutenant(Creature* pCreature)
 }
 enum
 {
-
-
 	SPELL_BLOOD_SAP      	        = 70432,
 	SPELL_SHADOWSTEP        		= 70431,
 };
@@ -2925,7 +2877,6 @@ struct MANGOS_DLL_DECL mob_darkfallen_tacticianAI : public ScriptedAI
 	{
 		Reset();
 	}
-
 
 	uint32 m_uiBloodSapTimer;
 	uint32 m_uiUnholyStrikeTimer;
@@ -2945,8 +2896,7 @@ struct MANGOS_DLL_DECL mob_darkfallen_tacticianAI : public ScriptedAI
 
 		if (m_uiBloodSapTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_BLOOD_SAP);
+			DoCast(m_creature->getVictim(), SPELL_BLOOD_SAP);
 			m_uiBloodSapTimer = urand(5000, 9000);
 		}
 		else m_uiBloodSapTimer -= uiDiff;
@@ -2954,15 +2904,14 @@ struct MANGOS_DLL_DECL mob_darkfallen_tacticianAI : public ScriptedAI
 		if (m_uiShadowstepTimer < uiDiff)
 		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_SHADOWSTEP);
+				DoCast(pTarget, SPELL_SHADOWSTEP);
 			m_uiShadowstepTimer = urand(7000, 11000);
 		}
 		else m_uiShadowstepTimer -= uiDiff;
 
 		if (m_uiUnholyStrikeTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_UNHOLY_STRIKE);
+			DoCast(m_creature->getVictim(), SPELL_UNHOLY_STRIKE);
 			m_uiUnholyStrikeTimer = urand(9000, 15000);
 		}
 		else m_uiUnholyStrikeTimer -= uiDiff;
@@ -2978,8 +2927,6 @@ CreatureAI* GetAI_mob_darkfallen_tactician(Creature* pCreature)
 
 enum
 {
-
-
 	SPELL_BATTLE_SHOUT     	        = 70750,
 	SPELL_VAMPIRE_RUSH_10        	= 70449,
 	SPELL_VAMPIRE_RUSH_25      	    = 71155,
@@ -2997,13 +2944,16 @@ struct MANGOS_DLL_DECL mob_darkfallen_commanderAI : public ScriptedAI
 	}
 
 	uint32 Difficulty;
-	uint32 m_uiBattleShoutTimer;
 	uint32 m_uiVampireRushTimer;
 
 	void Reset()
 	{
-		m_uiBattleShoutTimer                = urand(5000, 9000);
 		m_uiVampireRushTimer                = urand(7000, 11000);
+	}
+
+	void Aggro(Unit* pWho)
+	{
+		DoCast(m_creature, SPELL_BATTLE_SHOUT);
 	}
 
 	void UpdateAI(const uint32 uiDiff)
@@ -3011,22 +2961,14 @@ struct MANGOS_DLL_DECL mob_darkfallen_commanderAI : public ScriptedAI
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
 			return;
 
-		if (m_uiBattleShoutTimer < uiDiff)
-		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_BATTLE_SHOUT);
-			m_uiBattleShoutTimer = urand(5000, 9000);
-		}
-		else m_uiBattleShoutTimer -= uiDiff;
-
 		if (m_uiVampireRushTimer < uiDiff)
 		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
 				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-					DoCast(m_creature, SPELL_VAMPIRE_RUSH_10);
+					DoCast(pTarget, SPELL_VAMPIRE_RUSH_10);
 				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-					DoCast(m_creature, SPELL_VAMPIRE_RUSH_25);
+					DoCast(pTarget, SPELL_VAMPIRE_RUSH_25);
 			}
 			m_uiVampireRushTimer = urand(7000, 11000);
 		}
@@ -3043,38 +2985,24 @@ CreatureAI* GetAI_mob_darkfallen_commander(Creature* pCreature)
 
 /*########################################
 ##########################################
-############ Frostwing trash #############
+############## Svalna event ##############
 ##########################################
 ########################################*/
 
-// Sister Svalna event - miniboss:
-// Crok Scourgebane
-// Captain Amath
-// Captain Brandon
-// Captain Grunder
-// Captain Rupert
-// Ymirjar battle maiden
-// Ymirjar deathbringer
-// Ymirjar warlord
-// Ymirjar huntress
-
-// #Valithria event#:
-// Risen archmage
-// Blazing Skeletons
-// Suppressors
-// Blistering Zombies
-// Gluttonous Abominations
-
-// #Sindragosa event#:
-// Forstwarden handler
-// Frostwing whelp
-// Rimefang - miniboss
-// Spinestalker - minoboss
-
 enum
 {
+	// event yells
+	SAY_CROCK_INTRO					= -1609520,
+	SAY_ARNATH_INTRO				= -1609521,
+	SAY_CROCK_START					= -1609522,
+	SAY_SVALNA_TAUNT				= -1609523,
+	SAY_SVALNA_WIPE					= -1609524,
+	SAY_RESSURECT_UNDEAD			= -1609525,
+	SAY_AGGRO						= -1609526,
+	SAY_KILL_CAPTAIN				= -1609527,
+	SAY_KILL_PLAYER					= -1609528,
+	SAY_DEATH						= -1609529,
 
-	
 	SPELL_AETHER_BURST_10     	    = 71468,
     SPELL_AETHER_BURST_25        	= 71469,
     SPELL_AETHER_SHIELD      	    = 71463,
@@ -3198,7 +3126,6 @@ CreatureAI* GetAI_miniboss_sister_svalna(Creature* pCreature)
 
 enum
 {
-
 	SPELL_ICEBOUND_ARMOR	   	    = 70714,
 	SPELL_DEATHSTRIKE	            = 71489,
 	SPELL_DEATH_COIL_25 			= 71490,
@@ -3746,11 +3673,8 @@ CreatureAI* GetAI_mob_captain_rupert(Creature* pCreature)
 
 enum
 {
-
 	SPELL_ADRENALINE_RUSH 	   	    = 71258,
 	SPELL_BARBARIC_STRIKE           = 71257,
-	
-	
 };
 
 /*######
@@ -3760,22 +3684,18 @@ struct MANGOS_DLL_DECL mob_ymirjar_battlemaidenAI : public ScriptedAI
 {
     mob_ymirjar_battlemaidenAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-		Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
-
-	uint32 Difficulty;
 
     uint32 m_uiAdrenalineTimer;
 	uint32 m_uiBarbaricTimer;
 	
 	
-	   void Reset()
-    {
-        m_uiAdrenalineTimer            = 10000;
+	void Reset()
+	{
+		m_uiAdrenalineTimer            = 10000;
 		m_uiBarbaricTimer              = urand(7000, 11000);
-		
-	 }
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -3784,21 +3704,18 @@ struct MANGOS_DLL_DECL mob_ymirjar_battlemaidenAI : public ScriptedAI
 
         if (m_uiAdrenalineTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_ADRENALINE_RUSH);
+			DoCast(m_creature, SPELL_ADRENALINE_RUSH);
 			m_uiAdrenalineTimer = 10000;
         }
         else m_uiAdrenalineTimer -= uiDiff;
 
 		if (m_uiBarbaricTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
 		        DoCast(pTarget, SPELL_BARBARIC_STRIKE);
-		
             m_uiBarbaricTimer = urand(7000, 11000);
         }
         else m_uiBarbaricTimer -= uiDiff;
-
 
         DoMeleeAttackIfReady();
     }
@@ -3811,7 +3728,6 @@ CreatureAI* GetAI_mob_ymirjar_battlemaiden(Creature* pCreature)
 
 enum
 {
-
 	SPELL_BANISH	   	            = 71298,
 	SPELL_DEATH_10                  = 71299,
 	SPELL_DEATH_25                  = 71300,
@@ -3819,8 +3735,6 @@ enum
 	SPELL_SHADOW_25                 = 71297,
 	SPELL_SPIRIT_STREAM             = 69929,
 	SPELL_SUMM_Y                    = 71303,
-	
-	
 };
 
 /*######
@@ -3841,17 +3755,15 @@ struct MANGOS_DLL_DECL mob_ymirjar_deathbringerAI : public ScriptedAI
 	uint32 m_uiShadowTimer;
 	uint32 m_uiSpiritTimer;
 	uint32 m_uiSummonTimer;
-	
-	
-	   void Reset()
-    {
-        m_uiBanishTimer            = 10000;
+
+	void Reset()
+	{
+		m_uiBanishTimer            = 10000;
 		m_uiDeathTimer             = urand(7000, 11000);
 		m_uiShadowTimer            = 14000;
 		m_uiSpiritTimer            = 15000;
 		m_uiSummonTimer            = 20000;
-		
-	 }
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -3860,55 +3772,58 @@ struct MANGOS_DLL_DECL mob_ymirjar_deathbringerAI : public ScriptedAI
 
         if (m_uiBanishTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
 				DoCast(pTarget, SPELL_BANISH);
 			m_uiBanishTimer = 10000;
         }
         else m_uiBanishTimer -= uiDiff;
 
 		if (m_uiShadowTimer < uiDiff)
-        {
+		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_SHADOW_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_SHADOW_25);
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(pTarget, SPELL_SHADOW_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(pTarget, SPELL_SHADOW_25);
 			}
 			m_uiShadowTimer = urand(7000, 11000);
-        }
+		}
         else m_uiShadowTimer -= uiDiff;
 
 		if (m_uiDeathTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
+		{
 			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_DEATH_10);
+				DoCast(m_creature, SPELL_DEATH_10);
 			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_DEATH_25);
-			}
+				DoCast(m_creature, SPELL_DEATH_25);
 			m_uiDeathTimer = urand(7000, 11000);
-        }
+		}
         else m_uiDeathTimer -= uiDiff;
-
 
 		if (m_uiSpiritTimer < uiDiff)
         {
-			 DoCast(m_creature, SPELL_SPIRIT_STREAM);
-		
+			switch(urand(0, 1))
+			{
+			case 0:
+				if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, 37132, 50.0f))
+					DoCast(pTarget, SPELL_SPIRIT_STREAM);
+				break;
+			case 1:
+				if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, 37134, 50.0f))
+					DoCast(pTarget, SPELL_SPIRIT_STREAM);
+				break;
+			}		
             m_uiSpiritTimer = urand(7000, 11000);
         }
-        else m_uiSpiritTimer -= uiDiff;
+		else m_uiSpiritTimer -= uiDiff;
 
 		if (m_uiSummonTimer < uiDiff)
-        {
-			 DoCast(m_creature, SPELL_SUMM_Y);
-		
-            m_uiSummonTimer = urand(7000, 11000);
-        }
-        else m_uiSummonTimer -= uiDiff;
-
+		{
+			DoCast(m_creature, SPELL_SUMM_Y);
+			m_uiSummonTimer = urand(7000, 11000);
+		}
+		else m_uiSummonTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
@@ -3922,12 +3837,8 @@ CreatureAI* GetAI_mob_ymirjar_deathbringer(Creature* pCreature)
 
 enum
 {
-
 	SPELL_WHIRL1	   	            = 41057,
 	SPELL_WHIRL2                    = 41056,
-	
-	
-	
 };
 
 /*######
@@ -3937,24 +3848,17 @@ struct MANGOS_DLL_DECL mob_ymirjar_warlordAI : public ScriptedAI
 {
     mob_ymirjar_warlordAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-		Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
-
-	uint32 Difficulty;
 
     uint32 m_uiWhirl1Timer;
 	uint32 m_uiWhirl2Timer;
 	
-	
-	
-	   void Reset()
-    {
-        m_uiWhirl1Timer            = 10000;
-		m_uiWhirl2Timer             = urand(7000, 11000);
-		
-		
-	 }
+	void Reset()
+	{
+		m_uiWhirl1Timer            = 10000;
+		m_uiWhirl2Timer            = urand(7000, 11000);
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -3963,25 +3867,17 @@ struct MANGOS_DLL_DECL mob_ymirjar_warlordAI : public ScriptedAI
 
         if (m_uiWhirl1Timer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_WHIRL1);
+			DoCast(m_creature, SPELL_WHIRL1);
 			m_uiWhirl1Timer = 10000;
         }
         else m_uiWhirl1Timer -= uiDiff;
 
 		if (m_uiWhirl2Timer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_WHIRL2);
+			DoCast(m_creature, SPELL_WHIRL2);
 			m_uiWhirl2Timer = 10000;
         }
         else m_uiWhirl2Timer -= uiDiff;
-
-		
-
-
-		
-
 
         DoMeleeAttackIfReady();
     }
@@ -3995,15 +3891,11 @@ CreatureAI* GetAI_mob_ymirjar_warlord(Creature* pCreature)
 
 enum
 {
-
 	SPELL_ICE_TRAP	   	            = 71249,
 	SPELL_RAPID_SHOT                = 71251,
 	SPELL_SHOOT                     = 71253,
 	SPELL_SUMMON_W                  = 71705,
 	SPELL_VOLLEY                    = 71252,
-	
-	
-	
 };
 
 /*######
@@ -4025,16 +3917,14 @@ struct MANGOS_DLL_DECL mob_ymirjar_huntressAI : public ScriptedAI
 	uint32 m_uiSummonTimer;
 	uint32 m_uiVolleyTimer;
 	
-	
-	   void Reset()
-    {
-        m_uiIcetrapTimer            = 10000;
+	void Reset()
+	{
+		m_uiIcetrapTimer            = 10000;
 		m_uiRapidshotTimer          = urand(7000, 11000);
 		m_uiShootTimer              = 14000;
 		m_uiSummonTimer             = 15000;
 		m_uiVolleyTimer             = 20000;
-		
-	 }
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -4051,20 +3941,14 @@ struct MANGOS_DLL_DECL mob_ymirjar_huntressAI : public ScriptedAI
 
 		if (m_uiSummonTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_SUMMON_W);
-			
+			DoCast(m_creature, SPELL_SUMMON_W);
 			m_uiSummonTimer = 15000;
         }
         else m_uiSummonTimer -= uiDiff;
 
 		if (m_uiRapidshotTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_RAPID_SHOT);
-			
+			DoCast(m_creature, SPELL_RAPID_SHOT);
 			m_uiRapidshotTimer = urand(7000, 11000);
         }
         else m_uiRapidshotTimer -= uiDiff;
@@ -4073,7 +3957,6 @@ struct MANGOS_DLL_DECL mob_ymirjar_huntressAI : public ScriptedAI
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				DoCast(pTarget, SPELL_SHOOT);
-		
 			m_uiShootTimer = 14000;
         }
         else m_uiShootTimer -= uiDiff;
@@ -4082,18 +3965,12 @@ struct MANGOS_DLL_DECL mob_ymirjar_huntressAI : public ScriptedAI
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				DoCast(pTarget, SPELL_VOLLEY);
-		
 			m_uiVolleyTimer = 20000;
-        }
-        else m_uiVolleyTimer -= uiDiff;
+		}
+		else m_uiVolleyTimer -= uiDiff;
 
-
-
-		
-
-
-        DoMeleeAttackIfReady();
-    }
+		DoMeleeAttackIfReady();
+	}
 };
 
 CreatureAI* GetAI_mob_ymirjar_huntress(Creature* pCreature)
@@ -4101,454 +3978,14 @@ CreatureAI* GetAI_mob_ymirjar_huntress(Creature* pCreature)
     return new mob_ymirjar_huntressAI(pCreature);
 }
 
-// #Valithria event#:
-
-
-
-
-
-
-enum
-{
-
-	SPELL_CORRUPTION	            = 71298,
-	SPELL_FV_10                     = 71299,
-	SPELL_FV_25                     = 71300,
-	SPELL_FROSTV_10                 = 71296,
-	SPELL_FROSTV_25                 = 71297,
-	SPELL_MANA_VOID_10              = 69929,
-	SPELL_MANA_VOID_25              = 71303,
-	
-	
-};
-
-/*######
-## // Risen archmage
-######*/
-struct MANGOS_DLL_DECL mob_risen_archmageAI : public ScriptedAI
-{
-    mob_risen_archmageAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-		Difficulty = pCreature->GetMap()->GetDifficulty();
-        Reset();
-    }
-
-	uint32 Difficulty;
-
-    uint32 m_uiCorruptionTimer;
-	uint32 m_uiFvTimer;
-	uint32 m_uiFrostvTimer;
-	uint32 m_uiManavoidTimer;
-	
-	
-	   void Reset()
-    {
-        m_uiCorruptionTimer            = 10000;
-		m_uiFvTimer                    = urand(7000, 11000);
-		m_uiFrostvTimer                = 14000;
-		m_uiManavoidTimer              = 15000;
-
-		
-	 }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        if (m_uiCorruptionTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_CORRUPTION);
-			m_uiCorruptionTimer = 10000;
-        }
-        else m_uiCorruptionTimer -= uiDiff;
-
-		if (m_uiFvTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if( Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_FV_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_FV_25);
-			}
-			m_uiFvTimer = urand(7000, 11000);
-        }
-        else m_uiFvTimer -= uiDiff;
-
-		if (m_uiFrostvTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_FROSTV_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_FROSTV_25);
-			}
-			m_uiFrostvTimer = urand(7000, 11000);
-        }
-        else m_uiFrostvTimer -= uiDiff;
-
-		if (m_uiManavoidTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_MANA_VOID_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_MANA_VOID_25);
-			}
-			m_uiManavoidTimer = urand(7000, 11000);
-        }
-        else m_uiManavoidTimer -= uiDiff;
-        
-		DoMeleeAttackIfReady();
-    }
-};
-
-CreatureAI* GetAI_mob_risen_archmage(Creature* pCreature)
-{
-    return new mob_risen_archmageAI(pCreature);
-}
-
+/*########################################
+##########################################
+############ Frostwing trash #############
+##########################################
+########################################*/
 
 enum
 {
-
-	
-	SPELL_FR_10                     = 71299,
-	SPELL_FR_25                     = 71300,
-	SPELL_FIREB_10                  = 71296,
-	SPELL_FIREB_25                  = 71297,
-	SPELL_LAY_10                    = 69929,
-	SPELL_LAY_25                    = 71303,
-	
-	
-};
-
-/*######
-## // Blazing Skeleton
-######*/
-struct MANGOS_DLL_DECL mob_blazing_skeletonAI : public ScriptedAI
-{
-    mob_blazing_skeletonAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-		Difficulty = pCreature->GetMap()->GetDifficulty();
-        Reset();
-    }
-
-	uint32 Difficulty;
-
-    
-	uint32 m_uiFrTimer;
-	uint32 m_uiFirebTimer;
-	uint32 m_uiLayWasteTimer;
-	
-	
-	   void Reset()
-    {
-       
-		m_uiFrTimer                    = urand(7000, 11000);
-		m_uiFirebTimer                 = 14000;
-		m_uiLayWasteTimer              = 15000;
-
-		
-	 }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        
-
-		if (m_uiFrTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if( Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_FR_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_FR_25);
-			}
-			m_uiFrTimer = urand(7000, 11000);
-        }
-        else m_uiFrTimer -= uiDiff;
-
-		if (m_uiFirebTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_FIREB_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_FIREB_25);
-			}
-			m_uiFirebTimer = 14000;
-        }
-        else m_uiFirebTimer -= uiDiff;
-
-		if (m_uiLayWasteTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_LAY_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_LAY_25);
-			}
-			m_uiLayWasteTimer = 15000;
-        }
-        else m_uiLayWasteTimer -= uiDiff;
-        
-		DoMeleeAttackIfReady();
-    }
-};
-
-CreatureAI* GetAI_mob_blazing_skeleton(Creature* pCreature)
-{
-    return new mob_blazing_skeletonAI(pCreature);
-}
-
-enum
-{
-
-	
-	SPELL_SUPPRESSION   = 70588,
-	
-	
-	
-};
-
-/*######
-## // Suppresser
-######*/
-struct MANGOS_DLL_DECL mob_suppresserAI : public ScriptedAI
-{
-    mob_suppresserAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-		Difficulty = pCreature->GetMap()->GetDifficulty();
-        Reset();
-    }
-
-	uint32 Difficulty;
-    uint32 m_uiSuppressionTimer;
-	
-	
-	
-	   void Reset()
-    {
-       
-		m_uiSuppressionTimer                    = urand(7000, 11000);
-		
-
-		
-	 }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        
-
-		if (m_uiSuppressionTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			    DoCast(pTarget, SPELL_SUPPRESSION);
-			
-			m_uiSuppressionTimer = urand(7000, 11000);
-        }
-        else m_uiSuppressionTimer -= uiDiff;
-
-		
-        
-		DoMeleeAttackIfReady();
-    }
-};
-
-CreatureAI* GetAI_mob_suppresser(Creature* pCreature)
-{
-    return new mob_suppresserAI(pCreature);
-}
-
-
-enum
-{
-
-	
-	SPELL_ACID_B_N_10             = 70744,
-	SPELL_ACID_B_N_25             = 71733,
-	SPELL_ACID_B_10               = 72017,
-	SPELL_ACID_B_25               = 72018,
-	
-	
-	
-};
-
-/*######
-## // Blistering Zombies
-######*/
-struct MANGOS_DLL_DECL mob_blistering_zombieAI : public ScriptedAI
-{
-    mob_blistering_zombieAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-		Difficulty = pCreature->GetMap()->GetDifficulty();
-        Reset();
-    }
-
-	uint32 Difficulty;
-
-    
-	uint32 m_uiAcidBNTimer;
-	uint32 m_uiAcidBTimer;
-	
-	
-	   void Reset()
-    {
-       
-		m_uiAcidBNTimer                = urand(7000, 11000);
-		m_uiAcidBTimer                 = 14000;
-		
-
-		
-	 }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        
-
-		if (m_uiAcidBNTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if( Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_ACID_B_N_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_ACID_B_N_25);
-			}
-			m_uiAcidBNTimer = urand(7000, 11000);
-        }
-        else m_uiAcidBNTimer -= uiDiff;
-
-		if (m_uiAcidBTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_ACID_B_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_ACID_B_25);
-			}
-			m_uiAcidBTimer = 14000;
-        }
-        else m_uiAcidBTimer -= uiDiff;
-		    
-		DoMeleeAttackIfReady();
-    }
-};
-
-CreatureAI* GetAI_mob_blistering_zombie(Creature* pCreature)
-{
-    return new mob_blistering_zombieAI(pCreature);
-}
-
-
-
-enum
-{
-
-	
-	SPELL_GUT_SPRAY_N_10             = 70633,
-	SPELL_GUT_SPRAY_N_25             = 71283,
-	SPELL_GUT_SPRAY_10               = 72025,
-	SPELL_GUT_SPRAY_25               = 72026,
-	
-	
-	
-};
-
-/*######
-## // Gluttonous Abomination
-######*/
-struct MANGOS_DLL_DECL mob_gluttonous_abominationAI : public ScriptedAI
-{
-    mob_gluttonous_abominationAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-		Difficulty = pCreature->GetMap()->GetDifficulty();
-        Reset();
-    }
-
-	uint32 Difficulty;
-
-    
-	uint32 m_uiGutSprayNTimer;
-	uint32 m_uiGutSprayTimer;
-	
-	
-	   void Reset()
-    {
-       
-		m_uiGutSprayNTimer                = urand(7000, 11000);
-		m_uiGutSprayTimer                 = 14000;
-		
-
-		
-	 }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        
-
-		if (m_uiGutSprayNTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if( Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_GUT_SPRAY_N_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_GUT_SPRAY_N_25);
-			}
-			m_uiGutSprayNTimer = urand(7000, 11000);
-        }
-        else m_uiGutSprayNTimer -= uiDiff;
-
-		if (m_uiGutSprayTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_GUT_SPRAY_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_GUT_SPRAY_25);
-			}
-			m_uiGutSprayTimer = 14000;
-        }
-        else m_uiGutSprayTimer -= uiDiff;
-		    
-		DoMeleeAttackIfReady();
-    }
-};
-
-CreatureAI* GetAI_mob_gluttonous_abomination(Creature* pCreature)
-{
-    return new mob_gluttonous_abominationAI(pCreature);
-}
-// #Sindragosa event#:
-
-
-
-enum
-{
-
-	
 	SPELL_CONC_SHOT_10               = 71337,
 	SPELL_CONC_SHOT_25               = 71338,
 	SPELL_ORDER_WHELP                = 71357,
@@ -4566,47 +4003,34 @@ struct MANGOS_DLL_DECL mob_frostwarden_handlerAI : public ScriptedAI
     }
 
 	uint32 Difficulty;
-
-    
 	uint32 m_uiConcShotTimer;
 	uint32 m_uiOrderTimer;
-	
-	
-	
-	   void Reset()
-    {
-       
-		m_uiConcShotTimer                = urand(7000, 11000);
-		m_uiOrderTimer                   = 15000 ;
-		
 
-		
-	 }
+	void Reset()
+	{
+		m_uiConcShotTimer                = urand(7000, 11000);
+		m_uiOrderTimer                   = 15000 ;		
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-         if (m_uiConcShotTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
+		if (m_uiConcShotTimer < uiDiff)
+		{
 			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_CONC_SHOT_10);
+				DoCast(m_creature, SPELL_CONC_SHOT_10);
 			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_CONC_SHOT_25);
-			}
+				DoCast(m_creature, SPELL_CONC_SHOT_25);
 			m_uiConcShotTimer = 14000;
-        }
-        else m_uiConcShotTimer -= uiDiff;
-
+		}
+		else m_uiConcShotTimer -= uiDiff;
 
 		if (m_uiOrderTimer < uiDiff)
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			    DoCast(pTarget, SPELL_ORDER_WHELP);
-		
 			m_uiOrderTimer = 15000;
         }
         else m_uiOrderTimer -= uiDiff;
@@ -4620,12 +4044,8 @@ CreatureAI* GetAI_mob_frostwarden_handler(Creature* pCreature)
     return new mob_frostwarden_handlerAI(pCreature);
 }
 
-
-
 enum
 {
-
-	
 	SPELL_FROST_BLAST_10               = 71361,
 	SPELL_FROST_BLAST_25               = 71362,
 	SPELL_FOCUS_FIRE                   = 71350,
@@ -4643,47 +4063,40 @@ struct MANGOS_DLL_DECL mob_frostwarden_whelpAI : public ScriptedAI
     }
 
 	uint32 Difficulty;
-
-    
 	uint32 m_uiFrostBTimer;
 	uint32 m_uiFocusTimer;
 	
-	
-	
-	   void Reset()
-    {
-       
+	void Reset()
+	{
 		m_uiFrostBTimer                      = urand(7000, 11000);
 		m_uiFocusTimer                       = 15000 ;
-		
-
-		
-	 }
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-         if (m_uiFrostBTimer < uiDiff)
-        {
+		if (m_uiFrostBTimer < uiDiff)
+		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_FROST_BLAST_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_FROST_BLAST_25);
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(pTarget, SPELL_FROST_BLAST_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(pTarget, SPELL_FROST_BLAST_25);
 			}
 			m_uiFrostBTimer = 14000;
-        }
-        else m_uiFrostBTimer -= uiDiff;
-
+		}
+		else m_uiFrostBTimer -= uiDiff;
 
 		if (m_uiFocusTimer < uiDiff)
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+				m_creature->AddThreat(pTarget, 10000.0f);
 			    DoCast(pTarget, SPELL_FOCUS_FIRE);
-		
+			}		
 			m_uiFocusTimer = 15000;
         }
         else m_uiFocusTimer -= uiDiff;
@@ -4846,7 +4259,6 @@ void AddSC_icecrown_citadel()
     newscript->RegisterSelf();
 
 	// ### Plagueworks Trash ###
-
 	newscript = new Script;
     newscript->Name = "mob_blighted_abomination";
     newscript->GetAI = &GetAI_mob_blighted_abomination;
@@ -4909,7 +4321,6 @@ void AddSC_icecrown_citadel()
     newscript->RegisterSelf();
 
 	//   ### Frostwing Trash ###
-
 	newscript = new Script;
     newscript->Name = "miniboss_sister_svalna";
     newscript->GetAI = &GetAI_miniboss_sister_svalna;
@@ -4960,35 +4371,7 @@ void AddSC_icecrown_citadel()
     newscript->GetAI = &GetAI_mob_ymirjar_huntress;
     newscript->RegisterSelf();
 	
-    // ### Valithria Evenet ###
-	
-	newscript = new Script;
-    newscript->Name = "mob_risen_archmage";
-    newscript->GetAI = &GetAI_mob_risen_archmage;
-    newscript->RegisterSelf();
-
-	newscript = new Script;
-    newscript->Name = "mob_blazing_skeleton";
-    newscript->GetAI = &GetAI_mob_blazing_skeleton;
-    newscript->RegisterSelf();
-
-	newscript = new Script;
-    newscript->Name = "mob_suppresser";
-    newscript->GetAI = &GetAI_mob_suppresser;
-    newscript->RegisterSelf();
-
-	newscript = new Script;
-    newscript->Name = "mob_blistering_zombie";
-    newscript->GetAI = &GetAI_mob_blistering_zombie;
-    newscript->RegisterSelf();
-
-	newscript = new Script;
-    newscript->Name = "mob_gluttonous_abomination";
-    newscript->GetAI = &GetAI_mob_gluttonous_abomination;
-    newscript->RegisterSelf();
-
 	// ### Sindragosa Event ###
-	
 	newscript = new Script;
     newscript->Name = "mob_frostwarden_handler";
     newscript->GetAI = &GetAI_mob_frostwarden_handler;

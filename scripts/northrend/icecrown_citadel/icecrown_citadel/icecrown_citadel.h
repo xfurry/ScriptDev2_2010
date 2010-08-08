@@ -38,6 +38,7 @@ enum
     NPC_TALDARAM                = 37973,
     NPC_LANATHEL                = 37955,
 	// frostwing
+	NPC_VALITHRIA				= 36789,
 	NPC_SINDRAGOSA				= 36853,
 	NPC_RIMEFANG				= 37533,
 	NPC_SPLINESTALKER			= 37534,

@@ -111,6 +111,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
         m_uiFestergutGUID               = 0;
         m_uiRotfaceGUID                 = 0;
         m_uiPutricideGUID               = 0;
+		m_uiValithriaGUID				= 0;
 
         // lower spire
         m_uiMarrowgarIce1GUID           = 0;
@@ -169,6 +170,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             case NPC_KELESETH:      m_uiKelesethGUID        = pCreature->GetGUID(); break;
             case NPC_TALDARAM:      m_uiTaldaramGUID        = pCreature->GetGUID(); break;
             case NPC_LANATHEL:      m_uiLanathelGUID        = pCreature->GetGUID(); break;
+			case NPC_VALITHRIA:		m_uiValithriaGUID		= pCreature->GetGUID(); break;
 			case NPC_SPLINESTALKER:	m_uiSplinestalkerGUID	= pCreature->GetGUID(); break;
 			case NPC_RIMEFANG:		m_uiRimefangGUID		= pCreature->GetGUID(); break;
 			case NPC_LICH_KING:		m_uiLichKingGUID		= pCreature->GetGUID(); break;
@@ -611,6 +613,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 return m_uiRotfaceGUID;
             case NPC_PUTRICIDE:
                 return m_uiPutricideGUID;
+			case NPC_VALITHRIA:
+				return m_uiValithriaGUID;
 			case NPC_RIMEFANG:
 				return m_uiRimefangGUID;
 			case NPC_SPLINESTALKER:

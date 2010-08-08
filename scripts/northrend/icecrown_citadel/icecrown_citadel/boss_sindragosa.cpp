@@ -24,6 +24,23 @@ EndScriptData */
 #include "precompiled.h"
 #include "icecrown_citadel.h"
 
+enum
+{
+	// yells
+	SAY_AGGRO			= -1609540,
+	SAY_UNCHAINED_MAGIC	= -1609541,
+	SAY_BLISTERING_COLD	= -1609542,
+	SAY_RESPITE_SOUL	= -1609543,
+	SAY_TAKEOFF			= -1609544,
+	SAY_PHASE3			= -1609545,
+	SAY_SLAY1			= -1609546,
+	SAY_SLAY2			= -1609547,
+	SAY_BERSERK			= -1609548,
+	SAY_DEATH			= -1609549,
+
+	// spells
+};
+
 const float posSindragosa[4] = {4453.670f, 2484.251f, 224.797f, 3.15f};
 
 struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI

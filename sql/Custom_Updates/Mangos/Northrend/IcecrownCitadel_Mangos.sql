@@ -41,6 +41,11 @@ UPDATE creature_template SET ScriptName = 'boss_prince_valanar' WHERE entry = 37
 UPDATE creature_template SET ScriptName = 'boss_blood_queen_lanathel' WHERE entry = 37955;
 
 -- Valithria Dreamwalker
+update creature_template set scriptName = 'mob_risen_archmage' where entry = 37868;
+update creature_template set scriptName = 'mob_blazing_skeleton' where entry = 36791;
+update creature_template set scriptName = 'mob_suppresser' where entry = 37863;
+update creature_template set scriptName = 'mob_blistering_zombie' where entry = 37934;
+update creature_template set scriptName = 'mob_gluttonous_abomination' where entry = 37886;
 -- Sindragosa
 update creature_template set scriptName = 'boss_sindragosa' where entry = 36853;
 update creature_template set scriptName = 'miniboss_spinestalker' where entry = 37534;
@@ -49,6 +54,9 @@ update creature_template set scriptName = 'miniboss_rimefang' where entry = 3753
 -- Lich King
 update creature_template set scriptName = 'boss_the_lich_king' where entry = 36597;
 update creature_template set npcflag = 1, scriptName = 'npc_tirion_final' where entry = 38995;
+-- LK platform
+-- delete from gameobject where id in (202438);
+-- insert into gameobject VALUES (115000,202438,631,16,65535,494.463, -2520.409 ,1040.860,3.275,0,0,0,0,604800,0,1);
 
 -- Minibossed: Stinky, Precious, Svalna
 UPDATE creature_template SET ScriptName = 'miniboss_stinky' WHERE entry = 37025;
@@ -65,11 +73,6 @@ update creature_template set scriptName = 'mob_ymirjar_battlemaiden' where entry
 update creature_template set scriptName = 'mob_ymirjar_deathbringer' where entry = 38125;
 update creature_template set scriptName = 'mob_ymirjar_warlord' where entry = 37133;
 update creature_template set scriptName = 'mob_ymirjar_huntress' where entry = 37134;
-update creature_template set scriptName = 'mob_risen_archmage' where entry = 37868;
-update creature_template set scriptName = 'mob_blazing_skeleton' where entry = 36791;
-update creature_template set scriptName = 'mob_suppresser' where entry = 37863;
-update creature_template set scriptName = 'mob_blistering_zombie' where entry = 37934;
-update creature_template set scriptName = 'mob_gluttonous_abomination' where entry = 37886;
 update creature_template set scriptName = 'mob_frostwarden_handler' where entry = 37531;
 update creature_template set scriptName = 'mob_frostwarden_whelp' where entry = 37532;
 -- Crimson halls trash:
