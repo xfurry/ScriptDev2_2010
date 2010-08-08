@@ -1,11 +1,12 @@
 -- Ruby sanctum
-UPDATE `instance_template` SET `scriptname`='instance_ruby_sanctum' WHERE `map`=724;
+UPDATE `instance_template` SET `scriptname`='instance_ruby_sanctum' WHERE `map`= 724;
 -- Halion
-UPDATE `creature_template` SET `ScriptName`='boss_halion_real', `AIName` ='' WHERE `entry`=39863;
-UPDATE `creature_template` SET `ScriptName`='boss_halion_twilight', `AIName` ='' WHERE `entry`=40142;
-UPDATE `creature_template` SET `ScriptName`='mob_halion_meteor', `AIName` ='' WHERE `entry`=40029;
-UPDATE `creature_template` SET `ScriptName`='mob_halion_flame', `AIName` ='' WHERE `entry` IN (36673,36674);
-UPDATE `creature_template` SET `ScriptName`='mob_halion_control', `AIName` ='' WHERE `entry` IN (40146);
+UPDATE `creature_template` SET `ScriptName`='boss_halion_real', unit_flags = 0 WHERE `entry`= 39863;
+UPDATE `creature_template` SET `ScriptName`='boss_halion_twilight', unit_flags = 0 WHERE `entry`= 40142;
+UPDATE `creature_template` SET `ScriptName`='mob_halion_control' WHERE `entry` = 40146;
+UPDATE `creature_template` SET `ScriptName`='mob_halion_meteor' WHERE `entry` = 40029;
+
+-- UPDATE `creature_template` SET `ScriptName`='mob_halion_flame' WHERE `entry` IN (36673,36674);
 UPDATE `creature_template` SET `ScriptName`='mob_halion_portal_out', `AIName` ='' WHERE `entry` IN (36676);
 UPDATE `creature_template` SET `ScriptName`='mob_halion_portal_in', `AIName` ='' WHERE `entry` IN (36675);
 UPDATE `creature_template` SET `ScriptName`='mob_halion_orb_0', `AIName` ='' WHERE `entry` IN (40144);

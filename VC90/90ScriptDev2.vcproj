@@ -2047,7 +2047,19 @@
 						>
 					</File>
 					<File
-						RelativePath="..\scripts\northrend\ruby_sanctum\boss_zarithian.cpp"
+						RelativePath="..\scripts\northrend\ruby_sanctum\boss_zarithrian.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\ruby_sanctum\instance_ruby_sanctum.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\ruby_sanctum\ruby_sanctum.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\ruby_sanctum\ruby_sanctum.h"
 						>
 					</File>
 				</Filter>

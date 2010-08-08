@@ -42,8 +42,6 @@ enum
     GO_FIRE_FIELD                  = 203005,	// xerestrasza door
     GO_FLAME_WALLS                 = 203006,	// zarithrian ring
     GO_FLAME_RING                  = 203007,	// halion ring
-
-	SAY_HALION_INTRO			   = -1666100,
 };
 
 // used for corporality

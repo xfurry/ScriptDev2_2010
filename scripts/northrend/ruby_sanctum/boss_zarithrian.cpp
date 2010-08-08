@@ -110,12 +110,6 @@ struct MANGOS_DLL_DECL boss_zarithrianAI : public ScriptedAI
 		if(m_pInstance)
 			m_pInstance->SetData(TYPE_ZARITHRIAN, DONE);
         DoScriptText(SAY_DEATH, m_creature);
-
-		if(Creature* pXerestrasza = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_XERESTRASZA))))
-		{
-			if(Creature* pHalion = pXerestrasza->SummonCreature(NPC_HALION_REAL, 3155.190703f, 538.717708f, 72.889038f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY))
-				DoScriptText(SAY_HALION_INTRO, pHalion);
-		}
     }
 
     void UpdateAI(const uint32 uiDiff)

@@ -35,8 +35,8 @@ struct MANGOS_DLL_DECL instance_ruby_sanctum : public ScriptedInstance
 	uint32 m_auiEncounter[MAX_ENCOUNTERS];
 	uint32 m_uiHalionPhase;
 
-	uint64 m_uiHalion_pGUID;
-	uint64 m_uiHalion_tGUID;
+	uint64 m_uiHalionRealGUID;
+	uint64 m_uiHalionTwilightGUID;
 	uint64 m_uiSavianaGUID;
 	uint64 m_uiZarithrianGUID;
 	uint64 m_uiBaltharusGUID;
@@ -51,8 +51,8 @@ struct MANGOS_DLL_DECL instance_ruby_sanctum : public ScriptedInstance
 		memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 		m_uiHalionPhase		= 0;
 
-		m_uiHalion_pGUID	= 0;
-		m_uiHalion_tGUID	= 0;
+		m_uiHalionRealGUID	= 0;
+		m_uiHalionTwilightGUID = 0;
 		m_uiSavianaGUID		= 0;
 		m_uiZarithrianGUID	= 0;
 		m_uiBaltharusGUID	= 0;
@@ -71,22 +71,10 @@ struct MANGOS_DLL_DECL instance_ruby_sanctum : public ScriptedInstance
 		return false;
 	}
 
-	void OnPlayerEnter(Player *m_player)
-	{
-		m_player->SendUpdateWorldState(UPDATE_STATE_UI_SHOW,1);
-		m_player->SendUpdateWorldState(UPDATE_STATE_UI_COUNT,1);
-	}
-
 	void OnCreatureCreate(Creature* pCreature)
 	{
 		switch(pCreature->GetEntry())
 		{
-		case NPC_HALION_REAL:
-			m_uiHalion_pGUID = pCreature->GetGUID();
-			break;
-		case NPC_HALION_TWILIGHT:
-			m_uiHalion_tGUID = pCreature->GetGUID();
-			break;
 		case NPC_SAVIANA:
 			m_uiSavianaGUID = pCreature->GetGUID();
 			break;
@@ -101,6 +89,13 @@ struct MANGOS_DLL_DECL instance_ruby_sanctum : public ScriptedInstance
 			break;
 		case NPC_XERESTRASZA:
 			m_uiXerestraszaGUID = pCreature->GetGUID();
+			if(m_auiEncounter[2] == DONE)
+			{
+				if(Creature* pTemp = pCreature->SummonCreature(NPC_HALION_REAL, 3155.190703f, 538.717708f, 72.889038f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY))
+					m_uiHalionRealGUID = pTemp->GetGUID();
+				if(Creature* pTemp = pCreature->SummonCreature(NPC_HALION_TWILIGHT, 3155.190703f, 538.717708f, 72.889038f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY))
+					m_uiHalionTwilightGUID = pTemp->GetGUID();
+			}
 			break;
 		}
 	}
@@ -159,8 +154,10 @@ struct MANGOS_DLL_DECL instance_ruby_sanctum : public ScriptedInstance
 			{
 				if(Creature* pXerestrasza = instance->GetCreature(m_uiXerestraszaGUID))
 				{
-					if(Creature* pHalion = pXerestrasza->SummonCreature(NPC_HALION_REAL, 3155.190703f, 538.717708f, 72.889038f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY))
-						DoScriptText(SAY_HALION_INTRO, pHalion);
+					if(Creature* pTemp = pXerestrasza->SummonCreature(NPC_HALION_REAL, 3155.190703f, 538.717708f, 72.889038f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY))
+						m_uiHalionRealGUID = pTemp->GetGUID();
+					if(Creature* pTemp = pXerestrasza->SummonCreature(NPC_HALION_TWILIGHT, 3155.190703f, 538.717708f, 72.889038f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY))
+						m_uiHalionTwilightGUID = pTemp->GetGUID();
 				}
 			}
 			break;
@@ -222,9 +219,9 @@ struct MANGOS_DLL_DECL instance_ruby_sanctum : public ScriptedInstance
 		case NPC_SAVIANA:   
 			return m_uiSavianaGUID;
 		case NPC_HALION_REAL:               
-			return m_uiHalion_pGUID;
+			return m_uiHalionRealGUID;
 		case NPC_HALION_TWILIGHT:           
-			return m_uiHalion_tGUID;
+			return m_uiHalionTwilightGUID;
 		case NPC_XERESTRASZA:
 			return m_uiXerestraszaGUID;
 		}
