@@ -29,7 +29,7 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
     std::string strSaveData;
 
     //Creatures GUID
-    uint32 m_auiEncounter[MAX_ENCOUNTERS+1];
+    uint32 m_auiEncounter[MAX_ENCOUNTERS];
     uint64 m_uiFalrynGUID;
     uint64 m_uiMarwynGUID;
     uint64 m_uiLichKingGUID;
@@ -62,8 +62,7 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
 
     void Initialize()
     {
-        for (uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
-            m_auiEncounter[i] = NOT_STARTED;
+        memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
         m_uiFalrynGUID              = 0;
         m_uiMarwynGUID              = 0;
@@ -85,7 +84,7 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
     {
         switch(pCreature->GetEntry())
         {
-        case NPC_FALRYN: 
+        case NPC_FALRIC: 
             m_uiFalrynGUID = pCreature->GetGUID();
             break;
         case NPC_MARWYN: 
@@ -209,6 +208,9 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
             if(uiData == DONE)
                 DoRespawnGameObject(m_uiCaptainsChestGUID);
             break;
+		case TYPE_SPIRIT_EVENT:
+			m_auiEncounter[5] = uiData;
+			break;
         }
 
         if (uiData == DONE)
@@ -216,7 +218,8 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
             OUT_SAVE_INST_DATA;
 
             std::ostringstream saveStream;
-            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3] << " " << m_auiEncounter[4];
+            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3] << " " << m_auiEncounter[4] <<
+			" " << m_auiEncounter[5];
             strSaveData = saveStream.str();
 
             SaveToDB();
@@ -243,6 +246,8 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
             return m_auiEncounter[3];
         case TYPE_ESCAPE:        
             return m_auiEncounter[4];
+		case TYPE_SPIRIT_EVENT:
+			return m_auiEncounter[5];
         }
         return 0;
     }
@@ -251,7 +256,7 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
     {
         switch(uiData)
         {
-        case NPC_FALRYN:            return  m_uiFalrynGUID;
+        case NPC_FALRIC:            return  m_uiFalrynGUID;
         case NPC_MARWYN:            return  m_uiMarwynGUID;
         case NPC_LICH_KING:         return m_uiLichKingGUID;
         case DATA_ICECROWN_DOOR:    return m_uiIcecrownDoorGUID;
@@ -282,7 +287,8 @@ struct MANGOS_DLL_DECL instance_halls_of_reflection : public ScriptedInstance
         OUT_LOAD_INST_DATA(chrIn);
 
         std::istringstream loadStream(chrIn);
-        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3] >> m_auiEncounter[4];
+        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3] >> m_auiEncounter[4]
+		>> m_auiEncounter[5];
         
         for(uint8 i = 0; i < MAX_ENCOUNTERS; ++i)
         {

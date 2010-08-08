@@ -18,4 +18,4 @@ UPDATE `creature_template` SET `ScriptName` = 'mob_frozen_orb' WHERE `entry` = 3
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('72096', '1', '38433');
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('72034', '1', '38433');
 -- Instance
-update `instance_template` set `script` = 'instance_vault_of_archavon' where `map` = 624;
+update `instance_template` set `scriptName` = 'instance_vault_of_archavon' where `map` = 624;

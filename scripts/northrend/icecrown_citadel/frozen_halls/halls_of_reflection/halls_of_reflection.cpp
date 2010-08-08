@@ -152,8 +152,6 @@ struct MANGOS_DLL_DECL mob_lichKing_minionAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        //pCreature->SetVisibility(VISIBILITY_OFF);
-        //pCreature->setFaction(35);
         Reset();
     }
 
@@ -271,7 +269,6 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        //pCreature->SetVisibility(VISIBILITY_OFF); // only when script is full
         Reset();
     }
 
@@ -311,12 +308,12 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
     uint32 creatureEntry;
     uint32 selfKillTimer;
     bool m_bHasCasted;
-
-    bool m_bHasBeenChosen;
+	uint32 m_uiExploitCheckTimer;
 
     void Reset()
     {
         creatureEntry = m_creature->GetEntry();
+		m_creature->SetRespawnDelay(DAY);
 
         // tortured rifleman
         m_uiCursedArrowTimer    = 8000;
@@ -349,44 +346,7 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
         m_uiSpectralStrikeTimer = 8000;
         m_uiTorturedEnrageTimer = 15000;
 
-        //m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        m_bHasBeenChosen = true;    // temp
-    }
-
-    void ChooseForAttack()
-    {
-        m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
-        m_bHasBeenChosen = true;
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        m_creature->SetInCombatWithZone();
-        m_creature->GetMotionMaster()->MovePoint(0, 5305.374f, 1997.526f, 709.341f);
-
-        if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-        {
-            m_creature->AddThreat(pTarget,0.0f);
-            m_creature->AI()->AttackStart(pTarget);
-            m_creature->SetInCombatWithZone();
-        }
-    }
-
-    void Aggro(Unit* pWho)
-    {
-        m_bHasBeenChosen = true;
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-    }
-
-    void AttackStart(Unit* pWho)
-    {
-        if(!m_bHasBeenChosen)
-            return;
-
-        if (m_creature->Attack(pWho, true)) 
-        {
-            m_creature->AddThreat(pWho);
-            m_creature->SetInCombatWith(pWho);
-            pWho->SetInCombatWith(m_creature);
-            DoStartMovement(pWho);
-        }
+		m_uiExploitCheckTimer   = 1000;
     }
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
@@ -401,10 +361,41 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
         }
     }
 
+	bool IsPlayerInside()
+    {
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (PlayerList.isEmpty())
+                return false;
+
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if(GameObject* pAltar = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_ALTAR)))
+                {
+                    if (i->getSource()->isAlive() && i->getSource()->GetDistance2d(pAltar) < 75.0f)
+                        return true;
+                }
+            }
+        } 
+
+        return false;
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
+		if(m_uiExploitCheckTimer < uiDiff)
+		{
+			if(!IsPlayerInside())
+				m_creature->ForcedDespawn();
+			m_uiExploitCheckTimer = 1000;
+		}
+		else m_uiExploitCheckTimer -= uiDiff;
+
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
 
         switch(creatureEntry)
         {
@@ -717,7 +708,7 @@ struct MANGOS_DLL_DECL npc_lich_king_hor_startAI: public ScriptedAI
 
     void EquipFrostmourne()
     {
-        SetEquipmentSlots(false, EQUIP_ID_FROSTMOURNE, -1, -1);
+        //SetEquipmentSlots(false, EQUIP_ID_FROSTMOURNE, -1, -1);
     }
 };
 
@@ -738,11 +729,15 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
     uint32 creatureEntry;
 	uint64 m_uiLichKingGuid;
 	uint64 m_uiUtherGuid;
+	uint64 m_uiFalricGUID;
+	uint64 m_uiMarwynGUID;
 
     void Reset()
     {
 		m_uiLichKingGuid    = 0;
 		m_uiUtherGuid       = 0;
+		m_uiFalricGUID		= 0;
+		m_uiMarwynGUID		= 0;
         m_uiIntro_Phase     = 0;
         m_uiSpeech_Timer    = 1000;
         m_bIsIntro          = false;
@@ -757,52 +752,28 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
     void StartEncounter()
     {
         // Falric & Marwyn
-        if(Creature* pFalric = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_FALRIC))))
-        {
-            pFalric->setFaction(14);
-            pFalric->SetVisibility(VISIBILITY_ON);
-        }
-        if(Creature* pMarwyn = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MARWYN))))
-        {
-            pMarwyn->setFaction(14);
-            pMarwyn->SetVisibility(VISIBILITY_ON);
-        }
-
-		std::list<Creature*> lCreatureList;
-        if(GameObject* pAltar = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_ALTAR)))
-        {
-            // spectral footman
-            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_SPECTRAL_FOOTMAN, DEFAULT_VISIBILITY_INSTANCE);
-            // shadowy mercenary
-            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_SHADOWY_MERCENARY, DEFAULT_VISIBILITY_INSTANCE);
-            // phantom hallucination
-            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_PHANTOM_HALLUCINATION, DEFAULT_VISIBILITY_INSTANCE);
-            // phantom mage
-            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_PHANTOM_MAGE, DEFAULT_VISIBILITY_INSTANCE);
-            // ghostly priest
-            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_GHOSTLY_PRIEST, DEFAULT_VISIBILITY_INSTANCE);
-            // tortured rifleman
-            GetCreatureListWithEntryInGrid(lCreatureList, pAltar, MOB_TORTURED_RIFLEMAN, DEFAULT_VISIBILITY_INSTANCE);
-        }
-
-        if (!lCreatureList.empty())
-        {
-            for(std::list<Creature*>::iterator iter = lCreatureList.begin(); iter != lCreatureList.end(); ++iter)
-            {
-                if ((*iter) && !(*iter)->isAlive())
-                    (*iter)->SetVisibility(VISIBILITY_ON);
-            }
-        }
+		if(Creature* pFalric = m_creature->SummonCreature(NPC_FALRIC, 5270.289f, 2043.269f, 709.3204f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY))
+		{
+			m_uiFalricGUID = pFalric->GetGUID();
+			pFalric->CastSpell(pFalric, SPELL_BOSS_SPAWN_AURA, false);
+			pFalric->GetMotionMaster()->MovePoint(0, 5283.309f, 2031.173f, 709.319f);
+		}
+		if(Creature* pMarwyn = m_creature->SummonCreature(NPC_MARWYN, 5348.593f, 1969.527f, 709.3192f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY))
+		{
+			m_uiMarwynGUID = pMarwyn->GetGUID();
+			pMarwyn->CastSpell(pMarwyn, SPELL_BOSS_SPAWN_AURA, false);
+			pMarwyn->GetMotionMaster()->MovePoint(0, 5335.585f, 1981.439f, 709.319f);
+		}
 
         // delete frostmourne
         if(GameObject* pFrostmourne = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_FROSTMOURNE)))
             pFrostmourne->Delete();
 
-        if(m_pInstance && m_pInstance->GetData(TYPE_INTRO) == DONE && m_pInstance->GetData(TYPE_FALRIC) != DONE)
+        if(m_pInstance && m_pInstance->GetData(TYPE_INTRO) == DONE /*&& m_pInstance->GetData(TYPE_FALRIC) != DONE*/)
             m_pInstance->SetData(TYPE_FALRIC, SPECIAL);
 
-        if(m_pInstance && m_pInstance->GetData(TYPE_FALRIC) == DONE)
-            m_pInstance->SetData(TYPE_MARWYN, SPECIAL);
+        //if(m_pInstance && m_pInstance->GetData(TYPE_FALRIC) == DONE)
+            //m_pInstance->SetData(TYPE_MARWYN, SPECIAL);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -1001,18 +972,10 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
                         break;
                     case 26:
                         StartEncounter();
-                        if(Creature* pFalric = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_FALRIC))))
-                        {
-                            pFalric->SetVisibility(VISIBILITY_ON);
+						if(Creature* pFalric = m_pInstance->instance->GetCreature(m_uiFalricGUID))
                             DoScriptText(SAY_INTRO_FALRIC, pFalric);
-                            pFalric->CastSpell(pFalric, SPELL_BOSS_SPAWN_AURA, false);
-                        }
-                        if(Creature* pMarwyn = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MARWYN))))
-                        {
-                            pMarwyn->SetVisibility(VISIBILITY_ON);
+						if(Creature* pMarwyn = m_pInstance->instance->GetCreature(m_uiMarwynGUID))
                             DoScriptText(SAY_INTRO_MARWYN, pMarwyn);
-                            pMarwyn->CastSpell(pMarwyn, SPELL_BOSS_SPAWN_AURA, false);
-                        }
 						if(Creature* pLichKing = m_pInstance->instance->GetCreature(m_uiLichKingGuid))
 							pLichKing->GetMotionMaster()->MovePoint(0, 5364.653f, 2064.413f, 707.695f);
                         ++m_uiIntro_Phase;
@@ -1208,18 +1171,10 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_startAI: public ScriptedAI
                         break;
                     case 22:
                         StartEncounter();
-                        if(Creature* pFalric = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_FALRIC))))
-                        {
-                            pFalric->CastSpell(pFalric, SPELL_BOSS_SPAWN_AURA, false);
-                            pFalric->SetVisibility(VISIBILITY_ON);
+						if(Creature* pFalric = m_pInstance->instance->GetCreature(m_uiFalricGUID))
                             DoScriptText(SAY_INTRO_FALRIC, pFalric);
-                        }
-                        if(Creature* pMarwyn = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_MARWYN))))
-                        {
-                            pMarwyn->CastSpell(pMarwyn, SPELL_BOSS_SPAWN_AURA, false);
-                            pMarwyn->SetVisibility(VISIBILITY_ON);
+						if(Creature* pMarwyn = m_pInstance->instance->GetCreature(m_uiMarwynGUID))
                             DoScriptText(SAY_INTRO_MARWYN, pMarwyn);
-                        }
 						if(Creature* pLichKing = m_pInstance->instance->GetCreature(m_uiLichKingGuid))
 							pLichKing->GetMotionMaster()->MovePoint(0, 5364.653f, 2064.413f, 707.695f);
                         ++m_uiIntro_Phase;

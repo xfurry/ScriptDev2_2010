@@ -17,7 +17,7 @@
 #include "precompiled.h"
 #include "pit_of_saron.h"
 
-#define MAX_ENCOUNTER     4
+#define MAX_ENCOUNTER     5
 
 struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
 {
@@ -115,12 +115,14 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
             m_auiEncounter[2] = uiData; break;
         case TYPE_INTRO:
             m_auiEncounter[3] = uiData; break;
+		case TYPE_GAUNTLET:
+			m_auiEncounter[4] = uiData; break;
         }
 
         if (uiData == DONE)
         {
             std::ostringstream saveStream;
-            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3];
+            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3] << " " << m_auiEncounter[4];
             m_strInstData = saveStream.str();
 
             OUT_SAVE_INST_DATA;
@@ -137,6 +139,7 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
 			case TYPE_TYRANNUS:			    return m_auiEncounter[1];
 			case TYPE_KRICK_AND_ICK:		return m_auiEncounter[2];
             case TYPE_INTRO:                return m_auiEncounter[3];
+			case TYPE_GAUNTLET:				return m_auiEncounter[4];
         }
 
         return 0;
@@ -153,7 +156,7 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
         OUT_LOAD_INST_DATA(strIn);
 
         std::istringstream loadStream(strIn);
-        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3];
+        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3] >> m_auiEncounter[4];
 
         for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
         {

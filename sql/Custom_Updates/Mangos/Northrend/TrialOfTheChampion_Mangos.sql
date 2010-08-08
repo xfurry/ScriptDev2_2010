@@ -1,5 +1,5 @@
 -- instance
-UPDATE instance_template SET script = 'instance_trial_of_the_champion' WHERE map = 650;
+UPDATE instance_template SET scriptName = 'instance_trial_of_the_champion' WHERE map = 650;
 
 -- announcers
 UPDATE creature_template SET npcflag = 1, ScriptName = 'npc_toc5_announcer' WHERE entry IN (35004, 35005);

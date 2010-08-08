@@ -52,7 +52,6 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
     boss_marwynAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        pCreature->SetVisibility(VISIBILITY_OFF);
         SetEquipmentSlots(false, EQUIP_ID, -1, -1);
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
@@ -74,9 +73,14 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
     bool m_bHasIntro;
 
     uint32 m_uiSoldierEntry[4];
-    std::list<Creature*> lSoldiers[4];
+	std::list<Creature*> lSoldiers[4];
 
-    void Reset()
+	uint32 m_uiLocNo;
+	uint64 m_uiSummonGUID[16];
+	uint32 m_uiCheckSummon;
+	bool m_bIsCall;
+
+	void Reset()
     {
         memset(&m_uiSoldierEntry, 0, 4);
         memset(&lSoldiers, 0, 4);
@@ -91,7 +95,10 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
         m_uiSummon_Timer            = 60000;
         m_bHasIntro                 = false;
 
+		m_bIsCall = false;
+
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		m_creature->SetRespawnDelay(DAY);
     }
 
     void JustReachedHome()
@@ -140,6 +147,7 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
                 pSylvanas->SendMonsterMove(5266.78f, 1953.42f, 707.697f, SPLINETYPE_NORMAL, pSylvanas->GetSplineFlags(), 1);
             }
         }
+		m_creature->ForcedDespawn();
     }
 
     bool CallGuards(TempSummonType type, uint32 ui_summontime )
@@ -184,13 +192,78 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
                         //(*iter)->Respawn();
                 }
             }*/
-
-            // temp
-            if (Creature* pSummon = m_creature->SummonCreature(m_uiSoldierEntry[i], SpawnLoc[i].x, SpawnLoc[i].y, SpawnLoc[i].z, 0, type, ui_summontime))
-                pSummon->SetInCombatWithZone();
         }
         
         return true;
+    }
+
+	void Summon()
+	{
+		uint32 m_uiSummonId;
+		m_uiLocNo = 14;
+
+		for(uint8 i = 0; i < 14; i++)
+		{
+			switch(urand(0,3))
+			{
+			case 0:
+				switch(urand(1, 3))
+				{
+				case 1: m_uiSummonId = MOB_SHADOWY_MERCENARY;	break;
+				case 2: m_uiSummonId = MOB_SPECTRAL_FOOTMAN;	break;
+				case 3: m_uiSummonId = MOB_GHOSTLY_PRIEST;		break;
+				}
+				break;
+			case 1: 
+				switch(urand(1, 3))
+				{
+				case 1: m_uiSummonId = MOB_TORTURED_RIFLEMAN;	break;
+				case 2: m_uiSummonId = MOB_SPECTRAL_FOOTMAN;	break;
+				case 3: m_uiSummonId = MOB_PHANTOM_MAGE;		break;
+				}
+				break;
+			case 2: 
+				switch(urand(1, 3))
+				{
+				case 1: m_uiSummonId = MOB_TORTURED_RIFLEMAN;		break;
+				case 2: m_uiSummonId = MOB_PHANTOM_HALLUCINATION;	break;
+				case 3: m_uiSummonId = MOB_GHOSTLY_PRIEST;			break;
+				}
+				break;
+			case 3: 
+				switch(urand(1, 3))
+				{
+				case 1: m_uiSummonId = MOB_SHADOWY_MERCENARY;		break;
+				case 2: m_uiSummonId = MOB_PHANTOM_HALLUCINATION;	break;
+				case 3: m_uiSummonId = MOB_PHANTOM_MAGE;			break;
+				}
+				break;
+			}
+
+			m_uiCheckSummon = 0;
+
+			if(Creature* pSummon = m_creature->SummonCreature(m_uiSummonId, SpawnLoc[m_uiLocNo].x, SpawnLoc[m_uiLocNo].y, SpawnLoc[m_uiLocNo].z, SpawnLoc[m_uiLocNo].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
+			{
+				m_uiSummonGUID[i] = pSummon->GetGUID();
+				pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+				pSummon->setFaction(974);
+			}
+			m_uiLocNo++;
+		}
+	}
+
+    void CallFallSoldier()
+    {
+         for(uint8 i = 0; i < 4; i++)
+         {
+            if(Creature* pSummon = m_pInstance->instance->GetCreature(m_uiSummonGUID[m_uiCheckSummon]))
+            {
+               pSummon->setFaction(14);
+			   pSummon->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+               pSummon->SetInCombatWithZone();
+            }
+            m_uiCheckSummon++;
+         }   
     }
 
     void AttackStart(Unit* pWho)
@@ -261,7 +334,16 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (m_pInstance->GetData(TYPE_MARWYN) == SPECIAL ) 
+		if (m_pInstance->GetData(TYPE_FALRIC) == SPECIAL) 
+        {
+            if(!m_bIsCall) 
+            {
+               m_bIsCall = true;
+               Summon();
+            }
+        }
+
+        if (m_pInstance->GetData(TYPE_MARWYN) == SPECIAL) 
         {
             if(m_uiExploitCheckTimer < uiDiff)
             {
@@ -275,8 +357,6 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
             {
                 if(!m_bHasIntro)
                 {
-                    if(m_pInstance)
-                        m_pInstance->DoUpdateWorldState(UI_STATE_SPIRIT_WAVES, 1);
                     DoScriptText(SAY_INTRO1, m_creature);
                     m_bHasIntro = true;
                 }
@@ -285,7 +365,10 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
                 if (m_uiSummonCount > MOB_WAVES_NUM) 
                 {
                     if(m_pInstance)
+					{
                         m_pInstance->SetData(TYPE_MARWYN, IN_PROGRESS);
+						m_pInstance->DoUpdateWorldState(UI_STATE_SPIRIT_WAVES_COUNT, m_uiSummonCount + 5);
+					}
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     m_creature->SetInCombatWithZone();
                 }
@@ -293,7 +376,7 @@ struct MANGOS_DLL_DECL boss_marwynAI : public ScriptedAI
                 {
                     if(m_pInstance)
                         m_pInstance->DoUpdateWorldState(UI_STATE_SPIRIT_WAVES_COUNT, m_uiSummonCount + 5);
-                    CallGuards(TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 60000);
+					CallFallSoldier();
                 }
                 m_uiSummon_Timer = MOB_WAVES_DELAY;
             } 

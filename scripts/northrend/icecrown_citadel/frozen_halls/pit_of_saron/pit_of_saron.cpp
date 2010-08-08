@@ -1157,6 +1157,22 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_pos_startAI: public ScriptedAI
     }
 };
 
+// start tyrannus gauntlet event
+bool AreaTrigger_at_tyrannus(Player* pPlayer, AreaTriggerEntry const* pAt)
+{
+    if (ScriptedInstance* pInstance = (ScriptedInstance*)pPlayer->GetInstanceData())
+    {
+		if (pInstance->GetData(TYPE_TYRANNUS) == NOT_STARTED && pInstance->GetData(TYPE_KRICK_AND_ICK) == DONE && pInstance->GetData(TYPE_GARFROST) == DONE)
+		{
+			// summon controller
+			pPlayer->SummonCreature(NPC_TYRANNUS,  994.127f, 165.074f, 628.156f, 5.81f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY);
+			pInstance->SetData(TYPE_TYRANNUS, SPECIAL);
+		}
+    }
+
+    return false;
+}
+
 CreatureAI* GetAI_npc_YmirjarWrathbringerAI(Creature* pCreature)
 {
     return new npc_YmirjarWrathbringerAI (pCreature);
@@ -1339,5 +1355,10 @@ void AddSC_Pit_Of_Saron()
     newscript = new Script;
     newscript->GetAI = &GetAI_npc_sylvanas_jaina_pos_start;
     newscript->Name = "npc_slyvanas_jaina_pos_start";
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "at_tyrannus";
+    newscript->pAreaTrigger = &AreaTrigger_at_tyrannus;
     newscript->RegisterSelf();
 }

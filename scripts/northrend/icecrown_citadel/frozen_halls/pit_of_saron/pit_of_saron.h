@@ -51,5 +51,6 @@ enum
     TYPE_TYRANNUS                  = 2,
     TYPE_KRICK_AND_ICK             = 3,
     TYPE_INTRO                     = 4,
+	TYPE_GAUNTLET				   = 5,
 };
 #endif

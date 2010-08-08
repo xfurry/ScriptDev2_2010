@@ -37,6 +37,9 @@ UPDATE `creature_template` SET `ScriptName`='npc_DeathwhisperNecrolyte' WHERE `e
 UPDATE `creature_template` SET `ScriptName`='npc_WrathboneSorcerer' WHERE `entry`=37728;
 UPDATE `creature_template` SET `ScriptName`='npc_GeistAmbusher' WHERE `entry`=36886;
 UPDATE `creature_template` SET `ScriptName`='npc_disturbedGlacialRevenant' WHERE `entry`=36874;
+-- Areatrigger: maybe wrong id :(
+delete from areatrigger_scripts where entry = 5578;
+insert into areatrigger_scripts values (5578, 'at_tyrannus');
 -- Boss
 UPDATE `creature_template` SET `ScriptName`='boss_Garfrost' WHERE `entry`=36494;
 UPDATE `creature_template` SET `ScriptName`='boss_Ick' WHERE `entry`=36476;
@@ -52,6 +55,10 @@ UPDATE `creature_template` SET `ScriptName`='npc_martin_gorkun' WHERE `entry` in
 update creature set spawnMask = 0 where id in (37591, 37592, 38188, 38189);
 update creature set spawnMask = 0 where guid in (123745, 123584, 123548, 123585);
 UPDATE gameobject_template SET faction = 114, data10 = 1 WHERE entry = 196485;
+-- spells
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69347', '1', '36794');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70521', '1', '37581');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70521', '1', '37580');
 
 /* HALLS OF REFLECTION */
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69708', '1', '37226');
@@ -73,9 +80,9 @@ update creature set spawnMask = 0 where guid in (135387, 135386);
 update creature set spawnMask = 0 where id in (36940, 36941, 37069);
 update creature set spawnMask = 0 where id in (38176, 38175, 38172, 38567, 38177, 38173); -- Temporary until script fulll implemented -> spawnMask should be 3 and the npc invisible until the event starts
 
-update instance_template set script = 'instance_halls_of_reflection' where map = 668;
-update instance_template set script = 'instance_pit_of_saron' where map = 658;
-update instance_template set script = 'instance_forge_of_souls' where map = 632;
+update instance_template set scriptName = 'instance_halls_of_reflection' where map = 668;
+update instance_template set scriptName = 'instance_pit_of_saron' where map = 658;
+update instance_template set scriptName = 'instance_forge_of_souls' where map = 632;
 
 update gameobject set spawntimesecs = -604800 where id in (202212, 201710, 202337, 202336);
 UPDATE gameobject_template SET faction = 0 WHERE entry in (202212, 201710, 202337, 202336);

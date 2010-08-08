@@ -117,7 +117,7 @@ update creature_template set scriptName = 'mob_ancient_skeletal_soldier' where e
 update creature_template set scriptName = 'mob_the_damned' where entry = 37011;
 
 -- Instance
-UPDATE instance_template SET script='instance_icecrown_citadel' WHERE map = 631;
+UPDATE instance_template SET scriptName ='instance_icecrown_citadel' WHERE map = 631;
 
 -- Instance teleporters: light's hammer, oratory of dammed, rampart of skulls, deathbringers rise, sindragosa, central spire, upper spire;
 UPDATE gameobject_template SET ScriptName="icecrown_citadel_teleporter" WHERE entry in (202242, 202243, 202244, 202245, 202246, 202223, 202235);

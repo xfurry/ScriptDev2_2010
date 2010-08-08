@@ -101,10 +101,11 @@ INSERT INTO `script_texts` VALUES ('-1610077', 'Urg... no!!', null, null, null, 
 INSERT INTO `script_texts` VALUES ('-1610078', 'Do not think that I shall permit you entry into my master\'s sanctum so easily. Pursue me if you dare.', null, null, null, null, null, null, null, null, 16754, '1', '0', '0', 'outro7_tyrannus');
 INSERT INTO `script_texts` VALUES ('-1610079', 'What a cruel end. Come, heroes. We must see if the gnome\'s story is true. If we can separate Arthas from Frostmourne, we might have a chance at stopping him', null, null, null, null, null, null, null, null, 16613, '1', '0', '0', 'outro8_aly');
 INSERT INTO `script_texts` VALUES ('-1610080', 'A fitting end for a traitor. Come, we must free the slaves and see what is within the Lich King\'s chamber for ourselves.', null, null, null, null, null, null, null, null, 17035, '1', '0', '0', 'outro8_horde');
+-- Gauntlet
 INSERT INTO `script_texts` VALUES ('-1610081', 'Your pursuit shall be in vain, adventurers, for the Lich King has placed an army of undead at my command! Behold!', null, null, null, null, null, null, null, null, 16755, '1', '0', '0', 'ambush1_tyrannus');
 INSERT INTO `script_texts` VALUES ('-1610082', 'Persistent whelps! You will not reach the entrance of my lord\'s lair! Soldiers, destroy them!', null, null, null, null, null, null, null, null, 16756, '1', '0', '0', 'ambush2_tyrannus');
--- Tyrannus
 INSERT INTO `script_texts` VALUES ('-1610083', 'Rimefang! Trap them within the tunnel! Bury them alive!', null, null, null, null, null, null, null, null, 16757, '1', '0', '0', 'gauntlet');
+-- Tyrannus
 INSERT INTO `script_texts` VALUES ('-1610084', 'Alas, brave, brave adventurers, your meddling has reached its end. Do you hear the clatter of bone and steel coming up the tunnel behind you? That is the sound of your impending demise.', null, null, null, null, null, null, null, null, 16758, '1', '0', '0', 'intro1');
 INSERT INTO `script_texts` VALUES ('-1610085', 'Heroes! We will hold off the undead as long as we can, even to our dying breath. Deal with the Scourgelord!', null, null, null, null, null, null, null, null, 0, '1', '0', '0', 'intro2');
 INSERT INTO `script_texts` VALUES ('-1610086', 'Ha, such an amusing gesture from the rabble. When I have finished with you, my master\'s blade will feast upon your souls. Die!', null, null, null, null, null, null, null, null, 16759, '1', '0', '0', 'intro3');

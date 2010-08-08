@@ -72,6 +72,25 @@ enum
     EQUIP_ID                      = 51796,
 };
 
+enum gauntlet
+{
+	SAY_GAUNTLET1		= -1610081,
+	SAY_GAUNTLET2		= -1610082,
+	SAY_TUNNEL			= -1610083,
+	// icicle event
+	NPC_COLLAPSING_ICICLE	= 36847,
+	SPELL_ICICLE			= 69428,
+	SPELL_ICICLE_DMG		= 69426,
+	SPELL_ICICLE_SUMMON		= 69424,
+	// mobs
+	// first 2 waves
+	NPC_WRATHBRINGER		= 36840,
+	NPC_FLAMEBEARER			= 36893,
+	NPC_DEATHBRINGER		= 36892,
+	// another 2 waves
+	NPC_FALLEN_WARRIOR		= 36841,
+};
+
 #define HOME_X                      1014.51f
 #define HOME_Y                      170.423f
 
@@ -433,6 +452,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         SetEquipmentSlots(false, EQUIP_ID, -1, -1);
+		m_bHasTaunted = false;
         Reset();
     }
 
@@ -440,9 +460,10 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
     bool m_bIsRegularMode;
 
     uint64 m_uiRimefangGuid;
+	uint64 m_uiTyrannusGUID;
 
-    uint32 m_uiSpeech_Timer;
-    uint8 m_uiIntro_Phase;
+    uint32 m_uiGauntletTimer;
+    uint32 m_uiGauntletPhase;
     bool m_bIsIntro;
     bool m_bIsTunnelIntro;
     bool m_bHasTaunted;
@@ -464,11 +485,9 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
         m_uiDarkMightTimer      = 40000;
         m_uiMarkOfRimefangTimer = 30000;
 
-        m_uiIntro_Phase     = 0;
-        m_uiSpeech_Timer    = 1000;
-        m_bIsIntro          = false; 
-
-        m_bHasTaunted = false;
+        m_uiGauntletPhase   = 0;
+        m_uiGauntletTimer	= 1000; 
+		m_uiTyrannusGUID	= 0;
 
         m_uiMartinGuid      = 0;
         m_uiGorkunGuid      = 0;
@@ -522,13 +541,12 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *pWho)
     {
-        if (!m_bHasTaunted && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsIntro && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 80) && m_creature->IsWithinLOSInMap(pWho))
+		if (!m_bHasTaunted && pWho->isInAccessablePlaceFor(m_creature) && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 80) && m_creature->IsWithinLOSInMap(pWho) && m_pInstance->GetData(TYPE_GAUNTLET) == DONE)
         {
-            m_bIsIntro = true;
             m_bHasTaunted = true;
 
-            m_uiIntro_Phase     = 0;
-            m_uiSpeech_Timer    = 1000;
+            m_uiGauntletPhase   = 50;
+            m_uiGauntletTimer   = 1000;
 
             if(Creature* pRimefang = m_pInstance->instance->GetCreature(m_uiRimefangGuid))
             {
@@ -568,49 +586,107 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (m_bIsIntro)
-        {
-            if(m_uiSpeech_Timer < uiDiff)
-            {
-                switch(m_uiIntro_Phase)
-                {
-                case 0:
-                    DoScriptText(SAY_INTRO1, m_creature);
-                    if(TeamInInstance == ALLIANCE)
-                        if(Creature* pMartin = m_creature->SummonCreature(NPC_MARTIN_VICTUS_END, 1060.955f, 107.274f, 629.424f, 2.084f, TEMPSUMMON_DEAD_DESPAWN, 0))
-                            m_uiMartinGuid = pMartin->GetGUID();
-                    if(TeamInInstance == HORDE)
-                        if(Creature* pGorkun = m_creature->SummonCreature(NPC_GORKUN_IRONSKULL_END, 1060.955f, 107.274f, 629.424f, 2.084f, TEMPSUMMON_DEAD_DESPAWN, 0))
-                            m_uiGorkunGuid = pGorkun->GetGUID();
-                    ++m_uiIntro_Phase;
-                    m_uiSpeech_Timer = 15000;
-                    break;
-                case 1:
-                    if(TeamInInstance == ALLIANCE)
-                    {
-                        if(Creature* pMartin = m_pInstance->instance->GetCreature(m_uiMartinGuid))
-                            DoScriptText(SAY_INTRO2_SLAVES, pMartin);
-                    }
-                    if(TeamInInstance == HORDE)
-                    {
-                        if(Creature* pGorkun = m_pInstance->instance->GetCreature(m_uiGorkunGuid))
-                            DoScriptText(SAY_INTRO2_SLAVES, pGorkun);
-                    }
-                    ++m_uiIntro_Phase;
-                    m_uiSpeech_Timer = 10000;
-                    break;
-                case 2:
-                    DoScriptText(SAY_INTRO3, m_creature);
-                    m_bIsIntro = false;
-                    ++m_uiIntro_Phase;
-                    m_uiSpeech_Timer = 15000;
-                    break;
+		// gauntlet event
+		if(m_pInstance && m_pInstance->GetData(TYPE_TYRANNUS) == SPECIAL)
+		{
+			if(m_uiGauntletTimer < uiDiff)
+			{
+				switch(m_uiGauntletPhase)
+				{
+					// intro
+				case 0:
+					if(Creature* pTyrannus = m_creature->SummonCreature(NPC_TYRANNUS_INTRO, 880.408f,57.166f, 542.693f, 3.55f, TEMPSUMMON_TIMED_DESPAWN, 10000))
+					{
+						m_uiTyrannusGUID = pTyrannus->GetGUID();
+						pTyrannus->GetMotionMaster()->MoveIdle();
+						pTyrannus->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID());
+						pTyrannus->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+						pTyrannus->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+						pTyrannus->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
+						pTyrannus->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
+						pTyrannus->GetMotionMaster()->MoveIdle();
+						pTyrannus->GetMap()->CreatureRelocation(pTyrannus, 880.408f,57.166f, 542.693f, 3.55f);
+						pTyrannus->SendMonsterMove(880.408f,57.166f, 542.693f, SPLINETYPE_NORMAL, pTyrannus->GetSplineFlags(), 1);
+						switch(urand(0, 1))
+						{
+						case 0: DoScriptText(SAY_GAUNTLET1, pTyrannus); break;
+						case 1: DoScriptText(SAY_GAUNTLET2, pTyrannus); break;
+						}
+					}
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 15000;
+					break;
+					// start summoning adds
+				case 1:
+					m_pInstance->SetData(TYPE_GAUNTLET, IN_PROGRESS);
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 30000;
+					break;
+				case 2:
+					if(Creature* pTyrannus = m_creature->SummonCreature(NPC_TYRANNUS_INTRO, 927.014f, -41.778f, 613.168f, 1.57f, TEMPSUMMON_TIMED_DESPAWN, 10000))
+					{
+						m_uiTyrannusGUID = pTyrannus->GetGUID();
+						pTyrannus->GetMotionMaster()->MoveIdle();
+						pTyrannus->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID());
+						pTyrannus->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+						pTyrannus->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+						pTyrannus->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
+						pTyrannus->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
+						pTyrannus->GetMotionMaster()->MoveIdle();
+						pTyrannus->GetMap()->CreatureRelocation(pTyrannus, 927.014f, -41.778f, 613.168f, 1.57f);
+						pTyrannus->SendMonsterMove(927.014f, -41.778f, 613.168f, SPLINETYPE_NORMAL, pTyrannus->GetSplineFlags(), 1);
+						DoScriptText(SAY_TUNNEL, pTyrannus);
+					}
+					// summon another 2 waves
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 30000;
+					break;
+					// start tunnel event
+				case 3:
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 10000;
+					break;
+				case 4:
+					m_pInstance->SetData(TYPE_GAUNTLET, DONE);
+					break;
 
-                default:
-                    m_uiSpeech_Timer = 100000;
-                }
-            }else m_uiSpeech_Timer -= uiDiff;
-        }
+					// gauntlet outro
+				case 50:
+					DoScriptText(SAY_INTRO1, m_creature);
+					if(TeamInInstance == ALLIANCE)
+						if(Creature* pMartin = m_creature->SummonCreature(NPC_MARTIN_VICTUS_END, 1060.955f, 107.274f, 629.424f, 2.084f, TEMPSUMMON_DEAD_DESPAWN, 0))
+							m_uiMartinGuid = pMartin->GetGUID();
+					if(TeamInInstance == HORDE)
+						if(Creature* pGorkun = m_creature->SummonCreature(NPC_GORKUN_IRONSKULL_END, 1060.955f, 107.274f, 629.424f, 2.084f, TEMPSUMMON_DEAD_DESPAWN, 0))
+							m_uiGorkunGuid = pGorkun->GetGUID();
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 15000;
+					break;
+				case 51:
+					if(TeamInInstance == ALLIANCE)
+					{
+						if(Creature* pMartin = m_pInstance->instance->GetCreature(m_uiMartinGuid))
+							DoScriptText(SAY_INTRO2_SLAVES, pMartin);
+					}
+					if(TeamInInstance == HORDE)
+					{
+						if(Creature* pGorkun = m_pInstance->instance->GetCreature(m_uiGorkunGuid))
+							DoScriptText(SAY_INTRO2_SLAVES, pGorkun);
+					}
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 10000;
+					break;
+				case 52:
+					DoScriptText(SAY_INTRO3, m_creature);
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 15000;
+					break;
+
+				default:
+					m_uiGauntletTimer = 100000;
+				}
+			}else m_uiGauntletTimer -= uiDiff;
+		}
 
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())

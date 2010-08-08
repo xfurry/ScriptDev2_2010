@@ -1,6 +1,6 @@
 /* TRIAL OF THE CRUSADER */
 -- event
-UPDATE instance_template SET script='instance_trial_of_the_crusader' WHERE map=649;
+UPDATE instance_template SET scriptName='instance_trial_of_the_crusader' WHERE map=649;
 UPDATE creature_template SET npcflag=1, flags_extra = 1, scriptname='npc_crusader_anouncer' WHERE `entry`=34816;
 update creature set spawntimesecs = 604800 where id = 34816;
 UPDATE creature_template SET flags_extra = 1, scriptname='npc_lich_king' WHERE `entry`=35877;

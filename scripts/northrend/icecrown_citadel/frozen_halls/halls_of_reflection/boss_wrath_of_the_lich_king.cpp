@@ -467,7 +467,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_endAI: public npc_escortAI
         switch (uiWP)
         {
         case 1:
-            m_creature->SummonGameobject(GO_ICE_WALL, IceWall[0].x, IceWall[0].y, IceWall[0].z, IceWall[0].o, 0);
+            //m_creature->SummonGameobject(GO_ICE_WALL, IceWall[0].x, IceWall[0].y, IceWall[0].z, IceWall[0].o, 0);
             if(Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LICH_KING))))
             {
                 DoScriptText(SAY_LICH_KING_FIRST_WALL, pLichKing);
@@ -490,7 +490,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_endAI: public npc_escortAI
             }
             break;
         case 3:
-            m_creature->SummonGameobject(GO_ICE_WALL, IceWall[1].x, IceWall[1].y, IceWall[1].z, IceWall[1].o, 0);
+            //m_creature->SummonGameobject(GO_ICE_WALL, IceWall[1].x, IceWall[1].y, IceWall[1].z, IceWall[1].o, 0);
             if(Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LICH_KING))))
             {
                 DoScriptText(SAY_LICH_KING_SECOND_WALL, pLichKing);
@@ -512,7 +512,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_endAI: public npc_escortAI
             }
             break;
         case 5:
-            m_creature->SummonGameobject(GO_ICE_WALL, IceWall[2].x, IceWall[2].y, IceWall[2].z, IceWall[2].o, 0);
+            //m_creature->SummonGameobject(GO_ICE_WALL, IceWall[2].x, IceWall[2].y, IceWall[2].z, IceWall[2].o, 0);
             if(Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LICH_KING))))
             {
                 DoScriptText(SAY_LICH_KING_THIRD_WALL, pLichKing);
@@ -534,7 +534,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_endAI: public npc_escortAI
             }
             break;
         case 7:
-            m_creature->SummonGameobject(GO_ICE_WALL, IceWall[3].x, IceWall[3].y, IceWall[3].z, IceWall[3].o, 0);
+            //m_creature->SummonGameobject(GO_ICE_WALL, IceWall[3].x, IceWall[3].y, IceWall[3].z, IceWall[3].o, 0);
             if(Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LICH_KING))))
             {
                 DoScriptText(SAY_LICH_KING_FINAL_WALL, pLichKing);
