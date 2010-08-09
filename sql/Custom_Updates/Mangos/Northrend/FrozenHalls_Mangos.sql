@@ -61,6 +61,15 @@ REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('705
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70521', '1', '37580');
 
 /* HALLS OF REFLECTION */
+-- start npcs
+-- jaina
+DELETE FROM `creature` WHERE `id`=37221;
+INSERT INTO `creature` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`modelid`,`equipment_id`,`position_x`,`position_y`,`position_z`,`orientation`,`spawntimesecs`,`spawndist`,`currentwaypoint`,`curhealth`,`curmana`,`DeathState`,`MovementType`) VALUES
+(117106, 37221, 668, 3, 128, 0, 0, 5266.78, 1953.42, 707.697, 0.740877, 7200, 0, 0, 5040000, 881400, 0, 0);
+-- sylvanas
+DELETE FROM `creature` WHERE `id`=37223;
+INSERT INTO `creature` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`modelid`,`equipment_id`,`position_x`,`position_y`,`position_z`,`orientation`,`spawntimesecs`,`spawndist`,`currentwaypoint`,`curhealth`,`curmana`,`DeathState`,`MovementType`) VALUES
+(117460, 37223, 668, 3, 64, 0, 0, 5266.78, 1953.42, 707.697, 0.740877, 7200, 0, 0, 6972500, 85160, 0, 0);
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69708', '1', '37226');
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70194', '1', '37226');
 -- trash
