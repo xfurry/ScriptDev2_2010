@@ -212,10 +212,10 @@ REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('623
 UPDATE creature_template SET ScriptName = "boss_hodir" WHERE entry = 32845;
 UPDATE creature_template SET ScriptName = "mob_toasty_fire" WHERE entry = 33342;
 UPDATE creature_template SET ScriptName = "mob_flashFreeze" WHERE entry in (32926);
-UPDATE `creature_template` SET `modelid_A` = 15880 WHERE `entry` = 33174;
-UPDATE `creature_template` SET `modelid_H` = 28470, ScriptName = "mob_icicle" WHERE `entry` = 33169;
+UPDATE `creature_template` SET `modelid_1` = 15880 WHERE `entry` = 33174;
+UPDATE `creature_template` SET `modelid_3` = 28470, ScriptName = "mob_icicle" WHERE `entry` = 33169;
 -- flash freeze that will lock the npcs in iceblock
-UPDATE creature_template SET `modelid_A` = 25865, ScriptName = "mob_npc_flashFreeze" WHERE entry in (32938, 33353);
+UPDATE creature_template SET `modelid_1` = 25865, ScriptName = "mob_npc_flashFreeze" WHERE entry in (32938, 33353);
 Update creature set spawnMask = 3 where id in (32938);
 update creature set spawnMask = 2 where id in (32901, 32900, 32950, 32946,33333, 33330, 33326);
 UPDATE creature_template SET ScriptName = "npc_hodir_priest" WHERE entry in (32897, 33326, 32948, 33330);
