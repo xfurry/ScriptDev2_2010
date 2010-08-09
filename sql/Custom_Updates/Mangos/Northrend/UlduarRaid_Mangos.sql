@@ -137,6 +137,7 @@ INSERT INTO creature (id, map, spawnMask, phaseMask, modelid, equipment_id, posi
 INSERT INTO creature (id, map, spawnMask, phaseMask, modelid, equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, currentwaypoint, curhealth, curmana, DeathState, MovementType) VALUES (32934, 603, 3, 65535, 0, 0, 1799.68, -24.3599, 452.227, 3.14747, 604800, 0, 0, 543855, 0, 0, 0);
 UPDATE creature_model_info SET bounding_radius=15, combat_reach=15 WHERE modelid IN (28638, 28822, 28821);
 UPDATE creature_template SET mechanic_immune_mask=617299803, unit_flags = 0, scriptname='boss_kologarn' WHERE entry=32930;
+UPDATE creature_template SET unit_flags = 0 WHERE entry in (32930, 33909);
 UPDATE creature_template SET mechanic_immune_mask=652951551, scriptname='boss_right_arm' WHERE entry=32934;
 UPDATE creature_template SET mechanic_immune_mask=652951551, scriptname='boss_left_arm' WHERE entry=32933;
 UPDATE creature_template SET ScriptName = "mob_ulduar_rubble" WHERE entry in (33768, 33809, 33908, 33942);
