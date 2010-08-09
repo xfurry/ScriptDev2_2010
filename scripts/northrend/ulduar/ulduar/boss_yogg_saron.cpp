@@ -415,12 +415,12 @@ static VisionLocXY SkullIcecrownLoc[]=
 //  X: 1951.097412 Y: -25.420420 Z: 326.162598 Orientation: 0.131792
 // brain room portal loc: 
 // sara -> type_flags = 108; original
-class MANGOS_DLL_DECL SanityAura : public Aura
+/*class MANGOS_DLL_DECL SanityAura : public Aura
 {
 public:
 	SanityAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, SpellAuraHolder *holder, Unit *target, Unit *caster) : Aura(spell, eff, bp, holder, target, caster, NULL)
     {}
-};
+};*/
 struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
 {
     boss_yogg_saronAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -2024,24 +2024,35 @@ struct MANGOS_DLL_DECL mob_immortal_guardianAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		if(SpellAuraHolder* empoweredAura = m_creature->GetSpellAuraHolder(SPELL_EMPOWERED))
+		/*if(SpellAuraHolder* empoweredAura = m_creature->GetSpellAuraHolder(SPELL_EMPOWERED))
 		{
 			if(empoweredAura->GetStackAmount() < 9 && !m_bHasAura)
 			{
 				m_bHasAura = true;
 				empoweredAura->SetStackAmount(9);
 			}
+		}*/
+
+		// temp for the old aura system
+		if(m_creature->HasAura(SPELL_EMPOWERED, EFFECT_INDEX_0) && !m_bHasAura)
+		{
+			m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0)->SetStackAmount(9);
+			m_bHasAura = true;
 		}
 
         if(m_creature->GetHealthPercent() > 10)
         {
             if(m_creature->GetHealthPercent() < m_uiHealth)
             {
-				if(SpellAuraHolder* empoweredAura = m_creature->GetSpellAuraHolder(SPELL_EMPOWERED))
+				/*if(SpellAuraHolder* empoweredAura = m_creature->GetSpellAuraHolder(SPELL_EMPOWERED))
 				{
 					if(empoweredAura->ModStackAmount(-1))
 						m_creature->RemoveAurasDueToSpell(SPELL_EMPOWERED);
-				}
+				}*/
+
+				// temp for old aura system
+				if(m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0)->modStackAmount(-1))	 	
+					m_creature->RemoveAurasDueToSpell(SPELL_EMPOWERED);
                 m_uiHealth -= 10;
             }
         }

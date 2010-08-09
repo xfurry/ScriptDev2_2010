@@ -92,7 +92,7 @@ enum
     SPELL_ERUPTION              = 66252,    // 3 infernals
     SPELL_ERUPTION_HC           = 67069,    // unlimited infernals
 
-    SPELL_NETHER_POWER          = 67108,    // 5 10man, 10 25man
+    SPELL_NETHER_POWER          = 67109,    // 5 10man, 10 25man
 
     SPELL_BERSERK               = 26662,
 
@@ -366,13 +366,20 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
 			return;
 
-		if(SpellAuraHolder* netherAura = m_creature->GetSpellAuraHolder(SPELL_NETHER_POWER))
+		/*if(SpellAuraHolder* netherAura = m_creature->GetSpellAuraHolder(SPELL_NETHER_POWER))
 		{
 			if(netherAura->GetStackAmount() < m_uiMaxNetherPower && !m_bHasAura)
 			{
 				m_bHasAura = true;
 				netherAura->SetStackAmount(m_uiMaxNetherPower);
 			}
+		}*/
+
+		// temp for the old aura system
+		if(m_creature->HasAura(SPELL_NETHER_POWER, EFFECT_INDEX_0) && !m_bHasAura)
+		{
+			m_creature->GetAura(SPELL_NETHER_POWER, EFFECT_INDEX_0)->SetStackAmount(m_uiMaxNetherPower);
+			m_bHasAura = true;
 		}
 
         // spells

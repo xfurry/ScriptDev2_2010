@@ -846,13 +846,20 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
                 return;
 
-			if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+			/*if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
 			{
 				if(natureAura->GetStackAmount() < 150 && !m_bHasAura)
 				{
 					m_bHasAura = true;
 					natureAura->SetStackAmount(150);
 				}
+			}*/
+
+			// temp for the old aura system
+			if(m_creature->HasAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0) && !m_bHasAura)
+			{
+				m_creature->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->SetStackAmount(150);
+				m_bHasAura = true;
 			}
 
 			if(!m_creature->HasAura(m_bIsRegularMode ? SPELL_TOUCH_OF_EONAR : SPELL_TOUCH_OF_EONAR_H))
@@ -869,12 +876,16 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                     if(!pWaterSpirit->isAlive() && !pStormLasher->isAlive() && !pSnapLasher->isAlive())
                     {
                         m_bWaveCheck = false;
-						if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+						/*if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
 						{
 							if(natureAura->ModStackAmount(-30))
 								m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
-						}
-                    }
+						}*/
+
+						// temp for old aura system
+						if(m_creature->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-30))	 	
+							m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
+					}
                     else
                     {
                         // respawn the dead ones
@@ -1332,11 +1343,15 @@ struct MANGOS_DLL_DECL mob_freya_spawnedAI : public ScriptedAI
 		{
 			if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
 			{
-				if(SpellAuraHolder* natureAura = pFreya->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+				/*if(SpellAuraHolder* natureAura = pFreya->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
 				{
 					if(natureAura->ModStackAmount(-25))
 						m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
-				}
+				}*/
+
+				// temp for old aura system
+				if(pFreya->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-25))	 	
+					pFreya->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
 			}
 		}
 
@@ -1344,11 +1359,15 @@ struct MANGOS_DLL_DECL mob_freya_spawnedAI : public ScriptedAI
 		{
 			if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
 			{
-				if(SpellAuraHolder* natureAura = pFreya->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+				/*if(SpellAuraHolder* natureAura = pFreya->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
 				{
 					if(natureAura->ModStackAmount(-2))
 						m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
-				}
+				}*/
+
+				// temp for old aura system
+				if(pFreya->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-2))	 	
+					pFreya->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
 			}
 		}
     }
