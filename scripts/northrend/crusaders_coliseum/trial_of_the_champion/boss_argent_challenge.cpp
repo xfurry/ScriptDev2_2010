@@ -311,6 +311,13 @@ struct MANGOS_DLL_DECL boss_paletressAI: public ScriptedAI
         }
     }
 
+	void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+	{
+		// don't take damage if below 25% and doesn't have shield
+		if(!m_bHasShielded && m_bHasSummoned)
+			uiDamage = 0;
+	}
+
     void AttackStart(Unit* pWho)
     {
         if (!m_pInstance)  
@@ -526,7 +533,6 @@ struct MANGOS_DLL_DECL boss_paletressAI: public ScriptedAI
                     m_uiMemoryGUID = pSummon->GetGUID();
                     if (pSummon->AI())
                         pSummon->AI()->AttackStart(m_creature->getVictim());
-
                 }
                 m_bHasSummoned = true;
                 m_uiShield_Delay = 1000;
