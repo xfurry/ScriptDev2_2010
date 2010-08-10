@@ -7,7 +7,7 @@
 
 enum
 {
-    MAX_ENCOUNTER               = 13,
+    MAX_ENCOUNTER               = 14,
 
     TYPE_MARROWGAR              = 1,
     TYPE_DEATHWHISPER           = 2,
@@ -18,11 +18,12 @@ enum
     TYPE_PUTRICIDE              = 7,
     TYPE_PRINCE_COUNCIL         = 8,
     TYPE_BLOOD_QUEEN            = 9,
-    TYPE_DREAMWALKER            = 10,
-    TYPE_SINDRAGOSA             = 11,
-    TYPE_LICH_KING              = 12,
+	TYPE_SVALNA					= 10,	// store miniboss svalna
+    TYPE_DREAMWALKER            = 11,
+    TYPE_SINDRAGOSA             = 12,
+    TYPE_LICH_KING              = 13,
 
-    TYPE_ATTEMPTS               = 13,
+    TYPE_ATTEMPTS               = 14,
 
 	// lower spire
     NPC_MARROWGAR               = 36612,
@@ -38,6 +39,7 @@ enum
     NPC_TALDARAM                = 37973,
     NPC_LANATHEL                = 37955,
 	// frostwing
+	NPC_SVALNA					= 37126,
 	NPC_VALITHRIA				= 36789,
 	NPC_SINDRAGOSA				= 36853,
 	NPC_RIMEFANG				= 37533,
@@ -70,7 +72,7 @@ enum
 
     // Bloodwing
     GO_BLOOD_COUNCIL_DOOR_LEFT  = 201378,
-    GO_BLOOD_COUNCIL_DOOR_RIGHT = 201379,
+    GO_BLOOD_COUNCIL_DOOR_RIGHT = 201377,
     GO_BLOODWING_DOOR           = 201920,
     GO_CRIMSON_HALL_DOOR        = 201376,
     GO_BLOODQUEEN_DOOR          = 201746,

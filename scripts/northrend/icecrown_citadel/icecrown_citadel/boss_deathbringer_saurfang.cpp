@@ -126,6 +126,9 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
     uint32 m_uiBoilingBlood_Timer;
     uint32 m_uiBloodNova_Timer;
     uint32 m_uiBerserkTimer;
+	uint32 m_uiAuraCheckTimer;
+	bool m_bHasAura;
+	uint32 m_uiAuraDamage;
 
     void Reset()
     {
@@ -134,6 +137,9 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
         m_uiBoilingBlood_Timer  = 18000;
         m_uiBloodNova_Timer     = 20000;
         m_uiBerserkTimer        = 480000;  // 8 min
+		m_uiAuraCheckTimer		= 1000;
+		m_bHasAura				= false;
+		m_uiAuraDamage			= 0;
 
         m_creature->SetPower(POWER_RAGE,0); 
         
@@ -175,7 +181,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
     void DamageDeal(Unit * pDoneTo, uint32 &uiDamage)
     {
         int temp1 = m_creature->GetPower(POWER_RAGE);
-        int temp2 = 0.001 * uiDamage;
+        int temp2 = 0.007 * uiDamage;
         temp1 = temp1 + temp2;
 
         if(temp1 > 1000)
@@ -195,6 +201,38 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
         }
     }
 
+	// workaround for mark of the fallen champ
+	void CheckFallenPlayers()
+	{
+		Map *map = m_creature->GetMap();
+		if (map->IsDungeon())
+		{
+			Map::PlayerList const &PlayerList = map->GetPlayers();
+
+			if (PlayerList.isEmpty())
+				return;
+
+			for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+			{
+				if(i->getSource()->HasAura(SPELL_MARK_FALLEN_CHAMP, EFFECT_INDEX_0) && i->getSource()->isAlive())
+				{
+					if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+						m_uiAuraDamage = urand(4275, 4725);
+					if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+						m_uiAuraDamage = urand(6175, 6825);
+					if(i->getSource()->GetHealth() > m_uiAuraDamage)
+						i->getSource()->DealDamage(i->getSource(), m_uiAuraDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+					else 
+					{
+						i->getSource()->DealDamage(i->getSource(), m_uiAuraDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+						// heal the boss for 5% of hp
+						m_creature->DealHeal(m_creature, 0.05*m_creature->GetMaxHealth(), NULL);
+					}
+				}
+			}
+		} 
+	}
+
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -203,10 +241,17 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
         if (m_creature->GetHealthPercent() < 30.0f && !m_creature->HasAura(SPELL_FRENZY))
             DoCast(m_creature, SPELL_FRENZY);
 
+		if(m_uiAuraCheckTimer < uiDiff && m_bHasAura)
+		{
+			CheckFallenPlayers();
+			m_uiAuraCheckTimer = 1000;
+		}
+		else m_uiAuraCheckTimer -= uiDiff;
+
         if (m_creature->GetPower(m_creature->getPowerType()) == m_creature->GetMaxPower(m_creature->getPowerType()))
         {
             DoScriptText(SAY_FALLENCHAMPION, m_creature);
-
+			m_bHasAura = true;
             if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_MARK_FALLEN_CHAMP);
             m_creature->SetPower(m_creature->getPowerType(),0);

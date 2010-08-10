@@ -88,6 +88,16 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 	// frostwing
 	uint64 m_uiRimefangGUID;
 	uint64 m_uiSplinestalkerGUID;
+	uint64 m_uiSindragosaEntranceGUID;
+	uint64 m_uiSindragosaExitGUID;
+	uint64 m_uiSindragosaDoorGUID;
+	uint64 m_uiFrostWingDoorGUID;
+	uint64 m_uiDragonEntranceGUID;
+	uint64 m_uiDragonExitGUID;
+	uint64 m_uiDragonDoor1GUID;
+	uint64 m_uiDragonDoor2GUID;
+	uint64 m_uiDragonDoor3GUID;
+	uint64 m_uiDragonDoor4GUID;
 
 	// frozen throne
 	uint64 m_uiTirionFinalGUID;
@@ -143,8 +153,19 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
         m_uiBloodSigilGUID              = 0;
 
 		// frostwing
+		m_uiSvalnaGUID					= 0;
 		m_uiRimefangGUID				= 0;
 		m_uiSplinestalkerGUID			= 0;
+		m_uiSindragosaEntranceGUID		= 0;
+		m_uiSindragosaExitGUID			= 0;
+		m_uiSindragosaDoorGUID			= 0;
+		m_uiFrostWingDoorGUID			= 0;
+		m_uiDragonEntranceGUID			= 0;
+		m_uiDragonExitGUID				= 0;
+		m_uiDragonDoor1GUID				= 0;
+		m_uiDragonDoor2GUID				= 0;
+		m_uiDragonDoor3GUID				= 0;
+		m_uiDragonDoor4GUID				= 0;
 
 		// frozen throne
 		m_uiLichKingGUID				= 0;
@@ -170,6 +191,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             case NPC_KELESETH:      m_uiKelesethGUID        = pCreature->GetGUID(); break;
             case NPC_TALDARAM:      m_uiTaldaramGUID        = pCreature->GetGUID(); break;
             case NPC_LANATHEL:      m_uiLanathelGUID        = pCreature->GetGUID(); break;
+			case NPC_SVALNA:		m_uiSvalnaGUID			= pCreature->GetGUID(); break;
 			case NPC_VALITHRIA:		m_uiValithriaGUID		= pCreature->GetGUID(); break;
 			case NPC_SPLINESTALKER:	m_uiSplinestalkerGUID	= pCreature->GetGUID(); break;
 			case NPC_RIMEFANG:		m_uiRimefangGUID		= pCreature->GetGUID(); break;
@@ -304,6 +326,40 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 m_uiBloodSigilGUID = pGo->GetGUID();
                 break;
                 // frostwyrm halls
+			case GO_SINDRAGOSA_ENTRANCE:
+				m_uiSindragosaEntranceGUID = pGo->GetGUID();
+				break;
+			case GO_SINDRAGOSA_EXIT:
+				m_uiSindragosaExitGUID = pGo->GetGUID();
+				break;
+			case GO_SINDRAGOSA_SHORT_ENT:
+				m_uiSindragosaDoorGUID = pGo->GetGUID();
+				break;
+			case GO_FROSTWING_DOOR: 
+				m_uiFrostWingDoorGUID = pGo->GetGUID();
+				break;
+			case GO_GREEN_DRAGON_ENTRANCE:
+				m_uiDragonEntranceGUID = pGo->GetGUID();
+				if(m_auiEncounter[9] == DONE)
+					pGo->SetGoState(GO_STATE_ACTIVE);
+				break;
+			case GO_GREEN_DRAGON_EXIT:
+				m_uiDragonExitGUID = pGo->GetGUID();
+				if(m_auiEncounter[10] == DONE)
+					pGo->SetGoState(GO_STATE_ACTIVE);
+				break;
+			case GO_ROOST_PORTCULLIS1:
+				m_uiDragonDoor1GUID = pGo->GetGUID();
+				break;
+			case GO_ROOST_PORTCULLIS2:
+				m_uiDragonDoor2GUID = pGo->GetGUID();
+				break;
+			case GO_ROOST_PORTCULLIS3:
+				m_uiDragonDoor3GUID = pGo->GetGUID();
+				break;
+			case GO_ROOST_PORTCULLIS4:
+				m_uiDragonDoor4GUID = pGo->GetGUID();
+				break;
                 // frozen throne
 
                 // loot
@@ -499,19 +555,31 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                     //DoUseDoorOrButton(m_uiBloodwingDoorGUID);
                 }
                 break;
+			case TYPE_SVALNA:
+				m_auiEncounter[9] = uiData;
+				if(uiData == DONE)
+					DoUseDoorOrButton(m_uiDragonEntranceGUID);
+				break;
             case TYPE_DREAMWALKER:
-                m_auiEncounter[9] = uiData;
+                m_auiEncounter[10] = uiData;
+				DoUseDoorOrButton(m_uiDragonDoor1GUID);
+				DoUseDoorOrButton(m_uiDragonDoor2GUID);
+				DoUseDoorOrButton(m_uiDragonDoor3GUID);
+				DoUseDoorOrButton(m_uiDragonDoor4GUID);
                 if(uiData == DONE)
+				{
+					DoUseDoorOrButton(m_uiDragonExitGUID);
                     DoRespawnGameObject(m_uiDreamwalkerCacheGUID, 30* MINUTE);
+				}
                 break;
             case TYPE_SINDRAGOSA:
-                m_auiEncounter[10] = uiData;
-                break;
-            case TYPE_LICH_KING:
                 m_auiEncounter[11] = uiData;
                 break;
-            case TYPE_ATTEMPTS:
+            case TYPE_LICH_KING:
                 m_auiEncounter[12] = uiData;
+                break;
+            case TYPE_ATTEMPTS:
+                m_auiEncounter[13] = uiData;
                 m_bNeedSave = true;
                 break;
         }
@@ -524,7 +592,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
                 << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " "
                 << m_auiEncounter[6] << " " << m_auiEncounter[7] << " " << m_auiEncounter[8] << " "
-                << m_auiEncounter[9] << " " << m_auiEncounter[10] << " " << m_auiEncounter[11] << " " << m_auiEncounter[12];
+                << m_auiEncounter[9] << " " << m_auiEncounter[10] << " " << m_auiEncounter[11] << " "
+				<< m_auiEncounter[12] << " " << m_auiEncounter[13];
 
             strInstData = saveStream.str();
 
@@ -552,7 +621,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
         std::istringstream loadStream(chrIn);
         loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3] 
         >> m_auiEncounter[4] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7] 
-        >> m_auiEncounter[8] >> m_auiEncounter[9] >> m_auiEncounter[10] >> m_auiEncounter[11] >> m_auiEncounter[12];
+        >> m_auiEncounter[8] >> m_auiEncounter[9] >> m_auiEncounter[10] >> m_auiEncounter[11]
+		>> m_auiEncounter[12] >> m_auiEncounter[13];
 
         for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
         {
@@ -585,14 +655,16 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 return m_auiEncounter[7];
             case TYPE_BLOOD_QUEEN:
                 return m_auiEncounter[8];
+			case TYPE_SVALNA:
+				return m_auiEncounter[9];
             case TYPE_DREAMWALKER:
-                return m_auiEncounter[9];
-            case TYPE_SINDRAGOSA:
                 return m_auiEncounter[10];
-            case TYPE_LICH_KING:
+            case TYPE_SINDRAGOSA:
                 return m_auiEncounter[11];
-            case TYPE_ATTEMPTS:
+            case TYPE_LICH_KING:
                 return m_auiEncounter[12];
+            case TYPE_ATTEMPTS:
+                return m_auiEncounter[13];
         }
         return 0;
     }
@@ -613,6 +685,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 return m_uiRotfaceGUID;
             case NPC_PUTRICIDE:
                 return m_uiPutricideGUID;
+			case NPC_SVALNA:
+				return m_uiSvalnaGUID;
 			case NPC_VALITHRIA:
 				return m_uiValithriaGUID;
 			case NPC_RIMEFANG:

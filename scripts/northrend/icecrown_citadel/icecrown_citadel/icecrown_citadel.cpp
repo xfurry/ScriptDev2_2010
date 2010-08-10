@@ -73,8 +73,8 @@ bool GoHello_icecrown_citadel_teleporter( Player *pPlayer, GameObject *pGO )
             {
                 pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Deathbringer's Rise", GOSSIP_SENDER_MAIN, DEATHBRINGERS_RISE);
 
-                if(pInstance->GetData(TYPE_SAURFANG) == DONE)
-                    pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Upper Spire", GOSSIP_SENDER_MAIN, UPPER_SPIRE);
+                //if(pInstance->GetData(TYPE_SAURFANG) == DONE)
+                    //pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Upper Spire", GOSSIP_SENDER_MAIN, UPPER_SPIRE);
             }
         }
     }
@@ -3008,9 +3008,10 @@ enum
     SPELL_AETHER_SHIELD      	    = 71463,
 	SPELL_CARESS_OF_DEATH           = 70078,
 	SPELL_DIVINE_SURGE              = 71465,
-	SPELL_IMPALING_SPEAR1           = 70169,
-	SPELL_IMPALING_SPEAR2           = 71443,
+	SPELL_IMPALING_SPEAR_HIT        = 70169,
+	SPELL_IMPALING_SPEAR_AURA       = 71443,
 	SPELL_REVIVE                    = 70053,
+	NPC_SPEAR						= 38248,
 };
 
 /*######
@@ -3020,97 +3021,94 @@ struct MANGOS_DLL_DECL miniboss_sister_svalnaAI : public ScriptedAI
 {
     miniboss_sister_svalnaAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
 
+	ScriptedInstance* m_pInstance;
     uint32 Difficulty;
+
     uint32 m_uiAetherBurstTimer;
 	uint32 m_uiAetherShieldTimer;
 	uint32 m_uiCaressOfDeathTimer;
-	uint32 m_uiDivineSurgeTimer;
-	uint32 m_uiImpaling1Timer;
-	uint32 m_uiImpaling2Timer;
+	uint32 m_uiImpalingTimer;
 	uint32 m_uiReviveTimer;
-	
-	   void Reset()
-    {
-        m_uiAetherBurstTimer                = urand(5000, 9000);
-		m_uiAetherShieldTimer               = urand(7000, 11000);
+
+	void Reset()
+	{
+		m_uiAetherBurstTimer                = 20000;
+		m_uiAetherShieldTimer               = 30000;
 		m_uiCaressOfDeathTimer              = urand(10000, 15000);
-		m_uiDivineSurgeTimer                = 15000;
-		m_uiImpaling1Timer                  = urand(9000, 14000);
-		m_uiImpaling2Timer                  = urand(7000, 15000);
+		m_uiImpalingTimer                   = 27000;
 		m_uiReviveTimer                     = 16000;
-	 }
+	}
+
+	void Aggro(Unit* pWho)
+	{
+		if(m_pInstance)
+			m_pInstance->SetData(TYPE_SVALNA, IN_PROGRESS);
+		DoScriptText(SAY_AGGRO, m_creature);
+		DoCast(m_creature, SPELL_DIVINE_SURGE);
+	}
+
+	void JustDied(Unit* pKiller)
+	{
+		DoScriptText(SAY_DEATH, m_creature);
+		if(m_pInstance)
+			m_pInstance->SetData(TYPE_SVALNA, DONE);
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
+		// gauntlet event here
+		// ....
+
         if (m_uiAetherShieldTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_AETHER_SHIELD);
-			m_uiAetherShieldTimer = urand(7000, 11000);
+			DoCast(m_creature, SPELL_AETHER_SHIELD);
+			m_uiAetherShieldTimer = 30000;
         }
         else m_uiAetherShieldTimer -= uiDiff;
 
 		if (m_uiAetherBurstTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
 			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_AETHER_BURST_10);
+				DoCast(m_creature, SPELL_AETHER_BURST_10);
 			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_AETHER_BURST_25);
-			}
-			m_uiAetherBurstTimer = urand(5000, 9000);
+				DoCast(m_creature, SPELL_AETHER_BURST_25);
+			m_uiAetherBurstTimer = 20000;
         }
         else m_uiAetherBurstTimer -= uiDiff;
 
-
         if (m_uiCaressOfDeathTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_CARESS_OF_DEATH);
+			// cast on npcs
+			//if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				//DoCast(pTarget, SPELL_CARESS_OF_DEATH);
 			m_uiCaressOfDeathTimer = urand(10000, 15000);
         }
-        else m_uiCaressOfDeathTimer -= uiDiff;
+        else m_uiCaressOfDeathTimer -= uiDiff;	
 
-
-
-        if (m_uiDivineSurgeTimer < uiDiff)
+        if (m_uiImpalingTimer < uiDiff)
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_DIVINE_SURGE);
-			m_uiAetherShieldTimer = 15000;
+			{
+				DoCast(pTarget, SPELL_IMPALING_SPEAR_HIT);
+				m_creature->SummonCreature(NPC_SPEAR, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 1000);
+			}
+			m_uiImpalingTimer = 30000;
         }
-        else m_uiDivineSurgeTimer -= uiDiff;
-
-	
-
-        if (m_uiImpaling1Timer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_IMPALING_SPEAR1);
-			m_uiImpaling1Timer = urand(9000, 14000);
-        }
-        else m_uiImpaling1Timer -= uiDiff;
-
-		if (m_uiImpaling2Timer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_IMPALING_SPEAR2);
-			m_uiImpaling2Timer = urand(7000, 15000);
-        }
-        else m_uiImpaling2Timer -= uiDiff;
+        else m_uiImpalingTimer -= uiDiff;
 
 		if (m_uiReviveTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_REVIVE);
+			// used on npcs
+			//if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				//DoCast(pTarget, SPELL_REVIVE);
 			m_uiReviveTimer = 16000;
         }
         else m_uiReviveTimer -= uiDiff;
@@ -3124,11 +3122,82 @@ CreatureAI* GetAI_miniboss_sister_svalna(Creature* pCreature)
     return new miniboss_sister_svalnaAI(pCreature);
 }
 
+struct MANGOS_DLL_DECL mob_valkyr_spearAI : public ScriptedAI
+{
+    mob_valkyr_spearAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        Reset();
+    }
+
+    ScriptedInstance *m_pInstance;
+    uint64 m_uiVictimGUID;
+
+    void Reset()
+    {
+        SetCombatMovement(false);
+        m_creature->SetInCombatWithZone();
+    }
+
+    void Aggro(Unit* pWho)
+    {
+        m_creature->SetInCombatWith(pWho);
+        pWho->SetInCombatWith(m_creature);
+        DoCast(pWho, SPELL_IMPALING_SPEAR_AURA);
+        m_uiVictimGUID = pWho->GetGUID();
+    }
+
+    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+    {
+        if (uiDamage > m_creature->GetHealth())
+        {
+            if (m_uiVictimGUID)
+            {
+                if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+                    pVictim->RemoveAurasDueToSpell(SPELL_IMPALING_SPEAR_AURA);
+            }
+        }
+    }
+
+    void KilledUnit(Unit* pVictim)
+    {
+        if (pVictim) 
+            pVictim->RemoveAurasDueToSpell(SPELL_IMPALING_SPEAR_AURA);
+    }
+
+    void JustDied(Unit* Killer)
+    {
+        if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+            pVictim->RemoveAurasDueToSpell(SPELL_IMPALING_SPEAR_AURA);
+
+        if (Killer)
+            Killer->RemoveAurasDueToSpell(SPELL_IMPALING_SPEAR_AURA);
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		if(m_pInstance && m_pInstance->GetData(TYPE_SVALNA) != IN_PROGRESS)
+        {
+            if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+				pVictim->RemoveAurasDueToSpell(SPELL_IMPALING_SPEAR_AURA);
+            m_creature->ForcedDespawn();
+        }
+
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+    }
+};
+
+CreatureAI* GetAI_mob_valkyr_spear(Creature* pCreature)
+{
+    return new mob_valkyr_spearAI(pCreature);
+}
+
 enum
 {
 	SPELL_ICEBOUND_ARMOR	   	    = 70714,
 	SPELL_DEATHSTRIKE	            = 71489,
-	SPELL_DEATH_COIL_25 			= 71490,
+	SPELL_DEATH_COIL	 			= 71490,	// only on 25
 	SPELL_SCOURGE_STRIKE            = 71488,
 };
 
@@ -3139,63 +3208,66 @@ struct MANGOS_DLL_DECL mob_crok_scourgebaneAI : public ScriptedAI
 {
     mob_crok_scourgebaneAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		Difficulty = pCreature->GetMap()->GetDifficulty();
         Reset();
     }
 
+	ScriptedInstance* m_pInstance;
 	uint32 Difficulty;
 
     uint32 m_uiIceboundTimer;
+	bool m_bAuraUsed;
 	uint32 m_uiDeathstrikeTimer;
 	uint32 m_uiDeathcoilTimer;
 	uint32 m_uiScourgeStrikeTimer;
 	
-	   void Reset()
-    {
-        m_uiIceboundTimer          = 20000;
+	void Reset()
+	{
+		m_uiIceboundTimer          = 0;
+		m_bAuraUsed				   = false;
 		m_uiDeathstrikeTimer       = urand(7000, 11000);
 		m_uiDeathcoilTimer         = urand(9000, 13000);
 		m_uiScourgeStrikeTimer     = urand(10000, 15000);
-	 }
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (m_uiIceboundTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_ICEBOUND_ARMOR);
-			m_uiIceboundTimer = 20000;
-        }
+		if (m_uiIceboundTimer < uiDiff && m_creature->HasAura(SPELL_ICEBOUND_ARMOR, EFFECT_INDEX_0))
+			m_creature->RemoveAurasDueToSpell(SPELL_ICEBOUND_ARMOR);
         else m_uiIceboundTimer -= uiDiff;
 
+		if(m_creature->GetHealthPercent() < 25.0f && !m_bAuraUsed)
+		{
+			DoCast(m_creature, SPELL_ICEBOUND_ARMOR);
+			m_uiIceboundTimer = 10000;
+			m_bAuraUsed = true;
+		}
+
 		if (m_uiDeathcoilTimer < uiDiff)
-        {
+		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
-			
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_DEATH_COIL_25);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(pTarget, SPELL_DEATH_COIL);
 			}
-            m_uiDeathcoilTimer = urand(9000, 13000);
-        }
+			m_uiDeathcoilTimer = urand(9000, 13000);
+		}
         else m_uiDeathcoilTimer -= uiDiff;
-
 
 		if (m_uiDeathstrikeTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_DEATHSTRIKE);
+			DoCast(m_creature->getVictim(), SPELL_DEATHSTRIKE);
             m_uiDeathstrikeTimer = urand(7000, 11000);
         }
         else m_uiDeathstrikeTimer -= uiDiff;
 
 		if (m_uiScourgeStrikeTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_SCOURGE_STRIKE);
+			DoCast(m_creature->getVictim(), SPELL_SCOURGE_STRIKE);
             m_uiScourgeStrikeTimer = urand(11000, 15000);
         }
         else m_uiScourgeStrikeTimer -= uiDiff;
@@ -3209,20 +3281,20 @@ CreatureAI* GetAI_mob_crok_scourgebane(Creature* pCreature)
     return new mob_crok_scourgebaneAI(pCreature);	
 }
 
-	enum
+enum
 {
 
 	SPELL_FLASH_HEAL	   	    = 71595,
 	SPELL_FLASH_HEAL_10	        = 71782,
 	SPELL_FLASH_HEAL_25         = 71783,
-	SPELL_DOMINATE_MIND_25 		= 14515,
+	SPELL_DOMINATE_MIND 		= 14515,	// on 25 man
 	SPELL_POWER_SHIELD          = 71548,
 	SPELL_POWER_SHIELD_10       = 71780,
 	SPELL_POWER_SHIELD_25       = 71781,
 	SPELL_SMITE1_10             = 71546,
 	SPELL_SMITE1_25             = 71547,
-	SPELL_SMITE2_10             = 71778,
-	SPELL_SMITE2_25             = 71779,
+	SPELL_SMITE_10HC            = 71778,
+	SPELL_SMITE_25HC            = 71779,
 	SPELL_UNDEATH               = 70089,
 };
 
@@ -3239,121 +3311,74 @@ struct MANGOS_DLL_DECL mob_captain_arnathAI : public ScriptedAI
 
 	uint32 Difficulty;
 
-    uint32 m_uiFlash1Timer;
-	uint32 m_uiFlash2Timer;
-	uint32 m_uiShield1Timer;
-	uint32 m_uiShield2Timer;
+    uint32 m_uiFlashTimer;
+	uint32 m_uiShieldTimer;
 	uint32 m_uiDominateTimer;
-	uint32 m_uiSmite1Timer;
-	uint32 m_uiSmite2Timer;
-	uint32 m_uiUndeathTimer;
+	uint32 m_uiSmiteTimer;
 	
-	   void Reset()
-    {
-        m_uiFlash1Timer            = 10000;
-		m_uiFlash2Timer            = urand(7000, 11000);
-		m_uiSmite1Timer            = urand(9000, 13000);
-		m_uiSmite2Timer            = urand(10000, 15000);
-		m_uiShield1Timer           = 9000;
-		m_uiShield2Timer           = urand(10000, 17000);
-		m_uiDominateTimer          = 14000;
-		m_uiUndeathTimer           = urand(12000, 19000);
-	 }
+	void Reset()
+	{
+		m_uiFlashTimer             = urand(7000, 11000);
+		m_uiSmiteTimer             = urand(9000, 13000);
+		m_uiShieldTimer            = urand(15000, 17000);
+		m_uiDominateTimer          = 20000;
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (m_uiFlash1Timer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_FLASH_HEAL);
-			m_uiFlash1Timer = 10000;
-        }
-        else m_uiFlash1Timer -= uiDiff;
-
 		if (m_uiDominateTimer < uiDiff)
-        {
+		{
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
-			
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_DOMINATE_MIND_25);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(pTarget, SPELL_DOMINATE_MIND);
 			}
-            m_uiDominateTimer = 14000;
-        }
-        else m_uiDominateTimer -= uiDiff;
+			m_uiDominateTimer = 20000;
+		}
+		else m_uiDominateTimer -= uiDiff;
 
-
-		if (m_uiFlash2Timer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+		if (m_uiFlashTimer < uiDiff)
+		{
+			if (Unit* pTarget = DoSelectLowestHpFriendly(50.0f))
 			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(m_creature, SPELL_FLASH_HEAL_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(m_creature, SPELL_FLASH_HEAL_25);
+				if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+					DoCast(pTarget, SPELL_FLASH_HEAL_10);
+				if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+					DoCast(pTarget, SPELL_FLASH_HEAL_25);
 			}
-			m_uiFlash2Timer = urand(7000, 11000);
-        }
-        else m_uiFlash2Timer -= uiDiff;
+			m_uiFlashTimer = urand(7000, 11000);
+		}
+		else m_uiFlashTimer -= uiDiff;
 
-		if (m_uiShield2Timer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
+		if (m_uiShieldTimer < uiDiff)
+		{
 			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 				DoCast(m_creature, SPELL_POWER_SHIELD_10);
 			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
 				DoCast(m_creature, SPELL_POWER_SHIELD_25);
-			}
-			m_uiShield2Timer = urand(10000, 17000);
-        }
-        else m_uiShield2Timer -= uiDiff;
+			m_uiShieldTimer = urand(15000, 20000);
+		}
+		else m_uiShieldTimer -= uiDiff;
 
-		if (m_uiSmite1Timer < uiDiff)
+		if (m_uiSmiteTimer < uiDiff)
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC) 
+				DoCast(pTarget, SPELL_SMITE_10HC);
+			if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
 				DoCast(pTarget, SPELL_SMITE1_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC) 
+				DoCast(pTarget, SPELL_SMITE_25HC);
+			if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
 				DoCast(pTarget, SPELL_SMITE1_25);
 			}
-			m_uiSmite1Timer = urand(9000, 13000);
+			m_uiSmiteTimer = urand(9000, 13000);
         }
-        else m_uiSmite1Timer -= uiDiff;
-
-		if (m_uiSmite2Timer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_SMITE2_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_SMITE2_25);
-			}
-			m_uiSmite2Timer = urand(10000, 15000);
-        }
-        else m_uiSmite2Timer -= uiDiff;
-
-
-		if (m_uiShield1Timer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(m_creature, SPELL_POWER_SHIELD);
-            m_uiShield1Timer = 9000;
-        }
-        else m_uiShield1Timer -= uiDiff;
-
-		if (m_uiUndeathTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_UNDEATH);
-            m_uiUndeathTimer = urand(12000, 19000);
-        }
-        else m_uiUndeathTimer -= uiDiff;
+        else m_uiSmiteTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
@@ -3364,9 +3389,8 @@ CreatureAI* GetAI_mob_captain_arnath(Creature* pCreature)
     return new mob_captain_arnathAI(pCreature);
 }
 
-	enum
+enum
 {
-
 	SPELL_CRUSADER   	   	    = 71549,
 	SPELL_DIVINE                = 71550,
 	SPELL_HAMMER                = 71784,
@@ -3390,16 +3414,15 @@ struct MANGOS_DLL_DECL mob_captain_brandonAI : public ScriptedAI
 	uint32 m_uiDivineTimer;
 	uint32 m_uiHammerTimer;
 	uint32 m_uiJudgeTimer;
-	uint32 m_uiUndeathTimer;
+	bool m_bHasShield;
 	
-	   void Reset()
-    {
-        m_uiCrusaderTimer           = 10000;
-		m_uiDivineTimer             = urand(7000, 11000);
+	void Reset()
+	{
+		m_uiCrusaderTimer           = 10000;
+		m_bHasShield				= false;
 		m_uiHammerTimer             = urand(9000, 13000);
 		m_uiJudgeTimer              = urand(10000, 15000);
-		m_uiUndeathTimer            = urand(12000, 19000);
-	 }
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -3408,18 +3431,16 @@ struct MANGOS_DLL_DECL mob_captain_brandonAI : public ScriptedAI
 
         if (m_uiCrusaderTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_CRUSADER);
+			DoCast(m_creature->getVictim(), SPELL_CRUSADER);
 			m_uiCrusaderTimer = 10000;
         }
         else m_uiCrusaderTimer -= uiDiff;
 
-		if (m_uiDivineTimer < uiDiff)
+		if (m_creature->GetHealthPercent() < 25.0f && !m_bHasShield)
         {
 			DoCast(m_creature, SPELL_DIVINE);
-			m_uiDivineTimer = urand(7000,11000);
+			m_bHasShield = true;
         }
-        else m_uiDivineTimer -= uiDiff;
     
 		if (m_uiHammerTimer < uiDiff)
         {
@@ -3437,14 +3458,6 @@ struct MANGOS_DLL_DECL mob_captain_brandonAI : public ScriptedAI
         }
         else m_uiJudgeTimer -= uiDiff;
 
-		if (m_uiUndeathTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_UNDEATH);
-            m_uiUndeathTimer = urand(12000, 19000);
-        }
-        else m_uiUndeathTimer -= uiDiff;
-
         DoMeleeAttackIfReady();
     }
 };
@@ -3456,7 +3469,6 @@ CreatureAI* GetAI_mob_captain_brandon(Creature* pCreature)
 
 enum
 {
-
 	SPELL_CHARGE     	   	    = 71553,
 	SPELL_CONFLAGRATION         = 71785,
 	SPELL_MORTAL_STRIKE         = 71552,
@@ -3480,16 +3492,14 @@ struct MANGOS_DLL_DECL mob_captain_grondelAI : public ScriptedAI
 	uint32 m_uiConflagrationTimer;
 	uint32 m_uiMstrikeTimer;
 	uint32 m_uiSunderTimer;
-	uint32 m_uiUndeathTimer;
 	
-	   void Reset()
-    {
-        m_uiChargeTimer            = 10000;
+	void Reset()
+	{
+		m_uiChargeTimer            = 10000;
 		m_uiConflagrationTimer     = urand(7000, 11000);
 		m_uiMstrikeTimer           = urand(9000, 13000);
 		m_uiSunderTimer            = urand(10000, 15000);
-		m_uiUndeathTimer           = urand(12000, 19000);
-	 }
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -3508,35 +3518,24 @@ struct MANGOS_DLL_DECL mob_captain_grondelAI : public ScriptedAI
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 				DoCast(pTarget, SPELL_CONFLAGRATION);
-			
             m_uiConflagrationTimer = 14000;
         }
         else m_uiConflagrationTimer -= uiDiff;
 
-
 		if (m_uiMstrikeTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			    DoCast(pTarget, SPELL_MORTAL_STRIKE);
+			DoCast(m_creature->getVictim(), SPELL_MORTAL_STRIKE);
 			m_uiMstrikeTimer = urand(7000, 11000);
         }
         else m_uiMstrikeTimer -= uiDiff;
 
 		if (m_uiSunderTimer < uiDiff)
         {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
 			    DoCast(pTarget, SPELL_SUNDER_ARMOR);
 			m_uiSunderTimer = urand(10000, 17000);
         }
         else m_uiSunderTimer -= uiDiff;
-
-       if (m_uiUndeathTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_UNDEATH);
-            m_uiUndeathTimer = urand(12000, 19000);
-        }
-        else m_uiUndeathTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
@@ -3549,14 +3548,9 @@ CreatureAI* GetAI_mob_captain_grondel(Creature* pCreature)
 
 enum
 {
-
-	SPELL_FEL_BOMB1  	   	    = 71592,
-	SPELL_FEL_BOMB2             = 71787,
+	SPELL_FEL_BOMB              = 71787,
 	SPELL_MACHINE_GUN           = 71594,
-	SPELL_MACHINE_GUN_10        = 71780,
-	SPELL_MACHINE_GUN_25        = 71781,
-	SPELL_ROCKET1               = 71590,
-	SPELL_ROCKET2               = 71786,
+	SPELL_ROCKET                = 71786,
 };
 
 /*######
@@ -3572,93 +3566,45 @@ struct MANGOS_DLL_DECL mob_captain_rupertAI : public ScriptedAI
 
 	uint32 Difficulty;
 
-    uint32 m_uiFel1Timer;
-	uint32 m_uiFel2Timer;
-	uint32 m_uiMg1Timer;
-	uint32 m_uiMg2Timer;
-	uint32 m_uiRocket1Timer;
-	uint32 m_uiRocket2Timer;
-	uint32 m_uiUndeathTimer;
-	
-	   void Reset()
-    {
-        m_uiFel1Timer            = 10000;
-		m_uiFel2Timer            = urand(7000, 11000);
-		m_uiMg1Timer             = urand(9000, 13000);
-		m_uiMg2Timer             = urand(10000, 15000);
-		m_uiRocket1Timer         = 9000;
-		m_uiRocket2Timer         = urand(10000, 17000);
-		m_uiUndeathTimer         = urand(12000, 19000);
-	 }
+	uint32 m_uiFelTimer;
+	uint32 m_uiMgTimer;
+	uint32 m_uiRocketTimer;
+
+	void Reset()
+	{
+		m_uiFelTimer             = urand(7000, 11000);
+		m_uiMgTimer              = urand(9000, 13000);
+		m_uiRocketTimer          = urand(15000, 17000);
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if (m_uiFel1Timer < uiDiff)
+		if (m_uiFelTimer < uiDiff)
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_FEL_BOMB1);
-			m_uiFel1Timer = 10000;
+		        DoCast(pTarget, SPELL_FEL_BOMB);
+            m_uiFelTimer = urand(7000, 11000);
         }
-        else m_uiFel1Timer -= uiDiff;
+        else m_uiFelTimer -= uiDiff;
 
-		if (m_uiFel2Timer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-		        DoCast(pTarget, SPELL_FEL_BOMB2);
-		
-            m_uiFel2Timer = urand(7000, 11000);
-        }
-        else m_uiFel2Timer -= uiDiff;
-
-		if (m_uiMg1Timer < uiDiff)
+		if (m_uiMgTimer < uiDiff)
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 		        DoCast(pTarget, SPELL_MACHINE_GUN);
-		
-            m_uiMg1Timer = urand(7000, 11000);
+            m_uiMgTimer = urand(7000, 11000);
         }
-        else m_uiMg1Timer -= uiDiff;
+        else m_uiMgTimer -= uiDiff;
 
-
-		if (m_uiMg2Timer < uiDiff)
+		if (m_uiRocketTimer < uiDiff)
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			{
-			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-				DoCast(pTarget, SPELL_MACHINE_GUN_10);
-			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				DoCast(pTarget, SPELL_MACHINE_GUN_25);
-			}
-			m_uiMg2Timer = urand(7000, 11000);
+				DoCast(pTarget, SPELL_ROCKET);
+            m_uiRocketTimer = urand(15000, 17000);
         }
-        else m_uiMg2Timer -= uiDiff;
-
-		if (m_uiRocket1Timer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_ROCKET1);
-            m_uiRocket1Timer = 9000;
-        }
-        else m_uiRocket1Timer -= uiDiff;
-
-		if (m_uiRocket2Timer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_ROCKET2);
-            m_uiRocket2Timer = 9000;
-        }
-        else m_uiRocket2Timer -= uiDiff;
-
-		if (m_uiUndeathTimer < uiDiff)
-        {
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCast(pTarget, SPELL_UNDEATH);
-            m_uiUndeathTimer = urand(12000, 19000);
-        }
-        else m_uiUndeathTimer -= uiDiff;
+        else m_uiRocketTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
     }
@@ -3668,8 +3614,6 @@ CreatureAI* GetAI_mob_captain_rupert(Creature* pCreature)
 {
     return new mob_captain_rupertAI(pCreature);
 }
-
-
 
 enum
 {
@@ -4324,6 +4268,11 @@ void AddSC_icecrown_citadel()
 	newscript = new Script;
     newscript->Name = "miniboss_sister_svalna";
     newscript->GetAI = &GetAI_miniboss_sister_svalna;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_valkyr_spear";
+	newscript->GetAI = &GetAI_mob_valkyr_spear;
     newscript->RegisterSelf();
 
 	newscript = new Script;
