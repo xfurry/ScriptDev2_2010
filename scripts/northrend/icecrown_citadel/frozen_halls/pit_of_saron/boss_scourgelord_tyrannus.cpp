@@ -104,7 +104,7 @@ enum gauntlet
 static LocationsXY GauntletLoc[]=
 {
 	// first & second wave
-	{39.5454f, 79.563f, 564.941f, 3.3f},	// 0
+	{939.545f, 79.563f, 564.941f, 3.3f},	// 0
     {936.182f, 68.153f, 565.948f, 3.3f},
     {932.409f, 89.724f, 563.709f, 3.3f},
 	{942.788f, 85.200f, 565.518f, 3.3f},
@@ -120,16 +120,16 @@ static LocationsXY GauntletLoc[]=
 static LocationsXY TunnelLoc[]=
 {
 	// used for summoning skeletons and for icicles
-	{953.161f, -106.254f, 594.972f},
-	{968.903f, -119.275f, 598.156f},
-	{1014.822f,-132.030f, 622.475f},
-	{1044.323f,-111.136f, 629.631f},
-	{1053.802f, -93.590f, 632.728f},
-	{1061.800f, -68.209f, 633.955f},
-	{1069.361f, -33.613f, 633.624f},
-	{1073.614f,  -9.413f, 633.548f},	// revenant
-	{1074.075f,  37.676f, 629.672f},
-	{1066.194f,  75.234f, 630.872f},
+	{953.161f, -106.254f, 594.972f, 4.45f},
+	{968.903f, -119.275f, 598.156f, 4.45f},
+	{1014.822f,-132.030f, 622.475f, 4.45f},
+	{1044.323f,-111.136f, 629.631f, 4.45f},
+	{1053.802f, -93.590f, 632.728f, 4.45f},
+	{1061.800f, -68.209f, 633.955f, 4.45f},
+	{1069.361f, -33.613f, 633.624f, 4.45f},
+	{1073.614f,  -9.413f, 633.548f, 4.45f},	//7 revenant
+	{1074.075f,  37.676f, 629.672f, 4.45f},
+	{1066.194f,  75.234f, 630.872f, 4.45f},
 };
 
 #define HOME_X                      1014.51f
@@ -152,6 +152,40 @@ static LocationsXY MoveLoc[]=
     {1015.389f, 183.650f, 628.156f},
     {1065.827f, 210.836f, 628.156f},
     {1072.659f, 204.432f, 628.156f},
+};
+
+struct MANGOS_DLL_DECL npc_colapsing_icicleAI: public ScriptedAI
+{
+    npc_colapsing_icicleAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+		pCreature->SetDisplayId(11686);     // make invisible
+		m_creature->setFaction(14);
+		SetCombatMovement(false);
+        Reset();
+    }
+
+	ScriptedInstance* m_pInstance;
+
+	uint32 m_uiDamageTimer;
+
+	void Reset()
+    {
+       DoCast(m_creature, SPELL_ICICLE);
+	   m_uiDamageTimer = 500;
+    }
+
+	void UpdateAI(const uint32 uiDiff)
+    {
+		if(m_uiDamageTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_ICICLE_DMG);
+			m_uiDamageTimer = 10000;
+		}
+		else m_uiDamageTimer -= uiDiff;
+	}
 };
 
 struct MANGOS_DLL_DECL npc_sylvanas_jaina_pos_endAI: public ScriptedAI
@@ -515,6 +549,9 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
     uint32 m_uiMarkOfRimefangTimer;
     uint32 TeamInInstance;
 
+	float angle, homeX, homeY;
+	uint32 m_uiAddEntry;
+
     void Reset()
     {
         m_uiForcefulSmashTimer  = 10000;
@@ -530,6 +567,11 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
         m_uiGorkunGuid      = 0;
         m_uiRimefangGuid    = 0;
 		m_uiMobsDied		= 0;
+
+		angle = 0; 
+		homeX = 0; 
+		homeY = 0;
+		m_uiAddEntry = 0;
         
         TeamInInstance = GetFaction();
         
@@ -575,16 +617,6 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
             }
         }
         return faction;
-    }
-
-    void MoveInLineOfSight(Unit *pWho)
-    {
-		if (!m_bHasTaunted && pWho->isInAccessablePlaceFor(m_creature) && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 80) && m_creature->IsWithinLOSInMap(pWho) && m_pInstance->GetData(TYPE_GAUNTLET) == DONE)
-        {
-            m_bHasTaunted = true;
-            //m_uiGauntletPhase   = 10;
-            //m_uiGauntletTimer   = 1000;  
-        }  
     }
 
 	void SummonedCreatureJustDied(Creature* pSummoned)
@@ -648,7 +680,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 						case 1: DoScriptText(SAY_GAUNTLET2, pTyrannus); break;
 						}
 					}
-					m_pInstance->SetData(TYPE_GAUNTLET, IN_PROGRESS);
+					//m_pInstance->SetData(TYPE_GAUNTLET, IN_PROGRESS);
 					++m_uiGauntletPhase;
 					m_uiGauntletTimer = 5000;
 					break;
@@ -726,6 +758,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 					m_creature->SummonCreature(NPC_FLAMEBEARER, GauntletLoc[9].x, GauntletLoc[9].y, GauntletLoc[9].z, GauntletLoc[9].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
 					++m_uiGauntletPhase;
 					m_uiGauntletTimer = 5000;
+					break;
 				case 7:
 					if(m_uiMobsDied == 10)
 					{
@@ -736,11 +769,37 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 					break;
 				case 8:
 					// summon tunnel adds
+					if(!m_bIsRegularMode)
+						m_creature->SummonCreature(NPC_GLACIAL_REVENANT, TunnelLoc[7].x, TunnelLoc[7].y, TunnelLoc[7].z, TunnelLoc[7].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					for(uint8 i = 0; i < 10; i++)
+					{
+						for(uint8 j = 0; j < 2; j++)
+						{
+							switch(urand(0, 6))
+							{
+							case 0: case 1: case 2: m_uiAddEntry = NPC_WRATHBONE_COLDWRAITH; break;
+							case 3: case 4: case 5: m_uiAddEntry = NPC_WRATHBONE_SORCERER; break;
+							case 6: m_uiAddEntry = NPC_FALLEN_WARRIOR; break;
+							}
+							angle = (float) rand()*360/RAND_MAX + 1;
+							homeX = TunnelLoc[i].x + urand(0, 7)*cos(angle*(M_PI/180));
+							homeY = TunnelLoc[i].y + urand(0, 7)*sin(angle*(M_PI/180));
+							m_creature->SummonCreature(m_uiAddEntry, homeX, homeY, TunnelLoc[i].z, TunnelLoc[i].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+						}
+					}
 					++m_uiGauntletPhase;
 					m_uiGauntletTimer = 5000;
 					break;
 				case 9:
 					// do icicles
+					for(uint8 i = 0; i < 10; i++)
+					{
+						angle = (float) rand()*360/RAND_MAX + 1;
+						homeX = TunnelLoc[i].x + urand(0, 7)*cos(angle*(M_PI/180));
+						homeY = TunnelLoc[i].y + urand(0, 7)*sin(angle*(M_PI/180));
+						m_creature->SummonCreature(NPC_COLLAPSING_ICICLE, homeX, homeY, TunnelLoc[i].z, TunnelLoc[i].o, TEMPSUMMON_TIMED_DESPAWN, 10000);
+					}
+					// check if done
 					if(m_uiMobsDied == 20)
 					{
 						// last mob dies in the tunnel, set to done
@@ -918,6 +977,11 @@ CreatureAI* GetAI_mob_icy_blast(Creature* pCreature)
     return new mob_icy_blastAI (pCreature);
 }
 
+CreatureAI* GetAI_npc_colapsing_icicle(Creature* pCreature)
+{
+	return new npc_colapsing_icicleAI (pCreature);
+}
+
 CreatureAI* GetAI_npc_sylvanas_jaina_pos_end(Creature* pCreature)
 {
     return new npc_sylvanas_jaina_pos_endAI (pCreature);
@@ -939,6 +1003,11 @@ void AddSC_boss_Tyrannus()
     newscript = new Script;
     newscript->Name="mob_icy_blast";
     newscript->GetAI = &GetAI_mob_icy_blast;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name="npc_colapsing_icicle";
+    newscript->GetAI = &GetAI_npc_colapsing_icicle;
     newscript->RegisterSelf();
 
     newscript = new Script;

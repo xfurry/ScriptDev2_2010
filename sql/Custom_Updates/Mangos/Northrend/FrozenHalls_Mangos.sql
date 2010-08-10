@@ -34,12 +34,12 @@ UPDATE `creature_template` SET `ScriptName`='npc_FallenWarrior' WHERE `entry`=36
 UPDATE `creature_template` SET `ScriptName`='npc_DeathwhisperTorturer' WHERE `entry`=37713;
 UPDATE `creature_template` SET `ScriptName`='npc_DeathwhisperShadowcaster' WHERE `entry`=37712;
 UPDATE `creature_template` SET `ScriptName`='npc_DeathwhisperNecrolyte' WHERE `entry`=36788;
-UPDATE `creature_template` SET `ScriptName`='npc_WrathboneSorcerer' WHERE `entry`=37728;
+UPDATE `creature_template` SET `ScriptName`='npc_WrathboneSorcerer', `faction_A` = 14, `faction_H` = 14 WHERE `entry`=37728;
 UPDATE `creature_template` SET `ScriptName`='npc_GeistAmbusher' WHERE `entry`=36886;
 UPDATE `creature_template` SET `ScriptName`='npc_disturbedGlacialRevenant' WHERE `entry`=36874;
--- Areatrigger: maybe wrong id :(
-delete from areatrigger_scripts where entry = 5578;
-insert into areatrigger_scripts values (5578, 'at_tyrannus');
+-- Areatrigger:
+delete from scripted_areatrigger where entry = 5578;
+insert into scripted_areatrigger values (5578, 'at_tyrannus');
 -- Boss
 UPDATE `creature_template` SET `ScriptName`='boss_Garfrost' WHERE `entry`=36494;
 UPDATE `creature_template` SET `ScriptName`='boss_Ick' WHERE `entry`=36476;
@@ -48,6 +48,7 @@ UPDATE `creature_template` SET `ScriptName`='mob_explosive_orb' WHERE `entry`=36
 UPDATE `creature_template` SET `ScriptName`='boss_Tyrannus' WHERE `entry`=36658;
 UPDATE `creature_template` SET `ScriptName`='boss_Rimefang' WHERE `entry`=36661;
 UPDATE `creature_template` SET `ScriptName`='mob_icy_blast' WHERE `entry`=36731;
+UPDATE `creature_template` SET `ScriptName`='npc_colapsing_icicle' WHERE `entry`=36847;
 -- npc
 UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_pos_start' WHERE `entry` in (36993, 36990);
 UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_pos_end' WHERE `entry` in (38188, 38189);
