@@ -392,6 +392,7 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
                 {
                     // go to center
                 case 0:
+					m_creature->GetMotionMaster()->MovePoint(0, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z);
                     m_creature->GetMap()->CreatureRelocation(m_creature, SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z, 0);
                     m_creature->SendMonsterMove(SpawnLoc[1].x, SpawnLoc[1].y, SpawnLoc[1].z, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
                     m_creature->GetMotionMaster()->MoveIdle();
@@ -1782,18 +1783,24 @@ struct MANGOS_DLL_DECL mob_slime_poolAI : public ScriptedAI
     {
         DoCast(m_creature, SPELL_SLIME_POOL_VISUAL);
         m_fSize = 1.0f;
-        m_uiSizeTimer   = 5000;
+        m_uiSizeTimer   = 1000;
         m_uiSpellTimer  = 1000;
         m_bHasSpell     = false;
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if(m_uiSizeTimer < uiDiff)
+        if(m_uiSizeTimer < uiDiff && m_fSize <= 2.0f)
         {
-            m_fSize += 0.2f;
+			if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				m_fSize += 0.033f;
+			if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+				m_fSize += 0.022f;
+			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+				m_fSize += 0.016f;
+
             m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, m_fSize);
-            m_uiSizeTimer = 5000;
+            m_uiSizeTimer = 1000;
         }
         else
             m_uiSizeTimer -= uiDiff;
