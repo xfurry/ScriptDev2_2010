@@ -72,6 +72,13 @@ enum
     EQUIP_ID                      = 51796,
 };
 
+//Positional defines 
+struct LocationsXY
+{
+    float x, y, z, o;
+    uint32 id;
+};
+
 enum gauntlet
 {
 	SAY_GAUNTLET1		= -1610081,
@@ -89,6 +96,40 @@ enum gauntlet
 	NPC_DEATHBRINGER		= 36892,
 	// another 2 waves
 	NPC_FALLEN_WARRIOR		= 36841,
+	NPC_WRATHBONE_COLDWRAITH= 36842,
+	NPC_WRATHBONE_SORCERER	= 37728,
+	NPC_GLACIAL_REVENANT	= 36874,
+};
+
+static LocationsXY GauntletLoc[]=
+{
+	// first & second wave
+	{39.5454f, 79.563f, 564.941f, 3.3f},	// 0
+    {936.182f, 68.153f, 565.948f, 3.3f},
+    {932.409f, 89.724f, 563.709f, 3.3f},
+	{942.788f, 85.200f, 565.518f, 3.3f},
+	{939.697f, 67.286f, 566.268f, 3.3f},
+	// third & forth wave
+	{930.037f, -30.718f, 589.314f, 1.45f},	// 5
+	{935.862f, -26.780f, 589.284f, 1.45f},
+	{919.687f, -23.890f, 585.659f, 1.45f},
+	{924.874f, -30.458f, 588.207f, 1.45f},
+	{932.928f, -30.944f, 590.035f, 1.45f},
+};
+
+static LocationsXY TunnelLoc[]=
+{
+	// used for summoning skeletons and for icicles
+	{953.161f, -106.254f, 594.972f},
+	{968.903f, -119.275f, 598.156f},
+	{1014.822f,-132.030f, 622.475f},
+	{1044.323f,-111.136f, 629.631f},
+	{1053.802f, -93.590f, 632.728f},
+	{1061.800f, -68.209f, 633.955f},
+	{1069.361f, -33.613f, 633.624f},
+	{1073.614f,  -9.413f, 633.548f},	// revenant
+	{1074.075f,  37.676f, 629.672f},
+	{1066.194f,  75.234f, 630.872f},
 };
 
 #define HOME_X                      1014.51f
@@ -96,12 +137,7 @@ enum gauntlet
 
 const float RimefangSummon[4] = {1013.827f, 169.71f, 628.157f, 5.31f};
 
-//Positional defines 
-struct LocationsXY
-{
-    float x, y, z, o;
-    uint32 id;
-};
+
 static LocationsXY SummonLoc[]=
 {
     {1060.955f, 107.274f, 628.424f},
@@ -468,6 +504,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
     bool m_bIsTunnelIntro;
     bool m_bHasTaunted;
     bool m_bHasPassedTunnel;
+	uint32 m_uiMobsDied;
 
     uint64 m_uiMartinGuid;
     uint64 m_uiGorkunGuid;
@@ -492,6 +529,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
         m_uiMartinGuid      = 0;
         m_uiGorkunGuid      = 0;
         m_uiRimefangGuid    = 0;
+		m_uiMobsDied		= 0;
         
         TeamInInstance = GetFaction();
         
@@ -544,18 +582,15 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 		if (!m_bHasTaunted && pWho->isInAccessablePlaceFor(m_creature) && pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 80) && m_creature->IsWithinLOSInMap(pWho) && m_pInstance->GetData(TYPE_GAUNTLET) == DONE)
         {
             m_bHasTaunted = true;
-
-            m_uiGauntletPhase   = 50;
-            m_uiGauntletTimer   = 1000;
-
-            if(Creature* pRimefang = m_pInstance->instance->GetCreature(m_uiRimefangGuid))
-            {
-                pRimefang->GetMotionMaster()->MoveIdle();
-                pRimefang->GetMap()->CreatureRelocation(pRimefang, RimefangSummon[0], RimefangSummon[1], RimefangSummon[2]  + 10, RimefangSummon[3]);
-                pRimefang->SendMonsterMove(RimefangSummon[0], RimefangSummon[1], RimefangSummon[2] + 10, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
-            }
+            //m_uiGauntletPhase   = 10;
+            //m_uiGauntletTimer   = 1000;  
         }  
     }
+
+	void SummonedCreatureJustDied(Creature* pSummoned)
+	{
+		m_uiMobsDied += 1;
+	}
 
     void Aggro(Unit* pWho)
     {
@@ -613,16 +648,43 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 						case 1: DoScriptText(SAY_GAUNTLET2, pTyrannus); break;
 						}
 					}
-					++m_uiGauntletPhase;
-					m_uiGauntletTimer = 15000;
-					break;
-					// start summoning adds
-				case 1:
 					m_pInstance->SetData(TYPE_GAUNTLET, IN_PROGRESS);
 					++m_uiGauntletPhase;
-					m_uiGauntletTimer = 30000;
+					m_uiGauntletTimer = 5000;
+					break;
+				case 1:
+					// summon first wave and set in combat
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_DEATHBRINGER, GauntletLoc[0].x, GauntletLoc[0].y, GauntletLoc[0].z, GauntletLoc[0].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
+						pTemp->SetInCombatWithZone();
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_WRATHBRINGER, GauntletLoc[1].x, GauntletLoc[1].y, GauntletLoc[1].z, GauntletLoc[1].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
+						pTemp->SetInCombatWithZone();
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_WRATHBRINGER, GauntletLoc[2].x, GauntletLoc[2].y, GauntletLoc[2].z, GauntletLoc[2].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
+						pTemp->SetInCombatWithZone();
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_FLAMEBEARER, GauntletLoc[3].x, GauntletLoc[3].y, GauntletLoc[3].z, GauntletLoc[3].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
+						pTemp->SetInCombatWithZone();
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_FLAMEBEARER, GauntletLoc[4].x, GauntletLoc[4].y, GauntletLoc[4].z, GauntletLoc[4].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
+						pTemp->SetInCombatWithZone();
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 5000;
 					break;
 				case 2:
+					// summon second wave, static
+					m_creature->SummonCreature(NPC_DEATHBRINGER, GauntletLoc[0].x, GauntletLoc[0].y, GauntletLoc[0].z, GauntletLoc[0].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					m_creature->SummonCreature(NPC_WRATHBRINGER, GauntletLoc[1].x, GauntletLoc[1].y, GauntletLoc[1].z, GauntletLoc[1].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					m_creature->SummonCreature(NPC_WRATHBRINGER, GauntletLoc[2].x, GauntletLoc[2].y, GauntletLoc[2].z, GauntletLoc[2].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					m_creature->SummonCreature(NPC_FLAMEBEARER, GauntletLoc[3].x, GauntletLoc[3].y, GauntletLoc[3].z, GauntletLoc[3].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					m_creature->SummonCreature(NPC_FLAMEBEARER, GauntletLoc[4].x, GauntletLoc[4].y, GauntletLoc[4].z, GauntletLoc[4].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 5000;
+				case 3:
+					if(m_uiMobsDied == 10)
+					{
+						m_uiMobsDied = 0;
+						++m_uiGauntletPhase;
+						m_uiGauntletTimer = 3000;
+					}
+					break;
+				case 4:
 					if(Creature* pTyrannus = m_creature->SummonCreature(NPC_TYRANNUS_INTRO, 927.014f, -41.778f, 613.168f, 1.57f, TEMPSUMMON_TIMED_DESPAWN, 10000))
 					{
 						m_uiTyrannusGUID = pTyrannus->GetGUID();
@@ -637,32 +699,82 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 						pTyrannus->SendMonsterMove(927.014f, -41.778f, 613.168f, SPLINETYPE_NORMAL, pTyrannus->GetSplineFlags(), 1);
 						DoScriptText(SAY_TUNNEL, pTyrannus);
 					}
-					// summon another 2 waves
 					++m_uiGauntletPhase;
-					m_uiGauntletTimer = 30000;
+					m_uiGauntletTimer = 5000;
 					break;
-					// start tunnel event
-				case 3:
+				case 5:
+					// summon third wave and set in combat
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_FALLEN_WARRIOR, GauntletLoc[5].x, GauntletLoc[5].y, GauntletLoc[5].z, GauntletLoc[5].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
+						pTemp->SetInCombatWithZone();
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_FALLEN_WARRIOR, GauntletLoc[6].x, GauntletLoc[6].y, GauntletLoc[6].z, GauntletLoc[6].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
+						pTemp->SetInCombatWithZone();
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_FALLEN_WARRIOR, GauntletLoc[7].x, GauntletLoc[7].y, GauntletLoc[7].z, GauntletLoc[7].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
+						pTemp->SetInCombatWithZone();
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_FALLEN_WARRIOR, GauntletLoc[8].x, GauntletLoc[8].y, GauntletLoc[8].z, GauntletLoc[8].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
+						pTemp->SetInCombatWithZone();
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_FALLEN_WARRIOR, GauntletLoc[9].x, GauntletLoc[9].y, GauntletLoc[9].z, GauntletLoc[9].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000))
+						pTemp->SetInCombatWithZone();
 					++m_uiGauntletPhase;
-					m_uiGauntletTimer = 10000;
+					m_uiGauntletTimer = 5000;
 					break;
-				case 4:
-					m_pInstance->SetData(TYPE_GAUNTLET, DONE);
+				case 6:
+					// summon last wave, static
+					m_creature->SummonCreature(NPC_DEATHBRINGER, GauntletLoc[5].x, GauntletLoc[5].y, GauntletLoc[5].z, GauntletLoc[5].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					m_creature->SummonCreature(NPC_WRATHBRINGER, GauntletLoc[6].x, GauntletLoc[6].y, GauntletLoc[6].z, GauntletLoc[6].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					m_creature->SummonCreature(NPC_WRATHBRINGER, GauntletLoc[7].x, GauntletLoc[7].y, GauntletLoc[7].z, GauntletLoc[7].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					m_creature->SummonCreature(NPC_FLAMEBEARER, GauntletLoc[8].x, GauntletLoc[8].y, GauntletLoc[8].z, GauntletLoc[8].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					m_creature->SummonCreature(NPC_FLAMEBEARER, GauntletLoc[9].x, GauntletLoc[9].y, GauntletLoc[9].z, GauntletLoc[9].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 5000;
+				case 7:
+					if(m_uiMobsDied == 10)
+					{
+						m_uiMobsDied = 0;
+						++m_uiGauntletPhase;
+						m_uiGauntletTimer = 3000;
+					}
 					break;
-
+				case 8:
+					// summon tunnel adds
+					++m_uiGauntletPhase;
+					m_uiGauntletTimer = 5000;
+					break;
+				case 9:
+					// do icicles
+					if(m_uiMobsDied == 20)
+					{
+						// last mob dies in the tunnel, set to done
+						m_uiMobsDied = 0;
+						++m_uiGauntletPhase;
+						m_uiGauntletTimer = 5000;
+						m_pInstance->SetData(TYPE_GAUNTLET, DONE);
+					}
+					else
+						m_uiGauntletTimer = urand(3000, 5000);
+					break;
 					// gauntlet outro
-				case 50:
+				case 10:
+					if(Creature* pRimefang = m_pInstance->instance->GetCreature(m_uiRimefangGuid))
+					{
+						pRimefang->GetMotionMaster()->MoveIdle();
+						pRimefang->GetMap()->CreatureRelocation(pRimefang, RimefangSummon[0], RimefangSummon[1], RimefangSummon[2]  + 10, RimefangSummon[3]);
+						pRimefang->SendMonsterMove(RimefangSummon[0], RimefangSummon[1], RimefangSummon[2] + 10, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+					}
 					DoScriptText(SAY_INTRO1, m_creature);
 					if(TeamInInstance == ALLIANCE)
+					{
 						if(Creature* pMartin = m_creature->SummonCreature(NPC_MARTIN_VICTUS_END, 1060.955f, 107.274f, 629.424f, 2.084f, TEMPSUMMON_DEAD_DESPAWN, 0))
 							m_uiMartinGuid = pMartin->GetGUID();
+					}
 					if(TeamInInstance == HORDE)
+					{
 						if(Creature* pGorkun = m_creature->SummonCreature(NPC_GORKUN_IRONSKULL_END, 1060.955f, 107.274f, 629.424f, 2.084f, TEMPSUMMON_DEAD_DESPAWN, 0))
 							m_uiGorkunGuid = pGorkun->GetGUID();
+					}
 					++m_uiGauntletPhase;
 					m_uiGauntletTimer = 15000;
 					break;
-				case 51:
+				case 11:
 					if(TeamInInstance == ALLIANCE)
 					{
 						if(Creature* pMartin = m_pInstance->instance->GetCreature(m_uiMartinGuid))
@@ -676,7 +788,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 					++m_uiGauntletPhase;
 					m_uiGauntletTimer = 10000;
 					break;
-				case 52:
+				case 12:
 					DoScriptText(SAY_INTRO3, m_creature);
 					++m_uiGauntletPhase;
 					m_uiGauntletTimer = 15000;

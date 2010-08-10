@@ -102,22 +102,22 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
 
     void SetData(uint32 type, uint32 uiData)
     {
-        switch(type)
-        {
-        case TYPE_GARFROST:
-            m_auiEncounter[0] = uiData; break;
-		case TYPE_TYRANNUS:
-            m_auiEncounter[1] = uiData; 
-            if(uiData == DONE)
-                DoUseDoorOrButton(m_uiHorPortcullisGUID);
-            break;
-        case TYPE_KRICK_AND_ICK:
-            m_auiEncounter[2] = uiData; break;
-        case TYPE_INTRO:
-            m_auiEncounter[3] = uiData; break;
+		switch(type)
+		{
+		case TYPE_INTRO:
+			m_auiEncounter[0] = uiData; break;
+		case TYPE_GARFROST:
+			m_auiEncounter[1] = uiData; break;
+		case TYPE_KRICK_AND_ICK:
+			m_auiEncounter[2] = uiData; break;
 		case TYPE_GAUNTLET:
-			m_auiEncounter[4] = uiData; break;
-        }
+			m_auiEncounter[3] = uiData; break;
+		case TYPE_TYRANNUS:
+			m_auiEncounter[4] = uiData; 
+			if(uiData == DONE)
+				DoUseDoorOrButton(m_uiHorPortcullisGUID);
+			break;
+		}
 
         if (uiData == DONE)
         {
@@ -135,11 +135,11 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
     {
         switch(type)
         {
-            case TYPE_GARFROST:			    return m_auiEncounter[0];
-			case TYPE_TYRANNUS:			    return m_auiEncounter[1];
+			case TYPE_INTRO:                return m_auiEncounter[0];
+            case TYPE_GARFROST:			    return m_auiEncounter[1];
 			case TYPE_KRICK_AND_ICK:		return m_auiEncounter[2];
-            case TYPE_INTRO:                return m_auiEncounter[3];
-			case TYPE_GAUNTLET:				return m_auiEncounter[4];
+			case TYPE_GAUNTLET:				return m_auiEncounter[3];
+			case TYPE_TYRANNUS:			    return m_auiEncounter[4];
         }
 
         return 0;

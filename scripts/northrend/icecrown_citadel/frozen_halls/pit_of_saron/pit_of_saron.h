@@ -47,10 +47,10 @@ enum
 
     GO_HOR_PORTCULLIS               = 201848,
 
+	TYPE_INTRO                     = 0,
     TYPE_GARFROST                  = 1,
-    TYPE_TYRANNUS                  = 2,
-    TYPE_KRICK_AND_ICK             = 3,
-    TYPE_INTRO                     = 4,
-	TYPE_GAUNTLET				   = 5,
+	TYPE_KRICK_AND_ICK             = 2,
+	TYPE_GAUNTLET				   = 3,
+    TYPE_TYRANNUS                  = 4,
 };
 #endif
