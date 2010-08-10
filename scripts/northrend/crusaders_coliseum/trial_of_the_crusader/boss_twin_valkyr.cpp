@@ -440,6 +440,7 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
         if (m_uiCastTimeOut < uiDiff)
         {
             m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
+			UpdateHealth();
             m_uiCastTimeOut = 600000;
         }
         else
@@ -933,6 +934,7 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
         if (m_uiCastTimeOut < uiDiff)
         {
             m_pInstance->SetData(TYPE_TWINS_CASTING, NOT_STARTED);
+			UpdateHealth();
             m_uiCastTimeOut = 600000;
         }
         else
