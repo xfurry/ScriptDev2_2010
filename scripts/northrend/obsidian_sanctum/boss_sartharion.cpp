@@ -268,7 +268,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
 {
     boss_sartharionAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
@@ -413,9 +413,9 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
 
     void FetchDragons()
     {
-        Unit* pTene = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_TENEBRON));
-        Unit* pShad = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_SHADRON));
-        Unit* pVesp = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_VESPERON));
+        Creature* pTene = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TENEBRON));
+        Creature* pShad = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_SHADRON));
+        Creature* pVesp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VESPERON));
 
         //if at least one of the dragons are alive and are being called
         if (pTene && pTene->isAlive() && !pTene->getVictim())
@@ -459,7 +459,7 @@ struct MANGOS_DLL_DECL boss_sartharionAI : public ScriptedAI
     {
         if (m_pInstance)
         {
-            Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(uiDataId));
+            Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(uiDataId));
 
             if (pTemp && pTemp->isAlive() && !pTemp->getVictim())
             {
@@ -683,7 +683,7 @@ struct MANGOS_DLL_DECL dummy_dragonAI : public ScriptedAI
 {
     dummy_dragonAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }
@@ -852,7 +852,7 @@ struct MANGOS_DLL_DECL dummy_dragonAI : public ScriptedAI
                 return;
 
             // Twilight Revenge to main boss
-            if (Unit* pSartharion = Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_SARTHARION)))
+            if (Creature* pSartharion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_SARTHARION)))
             {
                 if (pSartharion->isAlive())
                     pSartharion->CastSpell(pSartharion,SPELL_TWILIGHT_REVENGE,true);
@@ -1335,7 +1335,7 @@ struct MANGOS_DLL_DECL mob_acolyte_of_shadronAI : public ScriptedAI
 {
     mob_acolyte_of_shadronAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Reset();
     }
 
@@ -1417,7 +1417,7 @@ struct MANGOS_DLL_DECL mob_acolyte_of_vesperonAI : public ScriptedAI
 {
     mob_acolyte_of_vesperonAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Reset();
     }
 

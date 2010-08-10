@@ -140,7 +140,7 @@ struct MANGOS_DLL_DECL boss_bjarngrimAI : public ScriptedAI
 
         for(uint8 i = 0; i < 2; ++i)
         {
-            if (Creature* pStormforgedLieutenant = ((Creature*)Unit::GetUnit((*m_creature), m_auiStormforgedLieutenantGUID[i])))
+            if (Creature* pStormforgedLieutenant = m_creature->GetMap()->GetCreature(m_auiStormforgedLieutenantGUID[i]))
             {
                 if (!pStormforgedLieutenant->isAlive())
                     pStormforgedLieutenant->Respawn();
@@ -357,7 +357,7 @@ struct MANGOS_DLL_DECL mob_stormforged_lieutenantAI : public ScriptedAI
 {
     mob_stormforged_lieutenantAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
-        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         Reset();
     }

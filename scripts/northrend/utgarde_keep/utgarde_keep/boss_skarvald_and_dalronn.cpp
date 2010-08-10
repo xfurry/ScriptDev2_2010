@@ -110,7 +110,7 @@ struct MANGOS_DLL_DECL boss_s_and_d_dummyAI : public ScriptedAI
                 pBuddy->Respawn();
         }
 
-        if (Creature* pGhost = (Creature*)Unit::GetUnit(*m_creature, m_uiGhostGUID))
+        if (Creature* pGhost = m_creature->GetMap()->GetCreature(m_uiGhostGUID))
         {
             if (pGhost->isAlive())
                 pGhost->ForcedDespawn();
@@ -161,7 +161,7 @@ struct MANGOS_DLL_DECL boss_s_and_d_dummyAI : public ScriptedAI
             }
             else
             {
-                if (Creature* pGhost = (Creature*)Unit::GetUnit(*m_creature,m_uiGhostGUID))
+                if (Creature* pGhost = m_creature->GetMap()->GetCreature(m_uiGhostGUID))
                     pGhost->ForcedDespawn();
 
                 pBuddy->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
