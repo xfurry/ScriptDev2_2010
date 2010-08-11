@@ -156,7 +156,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 		uint32 m_uiSummonId;
 		m_uiLocNo = 0;
 
-		for(uint8 i = 0; i < 16; i++)
+		for(uint8 i = 0; i < 20; i++)
 		{
 			switch(urand(0,3))
 			{
@@ -180,7 +180,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 				switch(urand(1, 3))
 				{
 				case 1: m_uiSummonId = MOB_TORTURED_RIFLEMAN;		break;
-				case 2: m_uiSummonId = MOB_PHANTOM_HALLUCINATION;	break;
+				case 2: m_uiSummonId = MOB_SPECTRAL_FOOTMAN;		break;
 				case 3: m_uiSummonId = MOB_GHOSTLY_PRIEST;			break;
 				}
 				break;
@@ -188,30 +188,27 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 				switch(urand(1, 3))
 				{
 				case 1: m_uiSummonId = MOB_SHADOWY_MERCENARY;		break;
-				case 2: m_uiSummonId = MOB_PHANTOM_HALLUCINATION;	break;
+				case 2: m_uiSummonId = MOB_TORTURED_RIFLEMAN;		break;
 				case 3: m_uiSummonId = MOB_PHANTOM_MAGE;			break;
 				}
 				break;
 			}
 
 			if(Creature* pSummon = m_creature->SummonCreature(m_uiSummonId, SpawnLoc[m_uiLocNo].x, SpawnLoc[m_uiLocNo].y, SpawnLoc[m_uiLocNo].z, SpawnLoc[m_uiLocNo].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
-			{
 				m_lSoldiersGUIDList.push_back(pSummon->GetGUID());
-				pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-				pSummon->setFaction(974);
-			}
 			m_uiLocNo += 1;
 		}
 	}
 
 	void CallFallSoldier()
 	{
-		for(uint8 i = 0; i < 4; ++i)
+		for(uint8 i = 0; i < 5; ++i)
 		{
 			if(!m_lSoldiersGUIDList.empty())
 			{
 				std::list<uint64>::iterator iter = m_lSoldiersGUIDList.begin();
-				advance(iter, urand(0, m_lSoldiersGUIDList.size()-1));
+				// no random
+				//advance(iter, urand(0, m_lSoldiersGUIDList.size()-1));
 
 				if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *iter))
 				{

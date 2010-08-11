@@ -292,7 +292,6 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
     uint32 m_uiFireballTimer;
     uint32 m_uiFlameStrikeTimer;
     uint32 m_uiFrostboltTimer;
-    uint32 m_uiHallucinationTimer;
 
     // shadowy mercenary
     uint32 m_uiDeadlyPoisonTimer;
@@ -332,7 +331,6 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
         m_uiFireballTimer       = 8000;
         m_uiFlameStrikeTimer    = 15000;
         m_uiFrostboltTimer      = 7000;
-        m_uiHallucinationTimer  = 20000;
         m_bHasCasted = false;
 
         // shadowy mercenary
@@ -347,6 +345,9 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
         m_uiTorturedEnrageTimer = 15000;
 
 		m_uiExploitCheckTimer   = 1000;
+
+		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		m_creature->setFaction(974);
     }
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
@@ -383,6 +384,12 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
 
         return false;
     }
+
+	void JustSummoned(Creature* pSummon)
+	{
+		if(pSummon->GetEntry() == MOB_PHANTOM_HALLUCINATION)
+			pSummon->SetHealth(m_creature->GetHealth());
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -543,11 +550,12 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
             m_uiFrostboltTimer = 7000;
         }else m_uiFrostboltTimer -= uiDiff;
 
-        if (m_uiHallucinationTimer <= uiDiff)
+		if (m_creature->GetHealthPercent() < 25.0f && !m_bHasCasted)
         {
+			m_creature->InterruptNonMeleeSpells(true);
             DoCast(m_creature, SPELL_HALLUCINATION_MAGE);
-            m_uiHallucinationTimer = 20000;
-        }else m_uiHallucinationTimer -= uiDiff;
+            m_bHasCasted = true;
+        }
     }
 
     //Ghostly Priest

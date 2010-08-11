@@ -34,7 +34,7 @@ UPDATE `creature_template` SET `ScriptName`='npc_FallenWarrior' WHERE `entry`=36
 UPDATE `creature_template` SET `ScriptName`='npc_DeathwhisperTorturer' WHERE `entry`=37713;
 UPDATE `creature_template` SET `ScriptName`='npc_DeathwhisperShadowcaster' WHERE `entry`=37712;
 UPDATE `creature_template` SET `ScriptName`='npc_DeathwhisperNecrolyte' WHERE `entry`=36788;
-UPDATE `creature_template` SET `ScriptName`='npc_WrathboneSorcerer', `faction_A` = 14, `faction_H` = 14 WHERE `entry`=37728;
+UPDATE `creature_template` SET `ScriptName`='npc_WrathboneSorcerer' WHERE `entry`=37728;
 UPDATE `creature_template` SET `ScriptName`='npc_GeistAmbusher' WHERE `entry`=36886;
 UPDATE `creature_template` SET `ScriptName`='npc_disturbedGlacialRevenant' WHERE `entry`=36874;
 -- Areatrigger:

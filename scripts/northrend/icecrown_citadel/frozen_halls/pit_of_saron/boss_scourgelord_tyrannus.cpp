@@ -97,7 +97,7 @@ enum gauntlet
 	// another 2 waves
 	NPC_FALLEN_WARRIOR		= 36841,
 	NPC_WRATHBONE_COLDWRAITH= 36842,
-	NPC_WRATHBONE_SORCERER	= 37728,
+	NPC_WRATHBONE_SORCERER	= 37728,	// this is for the end event, not used
 	NPC_GLACIAL_REVENANT	= 36874,
 };
 
@@ -775,11 +775,10 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 					{
 						for(uint8 j = 0; j < 2; j++)
 						{
-							switch(urand(0, 6))
+							switch(urand(0, 3))
 							{
-							case 0: case 1: case 2: m_uiAddEntry = NPC_WRATHBONE_COLDWRAITH; break;
-							case 3: case 4: case 5: m_uiAddEntry = NPC_WRATHBONE_SORCERER; break;
-							case 6: m_uiAddEntry = NPC_FALLEN_WARRIOR; break;
+							case 0: m_uiAddEntry = NPC_WRATHBONE_COLDWRAITH; break;
+							case 1: case 2: case 3: m_uiAddEntry = NPC_FALLEN_WARRIOR; break;
 							}
 							angle = (float) rand()*360/RAND_MAX + 1;
 							homeX = TunnelLoc[i].x + urand(0, 7)*cos(angle*(M_PI/180));
@@ -797,7 +796,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 						angle = (float) rand()*360/RAND_MAX + 1;
 						homeX = TunnelLoc[i].x + urand(0, 7)*cos(angle*(M_PI/180));
 						homeY = TunnelLoc[i].y + urand(0, 7)*sin(angle*(M_PI/180));
-						m_creature->SummonCreature(NPC_COLLAPSING_ICICLE, homeX, homeY, TunnelLoc[i].z, TunnelLoc[i].o, TEMPSUMMON_TIMED_DESPAWN, 10000);
+						m_creature->SummonCreature(NPC_COLLAPSING_ICICLE, homeX, homeY, TunnelLoc[i].z + 1, TunnelLoc[i].o, TEMPSUMMON_TIMED_DESPAWN, 10000);
 					}
 					// check if done
 					if(m_uiMobsDied == 20)

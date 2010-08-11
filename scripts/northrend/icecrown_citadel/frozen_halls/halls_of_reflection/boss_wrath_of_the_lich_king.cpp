@@ -97,7 +97,7 @@ enum
     SPELL_DESTROY_ICE_WALL_01          = 69784, //Jaina
     SPELL_DESTROY_ICE_WALL_02          = 70224, 
     SPELL_DESTROY_ICE_WALL_03          = 70225, //Sylvana
-    SPELL_SUMMON_ICE_WALL              = 69784,
+    SPELL_SUMMON_ICE_WALL              = 69784,	// 69767
     SPELL_SYLVANA_JUMP                 = 68339,
     SPELL_SYLVANA_STEP                 = 69087,
     SPELL_SILENCE                      = 69413,
