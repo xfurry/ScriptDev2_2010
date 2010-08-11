@@ -1,16 +1,16 @@
 /* VIOLET HOLD */
 UPDATE `creature_template` SET `ScriptName`='npc_azure_saboteur' WHERE `entry`='31079';
 UPDATE `creature_template` SET `ScriptName`='boss_cyanigosa' WHERE `entry`='31134';
-UPDATE `creature_template` SET `ScriptName`='boss_erekem', `unit_flags` = 0 WHERE `entry`='29315';
-UPDATE `creature_template` SET `ScriptName`='mob_erekem_guard', `unit_flags` = 0 WHERE `entry`='29395';
-UPDATE `creature_template` SET `ScriptName`='boss_ichoron', `unit_flags` = 0 WHERE `entry`='29313';
+UPDATE `creature_template` SET `ScriptName`='boss_erekem', `unit_flags` = 0, AIName="" WHERE `entry`='29315';
+UPDATE `creature_template` SET `ScriptName`='mob_erekem_guard', `unit_flags` = 0, AIName="" WHERE `entry`='29395';
+UPDATE `creature_template` SET `ScriptName`='boss_ichoron', `unit_flags` = 0, AIName="" WHERE `entry`='29313';
 UPDATE `creature_template` SET `ScriptName`='mob_ichor_globule',`modelid_1`=5492, `modelid_3`=5492 WHERE `entry`='29321';
 UPDATE `creature_template` SET `modelid_1`=5492, `modelid_3`=5492 WHERE `entry`='31515'; -- heroic
-UPDATE `creature_template` SET `ScriptName`='boss_lavanthor', `unit_flags` = 0 WHERE `entry`='29312';
-UPDATE `creature_template` SET `ScriptName`='boss_moragg', `unit_flags` = 0 WHERE `entry`='29316';
-UPDATE `creature_template` SET `ScriptName`='boss_xevozz', `unit_flags` = 0 WHERE `entry`='29266';
+UPDATE `creature_template` SET `ScriptName`='boss_lavanthor', `unit_flags` = 0, AIName="" WHERE `entry`='29312';
+UPDATE `creature_template` SET `ScriptName`='boss_moragg', `unit_flags` = 0, AIName="" WHERE `entry`='29316';
+UPDATE `creature_template` SET `ScriptName`='boss_xevozz', `unit_flags` = 0, AIName="" WHERE `entry`='29266';
 UPDATE `creature_template` SET `ScriptName`='mob_ethereal_sphere' WHERE `entry`='29271';
-UPDATE `creature_template` SET `ScriptName`='boss_zuramat', `unit_flags` = 0 WHERE `entry`='29314';
+UPDATE `creature_template` SET `ScriptName`='boss_zuramat', `unit_flags` = 0, AIName="" WHERE `entry`='29314';
 UPDATE `creature_template` SET `ScriptName`='mob_zuramat_sentry' WHERE `entry`='29364';
 
 UPDATE `gameobject_template` SET ScriptName = 'go_activation_crystal' where entry = 193611;
