@@ -1782,7 +1782,8 @@ struct MANGOS_DLL_DECL mob_slime_poolAI : public ScriptedAI
     void Reset()
     {
         DoCast(m_creature, SPELL_SLIME_POOL_VISUAL);
-        m_fSize = 1.0f;
+		m_fSize = 0.5f;
+		m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, m_fSize);
         m_uiSizeTimer   = 1000;
         m_uiSpellTimer  = 1000;
         m_bHasSpell     = false;
@@ -1790,7 +1791,7 @@ struct MANGOS_DLL_DECL mob_slime_poolAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if(m_uiSizeTimer < uiDiff && m_fSize <= 2.0f)
+        if(m_uiSizeTimer < uiDiff && m_fSize <= 1.25f)
         {
 			if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
 				m_fSize += 0.033f;
