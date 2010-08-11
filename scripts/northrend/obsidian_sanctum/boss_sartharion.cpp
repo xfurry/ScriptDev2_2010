@@ -1312,7 +1312,8 @@ struct MANGOS_DLL_DECL mob_vesperonAI : public dummy_dragonAI
                 pDisciple->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 pDisciple->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 pDisciple->SetDisplayId(11686);     // make invisible
-                pDisciple->CastSpell(pDisciple, SPELL_TWILIGHT_TORMENT_VESP, false);
+				// disabled because bugged
+                //pDisciple->CastSpell(pDisciple, SPELL_TWILIGHT_TORMENT_VESP, false);
             }
             m_uiAcolyteVesperonTimer = 60000;
         }
