@@ -36,8 +36,12 @@ enum
 	SAY_VICTORY						= -1609537,
 
 	SPELL_NIGHTMARE_PORTALS			= 72482,
-	SPELL_EMERAL_VIGOR				= 36789,
-	SPELL_DREAMWALKERS_RAGE			= 71189,
+	SPELL_NIGHTMARE_VISUAL			= 71977,
+	SPELL_EMERAL_VIGOR				= 70873,
+	SPELL_DREAMWALKERS_RAGE			= 71189,	// at full hp
+	SPELL_CORRUPTION				= 70904,
+	SPELL_DREAM_SPLIT				= 71196,
+	SPELL_COLUMN_OF_FROST			= 70702,
 	NPC_NIGHTMARE_CLOUD				= 38421,
 };
 
@@ -56,9 +60,80 @@ static Locations SpawnLoc[]=
     {4239.579102f, 2566.753418f, 364.868439f},  // 4 Valithria Room 4
 };
 
+enum phases
+{
+	PHASE_IDLE		= 0,
+	PHASE_EVENT		= 1,
+	PHASE_OUTRO		= 2,
+};
+
+/*######
+## // Boss Valithria
+######*/
+struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
+{
+    boss_valithriaAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+		Difficulty = pCreature->GetMap()->GetDifficulty();
+        Reset();
+    }
+
+	ScriptedInstance *m_pInstance;
+	uint32 Difficulty;
+
+    uint8 m_uiPhase;
+	uint8 m_uiArchmageDied;
+		
+	void Reset()
+	{
+		m_uiPhase	= PHASE_IDLE;
+		m_uiArchmageDied	= 0;
+		DoCast(m_creature, SPELL_CORRUPTION);
+	}
+
+	void JustDied(Unit* pKiller)
+	{
+		// start event here
+	}
+
+	void JustReachedHome()
+	{
+	}
+
+	void JustRespawned()
+	{
+	}
+
+	void JustSummoned(Creature* pSummon)
+	{
+		pSummon->AddThreat(m_creature, 10000.0f);
+	}
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		switch(m_uiPhase)
+		{
+		case PHASE_IDLE:
+			if(m_uiArchmageDied == 4)
+				m_uiPhase = PHASE_EVENT;
+			break;
+		case PHASE_EVENT:
+			break;
+		case PHASE_OUTRO:
+			break;
+		}
+	}
+};
+
+CreatureAI* GetAI_boss_valithria(Creature* pCreature)
+{
+    return new boss_valithriaAI(pCreature);
+}
+
 enum
 {
-	SPELL_CORRUPTION	            = 70602,
+	SPELL_CORRUPTION_CHANNEL        = 70602,
 	SPELL_FROSTV_10                 = 70759,
 	SPELL_FROSTV_25                 = 71889,
 	SPELL_FROSTV_10HC               = 72015,
@@ -94,7 +169,7 @@ struct MANGOS_DLL_DECL mob_risen_archmageAI : public ScriptedAI
 		m_uiManavoidTimer              = 15000;
 
 		if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALITHRIA))))
-			DoCast(pTarget, SPELL_CORRUPTION);
+			DoCast(pTarget, SPELL_CORRUPTION_CHANNEL);
 	}
 
 	void Aggro(Unit* pWho)
@@ -104,7 +179,8 @@ struct MANGOS_DLL_DECL mob_risen_archmageAI : public ScriptedAI
 
 	void JustDied(Unit* pKiller)
 	{
-		// start event here
+		if (Creature* pValithria = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALITHRIA))))
+			((boss_valithriaAI*)pValithria->AI())->m_uiArchmageDied += 1;
 	}
 
 	void JustSummoned(Creature* pSummon)
@@ -435,6 +511,11 @@ CreatureAI* GetAI_mob_gluttonous_abomination(Creature* pCreature)
 void AddSC_boss_valithria()
 {
 	Script *newscript;
+
+	newscript = new Script;
+    newscript->Name = "boss_valithria";
+    newscript->GetAI = &GetAI_boss_valithria;
+    newscript->RegisterSelf();
 
 	newscript = new Script;
     newscript->Name = "mob_risen_archmage";

@@ -52,6 +52,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
     uint64 m_uiCrokGUID;
     uint64 m_uiArnathGUID;
     uint64 m_uiValithriaGUID;
+	uint64 m_uiValithriaHumanGUID;
     uint64 m_uiSindragosaGUID;
     uint64 m_uiLichKingGUID;
 
@@ -122,6 +123,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
         m_uiRotfaceGUID                 = 0;
         m_uiPutricideGUID               = 0;
 		m_uiValithriaGUID				= 0;
+		m_uiValithriaHumanGUID			= 0;
 
         // lower spire
         m_uiMarrowgarIce1GUID           = 0;
@@ -192,7 +194,17 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             case NPC_TALDARAM:      m_uiTaldaramGUID        = pCreature->GetGUID(); break;
             case NPC_LANATHEL:      m_uiLanathelGUID        = pCreature->GetGUID(); break;
 			case NPC_SVALNA:		m_uiSvalnaGUID			= pCreature->GetGUID(); break;
-			case NPC_VALITHRIA:		m_uiValithriaGUID		= pCreature->GetGUID(); break;
+			case NPC_VALITHRIA:		
+				m_uiValithriaGUID = pCreature->GetGUID();
+				if(m_auiEncounter[10] == DONE)
+					pCreature->SetVisibility(VISIBILITY_OFF);
+				break;
+			case NPC_VALITHRIA_HUMAN: 
+				pCreature->SetVisibility(VISIBILITY_OFF);
+				m_uiValithriaHumanGUID = pCreature->GetGUID(); 
+				if(m_auiEncounter[10] == DONE)
+					pCreature->SetVisibility(VISIBILITY_ON);
+				break;
 			case NPC_SPLINESTALKER:	m_uiSplinestalkerGUID	= pCreature->GetGUID(); break;
 			case NPC_RIMEFANG:		m_uiRimefangGUID		= pCreature->GetGUID(); break;
 			case NPC_LICH_KING:		m_uiLichKingGUID		= pCreature->GetGUID(); break;
@@ -562,6 +574,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 				break;
             case TYPE_DREAMWALKER:
                 m_auiEncounter[10] = uiData;
+				DoUseDoorOrButton(m_uiDragonEntranceGUID);
 				DoUseDoorOrButton(m_uiDragonDoor1GUID);
 				DoUseDoorOrButton(m_uiDragonDoor2GUID);
 				DoUseDoorOrButton(m_uiDragonDoor3GUID);

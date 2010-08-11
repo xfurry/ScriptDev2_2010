@@ -3012,6 +3012,13 @@ enum
 	SPELL_IMPALING_SPEAR_AURA       = 71443,
 	SPELL_REVIVE                    = 70053,
 	NPC_SPEAR						= 38248,
+
+	// captains
+	NPC_CROK				= 37129,
+	NPC_ARNATH				= 37122,
+	NPC_BRANDON				= 37123,
+	NPC_GRONDEL				= 37124,
+	NPC_RUPERT				= 37125,
 };
 
 /*######
@@ -3034,14 +3041,21 @@ struct MANGOS_DLL_DECL miniboss_sister_svalnaAI : public ScriptedAI
 	uint32 m_uiCaressOfDeathTimer;
 	uint32 m_uiImpalingTimer;
 	uint32 m_uiReviveTimer;
+	bool m_bHasRevived;
+
+	bool m_bIsGauntlet;
+	uint32 m_uiExploitCheckTimer;
 
 	void Reset()
 	{
 		m_uiAetherBurstTimer                = 20000;
 		m_uiAetherShieldTimer               = 30000;
-		m_uiCaressOfDeathTimer              = urand(10000, 15000);
+		m_uiCaressOfDeathTimer              = urand(15000, 25000);
 		m_uiImpalingTimer                   = 27000;
-		m_uiReviveTimer                     = 16000;
+		m_uiReviveTimer                     = 10000;
+		m_bHasRevived						= false;
+		m_bIsGauntlet						= false;
+		m_uiExploitCheckTimer				= 1000;
 	}
 
 	void Aggro(Unit* pWho)
@@ -3050,7 +3064,65 @@ struct MANGOS_DLL_DECL miniboss_sister_svalnaAI : public ScriptedAI
 			m_pInstance->SetData(TYPE_SVALNA, IN_PROGRESS);
 		DoScriptText(SAY_AGGRO, m_creature);
 		DoCast(m_creature, SPELL_DIVINE_SURGE);
+		m_bIsGauntlet = false;
+		m_creature->GetMotionMaster()->MoveChase(pWho);
 	}
+
+	void JustReachedHome()
+	{
+		if(m_pInstance)
+			m_pInstance->SetData(TYPE_SVALNA, NOT_STARTED);
+		DoScriptText(SAY_SVALNA_WIPE, m_creature);
+
+		// reset mobs
+		std::list<Creature*> lMobs;
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37132, 200.0f);
+        GetCreatureListWithEntryInGrid(lMobs, m_creature, 38125, 200.0f);
+        GetCreatureListWithEntryInGrid(lMobs, m_creature, 37133, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37134, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37127, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 38154, 200.0f);
+		// captains
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, NPC_CROK, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, NPC_ARNATH, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, NPC_BRANDON, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, NPC_GRONDEL, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, NPC_RUPERT, 200.0f);
+
+        if (!lMobs.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lMobs.begin(); iter != lMobs.end(); ++iter)
+            {
+				if(*iter)
+				{
+					if (!(*iter)->isAlive())
+						(*iter)->Respawn();
+					else
+						(*iter)->AI()->EnterEvadeMode();
+				}
+            }
+        }
+	}
+
+	bool IsPlayerInside()
+    {
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (PlayerList.isEmpty())
+                return false;
+
+            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                    if (i->getSource()->isAlive() && i->getSource()->GetDistance2d(m_creature) < 200.0f)
+                        return true;
+            }
+        } 
+
+        return false;
+    }
 
 	void JustDied(Unit* pKiller)
 	{
@@ -3059,13 +3131,84 @@ struct MANGOS_DLL_DECL miniboss_sister_svalnaAI : public ScriptedAI
 			m_pInstance->SetData(TYPE_SVALNA, DONE);
 	}
 
+	void KilledUnit(Unit* pVictim)
+    {
+		if(pVictim->GetTypeId() == TYPEID_PLAYER)
+			DoScriptText(SAY_KILL_PLAYER, m_creature);
+		else
+			DoScriptText(SAY_KILL_CAPTAIN, m_creature);
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
+		if(m_bIsGauntlet)
+		{
+			// wipe check
+			if(m_uiExploitCheckTimer < uiDiff)
+            {
+                if(!IsPlayerInside())
+                    EnterEvadeMode();
+                m_uiExploitCheckTimer = 1000;
+            }
+            else m_uiExploitCheckTimer -= uiDiff;
+
+			if (m_uiCaressOfDeathTimer < uiDiff)
+			{
+				switch(urand(0, 4))
+				{
+				case 0:
+					if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, NPC_CROK, 200.0f))
+					{
+						if(pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_CARESS_OF_DEATH);
+							break;
+						}
+					}
+				case 1:
+					if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, NPC_ARNATH, 200.0f))
+					{
+						if(pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_CARESS_OF_DEATH);
+							break;
+						}
+					}
+				case 2:
+					if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, NPC_BRANDON, 200.0f))
+					{
+						if(pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_CARESS_OF_DEATH);
+							break;
+						}
+					}
+				case 3:
+					if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, NPC_GRONDEL, 200.0f))
+					{
+						if(pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_CARESS_OF_DEATH);
+							break;
+						}
+					}
+				case 4:
+					if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, NPC_RUPERT, 200.0f))
+					{
+						if(pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_CARESS_OF_DEATH);
+							break;
+						}
+					}
+				}
+				m_uiCaressOfDeathTimer = urand(20000, 25000);
+			}
+			else m_uiCaressOfDeathTimer -= uiDiff;	
+		}
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
-
-		// gauntlet event here
-		// ....
 
         if (m_uiAetherShieldTimer < uiDiff)
         {
@@ -3084,32 +3227,74 @@ struct MANGOS_DLL_DECL miniboss_sister_svalnaAI : public ScriptedAI
         }
         else m_uiAetherBurstTimer -= uiDiff;
 
-        if (m_uiCaressOfDeathTimer < uiDiff)
-        {
-			// cast on npcs
-			//if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				//DoCast(pTarget, SPELL_CARESS_OF_DEATH);
-			m_uiCaressOfDeathTimer = urand(10000, 15000);
-        }
-        else m_uiCaressOfDeathTimer -= uiDiff;	
-
         if (m_uiImpalingTimer < uiDiff)
         {
 			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 			{
-				DoCast(pTarget, SPELL_IMPALING_SPEAR_HIT);
-				m_creature->SummonCreature(NPC_SPEAR, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 1000);
+				//DoCast(pTarget, SPELL_IMPALING_SPEAR_HIT);
+				if(Creature* pTemp = m_creature->SummonCreature(NPC_SPEAR, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 1000))
+					pTemp->AddThreat(pTarget, 10000.0f);
 			}
 			m_uiImpalingTimer = 30000;
         }
         else m_uiImpalingTimer -= uiDiff;
 
-		if (m_uiReviveTimer < uiDiff)
+		// revive npcs
+		if (m_uiReviveTimer < uiDiff && !m_bHasRevived)
         {
-			// used on npcs
-			//if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				//DoCast(pTarget, SPELL_REVIVE);
-			m_uiReviveTimer = 16000;
+			for(uint8 i = 0; i < 2; i++)
+			{
+				switch(urand(0, 4))
+				{
+				case 0:
+					if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, NPC_CROK, 200.0f))
+					{
+						if(!pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_REVIVE);
+							break;
+						}
+					}
+				case 1:
+					if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, NPC_ARNATH, 200.0f))
+					{
+						if(!pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_REVIVE);
+							break;
+						}
+					}
+				case 2:
+					if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, NPC_BRANDON, 200.0f))
+					{
+						if(!pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_REVIVE);
+							break;
+						}
+					}
+				case 3:
+					if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, NPC_GRONDEL, 200.0f))
+					{
+						if(!pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_REVIVE);
+							break;
+						}
+					}
+				case 4:
+					if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, NPC_RUPERT, 200.0f))
+					{
+						if(!pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_REVIVE);
+							break;
+						}
+					}
+				}
+			}
+			DoScriptText(SAY_RESSURECT_UNDEAD, m_creature);
+			m_bHasRevived = true;
         }
         else m_uiReviveTimer -= uiDiff;
 
@@ -3172,6 +3357,9 @@ struct MANGOS_DLL_DECL mob_valkyr_spearAI : public ScriptedAI
 
         if (Killer)
             Killer->RemoveAurasDueToSpell(SPELL_IMPALING_SPEAR_AURA);
+
+		if (Creature* pSvalna = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SVALNA))))
+			pSvalna->RemoveAurasDueToSpell(SPELL_AETHER_SHIELD);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -3210,6 +3398,7 @@ struct MANGOS_DLL_DECL mob_crok_scourgebaneAI : public ScriptedAI
     {
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		Difficulty = pCreature->GetMap()->GetDifficulty();
+		m_bIsIntroDone = false;
         Reset();
     }
 
@@ -3221,6 +3410,13 @@ struct MANGOS_DLL_DECL mob_crok_scourgebaneAI : public ScriptedAI
 	uint32 m_uiDeathstrikeTimer;
 	uint32 m_uiDeathcoilTimer;
 	uint32 m_uiScourgeStrikeTimer;
+
+	bool m_bIsIntro;
+	bool m_bIsIntroDone;
+	uint32 m_uiIntro_Phase;
+    uint32 m_uiSpeech_Timer;
+
+	uint64 m_uiVictimGUID;
 	
 	void Reset()
 	{
@@ -3229,10 +3425,156 @@ struct MANGOS_DLL_DECL mob_crok_scourgebaneAI : public ScriptedAI
 		m_uiDeathstrikeTimer       = urand(7000, 11000);
 		m_uiDeathcoilTimer         = urand(9000, 13000);
 		m_uiScourgeStrikeTimer     = urand(10000, 15000);
+
+		m_bIsIntro              = false;
+        m_uiIntro_Phase         = 0;
+        m_uiSpeech_Timer        = 1000;
+		m_uiVictimGUID			= 0;
+	}
+
+	void Aggro(Unit* pWho)
+	{
+		if(!m_bIsIntro && !m_bIsIntroDone)
+			m_bIsIntro = true;
+		if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_ARNATH, DEFAULT_VISIBILITY_INSTANCE))
+			pTemp->AI()->AttackStart(m_creature->getVictim());
+		if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_BRANDON, DEFAULT_VISIBILITY_INSTANCE))
+			pTemp->AI()->AttackStart(m_creature->getVictim());
+		if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_GRONDEL, DEFAULT_VISIBILITY_INSTANCE))
+			pTemp->AI()->AttackStart(m_creature->getVictim());
+		if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_RUPERT, DEFAULT_VISIBILITY_INSTANCE))
+			pTemp->AI()->AttackStart(m_creature->getVictim());
+	}
+
+	void AdvanceAttack()
+	{
+		if(Unit* pTarget = Unit::GetUnit(*m_creature, m_uiVictimGUID))
+		{
+			m_creature->AI()->AttackStart(pTarget);
+			if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_ARNATH, DEFAULT_VISIBILITY_INSTANCE))
+				pTemp->AI()->AttackStart(pTarget);
+			if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_BRANDON, DEFAULT_VISIBILITY_INSTANCE))
+				pTemp->AI()->AttackStart(pTarget);
+			if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_GRONDEL, DEFAULT_VISIBILITY_INSTANCE))
+				pTemp->AI()->AttackStart(pTarget);
+			if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_RUPERT, DEFAULT_VISIBILITY_INSTANCE))
+				pTemp->AI()->AttackStart(pTarget);
+		}
+	}
+
+	void KilledUnit(Unit* pVictim)
+    {
+		if(pVictim->GetTypeId() != TYPEID_PLAYER)
+		{
+			switch(urand(0, 5))
+			{
+			case 0:
+				if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, 37132, 70.0f))
+				{
+					if(pTarget->isAlive())
+					{
+						m_uiVictimGUID = pTarget->GetGUID();
+						break;
+					}
+				}
+			case 1:
+				if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, 38125, 70.0f))
+				{
+					if(pTarget->isAlive())
+					{
+						m_uiVictimGUID = pTarget->GetGUID();
+						break;
+					}
+				}
+			case 2:
+				if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, 37133, 70.0f))
+				{
+					if(pTarget->isAlive())
+					{
+						m_uiVictimGUID = pTarget->GetGUID();
+						break;
+					}
+				}
+			case 3:
+				if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, 37134, 70.0f))
+				{
+					if(pTarget->isAlive())
+					{
+						m_uiVictimGUID = pTarget->GetGUID();
+						break;
+					}
+				}
+			case 4:
+				if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, 37127, 70.0f))
+				{
+					if(pTarget->isAlive())
+					{
+						m_uiVictimGUID = pTarget->GetGUID();
+						break;
+					}
+				}
+			case 5:
+				if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, 38154, 70.0f))
+				{
+					if(pTarget->isAlive())
+					{
+						m_uiVictimGUID = pTarget->GetGUID();
+						break;
+					}
+				}
+			}
+			if(m_uiVictimGUID != 0)
+				void AdvanceAttack();
+		}
 	}
 
     void UpdateAI(const uint32 uiDiff)
     {
+		// intro
+		if (m_bIsIntro && !m_bIsIntroDone)
+		{
+			if(m_uiSpeech_Timer < uiDiff)
+			{
+				switch(m_uiIntro_Phase)
+				{
+				case 0:
+					DoScriptText(SAY_CROCK_INTRO, m_creature);
+					++m_uiIntro_Phase;
+					m_uiSpeech_Timer = 8000;
+					break;
+				case 1:
+					if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_ARNATH, 30.0f))
+						DoScriptText(SAY_ARNATH_INTRO, pTemp);
+					++m_uiIntro_Phase;
+					m_uiSpeech_Timer = 8000;
+					break;
+				case 2:
+					DoScriptText(SAY_CROCK_START, m_creature);
+					++m_uiIntro_Phase;
+					m_uiSpeech_Timer = 8000;
+					break;
+				case 3:
+					if (Creature* pSvalna = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SVALNA))))
+					{
+						DoScriptText(SAY_SVALNA_TAUNT, pSvalna);
+						pSvalna->GetMotionMaster()->MoveIdle();
+						((miniboss_sister_svalnaAI*)pSvalna->AI())->m_bIsGauntlet = true;
+					}
+					++m_uiIntro_Phase;
+					m_uiSpeech_Timer = 8000;
+					break;
+				case 4:
+					m_bIsIntro      = false;
+					m_bIsIntroDone  = true;
+					m_uiSpeech_Timer = 12000;
+					break;
+				default:
+					m_uiSpeech_Timer = 100000;
+				}
+			}
+			else m_uiSpeech_Timer -= uiDiff;
+		}
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -3832,7 +4174,6 @@ CreatureAI* GetAI_mob_ymirjar_warlord(Creature* pCreature)
     return new mob_ymirjar_warlordAI(pCreature);
 }
 
-
 enum
 {
 	SPELL_ICE_TRAP	   	            = 71249,
@@ -3920,6 +4261,85 @@ struct MANGOS_DLL_DECL mob_ymirjar_huntressAI : public ScriptedAI
 CreatureAI* GetAI_mob_ymirjar_huntress(Creature* pCreature)
 {
     return new mob_ymirjar_huntressAI(pCreature);
+}
+
+enum
+{
+	SPELL_TWISTED_WINDS				= 71306,
+	SPELL_FROZEN_ORB				= 71274,
+	SPELL_ARCTIC_CHILL				= 71270,
+};
+
+/*######
+## // Ymirjar huntress
+######*/
+struct MANGOS_DLL_DECL mob_ymirjar_frostbinderAI : public ScriptedAI
+{
+    mob_ymirjar_frostbinderAI(Creature* pCreature) : ScriptedAI(pCreature)
+    {
+        Reset();
+    }
+
+    uint32 m_uiTwistedWindsTimer;
+	uint32 m_uiSpiritSteamTimer;
+	uint32 m_uiFrozenOrbTimer;
+	
+	void Reset()
+	{
+		m_uiTwistedWindsTimer	= 7000;
+		m_uiSpiritSteamTimer	= 20000;
+		m_uiFrozenOrbTimer		= 30000;
+	}
+
+	void Aggro(Unit* pWho)
+	{
+		DoCast(m_creature, SPELL_ARCTIC_CHILL);
+	}
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+
+        if (m_uiTwistedWindsTimer < uiDiff)
+        {
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(pTarget, SPELL_TWISTED_WINDS);
+			m_uiTwistedWindsTimer = urand(7000, 10000);
+        }
+        else m_uiTwistedWindsTimer -= uiDiff;
+
+		if (m_uiSpiritSteamTimer < uiDiff)
+        {
+			switch(urand(0, 1))
+			{
+			case 0:
+				if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, 37132, 50.0f))
+					DoCast(pTarget, SPELL_SPIRIT_STREAM);
+				break;
+			case 1:
+				if(Unit* pTarget = GetClosestCreatureWithEntry(m_creature, 37134, 50.0f))
+					DoCast(pTarget, SPELL_SPIRIT_STREAM);
+				break;
+			}		
+			m_uiSpiritSteamTimer = 15000;
+        }
+        else m_uiSpiritSteamTimer -= uiDiff;
+
+		if (m_uiFrozenOrbTimer < uiDiff)
+        {
+			DoCast(m_creature, SPELL_FROZEN_ORB);
+			m_uiFrozenOrbTimer = 25000;
+        }
+        else m_uiFrozenOrbTimer -= uiDiff;
+
+		DoMeleeAttackIfReady();
+	}
+};
+
+CreatureAI* GetAI_mob_ymirjar_frostbinder(Creature* pCreature)
+{
+    return new mob_ymirjar_frostbinderAI(pCreature);
 }
 
 /*########################################
@@ -4308,6 +4728,11 @@ void AddSC_icecrown_citadel()
 	newscript = new Script;
     newscript->Name = "mob_ymirjar_deathbringer";
     newscript->GetAI = &GetAI_mob_ymirjar_deathbringer;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_ymirjar_frostbinder";
+    newscript->GetAI = &GetAI_mob_ymirjar_frostbinder;
     newscript->RegisterSelf();
 
 	newscript = new Script;

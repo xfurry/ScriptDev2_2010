@@ -43,6 +43,7 @@ UPDATE creature_template SET ScriptName = 'boss_blood_queen_lanathel' WHERE entr
 -- Svalna event
 update creature_template set scriptName = 'miniboss_sister_svalna' where entry = 37126;
 update creature_template set scriptName = 'mob_valkyr_spear' where entry = 38248;
+update creature set spawnMask = 0 where id = 38248;
 update creature_template set scriptName = 'mob_crok_scourgebane' where entry = 37129;
 update creature_template set scriptName = 'mob_captain_arnath' where entry = 37122;
 update creature_template set scriptName = 'mob_captain_brandon' where entry = 37123;
@@ -50,11 +51,13 @@ update creature_template set scriptName = 'mob_captain_grondel' where entry = 37
 update creature_template set scriptName = 'mob_captain_rupert' where entry = 37125;
 
 -- Valithria Dreamwalker
+update creature_template set scriptName = 'boss_valithria' where entry = 36789;
 update creature_template set scriptName = 'mob_risen_archmage' where entry = 37868;
 update creature_template set scriptName = 'mob_blazing_skeleton' where entry = 36791;
 update creature_template set scriptName = 'mob_suppresser' where entry = 37863;
 update creature_template set scriptName = 'mob_blistering_zombie' where entry = 37934;
 update creature_template set scriptName = 'mob_gluttonous_abomination' where entry = 37886;
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70602', '1', '36789');
 
 -- Sindragosa
 update creature_template set scriptName = 'boss_sindragosa' where entry = 36853;
@@ -77,6 +80,7 @@ update creature_template set scriptName = 'mob_ymirjar_battlemaiden' where entry
 update creature_template set scriptName = 'mob_ymirjar_deathbringer' where entry = 38125;
 update creature_template set scriptName = 'mob_ymirjar_warlord' where entry = 37133;
 update creature_template set scriptName = 'mob_ymirjar_huntress' where entry = 37134;
+update creature_template set scriptName = 'mob_ymirjar_frostbinder' where entry = 37127;
 update creature_template set scriptName = 'mob_frostwarden_handler' where entry = 37531;
 update creature_template set scriptName = 'mob_frostwarden_whelp' where entry = 37532;
 -- Crimson halls trash:
@@ -133,6 +137,7 @@ UPDATE gameobject_template SET ScriptName="icecrown_citadel_teleporter" WHERE en
 UPDATE `gameobject_template` SET `flags` = 32 WHERE `entry` = 202223; -- original flag = 48
 update gameobject_template set faction = 114 where entry in (201857, 201563, 201370, 201371, 201372, 201618, 201617, 201614, 201613,
 201182, 202181, 202183);
+update gameobject_template set faction = 0 where entry in (201920, 201919);
 -- deathbringers & dreamwalkers loot
 UPDATE gameobject_template SET faction = 0, flags = 0 WHERE entry in (202238, 202239, 202240, 202241, 201959, 202338, 202339, 202340);
 update gameobject set spawntimesecs = -604800 where id in (202238, 202239, 202240, 202241, 201959, 202338, 202339, 202340);

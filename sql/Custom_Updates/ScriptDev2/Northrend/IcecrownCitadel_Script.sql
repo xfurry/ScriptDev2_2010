@@ -483,10 +483,10 @@ INSERT INTO `script_texts` VALUES
 ('-1609518','But... we were getting along... so well...', '', '', '', '', '', '', '', '','16794','1','0','0','death'),
 
 -- Sister Svalna
-('-1609520','Crok Scourgebane yells: Ready your arms, my Argent Brothers. The Vrykul will protect the Frost Queen with their lives.', '', '', '', '', '', '', '', '','16819','1','0','0','svalnaevent1'),
-('-1609521','Captain Arnath yells: Even dying here beats spending another day collecting reagents for that madman, Finklestein.', '', '', '', '', '', '', '', '','16585','1','0','0','svalnaevent2'),
-('-1609522','Crok Scourgebane yells: Enough idle banter! Our champions have arrived - support them as we push our way through the hall!', '', '', '', '', '', '', '', '','16820','1','0','0','svalnaevent3'),
-('-1609523','Sister Svalna yells: You may have once fought beside me, Crok, but now you are nothing more than a traitor. Come, your second death approaches!', '', '', '', '', '', '', '', '','17017','1','0','0','svalnaevent4'),
+('-1609520','Ready your arms, my Argent Brothers. The Vrykul will protect the Frost Queen with their lives.', '', '', '', '', '', '', '', '','16819','1','0','0','svalnaevent1'),
+('-1609521','Even dying here beats spending another day collecting reagents for that madman, Finklestein.', '', '', '', '', '', '', '', '','16585','1','0','0','svalnaevent2'),
+('-1609522','Enough idle banter! Our champions have arrived - support them as we push our way through the hall!', '', '', '', '', '', '', '', '','16820','1','0','0','svalnaevent3'),
+('-1609523','You may have once fought beside me, Crok, but now you are nothing more than a traitor. Come, your second death approaches!', '', '', '', '', '', '', '', '','17017','1','0','0','svalnaevent4'),
 ('-1609524','Miserable creatures, Die!', '', '', '', '', '', '', '', '','17018','1','0','0','killing crusaders'),
 ('-1609525','Foolish Crok, you brought my reinforcements with you! Arise Argent Champions and serve the Lich King in death!', '', '', '', '', '', '', '', '','17019','1','0','0','ressurecting killed crusaders'),
 ('-1609526','Come Scourgebane, I\'ll show the Lich King which one of us is truly worthy of the title, champion!', '', '', '', '', '', '', '', '','17020','1','0','0','aggro'),
