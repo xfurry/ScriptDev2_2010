@@ -82,7 +82,7 @@ struct MANGOS_DLL_DECL instance_pit_of_saron : public ScriptedInstance
         {
         case GO_HOR_PORTCULLIS:
             m_uiHorPortcullisGUID = pGo->GetGUID();
-            if(m_auiEncounter[1] == DONE)
+            if(m_auiEncounter[4] == DONE)
                 pGo->SetGoState(GO_STATE_ACTIVE);
             break;
         }

@@ -574,6 +574,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 		m_uiAddEntry = 0;
         
         TeamInInstance = GetFaction();
+		m_creature->SetRespawnDelay(DAY);
         
         if(Creature* pRimefang = GetClosestCreatureWithEntry(m_creature, NPC_RIMEFANG, 100.0f))
         {

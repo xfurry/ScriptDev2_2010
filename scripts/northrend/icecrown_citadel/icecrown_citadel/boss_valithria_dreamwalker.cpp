@@ -84,12 +84,21 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 
     uint8 m_uiPhase;
 	uint8 m_uiArchmageDied;
+	bool m_bIsIntro;
 		
 	void Reset()
 	{
 		m_uiPhase	= PHASE_IDLE;
 		m_uiArchmageDied	= 0;
 		DoCast(m_creature, SPELL_CORRUPTION);
+	}
+
+	void MoveInLineOfSight(Unit* pWho)
+	{
+		// start intro speech
+		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsIntro &&
+			pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 110) && m_creature->IsWithinLOSInMap(pWho))
+			m_bIsIntro = true;
 	}
 
 	void JustDied(Unit* pKiller)
