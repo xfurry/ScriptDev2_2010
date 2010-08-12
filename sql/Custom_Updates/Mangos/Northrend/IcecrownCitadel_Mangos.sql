@@ -20,9 +20,13 @@ UPDATE creature_template SET ScriptName = 'boss_festergut' WHERE entry = 36626;
 
 -- Rotface
 UPDATE creature_template SET ScriptName = 'boss_rotface' WHERE entry = 36627;
-UPDATE creature_template SET ScriptName = 'mob_small_ooze' WHERE entry = 36897;
+UPDATE creature_template SET ScriptName = 'mob_small_ooze', `flags_extra` = 256 WHERE entry = 36897;
 UPDATE creature_template SET ScriptName = 'mob_big_ooze' WHERE entry = 36899;
 UPDATE creature_template SET ScriptName = 'mob_sticky_ooze' WHERE entry = 37006;
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69783', '1', '37690');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69797', '1', '37690');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69799', '1', '37690');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69802', '1', '37690');
 
 -- Putricide
 UPDATE creature_template SET ScriptName = 'boss_professor_putricide' WHERE entry = 36678;

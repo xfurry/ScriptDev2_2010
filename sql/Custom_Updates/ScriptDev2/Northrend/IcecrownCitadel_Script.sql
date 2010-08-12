@@ -429,6 +429,7 @@ INSERT INTO `script_texts` VALUES
 ('-1609477','Dead, dead, dead!','', '', '', '', '', '', '', '','16903', '1','0','0','festergut kill 2'),
 ('-1609478','Fun time over!','', '', '', '', '', '', '', '','16905','1','0','0','festergut berserk'),
 ('-1609479','Da ... Ddy...','', '', '', '', '', '', '', '', '16904','1','0','0','festergut death1'),
+-- (-1603354,'Festergut casts slime spray!' ,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,3,0,0,'EMOTE_ground'),
 ('-1609480','Oh, Festergut. You were always my favorite. Next to Rotface. The good news is you left behind so much gas, I can practically taste it!', '', '', '', '', '', '', '', '','17124','1','0','0','festergut death2'),
 
 -- Putricide

@@ -39,10 +39,10 @@ enum BossSpells
     SAY_DEATH2          = -1609470,     //by putricide
 
     // spells
-    SPELL_OOZE_FLOOD_10         = 69789,
-    SPELL_OOZE_FLOOD_25         = 71215,
-    SPELL_OOZE_FLOOD_10HC       = 71587,
-    SPELL_OOZE_FLOOD_25HC       = 71588,
+    SPELL_OOZE_FLOOD_10         = 69783, //69789,
+    SPELL_OOZE_FLOOD_25         = 69797, //71215,
+    SPELL_OOZE_FLOOD_10HC       = 69799, //71587,
+    SPELL_OOZE_FLOOD_25HC       = 69802, //71588,
     SPELL_OOZE_FLOOD_VISUAL     = 69788,
     SPELL_SLIME_SPRAY           = 69508,
     SPELL_MUTATED_INFECTION_10  = 69674,
@@ -75,6 +75,25 @@ enum BossSpells
 	NPC_OOZE_PUDDLE				= 37690,	// used for ooze flood
 };
 
+struct Locations
+{
+    float x, y, z, o;
+    uint32 id;
+};
+
+static Locations PipeLoc[]=
+{
+	// pipe z = 370-> should be a pipe stalker which triggers the spell
+	{4424.396f, 3097.622f, 360.385f, 1.04f},	// 0
+	{4406.661f, 3116.535f, 360.385f, 0.66f},
+	{4407.328f, 3156.501f, 360.385f, 5.79f},	// 2
+	{4425.439f, 3176.543f, 360.385f, 5.31f},
+	{4465.495f, 3176.470f, 360.385f, 4.13f},	// 4
+	{4484.887f, 3156.339f, 360.385f, 3.79f},
+	{4483.696f, 3118.172f, 360.385f, 2.65f},	// 6
+	{4465.826f, 3098.206f, 360.385f, 2.26f},
+};
+
 struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
 {
     boss_rotfaceAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -94,14 +113,15 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
     uint8 m_uiOozeCount;
     uint32 m_uiWaitTimer;
     uint32 m_uiBerserkTimer;
+	uint32 m_uiPipeloc;
 
     uint64 m_uiOozeTargetGUID;
     uint64 m_uiBigOozeGUID;
 
     void Reset()
     {
-        m_uiOozeFloodTimer          = 15000;
-        m_uiSlimeSprayTimer         = 10000;
+        m_uiOozeFloodTimer          = 25000;
+        m_uiSlimeSprayTimer         = 15000;
         m_uiMutatedInfectionTimer   = 13000;
         m_uiMutatedSummonTimer      = 60000;
         m_uiWaitTimer               = 60000;
@@ -110,6 +130,7 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
 
         m_uiOozeTargetGUID          = 0;
         m_uiBigOozeGUID             = 0;
+		m_uiPipeloc					= 0;
     }
 
 	void JustReachedHome()
@@ -158,25 +179,51 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
                 case 1: DoScriptText(SAY_SLIME_FLOW2, pPutricide); break;
                 }
             }
-			// fix this! should be casted near a pipe
-            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-            {
-                if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                    DoCast(target, SPELL_OOZE_FLOOD_10);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                    DoCast(target, SPELL_OOZE_FLOOD_25);
-                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                    DoCast(target, SPELL_OOZE_FLOOD_10HC);
-                if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    DoCast(target, SPELL_OOZE_FLOOD_25HC);
-            }
-            m_uiOozeFloodTimer = 30000;
+
+			switch(urand(0, 4))
+			{
+			case 0:
+				m_uiPipeloc = 0;
+				break;
+			case 2:
+				m_uiPipeloc = 2;
+				break;
+			case 3:
+				m_uiPipeloc = 4;
+				break;
+			case 4:
+				m_uiPipeloc = 6;
+				break;
+			}
+
+			for(uint8 i = 0; i < 2; i++)
+			{
+				if(Creature* pTemp = m_creature->SummonCreature(NPC_OOZE_PUDDLE, PipeLoc[m_uiPipeloc + i].x, PipeLoc[m_uiPipeloc + i].y, PipeLoc[m_uiPipeloc + i].z, PipeLoc[m_uiPipeloc + i].o, TEMPSUMMON_TIMED_DESPAWN, 20000))
+				{
+					pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+					pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+					pTemp->SetDisplayId(11686);     // make invisible
+					pTemp->setFaction(14);
+					pTemp->AttackStop();
+					pTemp->GetMotionMaster()->MoveIdle();
+					if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+						pTemp->CastSpell(pTemp, SPELL_OOZE_FLOOD_10, false);
+					if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+						pTemp->CastSpell(pTemp, SPELL_OOZE_FLOOD_25, false);
+					if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+						pTemp->CastSpell(pTemp, SPELL_OOZE_FLOOD_10HC, false);
+					if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+						pTemp->CastSpell(pTemp, SPELL_OOZE_FLOOD_25HC, false);
+				}
+			}
+            m_uiOozeFloodTimer = 20000;
         }
         else
             m_uiOozeFloodTimer -= uiDiff;
 
         if (m_uiSlimeSprayTimer < uiDiff)
         {
+			m_creature->InterruptNonMeleeSpells(true);
             DoScriptText(SAY_SLIME_SPRAY, m_creature);
             if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_SLIME_SPRAY);
@@ -211,7 +258,7 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
                     DoCast(target, SPELL_MUTATED_INFECTION_25HC);
             }
             m_uiMutatedSummonTimer    = 12000;
-            m_uiMutatedInfectionTimer = 40000;
+            m_uiMutatedInfectionTimer = 15000;
         }
         else
             m_uiMutatedInfectionTimer -= uiDiff;
@@ -408,6 +455,8 @@ struct MANGOS_DLL_DECL mob_sticky_oozeAI : public ScriptedAI
     mob_sticky_oozeAI(Creature *pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 		pCreature->SetDisplayId(11686);     // make invisible
         pCreature->setFaction(14);
         SetCombatMovement(false);
