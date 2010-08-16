@@ -140,8 +140,8 @@ struct MANGOS_DLL_DECL mob_toc_argent_trashAI: public ScriptedAI
         // monk
         m_bHasShield            = false;
         m_uiFinalMeditationTimer = 9000;
-        m_uiFlurryBlowsTimer    = 4000;
-        m_uiPummelTimer         = 7000;
+        m_uiFlurryBlowsTimer    = 8000;
+        m_uiPummelTimer         = 4000;
         // priestess
         m_uiLightFountainTimer  = 11000;
         m_uiHolySmiteTimer      = 5000;
@@ -201,14 +201,14 @@ struct MANGOS_DLL_DECL mob_toc_argent_trashAI: public ScriptedAI
                 if(m_uiFlurryBlowsTimer < uiDiff)
                 {
                     DoCast(m_creature->getVictim(), SPELL_FLYRRY_BLOWS);
-                    m_uiFlurryBlowsTimer = urand(4000, 8000);
+                    m_uiFlurryBlowsTimer = urand(10000, 15000);
                 }
                 else m_uiFlurryBlowsTimer -= uiDiff;
 
                 if(m_uiPummelTimer < uiDiff)
                 {
                     DoCast(m_creature->getVictim(), SPELL_PUMMEL);
-                    m_uiPummelTimer = urand(4000, 8000);
+                    m_uiPummelTimer = urand(3000, 5000);
                 }
                 else m_uiPummelTimer -= uiDiff;
 
