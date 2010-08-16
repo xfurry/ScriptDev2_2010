@@ -388,7 +388,12 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
 	void JustSummoned(Creature* pSummon)
 	{
 		if(pSummon->GetEntry() == MOB_PHANTOM_HALLUCINATION)
+		{
+			pSummon->setFaction(14);
+			pSummon->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+			pSummon->SetInCombatWithZone();
 			pSummon->SetHealth(m_creature->GetHealth());
+		}
 	}
 
     void UpdateAI(const uint32 uiDiff)
