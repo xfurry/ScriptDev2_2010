@@ -462,6 +462,7 @@ struct MANGOS_DLL_DECL boss_RimefangAI : public ScriptedAI
         m_uiIcyBlastTimer   = 35000;
         m_uiIcyBlastSlowTimer   = 30000;
         m_uiMainTargetGUID  = 0;
+		m_creature->SetRespawnDelay(DAY);
         m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
         m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF); 
 
@@ -552,6 +553,8 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 	float angle, homeX, homeY;
 	uint32 m_uiAddEntry;
 
+	uint32 m_uiWipeCheckTimer;
+
     void Reset()
     {
         m_uiForcefulSmashTimer  = 10000;
@@ -572,6 +575,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 		homeX = 0; 
 		homeY = 0;
 		m_uiAddEntry = 0;
+		m_uiWipeCheckTimer	= 1000;
         
         TeamInInstance = GetFaction();
 		m_creature->SetRespawnDelay(DAY);
@@ -600,7 +604,16 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
     void JustReachedHome()
     {
         if (m_pInstance)
+		{
             m_pInstance->SetData(TYPE_TYRANNUS, NOT_STARTED);
+
+			if(m_pInstance->GetData(TYPE_GAUNTLET != DONE))
+				m_pInstance->SetData(TYPE_GAUNTLET, NOT_STARTED);
+		}
+
+		if(Creature* pRimefang = m_pInstance->instance->GetCreature(m_uiRimefangGuid))
+			pRimefang->ForcedDespawn();
+		m_creature->ForcedDespawn();
     }
 
     uint32 GetFaction()
@@ -628,7 +641,10 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
     void Aggro(Unit* pWho)
     {
         if (m_pInstance)
+		{
             m_pInstance->SetData(TYPE_TYRANNUS, IN_PROGRESS);
+			m_pInstance->SetData(TYPE_GAUNTLET, DONE);
+		}
 
         DoScriptText(SAY_AGGRO, m_creature);
 
@@ -652,11 +668,49 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
         }
     }
 
+	bool IsPlayerAlive()
+    {
+        Map *map = m_creature->GetMap();
+        if (map->IsDungeon())
+        {
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+
+            if (PlayerList.isEmpty())
+                return false;
+
+			for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+			{
+				if (i->getSource()->isAlive())
+					return true;
+			}
+        } 
+
+        return false;
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
 		// gauntlet event
-		if(m_pInstance && m_pInstance->GetData(TYPE_TYRANNUS) == SPECIAL)
+		if(m_pInstance && m_pInstance->GetData(TYPE_GAUNTLET) == IN_PROGRESS)
 		{
+			if(m_uiWipeCheckTimer < uiDiff)
+            {
+				if(!IsPlayerAlive())
+				{
+					if(m_pInstance)
+					{
+						if(m_pInstance->GetData(TYPE_GAUNTLET != DONE))
+							m_pInstance->SetData(TYPE_GAUNTLET, NOT_STARTED);
+					}
+
+					if(Creature* pRimefang = m_pInstance->instance->GetCreature(m_uiRimefangGuid))
+						pRimefang->ForcedDespawn();
+					m_creature->ForcedDespawn();
+				}
+                m_uiWipeCheckTimer = 1000;
+            }
+            else m_uiWipeCheckTimer -= uiDiff;
+
 			if(m_uiGauntletTimer < uiDiff)
 			{
 				switch(m_uiGauntletPhase)
@@ -681,7 +735,6 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 						case 1: DoScriptText(SAY_GAUNTLET2, pTyrannus); break;
 						}
 					}
-					//m_pInstance->SetData(TYPE_GAUNTLET, IN_PROGRESS);
 					++m_uiGauntletPhase;
 					m_uiGauntletTimer = 5000;
 					break;
@@ -712,7 +765,6 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 				case 3:
 					if(m_uiMobsDied == 10)
 					{
-						m_uiMobsDied = 0;
 						++m_uiGauntletPhase;
 						m_uiGauntletTimer = 3000;
 					}
@@ -758,18 +810,10 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 					m_creature->SummonCreature(NPC_FLAMEBEARER, GauntletLoc[8].x, GauntletLoc[8].y, GauntletLoc[8].z, GauntletLoc[8].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
 					m_creature->SummonCreature(NPC_FLAMEBEARER, GauntletLoc[9].x, GauntletLoc[9].y, GauntletLoc[9].z, GauntletLoc[9].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
 					++m_uiGauntletPhase;
-					m_uiGauntletTimer = 5000;
+					m_uiGauntletTimer = 10000;
 					break;
 				case 7:
-					if(m_uiMobsDied == 10)
-					{
-						m_uiMobsDied = 0;
-						++m_uiGauntletPhase;
-						m_uiGauntletTimer = 3000;
-					}
-					break;
-				case 8:
-					// summon tunnel adds
+					// summon tunnel adds after timer
 					if(!m_bIsRegularMode)
 						m_creature->SummonCreature(NPC_GLACIAL_REVENANT, TunnelLoc[7].x, TunnelLoc[7].y, TunnelLoc[7].z, TunnelLoc[7].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3000);
 					for(uint8 i = 0; i < 10; i++)
@@ -790,7 +834,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 					++m_uiGauntletPhase;
 					m_uiGauntletTimer = 5000;
 					break;
-				case 9:
+				case 8:
 					// do icicles
 					for(uint8 i = 0; i < 10; i++)
 					{
@@ -800,11 +844,10 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 						m_creature->SummonCreature(NPC_COLLAPSING_ICICLE, homeX, homeY, TunnelLoc[i].z + 1, TunnelLoc[i].o, TEMPSUMMON_TIMED_DESPAWN, 10000);
 					}
 					// check if done
-					if(m_uiMobsDied == 20)
+					if(m_uiMobsDied == 40)
 					{
 						// last mob dies in the tunnel, set to done
-						m_uiMobsDied = 0;
-						++m_uiGauntletPhase;
+						m_uiGauntletPhase = 10;
 						m_uiGauntletTimer = 5000;
 						m_pInstance->SetData(TYPE_GAUNTLET, DONE);
 					}

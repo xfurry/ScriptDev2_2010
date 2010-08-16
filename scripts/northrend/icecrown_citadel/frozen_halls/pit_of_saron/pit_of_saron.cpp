@@ -121,10 +121,14 @@ struct MANGOS_DLL_DECL npc_YmirjarWrathbringerAI : public ScriptedAI
     void Reset()
     {
         m_uiBlightTimer = 7000;
+		m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if (m_pInstance && m_pInstance->GetData(TYPE_GAUNTLET) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -210,10 +214,14 @@ struct MANGOS_DLL_DECL npc_YmirjarFlamebearerAI: public ScriptedAI
         m_uiFireballTimer       = 4000;
         m_uiHellfireTimer       = 8000;
         m_uiTacticalBlinkTimer  = 15000;
+		m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if (m_pInstance && m_pInstance->GetData(TYPE_GAUNTLET) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -266,10 +274,14 @@ struct MANGOS_DLL_DECL npc_YmirjarDeathbringerAI: public ScriptedAI
     void Reset()
     {
         m_uiEmpoweredShadowBoltTimer = 8000;
+		m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if (m_pInstance && m_pInstance->GetData(TYPE_GAUNTLET) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -365,10 +377,14 @@ struct MANGOS_DLL_DECL npc_WrathboneColdwraithAI: public ScriptedAI
     {
         m_uiFreezingCircleTimer = 9000;
         m_uiFrostboltTimer      = 5000;
+		m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if (m_pInstance && m_pInstance->GetData(TYPE_GAUNTLET) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -415,6 +431,13 @@ struct MANGOS_DLL_DECL npc_StonespineGargoyleAI: public ScriptedAI
         m_uiGargoyleStrikeTimer = 5000;
         m_bHasSkin  = false;
     }
+
+	void MoveInLineOfSight(Unit* pWho)
+	{
+		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && pWho->GetTypeId() == TYPEID_PLAYER && 
+			m_creature->IsWithinDist3d(pWho->GetPositionX(), pWho->GetPositionY(), pWho->GetPositionZ(), 100) && m_creature->IsWithinLOSInMap(pWho))
+			m_creature->SetInCombatWithZone();
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -592,10 +615,14 @@ struct MANGOS_DLL_DECL npc_FallenWarriorAI: public ScriptedAI
         m_uiArcticSliceTimer        = 8000;
         m_uiDemoralizingShoutTimer  = 20000;
         m_uiShieldBlockTimer        = 8000;
+		m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if (m_pInstance && m_pInstance->GetData(TYPE_GAUNTLET) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -865,10 +892,14 @@ struct MANGOS_DLL_DECL npc_disturbedGlacialRevenantAI: public ScriptedAI
     void Reset()
     {
         m_uiAvalancheTimer = 10000;
+		m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if (m_pInstance && m_pInstance->GetData(TYPE_GAUNTLET) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -1168,7 +1199,7 @@ bool AreaTrigger_at_tyrannus(Player* pPlayer, AreaTriggerEntry const* pAt)
 			pPlayer->SummonCreature(NPC_TYRANNUS,  1013.827f, 169.71f, 628.156f, 5.31f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY);
 			// start the gauntlet only if it hasn't been started yet
 			if(pInstance->GetData(TYPE_GAUNTLET) != DONE)
-				pInstance->SetData(TYPE_TYRANNUS, SPECIAL);
+				pInstance->SetData(TYPE_GAUNTLET, IN_PROGRESS);
 		}
     }
 
