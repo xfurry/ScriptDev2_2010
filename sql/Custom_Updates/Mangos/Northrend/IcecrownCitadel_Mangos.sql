@@ -17,6 +17,7 @@ UPDATE creature_template SET ScriptName = 'mob_blood_beast' WHERE entry = 38508;
 
 -- Festergut
 UPDATE creature_template SET ScriptName = 'boss_festergut' WHERE entry = 36626;
+UPDATE creature_template SET ScriptName = 'mob_vile_gas_stalker' WHERE entry = 38548;
 
 -- Rotface
 UPDATE creature_template SET ScriptName = 'boss_rotface' WHERE entry = 36627;
@@ -137,7 +138,7 @@ UPDATE instance_template SET scriptName ='instance_icecrown_citadel' WHERE map =
 -- Instance teleporters: light's hammer, oratory of dammed, rampart of skulls, deathbringers rise, sindragosa, central spire, upper spire;
 UPDATE gameobject_template SET ScriptName="icecrown_citadel_teleporter", `flags` = 32 WHERE entry in (202242, 202243, 202244, 202245, 202246, 202223, 202235);
 -- In oder to proper activate this, delete id 5718 from areatrigger_teleport
-#delete from areatrigger_teleport where id = 5718;
+#delete from scripted_areatrigger where id = 5718;
 UPDATE `gameobject_template` SET `flags` = 32 WHERE `entry` = 202223; -- original flag = 48
 update gameobject_template set faction = 114 where entry in (201857, 201563, 201370, 201371, 201372, 201618, 201617, 201614, 201613,
 201182, 202181, 202183);
