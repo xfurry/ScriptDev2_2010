@@ -106,15 +106,14 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
     uint32 m_uiSacrificeEndTimer;
 
     uint64 m_uiPlayerGUID;
-    uint64 m_uiAddsGUID[3];
+    std::list<uint64> m_lAddsGUIDList;
 
     void Reset()
     {
         pArthas = NULL;
 
-        m_uiPlayerGUID;
-        for(uint8 i=0; i<3; ++i)
-            m_uiAddsGUID[i] = 0;
+        m_uiPlayerGUID = 0;
+        m_lAddsGUIDList.clear();
 
         m_bIsSacrifice = false;
         m_uiSinisterStrikeTimer = urand(10000,20000);
@@ -276,72 +275,83 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
         }
 
         if(m_uiSacrificeEndTimer < uiDiff && m_bIsSacrifice)
-        {
-            for(uint8 i=0; i<3; ++i)
-            {
-                Unit* pAdd = Unit::GetUnit(*m_creature, m_uiAddsGUID[i]);
-                if(pAdd && pAdd->isAlive())
-                {
-                    Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiPlayerGUID);
-                    if(pPlayer)
-                        m_creature->DealDamage(pPlayer, pPlayer->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+		{
+			if(!m_lAddsGUIDList.empty())
+			{
+				for(std::list<uint64>::iterator iter = m_lAddsGUIDList.begin(); iter != m_lAddsGUIDList.end(); ++iter)
+				{
+					if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *iter))
+					{
+						if(pTemp->isAlive())
+							pTemp->ForcedDespawn();
+					}
+				}
+				m_lAddsGUIDList.clear();
+			}
 
-                    for(uint8 k=0; k<3; ++k)
-                    {
-                        Unit* pAdd = Unit::GetUnit(*m_creature, m_uiAddsGUID[i]);
-                        if(pAdd && pAdd->isAlive())
-                        {
-                            pAdd->SetVisibility(VISIBILITY_OFF);
-                            pAdd->setFaction(35);
-                        }
-                        m_uiAddsGUID[k] = 0;
-                    }
-                    m_bIsSacrifice = false;
-                    return;
-                }
-            }
-            m_uiPlayerGUID = 0;
-            m_bIsSacrifice = false;
-        }else m_uiSacrificeEndTimer -= uiDiff;
+			if(Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiPlayerGUID))
+				m_creature->DealDamage(pPlayer, pPlayer->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
-        if(m_uiSinisterStrikeTimer < uiDiff)
-        {
-            if(m_creature->getVictim())
-                m_creature->CastSpell(m_creature->getVictim(), m_bIsRegularMode ? SPELL_SINISTER_STRIKE : SPELL_SINISTER_STRIKE_H, false);
-            m_uiSinisterStrikeTimer = urand(10000,20000);
-        }else m_uiSinisterStrikeTimer -= uiDiff;
+			m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+			SetCombatMovement(true);
+			m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
+            m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
 
-        if(m_uiCallFlamesTimer < uiDiff)
-        {
-            std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
-            for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
-            {
-                Unit *TargetedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());  
-                if(TargetedPlayer && TargetedPlayer->isAlive())
-                    m_creature->CastSpell(TargetedPlayer, SPELL_BOLT, true);
-            }
-            m_uiCallFlamesTimer = urand(15000,25000);
-        }else m_uiCallFlamesTimer -= uiDiff;
+			m_uiPlayerGUID = 0;
+			m_bIsSacrifice = false;
+		}else m_uiSacrificeEndTimer -= uiDiff;
+
+		if(m_uiSinisterStrikeTimer < uiDiff)
+		{
+			DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_SINISTER_STRIKE : SPELL_SINISTER_STRIKE_H);
+			m_uiSinisterStrikeTimer = urand(10000,20000);
+		}else m_uiSinisterStrikeTimer -= uiDiff;
+
+		if(m_uiCallFlamesTimer < uiDiff)
+		{
+			if(Unit* pPlayer = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(pPlayer, SPELL_BOLT);
+			m_uiCallFlamesTimer = urand(15000,25000);
+		}else m_uiCallFlamesTimer -= uiDiff;
 
         if(m_uiSacrificeTimer < uiDiff)
         {
             m_uiPlayerGUID = 0;
             if(Unit* pPlayer = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
+				DoCast(pPlayer, SPELL_RITUAL_OF_SWORD);
                 m_uiPlayerGUID = pPlayer->GetGUID();
                 DoTeleportPlayer(pPlayer, fCoord[0][0], fCoord[0][1], fCoord[0][2], pPlayer->GetOrientation());
-                m_uiSacrificeEndTimer = 8000;
+                m_uiSacrificeEndTimer = 25000;
 
-                for(uint8 i=0; i<3; ++i)
-                    if(Creature* pAdd = m_creature->SummonCreature(NPC_CHANNELER, fCoord[i][0], fCoord[i][1], fCoord[i][2], fCoord[i][3], TEMPSUMMON_TIMED_DESPAWN, 9000))
+				switch(urand(0, 3))
+				{
+				case 0: DoScriptText(SAY_SACRIFICE_1, m_creature); break;
+				case 1: DoScriptText(SAY_SACRIFICE_2, m_creature); break;
+				case 2: DoScriptText(SAY_SACRIFICE_3, m_creature); break;
+				case 3: DoScriptText(SAY_SACRIFICE_4, m_creature); break;
+				}
+
+				// summon adds
+                for(uint8 i = 0; i < 3; ++i)
+				{
+                    if(Creature* pAdd = m_creature->SummonCreature(NPC_CHANNELER, fCoord[i][0], fCoord[i][1], fCoord[i][2], fCoord[i][3], TEMPSUMMON_CORPSE_DESPAWN, 9000))
                     {
-                        m_uiAddsGUID[i] = pAdd->GetGUID();
+						m_lAddsGUIDList.push_back(pAdd->GetGUID());
                         pAdd->AI()->AttackStart(pPlayer);
                         pAdd->CastSpell(pPlayer, SPELL_PARALYZE, false);
                     }
+				}
+
+				// fly
+				m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
+				m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
+				m_creature->SetUInt64Value(UNIT_FIELD_TARGET, pPlayer->GetGUID());
+				SetCombatMovement(false);
+				m_creature->GetMotionMaster()->MovePoint(0, 296.709f, -338.215f, 95.295f);
             }
             m_bIsSacrifice = true;
-            m_uiSacrificeTimer = 20000;
+            m_uiSacrificeTimer = 40000;
         }else m_uiSacrificeTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
@@ -368,18 +378,18 @@ struct MANGOS_DLL_DECL npc_svala_channelerAI : public Scripted_NoMovementAI
     ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
-    void Reset() {}
-
-    void DamageTaken(Unit* pDoneBy, uint32& uiDamage) 
-    {
-        if(!pDoneBy)
-            return;
-
-        m_creature->CastSpell(pDoneBy, SPELL_SHADOWS, false);
-    }
+    void Reset() 
+	{
+		if(!m_bIsRegularMode)
+			DoCast(m_creature, SPELL_SHADOWS);
+		m_creature->SetRespawnDelay(DAY);
+	}
 
     void UpdateAI(const uint32 uiDiff) 
     {
+		if (m_pInstance && m_pInstance->GetData(TYPE_SVALA) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
     }
