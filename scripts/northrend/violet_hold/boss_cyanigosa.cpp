@@ -77,7 +77,7 @@ struct MANGOS_DLL_DECL boss_cyanigosaAI : public ScriptedAI
         m_uiManaDestruction_Timer = urand(5000, 6000);
         m_uiBlizzard_Timer = urand(20000, 25000);
         m_uiTailSweep_Timer = urand(10000, 11000);
-        m_uiArcaneVacuum_Timer = urand(28000, 33000);
+        m_uiArcaneVacuum_Timer = 35000;
         m_uiSpeechTimer = 40000;
         m_uiMovementTimer = 8000;
 
@@ -168,9 +168,10 @@ struct MANGOS_DLL_DECL boss_cyanigosaAI : public ScriptedAI
 
         if (m_uiArcaneVacuum_Timer < uiDiff)
         {
+			m_creature->InterruptNonMeleeSpells(true);
             DoCast(m_creature, SPELL_ARCANE_VACUM);
             DoResetThreat();
-            m_uiArcaneVacuum_Timer = urand(28000, 33000);
+            m_uiArcaneVacuum_Timer = 35000;
         }
         else
             m_uiArcaneVacuum_Timer -= uiDiff;

@@ -47,7 +47,8 @@ struct MANGOS_DLL_DECL boss_lavanthorAI : public ScriptedAI
     instance_violet_hold* m_pInstance;
 
     bool m_bIsRegularMode;
-    bool MovementStarted;
+    bool m_bMovementStarted;
+	uint32 m_uiAttackStartTimer;
 
     uint32 m_uiCauterizingFlames_Timer;
     uint32 m_uiFlameBreath_Timer;
@@ -58,7 +59,8 @@ struct MANGOS_DLL_DECL boss_lavanthorAI : public ScriptedAI
         m_uiCauterizingFlames_Timer = urand(40000, 41000);
         m_uiFlameBreath_Timer = urand(15000, 16000);
         m_uiFirebolt_Timer = urand(10000, 11000);
-        MovementStarted = false;
+        m_bMovementStarted = false;
+		m_uiAttackStartTimer = 10000;
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_LAVANTHOR, NOT_STARTED);
@@ -103,13 +105,23 @@ struct MANGOS_DLL_DECL boss_lavanthorAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (m_pInstance->GetData(TYPE_LAVANTHOR) == SPECIAL && !MovementStarted) 
+        if (m_pInstance->GetData(TYPE_LAVANTHOR) == SPECIAL) 
         {
-            m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
-            m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            MovementStarted = true;
+            if(!m_bMovementStarted)
+			{
+				m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
+				m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
+				m_bMovementStarted = true;
+			}
+			
+			if (m_uiAttackStartTimer < uiDiff)
+			{
+				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+				m_creature->SetInCombatWithZone();
+			}
+			else m_uiAttackStartTimer -= uiDiff;
         }
+
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;

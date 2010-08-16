@@ -63,7 +63,8 @@ struct MANGOS_DLL_DECL boss_erekemAI : public ScriptedAI
 
     bool m_bIsRegularMode;
     bool m_bIsAddDead;
-    bool MovementStarted;
+    bool m_bMovementStarted;
+	uint32 m_uiAttackStartTimer;
 
     uint32 m_uiBloodlust_Timer;
     uint32 m_uiBreakBonds_Timer;
@@ -76,7 +77,8 @@ struct MANGOS_DLL_DECL boss_erekemAI : public ScriptedAI
     void Reset()
     {
         m_bIsAddDead = false;
-        MovementStarted = false;
+        m_bMovementStarted = false;
+		m_uiAttackStartTimer    = 10000;
         m_uiLightningBolt_Timer = 2000;
         m_uiEarthShield_Timer = urand(15000, 20000);
         m_uiEarthShock_Timer = urand(12000, 17000);
@@ -149,13 +151,22 @@ struct MANGOS_DLL_DECL boss_erekemAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (m_pInstance->GetData(TYPE_EREKEM) == SPECIAL && !MovementStarted) 
-        {
-            m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
-            m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            MovementStarted = true;
-        }
+		if (m_pInstance->GetData(TYPE_EREKEM) == SPECIAL) 
+		{
+			if(!m_bMovementStarted)
+			{
+				m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
+				m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
+				m_bMovementStarted = true;
+			}
+			
+			if (m_uiAttackStartTimer < uiDiff)
+			{
+				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+				m_creature->SetInCombatWithZone();
+			}
+			else m_uiAttackStartTimer -= uiDiff;
+		}
 
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -180,7 +191,7 @@ struct MANGOS_DLL_DECL boss_erekemAI : public ScriptedAI
 
         if (m_uiChainHeal_Timer < uiDiff)
         {
-            //m_creature->InterruptNonMeleeSpells(false);
+            m_creature->InterruptNonMeleeSpells(false);
             DoCast(m_creature, m_bIsRegularMode ? SPELL_CHAIN_HEAL_H : SPELL_CHAIN_HEAL);
             m_uiChainHeal_Timer = urand(5000, 25000);
         }
@@ -268,7 +279,8 @@ struct MANGOS_DLL_DECL mob_erekem_guardAI : public ScriptedAI
     uint32 m_uiGushingWound_Timer;
     uint32 m_uiHowlingScreech_Timer;
     uint32 m_uiStrike_Timer;
-    bool MovementStarted;
+    bool m_bMovementStarted;
+	uint32 m_uiAttackStartTimer;
 
     void Reset()
     {
@@ -276,7 +288,8 @@ struct MANGOS_DLL_DECL mob_erekem_guardAI : public ScriptedAI
         m_uiHowlingScreech_Timer = urand(12000, 15000);
         m_uiStrike_Timer = urand(10000, 11000);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        MovementStarted = false;
+        m_bMovementStarted = false;
+		m_uiAttackStartTimer = 10000;
     }
 
     void AttackStart(Unit* pWho)
@@ -286,7 +299,6 @@ struct MANGOS_DLL_DECL mob_erekem_guardAI : public ScriptedAI
 
         if (m_pInstance->GetData(TYPE_EREKEM) != SPECIAL && m_pInstance->GetData(TYPE_EREKEM) != IN_PROGRESS)
             return;
-
 
         if (!pWho || pWho == m_creature)
             return;
@@ -302,12 +314,21 @@ struct MANGOS_DLL_DECL mob_erekem_guardAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (m_pInstance->GetData(TYPE_EREKEM) == SPECIAL && !MovementStarted) 
+        if (m_pInstance->GetData(TYPE_EREKEM) == SPECIAL) 
         {
-            m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
-            m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            MovementStarted = true;
+            if(!m_bMovementStarted)
+			{
+				m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
+				m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
+				m_bMovementStarted = true;
+			}
+			
+			if (m_uiAttackStartTimer < uiDiff)
+			{
+				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+				m_creature->SetInCombatWithZone();
+			}
+			else m_uiAttackStartTimer -= uiDiff;
         }
 
         //Return since we have no target

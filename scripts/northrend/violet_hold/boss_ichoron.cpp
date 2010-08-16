@@ -67,7 +67,9 @@ struct MANGOS_DLL_DECL boss_ichoronAI : public ScriptedAI
     bool m_bIsRegularMode;
     bool m_bIsExploded;
     bool m_bIsFrenzy;
-    bool MovementStarted;
+    bool m_bMovementStarted;
+	uint32 m_uiAttackStartTimer;
+
     bool m_bDehydratation;
 
     uint32 m_uiBuubleChecker_Timer;
@@ -78,7 +80,8 @@ struct MANGOS_DLL_DECL boss_ichoronAI : public ScriptedAI
     {
         m_bIsExploded = false;
         m_bIsFrenzy = false;
-        MovementStarted = false;
+        m_bMovementStarted = false;
+		m_uiAttackStartTimer = 10000;
         m_uiBuubleChecker_Timer = 1000;
         m_uiWaterBoltVolley_Timer = urand(10000, 15000);
         m_uiShowup_Counter = 0;
@@ -170,12 +173,21 @@ struct MANGOS_DLL_DECL boss_ichoronAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (m_pInstance->GetData(TYPE_ICHORON) == SPECIAL && !MovementStarted) 
+        if (m_pInstance->GetData(TYPE_ICHORON) == SPECIAL) 
         {
-            m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
-            m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            MovementStarted = true;
+            if(!m_bMovementStarted)
+			{
+				m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
+				m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
+				m_bMovementStarted = true;
+			}
+			
+			if (m_uiAttackStartTimer < uiDiff)
+			{
+				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+				m_creature->SetInCombatWithZone();
+			}
+			else m_uiAttackStartTimer -= uiDiff;
         }
 
         //Return since we have no target

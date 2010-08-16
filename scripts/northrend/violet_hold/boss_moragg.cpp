@@ -49,11 +49,13 @@ struct MANGOS_DLL_DECL boss_moraggAI : public ScriptedAI
     uint32 m_uiOpticLink_Timer;
     uint32 m_uiRay_Timer;
 
-    bool MovementStarted;
+    bool m_bMovementStarted;
+	uint32 m_uiAttackStartTimer;
 
     void Reset()
     {
-        MovementStarted = false;
+        m_bMovementStarted = false;
+		m_uiAttackStartTimer = 10000;
         m_uiCorrosiveSaliva_Timer = urand(10000, 11000);
         m_uiOpticLink_Timer = urand(25000, 30000);
         m_uiRay_Timer = urand(2000, 7000);
@@ -101,12 +103,21 @@ struct MANGOS_DLL_DECL boss_moraggAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (m_pInstance->GetData(TYPE_MORAGG) == SPECIAL && !MovementStarted) 
+        if (m_pInstance->GetData(TYPE_MORAGG) == SPECIAL) 
         {
-            m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
-            m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            MovementStarted = true;
+            if(!m_bMovementStarted)
+			{
+				m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
+				m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
+				m_bMovementStarted = true;
+			}
+			
+			if (m_uiAttackStartTimer < uiDiff)
+			{
+				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+				m_creature->SetInCombatWithZone();
+			}
+			else m_uiAttackStartTimer -= uiDiff;
         }
 
         //Return since we have no target

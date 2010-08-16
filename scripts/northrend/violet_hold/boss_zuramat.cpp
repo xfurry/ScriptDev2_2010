@@ -64,7 +64,8 @@ struct MANGOS_DLL_DECL boss_zuramatAI : public ScriptedAI
     instance_violet_hold* m_pInstance;
 
     bool m_bIsRegularMode;
-    bool MovementStarted;
+    bool m_bMovementStarted;
+	uint32 m_uiAttackStartTimer;
     std::list<uint64> m_lSentryGUIDList;
 
     uint32 m_uiShroudDarkness_Timer;
@@ -76,7 +77,8 @@ struct MANGOS_DLL_DECL boss_zuramatAI : public ScriptedAI
         m_uiShroudDarkness_Timer = urand(8000, 9000);
         m_uiSummonVoidSentry_Timer = urand(5000, 10000);
         m_uiVoidShift_Timer = 10000;
-        MovementStarted = false;
+        m_bMovementStarted = false;
+		m_uiAttackStartTimer = 10000;
 
         m_bIsSentryAlive = true;
 
@@ -149,12 +151,21 @@ struct MANGOS_DLL_DECL boss_zuramatAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff) 
     {
-        if (m_pInstance->GetData(TYPE_ZURAMAT) == SPECIAL && !MovementStarted) 
+        if (m_pInstance->GetData(TYPE_ZURAMAT) == SPECIAL) 
         {
-            m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
-            m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            MovementStarted = true;
+            if(!m_bMovementStarted)
+			{
+				m_creature->GetMotionMaster()->MovePoint(0, PortalLoc[8].x, PortalLoc[8].y, PortalLoc[8].z);
+				m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
+				m_bMovementStarted = true;
+			}
+			
+			if (m_uiAttackStartTimer < uiDiff)
+			{
+				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+				m_creature->SetInCombatWithZone();
+			}
+			else m_uiAttackStartTimer -= uiDiff;
         }
 
         //Return since we have no target

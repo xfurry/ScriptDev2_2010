@@ -329,7 +329,7 @@ void instance_violet_hold::SetData(uint32 uiType, uint32 uiData)
                     break;
                 case DONE:                                  // portal done, set timer to 5 secs
                     if(m_uiWorldStatePortalCount == 6 || m_uiWorldStatePortalCount == 12)
-                        m_uiPortalTimer = 20000;            // set 20 sec portal delay after bosses
+                        m_uiPortalTimer = 35000;            // set 35 sec portal delay after bosses
                     else
                         m_uiPortalTimer = 5000;             
                     break;
