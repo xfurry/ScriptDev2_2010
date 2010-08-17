@@ -24,6 +24,8 @@ enum
     TYPE_LICH_KING              = 13,
 
     TYPE_ATTEMPTS               = 14,
+	
+	TYPE_PRINCES_PHASE			= 15,
 
 	// lower spire
     NPC_MARROWGAR               = 36612,

@@ -35,6 +35,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
     std::string strInstData;
     uint32 m_auiEncounter[MAX_ENCOUNTER];
     uint32 Difficulty;
+	uint32 m_auiPrincesPhase;
     bool m_bNeedSave;
 
     // npcs
@@ -118,6 +119,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 			m_auiEncounter[13]          = 9999;
 		else
 			m_auiEncounter[13]          = 25;
+
+		m_auiPrincesPhase				= 0;
 
         // npcs
         m_uiMarrowgarGUID               = 0;
@@ -599,6 +602,9 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 m_auiEncounter[13] = uiData;
                 m_bNeedSave = true;
                 break;
+			case TYPE_PRINCES_PHASE:
+				m_auiPrincesPhase = uiData;
+				break;
         }
 
         if (uiData == DONE || m_bNeedSave)
@@ -682,6 +688,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 return m_auiEncounter[12];
             case TYPE_ATTEMPTS:
                 return m_auiEncounter[13];
+			case TYPE_PRINCES_PHASE:
+				return m_auiPrincesPhase;
         }
         return 0;
     }
@@ -702,6 +710,12 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 return m_uiRotfaceGUID;
             case NPC_PUTRICIDE:
                 return m_uiPutricideGUID;
+			case NPC_TALDARAM:
+				return m_uiTaldaramGUID;
+			case NPC_VALANAR:
+				return m_uiValanarGUID;
+			case NPC_KELESETH:
+				return m_uiKelesethGUID;
 			case NPC_SVALNA:
 				return m_uiSvalnaGUID;
 			case NPC_VALITHRIA:

@@ -76,6 +76,7 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
     {
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		Difficulty = pCreature->GetMap()->GetDifficulty();
+		SetCombatMovement(false);
         Reset();
     }
 
@@ -96,9 +97,15 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 	void MoveInLineOfSight(Unit* pWho)
 	{
 		// start intro speech
-		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsIntro &&
-			pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 110) && m_creature->IsWithinLOSInMap(pWho))
-			m_bIsIntro = true;
+		if(m_uiPhase == PHASE_IDLE)
+		{
+			if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsIntro &&
+				pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 50) && m_creature->IsWithinLOSInMap(pWho))
+			{
+				m_uiPhase = PHASE_EVENT;
+				m_bIsIntro = true;
+			}
+		}
 	}
 
 	void JustDied(Unit* pKiller)
@@ -195,7 +202,12 @@ struct MANGOS_DLL_DECL mob_risen_archmageAI : public ScriptedAI
 	void JustSummoned(Creature* pSummon)
 	{
 		pSummon->CastSpell(pSummon, SPELL_MANA_VOID_AURA, false);
-		pSummon->SetInCombatWithZone();
+		pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+		pSummon->SetDisplayId(11686);     // make invisible
+        pSummon->setFaction(14);
+		pSummon->AttackStop();
+		pSummon->GetMotionMaster()->MoveConfused();
 	}
 
     void UpdateAI(const uint32 uiDiff)
@@ -223,7 +235,7 @@ struct MANGOS_DLL_DECL mob_risen_archmageAI : public ScriptedAI
 				DoCast(m_creature, SPELL_MANA_VOID_10);
 			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
 				DoCast(m_creature, SPELL_MANA_VOID_25);
-			m_uiManavoidTimer = urand(7000, 11000);
+			m_uiManavoidTimer = 30000;
         }
         else m_uiManavoidTimer -= uiDiff;
         

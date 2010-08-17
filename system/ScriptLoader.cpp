@@ -338,6 +338,7 @@ extern void AddSC_boss_saurfang();
 extern void AddSC_boss_festergut();
 extern void AddSC_boss_rotface();
 extern void AddSC_boss_professor_putricide();
+extern void AddSC_blood_prince_council();
 extern void AddSC_boss_blood_queen_lanathel();
 extern void AddSC_boss_valithria();
 extern void AddSC_boss_sindragosa();
@@ -845,7 +846,8 @@ void AddScripts()
     AddSC_boss_saurfang();
     AddSC_boss_festergut();
     AddSC_boss_rotface();
-    AddSC_boss_professor_putricide();	
+    AddSC_boss_professor_putricide();
+	AddSC_blood_prince_council();
 	AddSC_boss_blood_queen_lanathel();
 	AddSC_boss_valithria();
 	AddSC_boss_sindragosa();
