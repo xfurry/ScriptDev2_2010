@@ -78,6 +78,7 @@ enum
     SAY_DEATH           = -1609425,
 
     SPELL_BLOOD_LINK            = 72178,
+	SPELL_BLOOD_LINK_BEASTS		= 72176,
     SPELL_BLOOD_POWER           = 72371,
     SPELL_RUNE_OF_BLOOD         = 72408,
     SPELL_BLOOD_NOVA            = 72378,
@@ -91,6 +92,7 @@ enum
     SPELL_BOILING_BLOOD_25HC    = 72443,
     SPELL_FRENZY                = 72737,
     SPELL_MARK_FALLEN_CHAMP     = 72293,
+	SPELL_MARK_CHAMP_DMG		= 72256,
     SPELL_RUNE_OF_BLOOD_10      = 72409,
     SPELL_RUNE_OF_BLOOD_25      = 72447,
     SPELL_RUNE_OF_BLOOD_10HC    = 72448,
@@ -129,6 +131,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 	uint32 m_uiAuraCheckTimer;
 	bool m_bHasAura;
 	uint32 m_uiAuraDamage;
+	uint8 m_uiHealPercent;
 
     void Reset()
     {
@@ -140,22 +143,29 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 		m_uiAuraCheckTimer		= 1000;
 		m_bHasAura				= false;
 		m_uiAuraDamage			= 0;
+		if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+			m_uiHealPercent = 0.2;
+		else
+			m_uiHealPercent = 0.05;
 
         m_creature->SetPower(POWER_RAGE,0); 
-        
-        if(m_creature->HasAura(SPELL_BLOOD_LINK))
-            m_creature->RemoveAurasDueToSpell(SPELL_BLOOD_LINK);
     }
 
     void Aggro(Unit* pWho)
     {
         if (m_pInstance)
+		{
             m_pInstance->SetData(TYPE_SAURFANG, IN_PROGRESS);
+			m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_SHOW, 1);
+			m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_ATTEMPTS));
+			if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 9999);
+			else
+				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 25);
+		}
 
         DoScriptText(SAY_AGGRO, m_creature);
-
-        if (!m_creature->HasAura(SPELL_BLOOD_LINK))
-            DoCast(m_creature, SPELL_BLOOD_LINK);
+        DoCast(m_creature, SPELL_BLOOD_LINK);
     }
 
     void JustDied(Unit* pKiller)
@@ -174,6 +184,8 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
         if (m_pInstance)
         {
             m_pInstance->SetData(TYPE_SAURFANG, FAIL);
+			m_pInstance->SetData(TYPE_ATTEMPTS, m_pInstance->GetData(TYPE_ATTEMPTS) - 1);
+            m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_ATTEMPTS));
             m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_MARK_FALLEN_CHAMP);
         }
     }
@@ -181,7 +193,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
     void DamageDeal(Unit * pDoneTo, uint32 &uiDamage)
     {
         int temp1 = m_creature->GetPower(POWER_RAGE);
-        int temp2 = 0.007 * uiDamage;
+        int temp2 = 0.001 * uiDamage;
         temp1 = temp1 + temp2;
 
         if(temp1 > 1000)
@@ -225,8 +237,8 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 					else 
 					{
 						i->getSource()->DealDamage(i->getSource(), m_uiAuraDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-						// heal the boss for 5% of hp
-						m_creature->DealHeal(m_creature, 0.05*m_creature->GetMaxHealth(), NULL);
+						// heal the boss for % of hp
+						m_creature->DealHeal(m_creature, m_uiHealPercent*m_creature->GetMaxHealth(), NULL);
 					}
 				}
 			}
@@ -278,14 +290,8 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 
         if (m_uiRuneOfBlood_Timer < uiDiff)
         {
-            if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                DoCast(m_creature->getVictim(), SPELL_RUNE_OF_BLOOD_10);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                DoCast(m_creature->getVictim(), SPELL_RUNE_OF_BLOOD_25);
-            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                DoCast(m_creature->getVictim(), SPELL_RUNE_OF_BLOOD_10HC);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                DoCast(m_creature->getVictim(), SPELL_RUNE_OF_BLOOD_25HC);
+            if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(pTarget, SPELL_RUNE_OF_BLOOD);
             m_uiRuneOfBlood_Timer = 30000;
         }
         else m_uiRuneOfBlood_Timer -= uiDiff;
@@ -309,7 +315,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 
         if (m_uiBloodNova_Timer < uiDiff)
         {
-            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
             {
                 if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
                     DoCast(target, SPELL_BLOOD_NOVA_10);
@@ -327,6 +333,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
         // berserk
         if (m_uiBerserkTimer < uiDiff)
         {
+			m_creature->InterruptNonMeleeSpells(true);
             DoCast(m_creature, SPELL_BERSERK);
             DoScriptText(SAY_BERSERK, m_creature);
             m_uiBerserkTimer = 60000;
@@ -359,7 +366,7 @@ struct MANGOS_DLL_DECL mob_blood_beastAI : public ScriptedAI
     void Reset()
     {
         m_uiScentOfBloodTimer = 30000;
-        DoCast(m_creature, SPELL_RESISTANT_SKIN);
+		DoCast(m_creature, SPELL_BLOOD_LINK_BEASTS);
     }
 
     void DamageDeal(Unit * pDoneTo, uint32 &uiDamage)
@@ -390,6 +397,9 @@ struct MANGOS_DLL_DECL mob_blood_beastAI : public ScriptedAI
         //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+		if(!m_creature->HasAura(SPELL_RESISTANT_SKIN))
+			DoCast(m_creature, SPELL_RESISTANT_SKIN);
 
         if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
         {

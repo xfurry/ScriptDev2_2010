@@ -127,6 +127,7 @@ enum
 
 	UPDATE_STATE_UI_SHOW            = 4940,
     UPDATE_STATE_UI_COUNT           = 4941,
+	UPDATE_STATE_UI_TOTAL			= 4942,
 
 	SPELL_SOUL_FEAST				= 71203,
 };

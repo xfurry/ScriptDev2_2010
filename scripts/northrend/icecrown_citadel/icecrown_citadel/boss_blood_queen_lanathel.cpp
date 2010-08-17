@@ -104,6 +104,10 @@ struct MANGOS_DLL_DECL boss_blood_queen_lanathelAI : public ScriptedAI
             m_pInstance->SetData(TYPE_BLOOD_QUEEN, NOT_STARTED);
             m_pInstance->SetData(TYPE_ATTEMPTS, m_pInstance->GetData(TYPE_ATTEMPTS) - 1);
             m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_ATTEMPTS));
+			if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 9999);
+			else
+				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 25);
         }
     }
 
@@ -197,7 +201,7 @@ struct MANGOS_DLL_DECL boss_blood_queen_lanathelAI : public ScriptedAI
 			case 0: DoScriptText(SAY_VAMPIRIC_BITE1, m_creature); break;
 			case 1: DoScriptText(SAY_VAMPIRIC_BITE2, m_creature); break;
 			}
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,1))
 				DoCast(pTarget, SPELL_VAMPIRIC_BITE);
 			m_uiVampiricBiteTimer = 600000;	// cast only once
 		}
@@ -205,7 +209,7 @@ struct MANGOS_DLL_DECL boss_blood_queen_lanathelAI : public ScriptedAI
 
 		if(m_uiTwilightBloodboltTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,1))
 				DoCast(pTarget, SPELL_TWILIGHT_BLOODBOLT);
 			m_uiTwilightBloodboltTimer = urand(5000, 10000);
 		}
@@ -214,7 +218,7 @@ struct MANGOS_DLL_DECL boss_blood_queen_lanathelAI : public ScriptedAI
 		if (m_uiPactOfTheDarkfallenTimer < uiDiff)
 		{
 			DoScriptText(SAY_PACT, m_creature);
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,1))
 				DoCast(pTarget, SPELL_PACT_OF_THE_DARKFALLEN);
 			m_uiPactOfTheDarkfallenTimer = 30000;
 		}
@@ -223,7 +227,7 @@ struct MANGOS_DLL_DECL boss_blood_queen_lanathelAI : public ScriptedAI
 		if (m_uiSwarmingShadowsTimer < uiDiff)
 		{
 			DoScriptText(SAY_SHADOWS, m_creature);
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,1))
 				DoCast(pTarget,SPELL_SWARMING_SHADOWS);
 			m_uiSwarmingShadowsTimer = 30000;
 		}
@@ -231,7 +235,7 @@ struct MANGOS_DLL_DECL boss_blood_queen_lanathelAI : public ScriptedAI
 
 		if (m_uiBloodMirrorTimer < uiDiff)
 		{
-			//if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,0))
+			//if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,1))
 				//DoCast(pTarget, SPELL_BLOOD_MIRROR_1);
 			m_uiBloodMirrorTimer = 15000;
 		}

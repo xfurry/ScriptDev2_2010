@@ -114,9 +114,9 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 
         m_bNeedSave                     = false;
 		if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-			m_auiEncounter[12]          = 9999;
+			m_auiEncounter[13]          = 9999;
 		else
-			m_auiEncounter[12]          = 20;
+			m_auiEncounter[13]          = 25;
 
         // npcs
         m_uiMarrowgarGUID               = 0;
