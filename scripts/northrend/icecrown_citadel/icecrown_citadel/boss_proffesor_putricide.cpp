@@ -39,15 +39,14 @@ enum
 
     // spells
     // phase 1 -> 80%
-    SPELL_SLIME_PUDDLE              = 70341,
-    SPELL_SLIME_PUDDLE_10           = 70346,
-    SPELL_SLIME_PUDDLE_25           = 72868,
-    SPELL_SLIME_PUDDLE_25HC         = 72869,
     SPELL_SLIME_PUDDLE_TRIG         = 70343,
+	NPC_SLIME_PUDDLE				= 37690,
+	SPELL_SLIME_PUDDLE_SUMMON		= 70342,
+	SPELL_SLIME_PUDDLE_MISSLE		= 70341,
     SPELL_UNSTABLE_EXPERIMENT       = 71968,
     SPELL_TEAR_GAS                  = 71617,    // only on non hc
     SPELL_TEAR_GAS_STUN             = 71618,
-    SPELL_CREATE_CONCOCTION         = 71621,
+    SPELL_CREATE_CONCOCTION         = 71621,	// 71704
 
     // phase 2 -> 35%
     SPELL_CHOKING_GAS_TRIG          = 71259,
@@ -65,7 +64,7 @@ enum
     SPELL_MALLEABLE_GOO_10HC        = 72873,
     SPELL_MALLEABLE_GOO_25HC        = 72874,
     SPELL_MALLEABLE_GOO_SUMMON      = 72298,
-    SPELL_MALLEABLE_GOO_VISUAL      = 75845,
+	SPELL_MALLEABLE_GOO				= 72296,
 
     // phase 3
     SPELL_MUTATED_STRENGTH          = 71603,
@@ -102,8 +101,20 @@ enum
     NPC_VOLATILE_OOZE               = 37697,
     NPC_GAS_BOMB                    = 38159,
     NPC_MALLEABLE_OOZE              = 38556,
-    NPC_SLIME_PUDDLE                = 38234, 
 };
+
+enum phases
+{
+	PHASE_IDLE			= 0,
+	PHASE_1				= 1,
+	PHASE_TRANSFORM_1	= 2,
+	PHASE_2				= 3,
+	PHASE_TRANSFORM_2	= 4,
+	PHASE_3				= 5,
+};
+
+const float PosGreenPipe[3] = {4380.875f, 3206.018f, 389.399f};	// volatile ooze
+const float PosRedPipe[3] = {4329.408f, 3213.475f, 389.399f};	// gas cloud
 
 struct MANGOS_DLL_DECL boss_professor_putricideAI : public ScriptedAI
 {
@@ -136,7 +147,10 @@ struct MANGOS_DLL_DECL boss_professor_putricideAI : public ScriptedAI
     uint8 m_uiPhase;
     uint32 m_uiDrinkPotionTimer;
     uint32 m_uiSwitchTimer;
+	uint32 m_uiMovementTimer;
     bool m_bHasGasCasted;
+	bool m_bIsOoze;
+	uint8 m_uiMaxTargets;
     uint32 m_uiBerserkTimer;
 
     float homeX, homeY, homeZ;
@@ -153,11 +167,18 @@ struct MANGOS_DLL_DECL boss_professor_putricideAI : public ScriptedAI
         m_uiMutatedStrengthTimer    = 10000;
         m_uiMutatedPlagueTimer      = 15000;
 
+		if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+			m_uiMaxTargets = 1;
+		else 
+			m_uiMaxTargets = 2;
+
         // other
+		m_uiMovementTimer		= 30000;
         m_uiDrinkPotionTimer    = 30000;
         m_uiSwitchTimer         = 20000;
-        m_uiPhase               = 0;
+        m_uiPhase               = PHASE_IDLE;
         m_bHasGasCasted         = false;
+		m_bIsOoze				= true;
         m_uiBerserkTimer        = 600000;  // 10 min
     }
 
@@ -167,17 +188,25 @@ struct MANGOS_DLL_DECL boss_professor_putricideAI : public ScriptedAI
         {
             m_pInstance->SetData(TYPE_PUTRICIDE, NOT_STARTED);
             m_pInstance->SetData(TYPE_ATTEMPTS, m_pInstance->GetData(TYPE_ATTEMPTS) - 1);
-            //m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_ATTEMPTS));
+            m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_ATTEMPTS));
         }
     }
 
     void Aggro(Unit *who) 
     {
         DoScriptText(SAY_AGGRO, m_creature);
-        m_uiPhase = 1;
+        m_uiPhase = PHASE_1;
 
         if(m_pInstance) 
+		{
             m_pInstance->SetData(TYPE_PUTRICIDE, IN_PROGRESS);
+			m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_SHOW, 1);
+			m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_ATTEMPTS));
+			if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 9999);
+			else
+				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 25);
+		}
     }
 
     void KilledUnit(Unit* pVictim)
@@ -197,6 +226,39 @@ struct MANGOS_DLL_DECL boss_professor_putricideAI : public ScriptedAI
             m_pInstance->SetData(TYPE_PUTRICIDE, DONE);
     }
 
+	void JustSummoned(Creature* pSummon)
+	{
+		pSummon->SetInCombatWithZone();
+	}
+
+	void DoExperiment()
+	{
+		if(m_bIsOoze)
+		{
+			DoScriptText(SAY_PHASE, m_creature);
+			m_creature->SummonCreature(NPC_VOLATILE_OOZE, PosGreenPipe[0], PosGreenPipe[1], PosGreenPipe[2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000);
+			m_bIsOoze = false;
+		}
+		else
+		{
+			DoScriptText(SAY_AIRLOCK, m_creature);
+			m_creature->SummonCreature(NPC_GAS_CLOUD, PosRedPipe[0], PosRedPipe[1], PosRedPipe[2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000);
+			m_bIsOoze = true;
+		}
+	}
+
+	void DoSlimePuddle()
+	{
+		for(uint8 i = 0; i < m_uiMaxTargets; ++i)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+				DoCast(pTarget, SPELL_SLIME_PUDDLE_MISSLE);
+				m_creature->SummonCreature(NPC_SLIME_PUDDLE, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
+			}
+		}
+	}
+
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -205,30 +267,54 @@ struct MANGOS_DLL_DECL boss_professor_putricideAI : public ScriptedAI
         switch (m_uiPhase)
         {
             // phase 1
-        case 1:
+        case PHASE_1:
 
             if (m_uiSlimePuddleTimer < uiDiff)
             {
-                DoCast(m_creature, SPELL_SLIME_PUDDLE);
-                m_uiSlimePuddleTimer = urand(20000, 30000);
+				DoSlimePuddle();
+                m_uiSlimePuddleTimer = 35000;
             }
             else m_uiSlimePuddleTimer -= uiDiff;
 
             if (m_uiUnstableExperimentTimer < uiDiff)
             {
                 DoCast(m_creature, SPELL_UNSTABLE_EXPERIMENT);
-                m_uiUnstableExperimentTimer = urand(50000, 60000);
+				DoExperiment();
+                m_uiUnstableExperimentTimer = 37000;
             }
-            else m_uiUnstableExperimentTimer -= uiDiff;
+			else m_uiUnstableExperimentTimer -= uiDiff;
+
+			if (m_creature->GetHealthPercent() < 80.0f)
+			{
+				m_creature->InterruptNonMeleeSpells(true);
+				SetCombatMovement(false);
+				if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				{
+					DoCast(m_creature, SPELL_TEAR_GAS);
+					m_uiMovementTimer	= 2500;
+				}
+				else 
+					m_uiMovementTimer = 100;
+				m_uiSwitchTimer		 = 17500;
+				m_uiDrinkPotionTimer = 10000;
+				m_uiPhase = PHASE_TRANSFORM_1;
+			}
 
             break;
             // break -> tear gas
-        case 2:
+        case PHASE_TRANSFORM_1:
+
+			if(m_uiMovementTimer < uiDiff)
+			{
+				m_creature->GetMotionMaster()->MovePoint(0, homeX, homeY, homeZ);
+				m_uiMovementTimer = 30000;
+			}
+			else m_uiMovementTimer -= uiDiff;
 
             if (m_uiDrinkPotionTimer < uiDiff)
             {
+				DoScriptText(SAY_TRANSFORM1, m_creature);
                 DoCast(m_creature, SPELL_CREATE_CONCOCTION);
-                m_uiSwitchTimer = 15000;
                 m_uiDrinkPotionTimer = 60000;
             }
             else m_uiDrinkPotionTimer -= uiDiff;
@@ -236,53 +322,80 @@ struct MANGOS_DLL_DECL boss_professor_putricideAI : public ScriptedAI
             if(m_uiSwitchTimer < uiDiff)
             {
                 SetCombatMovement(true);
-                m_creature->RemoveAurasDueToSpell(SPELL_TEAR_GAS);
                 m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                m_uiPhase = 3;
+                m_uiPhase = PHASE_2;
             }
             else m_uiSwitchTimer -= uiDiff;
 
             break;
             // phase 2
-        case 3:
+        case PHASE_2:
 
             if (m_uiSlimePuddleTimer < uiDiff)
             {
-                DoCast(m_creature, SPELL_SLIME_PUDDLE);
-                m_uiSlimePuddleTimer = urand(20000, 30000);
+				DoSlimePuddle();
+                m_uiSlimePuddleTimer = 35000;
             }
             else m_uiSlimePuddleTimer -= uiDiff;
 
             if (m_uiUnstableExperimentTimer < uiDiff)
             {
                 DoCast(m_creature, SPELL_UNSTABLE_EXPERIMENT);
-                m_uiUnstableExperimentTimer = urand(50000, 60000);
+				DoExperiment();
+                m_uiUnstableExperimentTimer = 37000;
             }
             else m_uiUnstableExperimentTimer -= uiDiff;
 
-            if (m_uiChockinGasTimer < uiDiff)
-            {
-                //DoCast(m_creature, SPELL_SLIME_PUDDLE);
-                m_uiChockinGasTimer = urand(15000, 20000);
-            }
+			if (m_uiChockinGasTimer < uiDiff)
+			{
+				for(uint8 i = 0; i < m_uiMaxTargets; ++i)
+				{
+					if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+						m_creature->SummonCreature(NPC_GAS_BOMB, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 25000);
+				}
+				m_uiChockinGasTimer = urand(15000, 20000);
+			}
             else m_uiChockinGasTimer -= uiDiff;
 
             if (m_uiMalleableGooTimer < uiDiff)
             {
-                DoCast(m_creature, SPELL_MALLEABLE_GOO_SUMMON);
-                DoCast(m_creature, SPELL_MALLEABLE_GOO_VISUAL);
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+					DoCast(pTarget, SPELL_MALLEABLE_GOO);
                 m_uiMalleableGooTimer = urand(10000, 15000);
             }
-            else m_uiMalleableGooTimer -= uiDiff;
+			else m_uiMalleableGooTimer -= uiDiff;
+
+			if (m_creature->GetHealthPercent() < 35.0f) 
+			{
+				m_creature->InterruptNonMeleeSpells(true);
+				SetCombatMovement(false);
+				if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				{
+					DoCast(m_creature, SPELL_TEAR_GAS);
+					m_uiMovementTimer	= 2500;
+				}
+				else 
+					m_uiMovementTimer = 100;
+				m_uiSwitchTimer		 = 17500;
+				m_uiDrinkPotionTimer = 10000;
+				m_uiPhase = PHASE_TRANSFORM_2;
+			}
 
             break;
             // break -> tear gas
-        case 4:
+		case PHASE_TRANSFORM_2:
+
+			if(m_uiMovementTimer < uiDiff)
+			{
+				m_creature->GetMotionMaster()->MovePoint(0, homeX, homeY, homeZ);
+				m_uiMovementTimer = 30000;
+			}
+			else m_uiMovementTimer -= uiDiff;
 
             if (m_uiDrinkPotionTimer < uiDiff)
             {
+				DoScriptText(SAY_TRANSFORM2, m_creature);
                 DoCast(m_creature, SPELL_GUZZLE_POTIONS);
-                m_uiSwitchTimer = 15000;
                 m_uiDrinkPotionTimer = 60000;
             }
             else m_uiDrinkPotionTimer -= uiDiff;
@@ -292,52 +405,24 @@ struct MANGOS_DLL_DECL boss_professor_putricideAI : public ScriptedAI
                 if(m_pInstance)
                     m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_MUTATED_TRANSFORMATION);
                 SetCombatMovement(true);
-                m_creature->RemoveAurasDueToSpell(SPELL_TEAR_GAS);
                 m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                m_uiPhase = 5;
+                m_uiPhase = PHASE_3;
             }
             else m_uiSwitchTimer -= uiDiff;
 
             break;
             // phase 3
-        case 5:
-
-            if (m_uiMutatedStrengthTimer < uiDiff)
-            {
-                DoCast(m_creature, SPELL_MUTATED_STRENGTH);
-                m_uiMutatedStrengthTimer = urand(13000, 15000);
-            }
-            else m_uiMutatedStrengthTimer -= uiDiff;
+        case PHASE_3:
 
             if (m_uiMutatedPlagueTimer < uiDiff)
             {
-                if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
-                    DoCast(target, SPELL_MUTATED_PLAGUE);
-                m_uiMutatedPlagueTimer = urand(20000, 25000);
+                if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
+                    DoCast(pTarget, SPELL_MUTATED_PLAGUE);
+                m_uiMutatedPlagueTimer = 10000;
             }
             else m_uiMutatedPlagueTimer -= uiDiff;
 
             break;
-        }
-
-        // phase changes
-        if ( m_uiPhase == 1 && m_creature->GetHealthPercent() < 80.0f )
-        {
-            DoScriptText(SAY_TRANSFORM1, m_creature);
-            DoCast(m_creature, SPELL_TEAR_GAS);
-            SetCombatMovement(false);
-            m_creature->GetMotionMaster()->MovePoint(0, homeX, homeY, homeZ);
-            m_uiDrinkPotionTimer = 5000;
-            m_uiPhase = 2;
-        }
-        if ( m_uiPhase == 3 && m_creature->GetHealthPercent() < 35.0f ) 
-        {
-            DoScriptText(SAY_TRANSFORM2, m_creature);
-            DoCast(m_creature, SPELL_TEAR_GAS);
-            SetCombatMovement(false);
-            m_creature->GetMotionMaster()->MovePoint(0, homeX, homeY, homeZ);
-            m_uiDrinkPotionTimer = 5000;
-            m_uiPhase = 4;
         }
 
         // berserk
@@ -364,6 +449,7 @@ struct MANGOS_DLL_DECL mob_icc_gas_cloudAI : public ScriptedAI
     mob_icc_gas_cloudAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+		pCreature->setFaction(14);
         Reset();
     }
 
@@ -371,12 +457,19 @@ struct MANGOS_DLL_DECL mob_icc_gas_cloudAI : public ScriptedAI
 
     void Reset()
     {
+		DoCast(m_creature, SPELL_GASEOUS_BLOAT_10);
+		m_creature->SetRespawnDelay(DAY);
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if(m_pInstance->GetData(TYPE_PUTRICIDE) != IN_PROGRESS)
+            m_creature->ForcedDespawn();
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+		DoMeleeAttackIfReady();
     }
 };
 
@@ -390,20 +483,35 @@ struct MANGOS_DLL_DECL mob_icc_volatile_oozeAI : public ScriptedAI
     mob_icc_volatile_oozeAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+		pCreature->setFaction(14);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
 
+	bool m_bHasTarget;
+
     void Reset()
     {
+		m_bHasTarget = false;
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if(m_pInstance->GetData(TYPE_PUTRICIDE) != IN_PROGRESS)
+            m_creature->ForcedDespawn();
 
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+		if(!m_bHasTarget)
+		{
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(pTarget, SPELL_OOZE_ADHESIVE_10);
+			m_bHasTarget = true;
+		}
+
+		DoMeleeAttackIfReady();
     }
 };
 
@@ -412,57 +520,49 @@ CreatureAI* GetAI_mob_icc_volatile_ooze(Creature* pCreature)
     return new mob_icc_volatile_oozeAI(pCreature);
 }
 
-
 struct MANGOS_DLL_DECL mob_icc_gas_bombAI : public ScriptedAI
 {
     mob_icc_gas_bombAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = pCreature->GetMap()->GetDifficulty();
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        pCreature->SetRespawnTime(DAY);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetDisplayId(11686);     // make invisible
+        pCreature->setFaction(14);
         SetCombatMovement(false);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-    uint32 Difficulty;
 
     uint32 m_uiExplodeTimer;
+	uint32 m_uiDieTimer;
 
     void Reset()
     {
-        m_uiExplodeTimer = 20000;
-
-        if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-            DoCast(m_creature, SPELL_CHOKING_GAS_10);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-            DoCast(m_creature, SPELL_CHOKING_GAS_25);
-        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-            DoCast(m_creature, SPELL_CHOKING_GAS_10HC);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-            DoCast(m_creature, SPELL_CHOKING_GAS_25HC);
+        m_uiExplodeTimer	= 20000;
+		m_uiDieTimer		= 21000;
+		m_creature->SetRespawnTime(DAY);
+		DoCast(m_creature, SPELL_CHOKING_GAS_TRIG);
     }
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if(m_pInstance->GetData(TYPE_PUTRICIDE) != IN_PROGRESS)
-            m_creature->ForcedDespawn();
+		if(m_uiExplodeTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_CHOKING_GAS_EXPL_TRIG);
+			m_uiExplodeTimer = 10000;
+		}
+		else m_uiExplodeTimer -= uiDiff;
 
-        if(m_uiExplodeTimer < uiDiff)
-        {
-            if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                DoCast(m_creature, SPELL_CHOKING_GAS_EXPL_10);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                DoCast(m_creature, SPELL_CHOKING_GAS_EXPL_25);
-            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-                DoCast(m_creature, SPELL_CHOKING_GAS_EXPL_10HC);
-            if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                DoCast(m_creature, SPELL_CHOKING_GAS_EXPL_25HC);
-
-            m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }
-        else m_uiExplodeTimer -= uiDiff;
+		if(m_uiDieTimer < uiDiff)
+			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+		else m_uiDieTimer -= uiDiff;
     }
 };
 
@@ -471,72 +571,31 @@ CreatureAI* GetAI_mob_icc_gas_bomb(Creature* pCreature)
     return new mob_icc_gas_bombAI(pCreature);
 }
 
-struct MANGOS_DLL_DECL mob_malleable_oozeAI : public ScriptedAI
-{
-    mob_malleable_oozeAI(Creature* pCreature) : ScriptedAI(pCreature)
-    {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = pCreature->GetMap()->GetDifficulty();
-        pCreature->SetRespawnTime(DAY);
-        SetCombatMovement(false);
-        Reset();
-    }
-
-    ScriptedInstance* m_pInstance;
-    uint32 Difficulty;
-
-    void Reset()
-    {
-        if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-            DoCast(m_creature->getVictim(), SPELL_MALLEABLE_GOO_10);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-            DoCast(m_creature->getVictim(), SPELL_MALLEABLE_GOO_25);
-        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-            DoCast(m_creature->getVictim(), SPELL_MALLEABLE_GOO_10HC);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-            DoCast(m_creature->getVictim(), SPELL_MALLEABLE_GOO_25HC);
-    }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if(m_pInstance->GetData(TYPE_PUTRICIDE) != IN_PROGRESS)
-            m_creature->ForcedDespawn();
-
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-    }
-};
-
-CreatureAI* GetAI_mob_malleable_ooze(Creature* pCreature)
-{
-    return new mob_malleable_oozeAI(pCreature);
-}
-
 struct MANGOS_DLL_DECL mob_slime_puddleAI : public ScriptedAI
 {
     mob_slime_puddleAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        Difficulty = pCreature->GetMap()->GetDifficulty();
-        pCreature->SetRespawnTime(DAY);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetDisplayId(11686);     // make invisible
+        pCreature->setFaction(14);
         SetCombatMovement(false);
         Reset();
     }
 
     ScriptedInstance* m_pInstance;
-    uint32 Difficulty;
 
     void Reset()
     {
-        if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-            DoCast(m_creature->getVictim(), SPELL_SLIME_PUDDLE_10);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-            DoCast(m_creature->getVictim(), SPELL_SLIME_PUDDLE_25);
-        if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-            DoCast(m_creature->getVictim(), SPELL_SLIME_PUDDLE_25);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-            DoCast(m_creature->getVictim(), SPELL_SLIME_PUDDLE_25HC);
+		m_creature->SetRespawnTime(DAY);
+        DoCast(m_creature, SPELL_SLIME_PUDDLE_TRIG);
     }
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -574,11 +633,6 @@ void AddSC_boss_professor_putricide()
     newscript = new Script;
     newscript->Name = "mob_icc_gas_bomb";
     newscript->GetAI = &GetAI_mob_icc_gas_bomb;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "mob_malleable_ooze";
-    newscript->GetAI = &GetAI_mob_malleable_ooze;
     newscript->RegisterSelf();
 
     newscript = new Script;

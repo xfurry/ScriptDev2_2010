@@ -72,7 +72,7 @@ enum BossSpells
     NPC_BIG_OOZE                = 36899,	
     NPC_SMALL_OOZE              = 36897,
     NPC_STICKY_OOZE             = 37006,	// casted by big / small ooze
-	NPC_OOZE_PUDDLE				= 37690,	// used for ooze flood
+	NPC_OOZE_PUDDLE				= 37013,	// used for ooze flood
 };
 
 struct Locations

@@ -24,18 +24,21 @@ UPDATE creature_template SET ScriptName = 'boss_rotface' WHERE entry = 36627;
 UPDATE creature_template SET ScriptName = 'mob_small_ooze', `flags_extra` = 256 WHERE entry = 36897;
 UPDATE creature_template SET ScriptName = 'mob_big_ooze' WHERE entry = 36899;
 UPDATE creature_template SET ScriptName = 'mob_sticky_ooze' WHERE entry = 37006;
-REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69783', '1', '37690');
-REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69797', '1', '37690');
-REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69799', '1', '37690');
-REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69802', '1', '37690');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69783', '1', '37013');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69797', '1', '37013');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69799', '1', '37013');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('69802', '1', '37013');
+update creature set spawnMask = 0 where id in (37013);
 
 -- Putricide
 UPDATE creature_template SET ScriptName = 'boss_professor_putricide' WHERE entry = 36678;
 UPDATE creature_template SET ScriptName = 'mob_icc_volatile_ooze' WHERE entry = 37697;
 UPDATE creature_template SET ScriptName = 'mob_icc_gas_cloud' WHERE entry = 37562;
 UPDATE creature_template SET ScriptName = 'mob_icc_gas_bomb' WHERE entry = 38159;
-UPDATE creature_template SET ScriptName = 'mob_malleable_ooze' WHERE entry = 38556;
-UPDATE creature_template SET ScriptName = 'mob_slime_puddle' WHERE entry = 38234;
+UPDATE creature_template SET ScriptName = 'mob_slime_puddle' WHERE entry = 37690;
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('71617', '1', '36678');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('71704', '1', '36678');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('71621', '1', '36678');
 
 -- Blood prince council
 UPDATE creature_template SET ScriptName = 'boss_prince_taldaram' WHERE entry = 37973;

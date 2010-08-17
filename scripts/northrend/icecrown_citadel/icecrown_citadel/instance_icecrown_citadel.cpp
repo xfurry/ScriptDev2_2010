@@ -76,6 +76,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
     uint64 m_uiScientistDoorOrangeGUID;
     uint64 m_uiScientistDoorColisionGUID;
     uint64 m_uiPlagueSigilGUID;
+	uint64 m_uiDrinkMeGUID;
 
     // crimson halls
     uint64 m_uiBloodwingDoorGUID;
@@ -147,6 +148,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
         m_uiScientistDoorOrangeGUID     = 0;
         m_uiScientistDoorColisionGUID   = 0;
         m_uiPlagueSigilGUID             = 0;
+		m_uiDrinkMeGUID					= 0;
 
         // crimsonhalls
         m_uiBloodwingDoorGUID           = 0;
@@ -307,6 +309,9 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 if(m_auiEncounter[6] == DONE)
                     pGo->SetGoState(GO_STATE_READY);
                 break;
+			case GO_DRINK_ME:
+				m_uiDrinkMeGUID = pGo->GetGUID();
+				break;
                 // crimson halls
             case GO_BLOODWING_DOOR:
                 m_uiBloodwingDoorGUID = pGo->GetGUID();
@@ -709,6 +714,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 				return m_uiLichKingGUID;
 			case NPC_TIRION_FINAL:
 				return m_uiTirionFinalGUID;
+			case GO_DRINK_ME:
+				return m_uiDrinkMeGUID;
         }
         return 0;
     }

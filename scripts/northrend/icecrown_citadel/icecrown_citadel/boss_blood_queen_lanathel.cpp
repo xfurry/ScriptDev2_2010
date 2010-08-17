@@ -104,10 +104,6 @@ struct MANGOS_DLL_DECL boss_blood_queen_lanathelAI : public ScriptedAI
             m_pInstance->SetData(TYPE_BLOOD_QUEEN, NOT_STARTED);
             m_pInstance->SetData(TYPE_ATTEMPTS, m_pInstance->GetData(TYPE_ATTEMPTS) - 1);
             m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_ATTEMPTS));
-			if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 9999);
-			else
-				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 25);
         }
     }
 
@@ -119,6 +115,10 @@ struct MANGOS_DLL_DECL boss_blood_queen_lanathelAI : public ScriptedAI
             m_pInstance->SetData(TYPE_BLOOD_QUEEN, IN_PROGRESS);
 			m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_SHOW, 1);
 			m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_ATTEMPTS));
+			if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 9999);
+			else
+				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 25);
 		}
         DoCast(m_creature,SPELL_SHROUD_OF_SORROW);
     }
