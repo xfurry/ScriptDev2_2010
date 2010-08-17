@@ -274,7 +274,7 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
             return;
         }
 
-        if(m_uiSacrificeEndTimer < uiDiff && m_bIsSacrifice)
+        if(m_uiSacrificeEndTimer < uiDiff)
 		{
 			if(!m_lAddsGUIDList.empty())
 			{
@@ -283,22 +283,28 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
 					if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *iter))
 					{
 						if(pTemp->isAlive())
+						{
 							pTemp->ForcedDespawn();
+							m_bIsSacrifice = true;
+						}
 					}
 				}
 				m_lAddsGUIDList.clear();
 			}
 
-			if(Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiPlayerGUID))
-				m_creature->DealDamage(pPlayer, pPlayer->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+			if(m_bIsSacrifice)
+			{
+				if(Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiPlayerGUID))
+					m_creature->DealDamage(pPlayer, pPlayer->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+				m_bIsSacrifice = false;
+			}
 
 			m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
 			SetCombatMovement(true);
 			m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
             m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
-
 			m_uiPlayerGUID = 0;
-			m_bIsSacrifice = false;
+			m_uiSacrificeEndTimer = 40000;
 		}else m_uiSacrificeEndTimer -= uiDiff;
 
 		if(m_uiSinisterStrikeTimer < uiDiff)
@@ -317,6 +323,7 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
         if(m_uiSacrificeTimer < uiDiff)
         {
             m_uiPlayerGUID = 0;
+			m_creature->InterruptNonMeleeSpells(true);
             if(Unit* pPlayer = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
 				DoCast(pPlayer, SPELL_RITUAL_OF_SWORD);
@@ -350,7 +357,6 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
 				SetCombatMovement(false);
 				m_creature->GetMotionMaster()->MovePoint(0, 296.709f, -338.215f, 95.295f);
             }
-            m_bIsSacrifice = true;
             m_uiSacrificeTimer = 40000;
         }else m_uiSacrificeTimer -= uiDiff;
 
