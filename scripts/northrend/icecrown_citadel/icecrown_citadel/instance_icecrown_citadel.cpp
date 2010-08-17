@@ -113,7 +113,10 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
         m_bNeedSave                     = false;
-        m_auiEncounter[12]              = 20;
+		if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+			m_auiEncounter[12]          = 9999;
+		else
+			m_auiEncounter[12]          = 20;
 
         // npcs
         m_uiMarrowgarGUID               = 0;
@@ -194,11 +197,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             case NPC_TALDARAM:      m_uiTaldaramGUID        = pCreature->GetGUID(); break;
             case NPC_LANATHEL:      m_uiLanathelGUID        = pCreature->GetGUID(); break;
 			case NPC_SVALNA:		m_uiSvalnaGUID			= pCreature->GetGUID(); break;
-			case NPC_VALITHRIA:		
-				m_uiValithriaGUID = pCreature->GetGUID();
-				if(m_auiEncounter[10] == DONE)
-					pCreature->SetVisibility(VISIBILITY_OFF);
-				break;
+			case NPC_VALITHRIA:		m_uiValithriaGUID		= pCreature->GetGUID(); break;
 			case NPC_VALITHRIA_HUMAN: 
 				pCreature->SetVisibility(VISIBILITY_OFF);
 				m_uiValithriaHumanGUID = pCreature->GetGUID(); 

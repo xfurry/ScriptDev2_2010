@@ -44,6 +44,7 @@ UPDATE creature_template SET ScriptName = 'boss_prince_valanar' WHERE entry = 37
 
 -- Blood queen Lanathel
 UPDATE creature_template SET ScriptName = 'boss_blood_queen_lanathel' WHERE entry = 37955;
+update creature_template set scriptName = 'mob_swarming_shadow' where entry = 38163;
 
 -- Svalna event
 update creature_template set scriptName = 'miniboss_sister_svalna' where entry = 37126;

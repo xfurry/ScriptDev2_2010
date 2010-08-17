@@ -155,9 +155,12 @@ struct MANGOS_DLL_DECL miniboss_stinkyAI : public ScriptedAI
     {
         m_uiMortalWoundTimer    = 3000;
         m_uiDecimateTimer       = 10000;
-
-        DoCast(m_creature, SPELL_PLAGUE_STENCH);
     }
+
+	void Aggro(Unit* pWho)
+	{
+		DoCast(m_creature, SPELL_PLAGUE_STENCH);
+	}
 
     void JustDied(Unit *killer)
     {
@@ -212,9 +215,12 @@ struct MANGOS_DLL_DECL miniboss_preciousAI : public ScriptedAI
     {
         m_uiMortalWoundTimer    = 3000;
         m_uiDecimateTimer       = 10000;
-
-        DoCast(m_creature, SPELL_PRECIOUS_RIBBON);
     }
+
+	void Aggro(Unit* pWho)
+	{
+		DoCast(m_creature, SPELL_PRECIOUS_RIBBON);
+	}
 
     void JustDied(Unit *killer)
     {
