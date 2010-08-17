@@ -437,9 +437,9 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             // Shattered Hallway
         case GO_KOLOGARN_BRIDGE:
             m_uiKologarnBridgeGUID = pGo->GetGUID();
-            pGo->SetGoState(GO_STATE_READY);
+            pGo->SetGoState(GO_STATE_ACTIVE);
             if(m_auiEncounter[5] == DONE)
-                pGo->SetGoState(GO_STATE_ACTIVE);
+                pGo->SetGoState(GO_STATE_READY);
             break;
         case GO_SHATTERED_DOOR:
             m_uiShatteredHallsDoorGUID = pGo->GetGUID();
@@ -725,8 +725,10 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case TYPE_KOLOGARN:
             m_auiEncounter[5] = uiData;
+			DoUseDoorOrButton(m_uiShatteredHallsDoorGUID);
             if (uiData == DONE)
             {
+				DoUseDoorOrButton(m_uiKologarnBridgeGUID);
                 DoRespawnGameObject(m_uiKologarnLootGUID, 30*MINUTE);
                 CheckIronCouncil();
             }
