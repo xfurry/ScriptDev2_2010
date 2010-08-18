@@ -228,7 +228,8 @@ struct MANGOS_DLL_DECL boss_professor_putricideAI : public ScriptedAI
 
 	void JustSummoned(Creature* pSummon)
 	{
-		pSummon->SetInCombatWithZone();
+		if(pSummon->GetEntry() == NPC_GAS_CLOUD || pSummon->GetEntry() == NPC_VOLATILE_OOZE)
+			pSummon->SetInCombatWithZone();
 	}
 
 	void DoExperiment()
@@ -586,10 +587,17 @@ struct MANGOS_DLL_DECL mob_slime_puddleAI : public ScriptedAI
 
     ScriptedInstance* m_pInstance;
 
+	float m_fSize;
+    uint32 m_uiSizeTimer;
+
     void Reset()
     {
 		m_creature->SetRespawnTime(DAY);
         DoCast(m_creature, SPELL_SLIME_PUDDLE_TRIG);
+
+		m_fSize = 0.33f;
+		m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, m_fSize);
+        m_uiSizeTimer = 1000;
     }
 
 	void AttackStart(Unit* pWho)
@@ -602,8 +610,14 @@ struct MANGOS_DLL_DECL mob_slime_puddleAI : public ScriptedAI
         if(m_pInstance->GetData(TYPE_PUTRICIDE) != IN_PROGRESS)
             m_creature->ForcedDespawn();
 
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
+        if(m_uiSizeTimer < uiDiff && m_fSize <= 1.0f)
+        {
+			m_fSize += 0.032f;
+            m_creature->SetFloatValue(OBJECT_FIELD_SCALE_X, m_fSize);
+            m_uiSizeTimer = 1000;
+        }
+        else
+            m_uiSizeTimer -= uiDiff;
     }
 };
 
