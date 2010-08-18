@@ -634,7 +634,8 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
             m_creature->SetHealth(m_creature->GetMaxHealth()/2);
             submergeTimer = 10000;
             isSubmerged = true;
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
+            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+			m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         }
 
         if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
@@ -657,11 +658,9 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
 
         if (submergeTimer < uiDiff && isSubmerged)
         {
-            if (m_creature->HasAura(SPELL_SUBMERGE_ANUB, EFFECT_INDEX_0))
-            {
-                m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE_ANUB);
-                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE|UNIT_FLAG_NOT_SELECTABLE);
-            }
+            m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE_ANUB);
+			m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+			m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             submergeTimer = 600000;
         }else submergeTimer -= uiDiff;
 
