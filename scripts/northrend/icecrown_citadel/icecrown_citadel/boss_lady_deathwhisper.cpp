@@ -137,6 +137,8 @@ struct MANGOS_DLL_DECL boss_deathwhisperAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
+		pCreature->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_POWER_BURN, true);		// immune to mana burn
+		pCreature->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_POWER_DRAIN, true);	// immune to mana drain
         m_bIsIntroDone = false;
         Reset();
     }
