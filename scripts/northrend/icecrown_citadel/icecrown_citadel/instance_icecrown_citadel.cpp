@@ -716,6 +716,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 				return m_uiValanarGUID;
 			case NPC_KELESETH:
 				return m_uiKelesethGUID;
+			case NPC_LANATHEL:
+				return m_uiLanathelGUID;
 			case NPC_SVALNA:
 				return m_uiSvalnaGUID;
 			case NPC_VALITHRIA:

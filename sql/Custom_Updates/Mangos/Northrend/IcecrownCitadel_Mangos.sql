@@ -44,6 +44,12 @@ REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('716
 UPDATE creature_template SET ScriptName = 'boss_prince_taldaram' WHERE entry = 37973;
 UPDATE creature_template SET ScriptName = 'boss_prince_keleseth' WHERE entry = 37972;
 UPDATE creature_template SET ScriptName = 'boss_prince_valanar' WHERE entry = 37970;
+UPDATE creature_template SET ScriptName = 'mob_kinetic_bomb' WHERE entry = 38458;
+UPDATE creature_template SET ScriptName = 'mob_conjured_flame' WHERE entry in (38332, 38451);
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70981', '1', '37972');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70952', '1', '37970');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70982', '1', '37973');
+
 
 -- Blood queen Lanathel
 UPDATE creature_template SET ScriptName = 'boss_blood_queen_lanathel' WHERE entry = 37955;
@@ -145,7 +151,7 @@ UPDATE gameobject_template SET ScriptName="icecrown_citadel_teleporter", `flags`
 #delete from scripted_areatrigger where id = 5718;
 UPDATE `gameobject_template` SET `flags` = 32 WHERE `entry` = 202223; -- original flag = 48
 update gameobject_template set faction = 114 where entry in (201857, 201563, 201370, 201371, 201372, 201618, 201617, 201614, 201613,
-201182, 202181, 202183);
+201182, 202181, 202183, 201377, 201378);
 update gameobject_template set faction = 0 where entry in (201920, 201919);
 -- deathbringers & dreamwalkers loot
 UPDATE gameobject_template SET faction = 0, flags = 0 WHERE entry in (202238, 202239, 202240, 202241, 201959, 202338, 202339, 202340);

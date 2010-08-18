@@ -278,6 +278,7 @@ struct MANGOS_DLL_DECL mob_swarming_shadowAI : public ScriptedAI
         SetCombatMovement(false);
         Reset();
     }
+
     ScriptedInstance *m_pInstance;
 
     void Reset()
