@@ -439,7 +439,10 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             m_uiKologarnBridgeGUID = pGo->GetGUID();
             pGo->SetGoState(GO_STATE_ACTIVE);
             if(m_auiEncounter[5] == DONE)
+			{
+				pGo->SetUInt32Value(GAMEOBJECT_LEVEL, 0);
                 pGo->SetGoState(GO_STATE_READY);
+			}
             break;
         case GO_SHATTERED_DOOR:
             m_uiShatteredHallsDoorGUID = pGo->GetGUID();
@@ -728,7 +731,11 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
 			DoUseDoorOrButton(m_uiShatteredHallsDoorGUID);
             if (uiData == DONE)
             {
-				DoUseDoorOrButton(m_uiKologarnBridgeGUID);
+				if (GameObject* pGo = instance->GetGameObject(m_uiKologarnBridgeGUID))
+                {
+                    pGo->SetUInt32Value(GAMEOBJECT_LEVEL, 0);
+                    pGo->SetGoState(GO_STATE_READY);
+                }
                 DoRespawnGameObject(m_uiKologarnLootGUID, 30*MINUTE);
                 CheckIronCouncil();
             }
