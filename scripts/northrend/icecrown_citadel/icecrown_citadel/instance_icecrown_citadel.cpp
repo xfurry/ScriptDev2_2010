@@ -249,9 +249,14 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
             case GO_DEATHWHISPER_GATE:
                 m_uiDeathwhisperGateGUID = pGo->GetGUID();
                 break;
-            case GO_DEATHWHISPER_ELEVATOR:
-                m_uiDeathwhisperElevatorGUID = pGo->GetGUID();
-                break;
+			case GO_DEATHWHISPER_ELEVATOR:
+				m_uiDeathwhisperElevatorGUID = pGo->GetGUID();
+				if (m_auiEncounter[1] == DONE)
+				{
+					pGo->SetUInt32Value(GAMEOBJECT_LEVEL, 0);
+					pGo->SetGoState(GO_STATE_READY);
+				}
+				break;
             case GO_SAURFANG_DOOR:
                 m_uiSaurfangDoorGUID = pGo->GetGUID();
                 pGo->SetGoState(GO_STATE_READY);
@@ -507,7 +512,10 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 				if(uiData == DONE)
 				{
 					if(GameObject* pLift = instance->GetGameObject(m_uiDeathwhisperElevatorGUID))
-						pLift->SetGoState(GO_STATE_ACTIVE);
+					{
+						pLift->SetUInt32Value(GAMEOBJECT_LEVEL, 0);
+						pLift->SetGoState(GO_STATE_READY);
+					}
 				}
                 break;
             case TYPE_GUNSHIP_BATTLE:
