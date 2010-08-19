@@ -5,6 +5,9 @@ UPDATE `creature_template` SET `ScriptName`='mob_dark_rider_of_acherus',ainame="
 -- The Gift That Keeps On Giving
 UPDATE `creature_template` SET `ScriptName`='mob_scarlet_miner',ainame="" WHERE `entry`='28822';
 
+-- The Endless hunger
+UPDATE gameobject_template SET data2 = 120000 WHERE entry IN (191577,191580,191581,191582,191583,191584,191585,191586,191587,191588,191589,191590);
+
 -- How To Win Friends And Influence Enemies
 UPDATE `creature_template` SET `ScriptName`='npc_crusade_persuaded',ainame="" WHERE `entry` IN (28939,28940,28610);
 
@@ -81,7 +84,7 @@ INSERT INTO `creature_ai_scripts` VALUES ('90083', '29181', '0', '0', '100', '3'
 INSERT INTO `creature_ai_scripts` VALUES ('90084', '29181', '0', '0', '100', '3', '10000', '20000', '10000', '20000', '11', '21807', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'Rayne - SPELL_WRATH');
 
 -- Eye of Acherus
-UPDATE creature_template SET modelid_A = 16925, modelid_H = 16925, scale = 2, flags_extra = 0 WHERE entry IN (28525,28542,28543,28544);
+UPDATE creature_template SET modelid_1 = 16925, modelid_3 = 16925, scale = 2, flags_extra = 0 WHERE entry IN (28525,28542,28543,28544);
 
 UPDATE quest_template SET ReqSpellCast1 = 51859, ReqSpellCast2 = 51859, ReqSpellCast3 = 51859, ReqSpellCast4 = 51859 WHERE entry = 12641;
 
