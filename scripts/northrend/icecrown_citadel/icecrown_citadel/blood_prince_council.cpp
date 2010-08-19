@@ -82,6 +82,7 @@ enum BossSpells
     SPELL_FLAMES                            = 71393,
     SPELL_CONJURE_EMPOWERED_FLAME           = 72040,
     SPELL_EMPOWERED_FLAMES                  = 71709,	// periodic damage
+	SPELL_FLAMES_VISUAL						= 55928,	// NEEDS FIX!!!
 	NPC_CONJURED_FLAME						= 38332,	// needs advanced script
 	NPC_EMPOWERED_CONJURED_FLAME			= 38451,	// needs advanced script
 
@@ -129,7 +130,7 @@ struct MANGOS_DLL_DECL mob_conjured_flameAI : public ScriptedAI
 			DoCast(m_creature, SPELL_EMPOWERED_FLAMES);
 	}
 
-	void SetDestination(uint32 posX, uint32 posY, uint32 posZ)
+	void SetDestination(float posX, float posY, float posZ)
 	{
 		m_creature->GetMotionMaster()->MovePoint(0, posX, posY, posZ);
 	}
@@ -157,6 +158,9 @@ struct MANGOS_DLL_DECL mob_conjured_flameAI : public ScriptedAI
 		if (m_pInstance && m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != IN_PROGRESS) 
             m_creature->ForcedDespawn();
 
+		if(!m_creature->HasAura(SPELL_FLAMES_VISUAL, EFFECT_INDEX_0))
+			DoCast(m_creature, SPELL_FLAMES_VISUAL);
+
 		if(m_uiDieTimer < uiDiff && m_bMustDie)
 			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 		else m_uiDieTimer -= uiDiff;
@@ -167,6 +171,106 @@ struct MANGOS_DLL_DECL mob_conjured_flameAI : public ScriptedAI
 CreatureAI* GetAI_mob_conjured_flame(Creature* pCreature)
 {
     return new mob_conjured_flameAI(pCreature);
+}
+
+// kinetic bomb
+struct MANGOS_DLL_DECL mob_kinetic_bombAI : public ScriptedAI
+{
+	mob_kinetic_bombAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+		Difficulty = pCreature->GetMap()->GetDifficulty();
+		pCreature->SetDisplayId(11686);     // make invisible
+		pCreature->setFaction(14);
+		SetCombatMovement(false);
+		Reset();
+	}
+
+	ScriptedInstance* m_pInstance;
+	uint32 Difficulty;
+
+	uint32 m_uiDieTimer;
+	bool m_bMustDie;
+	bool m_bIsFalling;
+	float m_fSpeedRate;
+	float m_fTargetX;
+	float m_fTargetY;
+	float m_fTargetZ;
+
+	void Reset()
+	{
+		DoCast(m_creature,SPELL_KINETIC_BOMB_VISUAL);
+		m_bMustDie = false;
+		m_bIsFalling = false;
+		if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+			m_fSpeedRate = 1.0f;
+		else
+			m_fSpeedRate = 0.5f;
+		m_creature->SetSpeedRate(MOVE_WALK, m_fSpeedRate);
+        m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
+	}
+
+	void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+    {
+        if (uiDamage > 0)
+        {
+			uiDamage = 0;
+			m_bIsFalling = false;
+			m_creature->NearTeleportTo(m_creature->GetPositionX(), m_creature->GetPositionY(), 391.0f, 0, false);
+			m_creature->GetMap()->CreatureRelocation(m_creature, m_fTargetX, m_fTargetY, m_fTargetZ + 31, 0);
+			m_creature->SendMonsterMove(m_fTargetX, m_fTargetY, m_fTargetZ + 31, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+		}
+    }
+
+	void SetDestination(float posX, float posY, float posZ)
+	{
+		m_creature->GetMotionMaster()->MovePoint(0, posX, posY, posZ);
+		m_fTargetX = posX;
+		m_fTargetY = posY;
+		m_fTargetZ = posZ;
+		m_bIsFalling = true;
+	}
+
+	void MovementInform(uint32 uiType, uint32 uiPointId)
+	{
+		if(uiType != POINT_MOTION_TYPE)
+			return;
+
+		if(uiPointId == 0)
+		{
+			DoCast(m_creature, SPELL_KINETIC_BOMB_EXPLODE);
+			m_uiDieTimer = 1000;
+			m_bMustDie = true;
+		}
+	}
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if (m_pInstance && m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
+		if(m_creature->GetPositionZ() > 390 && !m_bIsFalling)
+		{
+			m_creature->GetMotionMaster()->MovePoint(0, m_fTargetX, m_fTargetY, m_fTargetZ);
+			m_creature->SetSpeedRate(MOVE_WALK, m_fSpeedRate);
+			m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
+			m_bIsFalling = true;
+		}
+
+		if(m_uiDieTimer < uiDiff && m_bMustDie)
+			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+		else m_uiDieTimer -= uiDiff;
+	}
+};
+
+CreatureAI* GetAI_mob_kinetic_bomb(Creature* pCreature)
+{
+    return new mob_kinetic_bombAI(pCreature);
 }
 
 // right side
@@ -566,6 +670,18 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 			pSummoned->CombatStop();
 			pSummoned->GetMotionMaster()->MoveIdle();
 		}
+		else if(pSummoned->GetEntry() == NPC_KINETIC_BOMB_TARGET)
+		{
+			pSummoned->SetDisplayId(11686);     // make invisible
+			if(Creature* pBomb = m_creature->SummonCreature(NPC_KINETIC_BOMB, pSummoned->GetPositionX(), pSummoned->GetPositionY(), pSummoned->GetPositionZ() + 10, 0, TEMPSUMMON_CORPSE_DESPAWN, 1000))
+			{
+				((mob_kinetic_bombAI*)pBomb->AI())->SetDestination(pSummoned->GetPositionX(), pSummoned->GetPositionY(), pSummoned->GetPositionZ());
+				pBomb->GetMap()->CreatureRelocation(pBomb, pSummoned->GetPositionX(), pSummoned->GetPositionY(), pSummoned->GetPositionZ() + 30, 0);
+                pBomb->SendMonsterMove(pSummoned->GetPositionX(), pSummoned->GetPositionY(), pSummoned->GetPositionZ() + 30, SPLINETYPE_NORMAL, pBomb->GetSplineFlags(), 1);
+				pBomb->AddSplineFlag(SPLINEFLAG_FLYING);
+				pBomb->SetInCombatWithZone();
+			}
+		}
 	}
 
 	void KilledUnit(Unit* pVictim)
@@ -666,7 +782,7 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 				if (Creature* pLanthel = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_LANATHEL))))
 					DoScriptText(SAY_INTRO1, pLanthel);
 				++m_uiIntroStep;
-				m_uiIntroTimer = 17000;
+				m_uiIntroTimer = 16000;
 				break;
 			case 3:
 				if (Creature* pLanthel = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_LANATHEL))))
@@ -807,87 +923,6 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 CreatureAI* GetAI_boss_prince_valanar(Creature* pCreature)
 {
     return new boss_prince_valanarAI(pCreature);
-}
-
-// kinetic bomb
-struct MANGOS_DLL_DECL mob_kinetic_bombAI : public ScriptedAI
-{
-	mob_kinetic_bombAI(Creature* pCreature) : ScriptedAI(pCreature)
-	{
-		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-		pCreature->SetDisplayId(11686);     // make invisible
-		pCreature->setFaction(14);
-		SetCombatMovement(false);
-		Reset();
-	}
-
-	ScriptedInstance* m_pInstance;
-
-	uint32 m_uiCheck_Timer;
-	uint32 m_uiMove_Timer;
-	uint32 m_uiBomb_Unstable;
-	uint32 m_uiDespawn_Timer;
-
-	void Reset()
-	{
-		DoCast(m_creature,SPELL_KINETIC_BOMB_VISUAL);
-		m_uiCheck_Timer = 200;
-		m_uiBomb_Unstable = 500;
-		m_uiMove_Timer  = 100;
-		m_uiDespawn_Timer = 2000;
-	}
-
-	void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
-    {
-        if (uiDamage > 0)
-        {
-            uiDamage = 0;
-            m_creature->NearTeleportTo(m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ()+5,0,false);
-        }
-    }
-
-	void UpdateAI(const uint32 uiDiff)
-	{
-		if (m_pInstance && m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != IN_PROGRESS) 
-            m_creature->ForcedDespawn();
-
-		if(m_uiBomb_Unstable <uiDiff)
-		{
-			//DoCast(m_creature,SPELL_BOMB_UNSTABLE);
-			m_uiBomb_Unstable = 61000;
-		}
-		else
-			m_uiBomb_Unstable -= uiDiff;
-		if(m_uiMove_Timer < uiDiff)
-		{
-			m_creature->NearTeleportTo(m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ()-0.125f,false);
-			m_uiMove_Timer = 100;
-		}
-		else 
-			m_uiMove_Timer -= uiDiff;
-		
-		if (m_uiCheck_Timer < uiDiff)
-        {
-            //if (m_creature->IsWithinDist3d(pBombTarget->GetPositionX(), pBombTarget->GetPositionY(), pBombTarget->GetPositionZ(),5.0f))
-            {
-				//DoCast(m_creature->getVictim(),SPELL_BOMB_EXPLOTION);
-				if(m_uiDespawn_Timer < uiDiff)
-				{
-					m_creature->ForcedDespawn();
-					m_uiDespawn_Timer = 100;
-				}
-            }
-           m_uiCheck_Timer = 1000;
-        }
-        else
-			m_uiCheck_Timer -= uiDiff;
-	}
-
-};
-
-CreatureAI* GetAI_mob_kinetic_bomb(Creature* pCreature)
-{
-    return new mob_kinetic_bombAI(pCreature);
 }
 
 void AddSC_blood_prince_council()
