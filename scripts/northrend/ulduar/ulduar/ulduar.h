@@ -168,6 +168,7 @@ enum
     GO_HODIR_ICE_WALL           = 194441,
     GO_HODIR_ENTER              = 194442,
     // mimiron
+	GO_MIMIRON_TRAM             = 194675,
     G0_MIMIRON_BUTTON           = 194739,
     GO_MIMIRON_DOOR_1           = 194774,
     GO_MIMIRON_DOOR_2           = 194775,

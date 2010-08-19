@@ -102,6 +102,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiHodirWallGUID;
     uint64 m_uiHodirExitDoorGUID;
     // Mimiron
+	uint64 m_uiMimironTramGUID;
     uint64 m_uiMimironButtonGUID;
     uint64 m_uiMimironDoor1GUID;
     uint64 m_uiMimironDoor2GUID;
@@ -223,6 +224,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiHodirWallGUID       = 0;
         m_uiHodirExitDoorGUID   = 0;
         // Mimiron
+		m_uiMimironTramGUID     = 0;
         m_uiMimironButtonGUID   = 0;
         m_uiMimironDoor1GUID    = 0;
         m_uiMimironDoor2GUID    = 0;
@@ -463,7 +465,15 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case GO_HODIR_ENTER:
             m_uiHodirEnterDoorGUID = pGo->GetGUID();
             break;
-            // Mimiron
+			// Mimiron
+		case GO_MIMIRON_TRAM:
+			m_uiMimironTramGUID = pGo->GetGUID();
+			if (m_auiEncounter[6] == DONE)
+			{
+				pGo->SetUInt32Value(GAMEOBJECT_LEVEL, 0);
+				pGo->SetGoState(GO_STATE_READY);
+			}
+			break;
         case G0_MIMIRON_BUTTON:
             m_uiMimironButtonGUID = pGo->GetGUID();
             if (m_auiEncounter[7] == NOT_STARTED)
@@ -743,7 +753,14 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case TYPE_AURIAYA:
             m_auiEncounter[6] = uiData;
             if (uiData == DONE)
+			{
                 CheckIronCouncil();
+				if (GameObject* pGO = instance->GetGameObject(m_uiMimironTramGUID))
+                {
+                    pGO->SetUInt32Value(GAMEOBJECT_LEVEL, 0);
+                    pGO->SetGoState(GO_STATE_READY);
+                }
+			}
             break;
 
             // Keepers
