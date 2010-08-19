@@ -55,11 +55,11 @@ bool GOHello_go_main_bridge_console(Player* pPlayer, GameObject* pGo)
 
     switch(pGo->GetEntry())
     {
-    case CONSOLE_LURKER: pInstance->SetData(TYPE_THELURKER_EVENT, SPECIAL); break;
-    case CONSOLE_HYDROSS: pInstance->SetData(TYPE_HYDROSS_EVENT, SPECIAL); break;
-    case CONSOLE_TIDEWALKER:  pInstance->SetData(TYPE_MOROGRIM_EVENT, SPECIAL);  break;
-    case CONSOLE_LEOTHERAS:  pInstance->SetData(TYPE_LEOTHERAS_EVENT, SPECIAL);  break;
-    case CONSOLE_FATHOM:  pInstance->SetData(TYPE_KARATHRESS_EVENT, SPECIAL);  break;
+    case CONSOLE_LURKER:		pInstance->SetData(TYPE_THELURKER_EVENT, SPECIAL);	break;
+    case CONSOLE_HYDROSS:		pInstance->SetData(TYPE_HYDROSS_EVENT, SPECIAL);	break;
+    case CONSOLE_TIDEWALKER:	pInstance->SetData(TYPE_MOROGRIM_EVENT, SPECIAL);	break;
+    case CONSOLE_LEOTHERAS:		pInstance->SetData(TYPE_LEOTHERAS_EVENT, SPECIAL);  break;
+    case CONSOLE_FATHOM:		pInstance->SetData(TYPE_KARATHRESS_EVENT, SPECIAL); break;
     }
 
     pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
@@ -85,12 +85,16 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
     uint64 m_uiLethorasConsole;
     uint64 m_uiTidewalkerConsole;
     uint64 m_uiFathomConsole;
+	uint64 m_uiBridge1GUID;
+	uint64 m_uiBridge2GUID;
+	uint64 m_uiBridge3GUID;
     uint32 WaterCheckTimer;
     uint32 FrenzySpawnTimer;
     uint32 Water;
     uint32 TrashCount;
     bool DoSpawnFrenzy;
 
+	std::string strInstData;
     uint32 m_auiShieldGenerator[MAX_GENERATOR];
     uint32 m_auiEncounter[MAX_ENCOUNTER];
 
@@ -99,25 +103,28 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
         memset(&m_auiShieldGenerator, 0, sizeof(m_auiShieldGenerator));
 
-        m_uiSharkkis = 0;
-        m_uiTidalvess = 0;
-        m_uiCaribdis = 0;
-        m_uiLadyVashj = 0;
-        m_uiKarathress = 0;
+        m_uiSharkkis			= 0;
+        m_uiTidalvess			= 0;
+        m_uiCaribdis			= 0;
+        m_uiLadyVashj			= 0;
+        m_uiKarathress			= 0;
         m_uiKarathressEvent_Starter = 0;
 
-        m_uiBridgeConsole = 0;
-        m_uiLurkerConsole = 0;
-        m_uiHydrossConsole  = 0;
-        m_uiLethorasConsole = 0;
-        m_uiTidewalkerConsole = 0;
-        m_uiFathomConsole   = 0;
+        m_uiBridgeConsole		= 0;
+        m_uiLurkerConsole		= 0;
+        m_uiHydrossConsole		= 0;
+        m_uiLethorasConsole		= 0;
+        m_uiTidewalkerConsole	= 0;
+        m_uiFathomConsole		= 0;
+		m_uiBridge1GUID			= 0;
+		m_uiBridge2GUID			= 0;
+		m_uiBridge3GUID			= 0;
 
-        WaterCheckTimer = 500;
-        FrenzySpawnTimer = 2000;
-        Water = WATERSTATE_FRENZY;
-        TrashCount = 0;
-        DoSpawnFrenzy = false;
+        WaterCheckTimer			= 500;
+        FrenzySpawnTimer		= 2000;
+        Water					= WATERSTATE_FRENZY;
+        TrashCount				= 0;
+        DoSpawnFrenzy			= false;
     }
 
     bool IsEncounterInProgress() const
@@ -195,33 +202,91 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
         }
     }
 
-    void OnGameObjectCreate(GameObject* pGo, bool add)
+    void OnObjectCreate(GameObject *pGo)
     {
         switch(pGo->GetEntry())
         {
-        case BRIDGE_CONSOLE:   m_uiBridgeConsole = pGo->GetGUID(); break;
-        case CONSOLE_LURKER:   m_uiLurkerConsole = pGo->GetGUID();
+		case GO_BRIDGE_1:
+			m_uiBridge1GUID = pGo->GetGUID();
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			pGo->SetGoState(GO_STATE_READY);
+			break;
+		case GO_BRIDGE_2:
+			m_uiBridge2GUID = pGo->GetGUID();
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			pGo->SetGoState(GO_STATE_READY);
+			break;
+		case GO_BRIDGE_3:
+			m_uiBridge3GUID = pGo->GetGUID();
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			pGo->SetGoState(GO_STATE_READY);
+        case BRIDGE_CONSOLE:   
+			m_uiBridgeConsole = pGo->GetGUID(); 
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			ActivateBridge();
+			break;
+        case CONSOLE_LURKER:   
+			m_uiLurkerConsole = pGo->GetGUID();
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			pGo->SetGoState(GO_STATE_READY);
             if (m_auiEncounter[2] == DONE)
                 pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			if (m_auiEncounter[2] == SPECIAL)
+                pGo->SetGoState(GO_STATE_ACTIVE);
             break;
-        case CONSOLE_HYDROSS:   m_uiHydrossConsole = pGo->GetGUID(); 
+        case CONSOLE_HYDROSS:   
+			m_uiHydrossConsole = pGo->GetGUID(); 
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			pGo->SetGoState(GO_STATE_READY);
             if (m_auiEncounter[0] == DONE)
                 pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			if (m_auiEncounter[0] == SPECIAL)
+                pGo->SetGoState(GO_STATE_ACTIVE);
             break;
-        case CONSOLE_TIDEWALKER:   m_uiTidewalkerConsole = pGo->GetGUID();
+        case CONSOLE_TIDEWALKER:   
+			m_uiTidewalkerConsole = pGo->GetGUID();
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			pGo->SetGoState(GO_STATE_READY);
             if (m_auiEncounter[4] == DONE)
                 pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			if (m_auiEncounter[4] == SPECIAL)
+                pGo->SetGoState(GO_STATE_ACTIVE);
             break;
-        case CONSOLE_LEOTHERAS:   m_uiLethorasConsole = pGo->GetGUID();
+        case CONSOLE_LEOTHERAS:   
+			m_uiLethorasConsole = pGo->GetGUID();
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			pGo->SetGoState(GO_STATE_READY);
             if (m_auiEncounter[1] == DONE)
                 pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			if (m_auiEncounter[1] == SPECIAL)
+                pGo->SetGoState(GO_STATE_ACTIVE);
             break;
-        case CONSOLE_FATHOM:   m_uiFathomConsole = pGo->GetGUID(); 
+        case CONSOLE_FATHOM:   
+			m_uiFathomConsole = pGo->GetGUID(); 
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			pGo->SetGoState(GO_STATE_READY);
             if (m_auiEncounter[3] == DONE)
                 pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			if (m_auiEncounter[3] == SPECIAL)
+                pGo->SetGoState(GO_STATE_ACTIVE);
             break;
         }
     }
+
+	void ActivateBridge()
+	{
+		if(m_auiEncounter[0] == SPECIAL && m_auiEncounter[1] == SPECIAL && m_auiEncounter[2] == SPECIAL && m_auiEncounter[3] == SPECIAL && m_auiEncounter[4] == SPECIAL)
+		{
+			if(GameObject* pConsole = instance->GetGameObject(m_uiBridgeConsole))
+				pConsole->SetGoState(GO_STATE_ACTIVE);
+			if(GameObject* pBridge = instance->GetGameObject(m_uiBridge1GUID))
+				pBridge->SetGoState(GO_STATE_ACTIVE);
+			if(GameObject* pBridge = instance->GetGameObject(m_uiBridge2GUID))
+				pBridge->SetGoState(GO_STATE_ACTIVE);
+			if(GameObject* pBridge = instance->GetGameObject(m_uiBridge3GUID))
+				pBridge->SetGoState(GO_STATE_ACTIVE);
+		}
+	}
 
     void SetData64(uint32 uiType, uint64 uiData)
     {
@@ -260,46 +325,55 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
                 SaveToDB();
             }
             break;
-        case TYPE_HYDROSS_EVENT:
-            if (uiData == SPECIAL)
-                if (uiData == DONE)
-                {
-                    if (GameObject* pGo = instance->GetGameObject(m_uiHydrossConsole))
-                        pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
-                }
-                m_auiEncounter[0] = uiData;
-                break;
-        case TYPE_LEOTHERAS_EVENT:
+		case TYPE_HYDROSS_EVENT:
+			m_auiEncounter[0] = uiData;
+			if (uiData == DONE)
+			{
+				if (GameObject* pGo = instance->GetGameObject(m_uiHydrossConsole))
+					pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+			}
+			if(uiData == SPECIAL)
+				ActivateBridge();
+			break;
+		case TYPE_LEOTHERAS_EVENT:
+			m_auiEncounter[1] = uiData;
             if (uiData == DONE)
             {
                 if (GameObject* pGo = instance->GetGameObject(m_uiLethorasConsole))
                     pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
             }
-            m_auiEncounter[1] = uiData;
-            break;
+			if(uiData == SPECIAL)
+				ActivateBridge();
+			break;
         case TYPE_THELURKER_EVENT:
+			m_auiEncounter[2] = uiData;
             if (uiData == DONE)
             {
                 if (GameObject* pGo = instance->GetGameObject(m_uiLurkerConsole))
                     pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
             }
-            m_auiEncounter[2] = uiData;
+			if(uiData == SPECIAL)
+				ActivateBridge();
             break;
         case TYPE_KARATHRESS_EVENT:
+			m_auiEncounter[3] = uiData;
             if (uiData == DONE)
             {
                 if (GameObject* pGo = instance->GetGameObject(m_uiFathomConsole))
                     pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
             }
-            m_auiEncounter[3] = uiData;
+			if(uiData == SPECIAL)
+				ActivateBridge();
             break;
         case TYPE_MOROGRIM_EVENT:
+			m_auiEncounter[4] = uiData;
             if (uiData == DONE)
             {
                 if (GameObject* pGo = instance->GetGameObject(m_uiTidewalkerConsole))
                     pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
             }
-            m_auiEncounter[4] = uiData;
+			if(uiData == SPECIAL)
+				ActivateBridge();
             break;
         case TYPE_LADYVASHJ_EVENT:
             if (uiData == NOT_STARTED)
@@ -320,13 +394,19 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
             break;
         }
 
-        if (TYPE_HYDROSS_EVENT == SPECIAL && TYPE_LEOTHERAS_EVENT == SPECIAL && TYPE_THELURKER_EVENT == SPECIAL && 
-            TYPE_KARATHRESS_EVENT == SPECIAL && TYPE_MOROGRIM_EVENT == SPECIAL)
-        {
-            DoUseDoorOrButton(m_uiBridgeConsole);
-        }
-        if (uiData == DONE || uiData == SPECIAL)
-            SaveToDB();
+		if (uiData == DONE || uiData == SPECIAL)
+		{
+			OUT_SAVE_INST_DATA;
+
+			std::ostringstream saveStream;
+			saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
+            << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " " << TrashCount;
+
+			strInstData = saveStream.str();
+
+			SaveToDB();
+			OUT_SAVE_INST_DATA_COMPLETE;
+		}
     }
 
     uint32 GetData(uint32 uiType)
@@ -375,22 +455,6 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
         return 0;
     }
 
-    std::string GetSaveData()
-    {
-        OUT_SAVE_INST_DATA;
-        std::ostringstream stream;
-        stream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
-            << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " " << TrashCount;
-        char* out = new char[stream.str().length() + 1];
-        strcpy(out, stream.str().c_str());
-        if (out)
-        {
-            OUT_SAVE_INST_DATA_COMPLETE;
-            return out;
-        }
-        return NULL;
-    }
-
     void Load(const char* in)
     {
         if (!in)
@@ -398,13 +462,19 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
             OUT_LOAD_INST_DATA_FAIL;
             return;
         }
+
         OUT_LOAD_INST_DATA(in);
+
         std::istringstream stream(in);
         stream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3]
         >> m_auiEncounter[4] >> m_auiEncounter[5] >> TrashCount;
+
         for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
+		{
             if (m_auiEncounter[i] == IN_PROGRESS)                // Do not load an encounter as "In Progress" - reset it instead.
                 m_auiEncounter[i] = NOT_STARTED;
+		}
+
         OUT_LOAD_INST_DATA_COMPLETE;
     }
 };

@@ -28,6 +28,10 @@ enum
     TYPE_SHIELDGENERATOR3           = 22,
     TYPE_SHIELDGENERATOR4           = 23,
 
+	GO_BRIDGE_1						= 184203,
+	GO_BRIDGE_2						= 184204, 
+	GO_BRIDGE_3						= 184205,
+
     DATA_WATER                      = 24,
     DATA_TRASH                      = 25,
 
