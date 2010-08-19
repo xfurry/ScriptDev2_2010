@@ -338,7 +338,7 @@ struct MANGOS_DLL_DECL npc_living_mojoAI : public ScriptedAI
     void Aggro(Unit* pWho)
     {
         //Check if the npc is near of Drakkari Colossus.
-        if(Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_COLOSSUS))))
+        if(Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_COLOSSUS))))
         {
             if(pColossus->isAlive() && m_creature->IsWithinDist(pColossus, 15.0f))
                 m_creature->GetMotionMaster()->MovePoint(0, pColossus->GetPositionX(), pColossus->GetPositionY(), pColossus->GetPositionZ());

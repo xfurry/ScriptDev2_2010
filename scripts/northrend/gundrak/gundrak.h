@@ -27,8 +27,6 @@ enum
     NPC_GALDARAH           = 29306,
     NPC_ECK                = 29932,
 
-    DATA_COLOSSUS           = 1,
-
     GO_ECK_DOOR            = 192632,
     GO_ECK_UNDERWATER_DOOR = 192569,
     GO_GALDARAH_DOOR       = 192568,
@@ -43,8 +41,8 @@ enum
     GO_TROLL_KEY           = 192567,
     GO_MAMMOTH_KEY         = 192565,
     GO_GALDARAH_KEY        = 192566,
-    GO_COLLISION           = 192633,
 
+    GO_COLLISION           = 192633,
     GO_BRIDGE              = 193188
 };
 

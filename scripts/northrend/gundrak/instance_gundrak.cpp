@@ -50,7 +50,7 @@ bool GOHello_go_gundrak_altar(Player* pPlayer, GameObject* pGo)
 
     pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
     return true;
-}
+};
 
 struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
 {
@@ -126,12 +126,12 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
             case GO_ECK_DOOR:
                 m_uiEckDoorGUID = pGo->GetGUID();
                 if ((m_auiEncounter[1] == DONE) && !instance->IsRegularDifficulty())
-                    DoUseDoorOrButton(m_uiEckDoorGUID);
+                    pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_ECK_UNDERWATER_DOOR:
                 m_uiEckUnderwaterDoorGUID = pGo->GetGUID();
                 if (m_auiEncounter[4] == DONE)
-                    DoUseDoorOrButton(m_uiEckUnderwaterDoorGUID);
+                    pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_GALDARAH_DOOR: 
                 m_uiGaldarahDoorGUID = pGo->GetGUID();
@@ -139,12 +139,12 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
             case GO_EXIT_DOOR_L:
                 m_uiExitDoorLeftGUID = pGo->GetGUID();
                 if (m_auiEncounter[3] == DONE)
-                    DoUseDoorOrButton(m_uiExitDoorLeftGUID);
+                    pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_EXIT_DOOR_R:
                 m_uiExitDoorRightGUID = pGo->GetGUID();
                 if (m_auiEncounter[3] == DONE)
-                    DoUseDoorOrButton(m_uiExitDoorRightGUID);
+                    pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_ALTAR_OF_SLADRAN:
                 m_uiAltarOfSladranGUID = pGo->GetGUID();
@@ -164,52 +164,48 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
             case GO_SNAKE_KEY: 
                 m_uiSnakeKeyGUID = pGo->GetGUID();
                 if (m_auiEncounter[0] == SPECIAL)
-                    DoUseDoorOrButton(m_uiSnakeKeyGUID);
+					pGo->SetGoState(GO_STATE_READY);
                 break;
             case GO_TROLL_KEY:
                 m_uiTrollKeyGUID = pGo->GetGUID();
                 if (m_auiEncounter[1] == SPECIAL)
-                    DoUseDoorOrButton(m_uiTrollKeyGUID);
+                    pGo->SetGoState(GO_STATE_READY);
                 break;
             case GO_MAMMOTH_KEY:
                 m_uiMammothKeyGUID = pGo->GetGUID();
                 if (m_auiEncounter[2] == SPECIAL)
-                    DoUseDoorOrButton(m_uiMammothKeyGUID);
+                    pGo->SetGoState(GO_STATE_READY);
                 break;
             case GO_GALDARAH_KEY:
                 m_uiGaldarahKeyGUID = pGo->GetGUID();
-                if (m_auiEncounter[2] == SPECIAL && m_auiEncounter[1] == SPECIAL && m_auiEncounter[0] == SPECIAL)
-                    DoUseDoorOrButton(m_uiGaldarahKeyGUID);
+                pGo->SetGoState(GO_STATE_READY);
                 break;
             case GO_BRIDGE: 
                 m_uiBridgeGUID = pGo->GetGUID();
                 break;
             case GO_COLLISION:
+				pGo->SetGoState(GO_STATE_READY);
                 m_uiCollisionGUID = pGo->GetGUID();
+				SwitchBridge();
                 break;
         }
-    }
-
-    void OpenDoor(uint64 guid)
-    {
-        if(!guid) return;
-        GameObject* pGo = instance->GetGameObject(guid);
-        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
-    }
-
-    void CloseDoor(uint64 guid)
-    {
-        if(!guid) return;
-        GameObject* pGo = instance->GetGameObject(guid);
-        if(pGo) pGo->SetGoState(GO_STATE_READY);
     }
 
     void SwitchBridge()
     {
         if(m_auiEncounter[0] == SPECIAL && m_auiEncounter[1] == SPECIAL && m_auiEncounter[2] == SPECIAL)
         {
-            DoUseDoorOrButton(m_uiBridgeGUID);
-            DoUseDoorOrButton(m_uiCollisionGUID);
+            //DoUseDoorOrButton(m_uiBridgeGUID);
+			if(GameObject* pBridge = instance->GetGameObject(m_uiCollisionGUID))
+				pBridge->SetGoState(GO_STATE_ACTIVE);
+			if(GameObject* pKey = instance->GetGameObject(m_uiGaldarahKeyGUID))
+				pKey->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
+			if(GameObject* pKey = instance->GetGameObject(m_uiTrollKeyGUID))
+				pKey->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
+			if(GameObject* pKey = instance->GetGameObject(m_uiMammothKeyGUID))
+				pKey->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
+			if(GameObject* pKey = instance->GetGameObject(m_uiSnakeKeyGUID))
+				pKey->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
         }
     }
     
@@ -222,8 +218,10 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
             case TYPE_SLADRAN:
                 m_auiEncounter[0] = uiData;
                 if (uiData == DONE)
+				{
                     if (GameObject* pGo = instance->GetGameObject(m_uiAltarOfSladranGUID))
                         pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+				}
                 if (uiData == SPECIAL)
                 {
                     DoUseDoorOrButton(m_uiSnakeKeyGUID);
@@ -248,8 +246,10 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
             case TYPE_COLOSSUS:
                 m_auiEncounter[2] = uiData;
                 if (uiData == DONE)
+				{
                     if (GameObject* pGo = instance->GetGameObject(m_uiAltarOfColossusGUID))
                         pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+				}
                 if (uiData == SPECIAL)
                 {
                     DoUseDoorOrButton(m_uiTrollKeyGUID);
@@ -258,16 +258,11 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
                 break;
             case TYPE_GALDARAH:
                 m_auiEncounter[3] = uiData;
-                if(uiData == IN_PROGRESS)
-                    CloseDoor(m_uiGaldarahDoorGUID);
-                if(uiData == NOT_STARTED)
-                    OpenDoor(m_uiGaldarahDoorGUID);
-                // Open exit doors
+                DoUseDoorOrButton(m_uiGaldarahDoorGUID);
                 if (uiData == DONE)
                 {
                     DoUseDoorOrButton(m_uiExitDoorLeftGUID);
                     DoUseDoorOrButton(m_uiExitDoorRightGUID);
-                    DoUseDoorOrButton(m_uiGaldarahDoorGUID);
                 }
                 break;
             case TYPE_ECK:
@@ -280,7 +275,7 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
                 break;
         }
 
-        if (uiData == DONE)
+		if (uiData == DONE || uiData == SPECIAL)
         {
             OUT_SAVE_INST_DATA;
 
