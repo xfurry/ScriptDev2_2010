@@ -112,6 +112,7 @@ struct MANGOS_DLL_DECL instance_halls_of_lightning : public ScriptedInstance
                 break;
             case GO_LOKEN_DOOR:
                 m_uiLokenDoorGUID = pGo->GetGUID();
+				pGo->SetGoState(GO_STATE_READY);
                 if (m_auiEncounter[3] == DONE)
                     pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
