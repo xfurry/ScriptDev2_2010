@@ -149,6 +149,20 @@ struct MANGOS_DLL_DECL mob_toc_argent_trashAI: public ScriptedAI
         m_uiShadowWordTimer     = 7000;
     }
 
+	void AttackStart(Unit* pWho)
+    {
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+			if(m_creature->GetEntry() == NPC_ARGENT_PRIESTESS)
+				DoStartMovement(pWho, 20.0f);
+			else
+				DoStartMovement(pWho);
+        }
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
