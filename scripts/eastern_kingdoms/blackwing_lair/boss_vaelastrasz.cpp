@@ -22,7 +22,6 @@ SDCategory: Blackwing Lair
 EndScriptData */
 
 #include "precompiled.h"
-#include "blackwing_lair.h"
 
 #define SAY_LINE1           -1469026
 #define SAY_LINE2           -1469027
@@ -45,11 +44,9 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
     {
         pCreature->setFaction(35);
         pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         Reset();
     }
 
-    ScriptedInstance* m_pInstance;
     uint64 PlayerGUID;
     uint32 SpeachTimer;
     uint32 SpeachNum;
@@ -75,9 +72,6 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
         TailSwipe_Timer = 20000;
         HasYelled = false;
         DoingSpeach = false;
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_VAELASTRASZ, NOT_STARTED);
     }
 
     void BeginSpeach(Unit* target)
@@ -105,15 +99,6 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
     {
         DoCastSpellIfCan(m_creature,SPELL_ESSENCEOFTHERED);
         m_creature->SetInCombatWithZone();
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_VAELASTRASZ, IN_PROGRESS);
-    }
-
-    void JustDied(Unit* pKiller)
-    {
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_VAELASTRASZ, DONE);
     }
 
     void UpdateAI(const uint32 diff)
@@ -139,7 +124,7 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
                         break;
                     case 2:
                         m_creature->setFaction(103);
-                        m_creature->SetMaxHealth(int(m_creature->GetMaxHealth()*.3));
+                        m_creature->SetHealth(int(m_creature->GetMaxHealth()*.3));
                         if (PlayerGUID && Unit::GetUnit((*m_creature),PlayerGUID))
                         {
                             AttackStart(Unit::GetUnit((*m_creature),PlayerGUID));
@@ -186,7 +171,7 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
             while (i < 3)                                   // max 3 tries to get a random target with power_mana
             {
                 ++i;
-                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1);//not aggro leader
+                target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM,1);//not aggro leader
                 if (target)
                     if (target->getPowerType() == POWER_MANA)
                         i=3;
