@@ -73,11 +73,18 @@ bool GoHello_icecrown_citadel_teleporter( Player *pPlayer, GameObject *pGO )
             {
                 pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Deathbringer's Rise", GOSSIP_SENDER_MAIN, DEATHBRINGERS_RISE);
 
-                //if(pInstance->GetData(TYPE_SAURFANG) == DONE)
-                    //pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Upper Spire", GOSSIP_SENDER_MAIN, UPPER_SPIRE);
+				// Inside the citadel
+                if(pInstance->GetData(TYPE_SAURFANG) == DONE)
+                    pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Upper Spire", GOSSIP_SENDER_MAIN, UPPER_SPIRE);
             }
         }
     }
+
+	if(pInstance->GetData(TYPE_SINDRAGOSA) == DONE)
+		pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Sindragosa's Lair", GOSSIP_SENDER_MAIN, SINDRAGOSA);
+
+	if(pInstance->GetData(TYPE_SINDRAGOSA) == DONE && pInstance->GetData(TYPE_BLOOD_QUEEN) == DONE && pInstance->GetData(TYPE_PUTRICIDE) == DONE)
+		pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Frozen Throne", GOSSIP_SENDER_MAIN, FROZEN_THRONE);
 
     pPlayer->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, pGO->GetGUID());
 

@@ -27,6 +27,7 @@ enum
 	
 	TYPE_PRINCES_PHASE			= 15,
 
+	NPC_TIRION_START			= 37119,
 	// lower spire
     NPC_MARROWGAR               = 36612,
     NPC_DEATHWHISPER            = 36855,

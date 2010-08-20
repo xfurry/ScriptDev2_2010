@@ -39,6 +39,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
     bool m_bNeedSave;
 
     // npcs
+	uint64 m_uiTirionGUID;
     uint64 m_uiMarrowgarGUID;
     uint64 m_uiDeathwhisperGUID;
     uint64 m_uiSaurfangGUID;
@@ -123,6 +124,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 		m_auiPrincesPhase				= 0;
 
         // npcs
+		m_uiTirionGUID					= 0;
         m_uiMarrowgarGUID               = 0;
         m_uiDeathwhisperGUID            = 0;
         m_uiSaurfangGUID                = 0;
@@ -213,6 +215,23 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 			case NPC_RIMEFANG:		m_uiRimefangGUID		= pCreature->GetGUID(); break;
 			case NPC_LICH_KING:		m_uiLichKingGUID		= pCreature->GetGUID(); break;
 			case NPC_TIRION_FINAL:  m_uiTirionFinalGUID		= pCreature->GetGUID(); break;
+			case NPC_TIRION_START:
+				m_uiTirionGUID = pCreature->GetGUID();
+				// summon sindragosa in case the minibosses are already dead
+				Creature* pRimefang = instance->GetCreature(m_uiRimefangGUID);
+				Creature* pSplinestalker = instance->GetCreature(m_uiSplinestalkerGUID);
+				if(pRimefang && pSplinestalker)
+				{
+					if(!pRimefang->isAlive() && !pSplinestalker->isAlive())
+					{
+						if(Creature* pSindragosa = pCreature->SummonCreature(NPC_SINDRAGOSA, 4453.670f, 2484.251f, 240.797f, 3.15f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY))
+						{
+							pSindragosa->GetMap()->CreatureRelocation(pSindragosa, 4453.670f, 2484.251f, 240.797f, 3.15f);
+							pSindragosa->SendMonsterMove(4453.670f, 2484.251f, 240.797f, SPLINETYPE_NORMAL, pSindragosa->GetSplineFlags(), 1);
+						}
+					}
+				}
+				break;
         }
     }
 
@@ -561,7 +580,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 if(uiData == DONE)
                 {
                     DoUseDoorOrButton(m_uiPlagueSigilGUID);
-                    DoUseDoorOrButton(m_uiBloodwingDoorGUID);
+                    //DoUseDoorOrButton(m_uiBloodwingDoorGUID);
                 }
                 break;
             case TYPE_PRINCE_COUNCIL:
@@ -602,6 +621,12 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 break;
             case TYPE_SINDRAGOSA:
                 m_auiEncounter[11] = uiData;
+				DoUseDoorOrButton(m_uiSindragosaEntranceGUID);
+				if(uiData == DONE)
+				{
+					DoUseDoorOrButton(m_uiSindragosaExitGUID);
+					DoUseDoorOrButton(m_uiSindragosaDoorGUID);
+				}
                 break;
             case TYPE_LICH_KING:
                 m_auiEncounter[12] = uiData;
