@@ -265,10 +265,13 @@ struct MANGOS_DLL_DECL mob_illidari_councilAI : public ScriptedAI
             Council[3] = m_pInstance->GetData64(DATA_VERASDARKSHADOW);
 
             // Start the event for the Voice Trigger
-            if (Creature* VoiceTrigger = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BLOOD_ELF_COUNCIL_VOICE)))
+            if (Creature* pVoiceTrigger = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BLOOD_ELF_COUNCIL_VOICE)))
             {
-                ((mob_blood_elf_council_voice_triggerAI*)VoiceTrigger->AI())->LoadCouncilGUIDs();
-                ((mob_blood_elf_council_voice_triggerAI*)VoiceTrigger->AI())->EventStarted = true;
+                if (mob_blood_elf_council_voice_triggerAI* pVoiceAI = dynamic_cast<mob_blood_elf_council_voice_triggerAI*>(pVoiceTrigger->AI()))
+                {
+                    pVoiceAI->LoadCouncilGUIDs();
+                    pVoiceAI->EventStarted = true;
+                }
             }
 
             for(uint8 i = 0; i < 4; ++i)
@@ -373,9 +376,11 @@ struct MANGOS_DLL_DECL boss_illidari_councilAI : public ScriptedAI
     {
         if (m_pInstance)
         {
-            Creature* Controller = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_ILLIDARICOUNCIL));
-            if (Controller)
-                ((mob_illidari_councilAI*)Controller->AI())->StartEvent(pWho);
+            if (Creature* pController = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_ILLIDARICOUNCIL)))
+            {
+                if (mob_illidari_councilAI* pControlAI = dynamic_cast<mob_illidari_councilAI*>(pController->AI()))
+                    pControlAI->StartEvent(pWho);
+            }
         }
         else
         {
@@ -463,7 +468,7 @@ struct MANGOS_DLL_DECL boss_gathios_the_shattererAI : public boss_illidari_counc
         if (!urand(0, 9))                                   // But there is a chance he picks someone else.
             member = urand(1, 3);
 
-        if (member != 2)                                    // No need to create another pointer to us using Unit::GetUnit
+        if (member != 2)                                    // No need to create another pointer
             pUnit = m_creature->GetMap()->GetCreature(Council[member]);
 
         return pUnit;

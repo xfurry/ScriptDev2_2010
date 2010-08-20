@@ -118,10 +118,10 @@ struct MANGOS_DLL_DECL npc_dirty_larryAI : public ScriptedAI
 
             if (bAttack)
             {
-                if (Unit* pUnit = Unit::GetUnit(*m_creature, m_uiPlayerGUID))
+                if (Player* pPlayer = m_creature->GetMap()->GetPlayer(m_uiPlayerGUID))
                 {
-                    if (pUnit->isAlive())
-                        pCreature->AI()->AttackStart(pUnit);
+                    if (pPlayer->isAlive())
+                        pCreature->AI()->AttackStart(pPlayer);
                 }
             }
         }
@@ -145,9 +145,9 @@ struct MANGOS_DLL_DECL npc_dirty_larryAI : public ScriptedAI
 
     uint32 NextStep(uint32 uiStep)
     {
-        Unit* pUnit = Unit::GetUnit(*m_creature, m_uiPlayerGUID);
+        Player* pPlayer = m_creature->GetMap()->GetPlayer(m_uiPlayerGUID);
 
-        if (!pUnit || pUnit->GetTypeId() != TYPEID_PLAYER)
+        if (!pPlayer)
         {
             SetRuffies(m_uiCreepjackGUID,false,true);
             SetRuffies(m_uiMaloneGUID,false,true);
@@ -158,17 +158,17 @@ struct MANGOS_DLL_DECL npc_dirty_larryAI : public ScriptedAI
         switch(uiStep)
         {
             case 1:
-                DoScriptText(SAY_START, m_creature, pUnit);
+                DoScriptText(SAY_START, m_creature, pPlayer);
                 SetRuffies(m_uiCreepjackGUID,false,false);
                 SetRuffies(m_uiMaloneGUID,false,false);
                 return 3000;
-            case 2: DoScriptText(SAY_COUNT, m_creature, pUnit); return 5000;
-            case 3: DoScriptText(SAY_COUNT_1, m_creature, pUnit); return 3000;
-            case 4: DoScriptText(SAY_COUNT_2, m_creature, pUnit); return 3000;
-            case 5: DoScriptText(SAY_ATTACK, m_creature, pUnit); return 3000;
+            case 2: DoScriptText(SAY_COUNT, m_creature, pPlayer); return 5000;
+            case 3: DoScriptText(SAY_COUNT_1, m_creature, pPlayer); return 3000;
+            case 4: DoScriptText(SAY_COUNT_2, m_creature, pPlayer); return 3000;
+            case 5: DoScriptText(SAY_ATTACK, m_creature, pPlayer); return 3000;
             case 6:
-                if (!m_creature->isInCombat() && pUnit->isAlive())
-                    AttackStart(pUnit);
+                if (!m_creature->isInCombat() && pPlayer->isAlive())
+                    AttackStart(pPlayer);
 
                 SetRuffies(m_uiCreepjackGUID,true,false);
                 SetRuffies(m_uiMaloneGUID,true,false);
@@ -188,7 +188,7 @@ struct MANGOS_DLL_DECL npc_dirty_larryAI : public ScriptedAI
         {
             damage = 0;
 
-            if (Player* pPlayer = (Player*)Unit::GetUnit(*m_creature, m_uiPlayerGUID))
+            if (Player* pPlayer = m_creature->GetMap()->GetPlayer(m_uiPlayerGUID))
             {
                 DoScriptText(SAY_GIVEUP, m_creature, pPlayer);
                 pPlayer->GroupEventHappens(QUEST_WHAT_BOOK, m_creature);
@@ -233,8 +233,12 @@ bool GossipSelect_npc_dirty_larry(Player* pPlayer, Creature* pCreature, uint32 u
 {
     if (uiAction == GOSSIP_ACTION_INFO_DEF+1)
     {
-        ((npc_dirty_larryAI*)pCreature->AI())->m_uiPlayerGUID = pPlayer->GetGUID();
-        ((npc_dirty_larryAI*)pCreature->AI())->StartEvent();
+        if (npc_dirty_larryAI* pLarryAI = dynamic_cast<npc_dirty_larryAI*>(pCreature->AI()))
+        {
+            pLarryAI->m_uiPlayerGUID = pPlayer->GetGUID();
+            pLarryAI->StartEvent();
+        }
+
         pPlayer->CLOSE_GOSSIP_MENU();
     }
 
@@ -695,7 +699,7 @@ bool GossipSelect_npc_raliq_the_drunk(Player* pPlayer, Creature* pCreature, uint
     {
         pPlayer->CLOSE_GOSSIP_MENU();
         pCreature->setFaction(FACTION_HOSTILE_RD);
-        ((npc_raliq_the_drunkAI*)pCreature->AI())->AttackStart(pPlayer);
+        pCreature->AI()->AttackStart(pPlayer);
     }
     return true;
 }
@@ -757,7 +761,7 @@ bool GossipHello_npc_salsalabim(Player* pPlayer, Creature* pCreature)
     if (pPlayer->GetQuestStatus(QUEST_10004) == QUEST_STATUS_INCOMPLETE)
     {
         pCreature->setFaction(FACTION_HOSTILE_SA);
-        ((npc_salsalabimAI*)pCreature->AI())->AttackStart(pPlayer);
+        pCreature->AI()->AttackStart(pPlayer);
     }
     else
     {

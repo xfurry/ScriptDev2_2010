@@ -402,8 +402,11 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
 
             if (Creature* pKalecgos = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_KALECGOS_DRAGON)))
             {
-                ((boss_kalecgosAI*)pKalecgos->AI())->m_bChecked = false;
-                ((boss_kalecgosAI*)pKalecgos->AI())->m_bUncorrupted = true;
+                if (boss_kalecgosAI* pKalecgosAI = dynamic_cast<boss_kalecgosAI*>(pKalecgos->AI()))
+                {
+                    pKalecgosAI->m_bChecked = false;
+                    pKalecgosAI->m_bUncorrupted = true;
+                }
             }
         }
     }
@@ -507,9 +510,9 @@ struct MANGOS_DLL_DECL boss_kalecgos_humanoidAI : public ScriptedAI
         {
             if (m_pInstance)
             {
-                /*Unit* pUnit = Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_RANDOM_SPECTRAL_PLAYER));
-                if (pUnit)
-                    DoCastSpellIfCan(pUnit, SPELL_REVITALIZE);*/
+                /*Player* pPlayer = m_creature->GetMap()->GetPlayer(m_pInstance->GetData64(DATA_RANDOM_SPECTRAL_PLAYER));
+                if (pPlayer)
+                    DoCastSpellIfCan(pPlayer, SPELL_REVITALIZE);*/
                 RevitalizeTimer = 30000;
             }
         }else RevitalizeTimer -= diff;

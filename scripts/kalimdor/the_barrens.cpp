@@ -403,7 +403,7 @@ struct MANGOS_DLL_DECL npc_twiggy_flatheadAI : public ScriptedAI
 
         if (Event_Timer < diff)
         {
-            Player* pPlayer = (Player*)Unit::GetUnit(*m_creature,PlayerGUID);
+            Player* pPlayer = m_creature->GetMap()->GetPlayer(PlayerGUID);
 
             if (!pPlayer || pPlayer->isDead())
                 Reset();
@@ -481,10 +481,13 @@ bool AreaTrigger_at_twiggy_flathead(Player* pPlayer, AreaTriggerEntry const* pAt
         if (!pCreature)
             return true;
 
-        if (((npc_twiggy_flatheadAI*)pCreature->AI())->CanStartEvent(pPlayer))
-            return false;                                   //ok to let mangos process further
-        else
-            return true;
+        if (npc_twiggy_flatheadAI* pTwiggyAI = dynamic_cast<npc_twiggy_flatheadAI*>(pCreature->AI()))
+        {
+            if (pTwiggyAI->CanStartEvent(pPlayer))
+                return false;                               //ok to let mangos process further
+        }
+
+        return true;
     }
     return true;
 }

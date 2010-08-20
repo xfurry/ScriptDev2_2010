@@ -280,15 +280,17 @@ struct MANGOS_DLL_DECL boss_attumenAI : public ScriptedAI
         {
             if (m_uiChargeTimer < uiDiff)
             {
-                Unit *target;
+                Unit *target = NULL;
                 std::vector<Unit *> target_list;
 
                 ThreatList const& tList = m_creature->getThreatManager().getThreatList();
                 for (ThreatList::const_iterator itr = tList.begin();itr != tList.end(); ++itr)
                 {
-                    target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+                    target = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());
+
                     if (target && !target->IsWithinDist(m_creature, ATTACK_DISTANCE, false))
                         target_list.push_back(target);
+
                     target = NULL;
                 }
 
@@ -307,11 +309,11 @@ struct MANGOS_DLL_DECL boss_attumenAI : public ScriptedAI
         {
             if (m_creature->GetHealthPercent() < 25.0f)
             {
-                Creature *pMidnight = m_creature->GetMap()->GetCreature(m_uiMidnightGUID);
-
-                if (pMidnight)
+                if (Creature *pMidnight = m_creature->GetMap()->GetCreature(m_uiMidnightGUID))
                 {
-                    ((boss_midnightAI*)(pMidnight->AI()))->Mount(m_creature);
+                    if (boss_midnightAI* pMidnightAI = dynamic_cast<boss_midnightAI*>(pMidnight->AI()))
+                        pMidnightAI->Mount(m_creature);
+
                     m_creature->SetHealth(pMidnight->GetHealth());
                     DoResetThreat();
                 }
@@ -324,7 +326,8 @@ struct MANGOS_DLL_DECL boss_attumenAI : public ScriptedAI
 
 void boss_midnightAI::SetMidnight(Creature* pAttumen, uint64 uiValue)
 {
-    ((boss_attumenAI*)pAttumen->AI())->m_uiMidnightGUID = uiValue;
+    if (boss_attumenAI* pAttumenAI = dynamic_cast<boss_attumenAI*>(pAttumen->AI()))
+        pAttumenAI->m_uiMidnightGUID = uiValue;
 }
 
 CreatureAI* GetAI_boss_attumen(Creature* pCreature)

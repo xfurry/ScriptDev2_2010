@@ -301,7 +301,8 @@ struct MANGOS_DLL_DECL boss_moroesAI : public ScriptedAI
 
                 for (ThreatList::const_iterator itr = vThreatList.begin();itr != vThreatList.end(); ++itr)
                 {
-                    pTarget = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+                    pTarget = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());
+
                     if (pTarget && pTarget->IsWithinDist(m_creature, ATTACK_DISTANCE, false))
                         vTargetList.push_back(pTarget);
                 }
@@ -355,7 +356,11 @@ struct MANGOS_DLL_DECL boss_moroes_guestAI : public ScriptedAI
         {
             for(uint8 i = 0; i < 3; ++i)
             {
-                uint64 uiGUID = ((boss_moroesAI*)pMoroes->AI())->m_auiAddGUID[i];
+                uint64 uiGUID = 0;
+
+                if (boss_moroesAI* pMoroesAI = dynamic_cast<boss_moroesAI*>(pMoroes->AI()))
+                    uiGUID = pMoroesAI->m_auiAddGUID[i];
+
                 if (uiGUID && uiGUID != m_creature->GetGUID())
                     m_auiGuestGUID[i+1] = uiGUID;
             }

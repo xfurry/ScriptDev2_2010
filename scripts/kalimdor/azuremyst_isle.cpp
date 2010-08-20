@@ -131,7 +131,7 @@ struct MANGOS_DLL_DECL npc_draenei_survivorAI : public ScriptedAI
             {
                 m_creature->RemoveAurasDueToSpell(SPELL_IRRIDATION);
 
-                if (Player* pPlayer = (Player*)Unit::GetUnit(*m_creature,m_uiCaster))
+                if (Player* pPlayer = m_creature->GetMap()->GetPlayer(m_uiCaster))
                 {
                     if (pPlayer->GetTypeId() != TYPEID_PLAYER)
                         return;
@@ -287,7 +287,7 @@ bool GossipSelect_npc_engineer_spark_overgrind(Player* pPlayer, Creature* pCreat
     {
         pPlayer->CLOSE_GOSSIP_MENU();
         pCreature->setFaction(FACTION_HOSTILE);
-        ((npc_engineer_spark_overgrindAI*)pCreature->AI())->AttackStart(pPlayer);
+        pCreature->AI()->AttackStart(pPlayer);
     }
     return true;
 }

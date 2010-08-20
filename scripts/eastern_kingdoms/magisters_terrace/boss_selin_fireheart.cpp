@@ -136,9 +136,8 @@ struct MANGOS_DLL_DECL boss_selin_fireheartAI : public ScriptedAI
         //for(uint8 i =  0; i < CRYSTALS_NUMBER; ++i)
         for(std::list<uint64>::iterator itr = Crystals.begin(); itr != Crystals.end(); ++itr)
         {
-            pCrystal = NULL;
-            //pCrystal = Unit::GetUnit(*m_creature, FelCrystals[i]);
             pCrystal = m_creature->GetMap()->GetCreature(*itr);
+
             if (pCrystal && pCrystal->isAlive())
             {
                 // select nearest
@@ -343,20 +342,23 @@ struct MANGOS_DLL_DECL mob_fel_crystalAI : public ScriptedAI
     {
         if (ScriptedInstance* pInstance = (ScriptedInstance*)m_creature->GetInstanceData())
         {
-            Creature* Selin = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_SELIN));
+            Creature* pSelin = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_SELIN));
 
-            if (Selin && Selin->isAlive())
+            if (pSelin && pSelin->isAlive())
             {
-                if (((boss_selin_fireheartAI*)Selin->AI())->CrystalGUID == m_creature->GetGUID())
+                boss_selin_fireheartAI* pSelinAI = dynamic_cast<boss_selin_fireheartAI*>(pSelin->AI());
+
+                if (pSelinAI && pSelinAI->CrystalGUID == m_creature->GetGUID())
                 {
                     // Set this to false if we are the creature that Selin is draining so his AI flows properly
-                    ((boss_selin_fireheartAI*)Selin->AI())->DrainingCrystal = false;
-                    ((boss_selin_fireheartAI*)Selin->AI())->IsDraining = false;
-                    ((boss_selin_fireheartAI*)Selin->AI())->EmpowerTimer = 10000;
-                    if (Selin->getVictim())
+                    pSelinAI->DrainingCrystal = false;
+                    pSelinAI->IsDraining = false;
+                    pSelinAI->EmpowerTimer = 10000;
+
+                    if (pSelin->getVictim())
                     {
-                        Selin->AI()->AttackStart(Selin->getVictim());
-                        Selin->GetMotionMaster()->MoveChase(Selin->getVictim());
+                        pSelin->AI()->AttackStart(pSelin->getVictim());
+                        pSelin->GetMotionMaster()->MoveChase(pSelin->getVictim());
                     }
                 }
             }

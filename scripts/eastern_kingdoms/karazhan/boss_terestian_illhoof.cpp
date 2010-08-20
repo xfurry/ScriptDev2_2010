@@ -79,8 +79,10 @@ struct MANGOS_DLL_DECL mob_demon_chainAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         if (m_uiSacrificeGUID)
-            if (Unit* pSacrifice = Unit::GetUnit((*m_creature), m_uiSacrificeGUID))
+        {
+            if (Player* pSacrifice = m_creature->GetMap()->GetPlayer(m_uiSacrificeGUID))
                 pSacrifice->RemoveAurasDueToSpell(SPELL_SACRIFICE);
+        }
     }
 };
 
@@ -172,7 +174,7 @@ struct MANGOS_DLL_DECL boss_terestianAI : public ScriptedAI
                 {
                     m_uiPortalGUID[1] = pSummoned->GetGUID();
 
-                    if (npc_fiendish_portalAI* pPortalAI = (npc_fiendish_portalAI*)pSummoned->AI())
+                    if (npc_fiendish_portalAI* pPortalAI = dynamic_cast<npc_fiendish_portalAI*>(pSummoned->AI()))
                         pPortalAI->m_uiSummonTimer = 10000;
                 }
                 else
@@ -245,10 +247,11 @@ struct MANGOS_DLL_DECL boss_terestianAI : public ScriptedAI
             {
                 DoCastSpellIfCan(pTarget, SPELL_SACRIFICE, CAST_TRIGGERED);
 
-                Creature* pChains = m_creature->SummonCreature(NPC_DEMONCHAINS, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 21000);
-                if (pChains)
+                if (Creature* pChains = m_creature->SummonCreature(NPC_DEMONCHAINS, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 21000))
                 {
-                    ((mob_demon_chainAI*)pChains->AI())->m_uiSacrificeGUID = pTarget->GetGUID();
+                    if (mob_demon_chainAI* pDemonAI = dynamic_cast<mob_demon_chainAI*>(pChains->AI()))
+                        pDemonAI->m_uiSacrificeGUID = pTarget->GetGUID();
+
                     pChains->CastSpell(pChains, SPELL_DEMON_CHAINS, true);
 
                     DoScriptText(urand(0, 1) ? SAY_SACRIFICE1 : SAY_SACRIFICE2, m_creature);
