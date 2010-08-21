@@ -96,7 +96,7 @@ struct MANGOS_DLL_DECL boss_xevozzAI : public ScriptedAI
 
     void JustReachedHome()
     {
-        if(Creature* pSinclari = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SINCLARI)))
+        if(Creature* pSinclari = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SINCLARI)))
             pSinclari->DealDamage(pSinclari, pSinclari->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
         if (m_pInstance)
@@ -268,7 +268,7 @@ struct MANGOS_DLL_DECL mob_ethereal_sphereAI : public ScriptedAI
         {
             if (m_pInstance)
             {
-                if (Creature* pXevozz = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_XEVOZZ))))
+                if (Creature* pXevozz = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_XEVOZZ)))
                 {
                     float fDistance = m_creature->GetDistance2d(pXevozz);
                     if (fDistance <= 3)

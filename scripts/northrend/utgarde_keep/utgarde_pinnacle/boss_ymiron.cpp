@@ -215,7 +215,7 @@ struct MANGOS_DLL_DECL boss_ymironAI : public ScriptedAI
     void DespawnBoatGhosts(uint64& m_uiCreatureGUID)
     {
         if (m_uiCreatureGUID)
-            if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, m_uiCreatureGUID))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_uiCreatureGUID))
                 //pTemp->ForcedDespawn();
                 pTemp->DealDamage(pTemp, pTemp->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         m_uiCreatureGUID = 0;

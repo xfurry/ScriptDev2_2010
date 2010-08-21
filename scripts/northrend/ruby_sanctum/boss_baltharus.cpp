@@ -232,7 +232,7 @@ struct MANGOS_DLL_DECL boss_baltharusAI : public ScriptedAI
 		else if (pBaltharus_Target = m_creature->SummonCreature(NPC_BALTHARUS_TARGET, SpawnLoc[0].x, SpawnLoc[0].y, SpawnLoc[0].z, 0.0f, TEMPSUMMON_MANUAL_DESPAWN, 1000))
 			pBaltharus_Target->GetMotionMaster()->MoveIdle();*/
 
-		if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_XERESTRASZA))))
+		if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_XERESTRASZA)))
 		{
 			m_creature->SetUInt64Value(UNIT_FIELD_TARGET, pTarget->GetGUID());
 			DoCast(pTarget, SPELL_CHANNEL_SPELL);
@@ -259,7 +259,7 @@ struct MANGOS_DLL_DECL boss_baltharusAI : public ScriptedAI
 		//if (Creature* pBaltharus_Target = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BALTHARUS_TARGET)))) 
 			//pBaltharus_Target->ForcedDespawn();
 
-		if(Creature* pXerestrasza = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_XERESTRASZA))))
+		if(Creature* pXerestrasza = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_XERESTRASZA)))
             ((mob_xerestraszaAI*)pXerestrasza->AI())->m_bIsOutro = true;
 
 		DoScriptText(SAY_DEATH, m_creature);
@@ -321,7 +321,7 @@ struct MANGOS_DLL_DECL boss_baltharusAI : public ScriptedAI
             switch(m_uiIntroStep)
             {
             case 1:
-				if(Creature* pXerestrasza = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_XERESTRASZA))))
+				if(Creature* pXerestrasza = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_XERESTRASZA)))
 					DoScriptText(SAY_XERESTRASZA_INTRO,  pXerestrasza);
                 ++m_uiIntroStep;
                 m_uiIntroTimer = 7000;
@@ -420,7 +420,7 @@ struct MANGOS_DLL_DECL mob_baltharus_cloneAI : public ScriptedAI
 
 	void KilledUnit(Unit* pVictim)
 	{
-		if(Creature* pBaltharus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BALTHARUS))))
+		if(Creature* pBaltharus = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BALTHARUS)))
 		{
 			switch (urand(0,1)) 
 			{

@@ -201,7 +201,7 @@ struct MANGOS_DLL_DECL boss_archavonAI : public ScriptedAI
 
         if (m_bCrushingLeapInProgress)
         {
-            Unit* m_pCrushingLeapTarget = Unit::GetUnit(*m_creature, m_uiCrushingLeapTargetGUID);
+            Unit* m_pCrushingLeapTarget = m_creature->GetMap()->GetUnit(m_uiCrushingLeapTargetGUID);
             if (m_pCrushingLeapTarget)
             {
                 if (m_pCrushingLeapTarget->isDead() || !m_pCrushingLeapTarget->IsInWorld() && !m_pCrushingLeapTarget->IsInMap(m_creature))
@@ -234,7 +234,7 @@ struct MANGOS_DLL_DECL boss_archavonAI : public ScriptedAI
             if (m_uiRockShardsProgressTimer < uiDiff)
             {
                 m_bRockShardsInProgress = false;
-                if (Unit* m_pRockShardsTarget = Unit::GetUnit(*m_creature, m_uiRockShardsTargetGUID))
+                if (Unit* m_pRockShardsTarget = m_creature->GetMap()->GetUnit(m_uiRockShardsTargetGUID))
                     m_creature->getThreatManager().addThreat(m_pRockShardsTarget, -100000000.0f);
                 return;
             }
@@ -243,7 +243,7 @@ struct MANGOS_DLL_DECL boss_archavonAI : public ScriptedAI
 
             if (m_uiRockShardTimer < uiDiff)
             {
-                Unit* m_pRockShardsTarget = Unit::GetUnit(*m_creature, m_uiRockShardsTargetGUID);
+                Unit* m_pRockShardsTarget = m_creature->GetMap()->GetUnit(m_uiRockShardsTargetGUID);
                 if (m_pRockShardsTarget && m_pRockShardsTarget->isAlive())
                 {
                     DoCast(m_pRockShardsTarget, m_bIsRegularMode ? (m_bRLRockShard ? SPELL_ROCK_SHARDS_LEFT : SPELL_ROCK_SHARDS_RIGHT) : (m_bRLRockShard ? SPELL_ROCK_SHARDS_LEFT_H : SPELL_ROCK_SHARDS_RIGHT_H));
@@ -280,7 +280,7 @@ struct MANGOS_DLL_DECL boss_archavonAI : public ScriptedAI
             std::list<Unit*> lTargets;
             for (ThreatList::const_iterator itr = tList.begin();itr != tList.end(); ++itr)
             {
-                Unit *pTemp = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+                Unit *pTemp = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());
                 if (pTemp && pTemp->GetTypeId() == TYPEID_PLAYER && !m_creature->IsWithinDist(pTemp, 10.0f) && m_creature->IsWithinDist(pTemp, 80.0f))
                     lTargets.push_back(pTemp);
             }

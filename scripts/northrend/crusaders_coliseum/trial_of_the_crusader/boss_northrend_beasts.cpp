@@ -247,10 +247,10 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
             m_pInstance->SetData(TYPE_STAGE,0);
         }
 
-        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+        if(Creature *pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
             DoScriptText(SAY_WIPE, pTirion);
 
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        if(Creature *pBarret = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BARRET)))
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
@@ -287,10 +287,10 @@ struct MANGOS_DLL_DECL boss_icehowlAI : public ScriptedAI
             m_pInstance->SetData(TYPE_STAGE,0);
         }
 
-        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+        if(Creature *pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
             DoScriptText(SAY_VICTORY, pTirion);
 
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        if(Creature *pBarret = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BARRET)))
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
@@ -674,10 +674,10 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
             m_pInstance->SetData(TYPE_STAGE,0);
         }
 
-        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+        if(Creature *pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
             DoScriptText(SAY_WIPE, pTirion);
 
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        if(Creature *pBarret = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BARRET)))
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
@@ -716,7 +716,7 @@ struct MANGOS_DLL_DECL boss_acidmawAI : public ScriptedAI
 
     void SummonIcehowl()
     {
-        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+        if(Creature *Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
             DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
 
         if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
@@ -1094,10 +1094,10 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
             m_pInstance->SetData(TYPE_STAGE,0);
         }
 
-        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+        if(Creature *pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
             DoScriptText(SAY_WIPE, pTirion);
 
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        if(Creature *pBarret = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BARRET)))
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
@@ -1136,7 +1136,7 @@ struct MANGOS_DLL_DECL boss_dreadscaleAI : public ScriptedAI
 
     void SummonIcehowl()
     {
-        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+        if(Creature *Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
             DoScriptText(SAY_SUMMON_ICEHOWL, Tirion);
 
         if(Creature* pIcehowl = m_creature->SummonCreature(NPC_ICEHOWL, SpawnLoc[28].x, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
@@ -1498,10 +1498,10 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
             m_pInstance->SetData(TYPE_STAGE,0);
         }
 
-        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+        if(Creature *pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
             DoScriptText(SAY_WIPE, pTirion);
 
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        if(Creature *pBarret = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BARRET)))
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
@@ -1550,7 +1550,7 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
     void SummonJormungars()
     {
 
-        if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+        if(Creature *Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
             DoScriptText(SAY_SUMMON_JORMUNGARS, Tirion);
 
         if (Creature* pDreadscale = m_creature->SummonCreature(NPC_DREADSCALE, SpawnLoc[28].x + 10, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000))
@@ -1619,12 +1619,12 @@ struct MANGOS_DLL_DECL boss_gormokAI : public ScriptedAI
                 m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
             if(TeamInInstance == ALLIANCE)
             {
-                if(Creature *Varian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
+                if(Creature *Varian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VARIAN)))
                     DoScriptText(SAY_VARIAN_BEASTS, Varian);
             }
             else if(TeamInInstance == HORDE)
             {
-                if(Creature *Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                if(Creature *Garrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
                     DoScriptText(SAY_GARROSH_BEASTS, Garrosh);
             }
             doorClosed = true;

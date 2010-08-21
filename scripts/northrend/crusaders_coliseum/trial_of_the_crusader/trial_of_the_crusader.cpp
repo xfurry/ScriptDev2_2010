@@ -194,53 +194,53 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
 
     void SummonHorde()
     {
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_1)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_1)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_2_1, SpawnLoc[3].x, SpawnLoc[3].y - 13, SpawnLoc[3].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_2)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_2)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_2_2, SpawnLoc[4].x, SpawnLoc[4].y - 13, SpawnLoc[4].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_3)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_3)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_2_3, SpawnLoc[5].x, SpawnLoc[5].y - 13, SpawnLoc[5].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_4)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_4)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_2_4, SpawnLoc[6].x, SpawnLoc[6].y - 13, SpawnLoc[6].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_5)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_5)))
             pTemp->Respawn();
         else 
             m_creature->SummonCreature(NPC_CRUSADER_2_5, SpawnLoc[7].x, SpawnLoc[7].y - 13, SpawnLoc[7].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_6)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_6)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_2_6, SpawnLoc[8].x, SpawnLoc[8].y - 13, SpawnLoc[8].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
         if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
         {
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_7)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_7)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_2_7, SpawnLoc[9].x, SpawnLoc[9].y - 13, SpawnLoc[9].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_8)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_8)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_2_8, SpawnLoc[10].x, SpawnLoc[10].y - 13, SpawnLoc[10].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_9)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_9)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_2_9, SpawnLoc[11].x, SpawnLoc[11].y - 13, SpawnLoc[11].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_10)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_10)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_2_10, SpawnLoc[12].x, SpawnLoc[12].y - 13, SpawnLoc[12].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_1)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_0_1, SpawnLoc[13].x, SpawnLoc[13].y - 13, SpawnLoc[13].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_2)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_0_2, SpawnLoc[14].x, SpawnLoc[14].y - 13, SpawnLoc[14].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
@@ -249,53 +249,53 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
 
     void SummonAly()
     {
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_1)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_1)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_1_1, SpawnLoc[3].x, SpawnLoc[3].y - 13, SpawnLoc[3].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_2)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_2)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_1_2, SpawnLoc[4].x, SpawnLoc[4].y - 13, SpawnLoc[4].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_3)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_3)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_1_3, SpawnLoc[5].x, SpawnLoc[5].y - 13, SpawnLoc[5].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_4)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_4)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_1_4, SpawnLoc[6].x, SpawnLoc[6].y - 13, SpawnLoc[6].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_5)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_5)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_1_5, SpawnLoc[7].x, SpawnLoc[7].y - 13, SpawnLoc[7].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_6)))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_6)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_1_6, SpawnLoc[8].x, SpawnLoc[8].y - 13, SpawnLoc[8].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
         if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
         {
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_7)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_7)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_1_7, SpawnLoc[9].x, SpawnLoc[9].y - 13, SpawnLoc[9].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_8)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_8)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_1_8, SpawnLoc[10].x, SpawnLoc[10].y - 13, SpawnLoc[10].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_9)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_9)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_1_9, SpawnLoc[11].x, SpawnLoc[11].y - 13, SpawnLoc[11].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_10)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_10)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_1_10, SpawnLoc[12].x, SpawnLoc[12].y - 13, SpawnLoc[12].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_1)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_0_1, SpawnLoc[13].x, SpawnLoc[13].y - 13, SpawnLoc[13].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_2)))
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_0_2, SpawnLoc[14].x, SpawnLoc[14].y - 13, SpawnLoc[14].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
@@ -440,12 +440,12 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
             case 3:
                 if(faction == 1)
                 {
-                    if(Creature* Varian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
+                    if(Creature* Varian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VARIAN)))
                         DoScriptText(SAY_VARIAN_CHAMP1, Varian);
                 }
                 if(faction == 2)
                 {
-                    if(Creature* Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                    if(Creature* Garrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
                         DoScriptText(SAY_GARROSH_CHAMP1, Garrosh);
                 }
                 ++IntroStep;
@@ -459,7 +459,7 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
             case 7:
                 if(faction == 2)
                 {
-                    if(Creature* Varian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
+                    if(Creature* Varian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VARIAN)))
                     {
                         DoScriptText(SAY_VARIAN_CHAMP2, Varian);
                         SummonHorde();
@@ -468,7 +468,7 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
                 }
                 if(faction == 1)
                 {
-                    if(Creature* Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                    if(Creature* Garrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
                     {
                         DoScriptText(SAY_GARROSH_CHAMP2, Garrosh);
                         SummonAly();
@@ -569,7 +569,7 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                 {
                 case 0:
                     m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-                    if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_WELCOME, Tirion);
 
                     /* temp */
@@ -589,147 +589,147 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                     break;
                     // aly intro
                 case 1:
-                    if(Creature* Varian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
+                    if(Creature* Varian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VARIAN)))
                         DoScriptText(SAY_VARIAN_INTRO1, Varian);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 3000;
                     break;
                 case 2:
-                    if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_ALY1, Tirion);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 3:
-                    if(Creature* Jaina = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_JAINA)))
+                    if(Creature* Jaina = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_JAINA)))
                         DoScriptText(SAY_JAINA_INTRO1, Jaina);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 4:
-                    if(Creature* Varian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
+                    if(Creature* Varian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VARIAN)))
                         DoScriptText(SAY_VARIAN_INTRO2, Varian);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 5:
-                    if(Creature* Jaina = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_JAINA)))
+                    if(Creature* Jaina = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_JAINA)))
                         DoScriptText(SAY_JAINA_INTRO2, Jaina);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 6:
-                    if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_ALY2, Tirion);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 7:
-                    if(Creature* Varian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
+                    if(Creature* Varian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VARIAN)))
                         DoScriptText(SAY_VARIAN_INTRO3, Varian);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                     //horde intro
                 case 8:
-                    if(Creature* Thrall = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_THRALL)))
+                    if(Creature* Thrall = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_THRALL)))
                         DoScriptText(SAY_THRALL_INTRO1, Thrall);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 9:
-                    if(Creature* Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                    if(Creature* Garrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
                         DoScriptText(SAY_GARROSH_INTRO1, Garrosh);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 10:
-                    if(Creature* Thrall = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_THRALL)))
+                    if(Creature* Thrall = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_THRALL)))
                         DoScriptText(SAY_THRALL_INTRO2, Thrall);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 11:
-                    if(Creature* Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                    if(Creature* Garrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
                         DoScriptText(SAY_GARROSH_INTRO2, Garrosh);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 12:
-                    if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_HORDE1, Tirion);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 5000;
                     break;
                 case 13:
-                    if(Creature* Thrall = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_THRALL)))
+                    if(Creature* Thrall = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_THRALL)))
                         DoScriptText(SAY_THRALL_INTRO3, Thrall);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 14:
-                    if(Creature* Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                    if(Creature* Garrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
                         DoScriptText(SAY_GARROSH_INTRO3, Garrosh);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 15:
-                    if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_HORDE2, Tirion);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 16:
-                    if(Creature* Thrall = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_THRALL)))
+                    if(Creature* Thrall = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_THRALL)))
                         DoScriptText(SAY_THRALL_INTRO4, Thrall);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 17:
-                    if(Creature* Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                    if(Creature* Garrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
                         DoScriptText(SAY_GARROSH_INTRO4, Garrosh);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 18:
-                    if(Creature* Thrall = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_THRALL)))
+                    if(Creature* Thrall = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_THRALL)))
                         DoScriptText(SAY_THRALL_INTRO5, Thrall);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 3000;
                     break;
                 case 19:
-                    if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_HORDE3, Tirion);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 20:
-                    if(Creature* Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                    if(Creature* Garrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
                         DoScriptText(SAY_GARROSH_INTRO5, Garrosh);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 3000;
                     break;
                 case 21:
-                    if(Creature* Thrall = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_THRALL)))
+                    if(Creature* Thrall = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_THRALL)))
                         DoScriptText(SAY_THRALL_INTRO6, Thrall);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                 case 22:
-                    if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_HORDE4, Tirion);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 10000;
                     break;
                     // start trial
                 case 23:
-                    if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_TRIAL, Tirion);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 15000;
                     break;
                 case 24:
-                    if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                    if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                         DoScriptText(SAY_TIRION_TWINS_INTRO2, Tirion);
                     ++m_uiIntro_Phase;
                     m_uiSpeech_Timer = 3000;
@@ -798,21 +798,21 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
             // Crusaders -> alliance
         case 3: 
             {
-                Creature* pTemp1 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_1));
-                Creature* pTemp2 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_2));
-                Creature* pTemp3 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_3));
-                Creature* pTemp4 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_4));
-                Creature* pTemp5 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_5));
-                Creature* pTemp6 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_6));
+                Creature* pTemp1 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_1));
+                Creature* pTemp2 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_2));
+                Creature* pTemp3 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_3));
+                Creature* pTemp4 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_4));
+                Creature* pTemp5 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_5));
+                Creature* pTemp6 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_6));
 
                 if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 {
-                    Creature* pTemp7 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_7));
-                    Creature* pTemp8 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_8));
-                    Creature* pTemp9 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_9));
-                    Creature* pTemp10 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_1_10));
-                    Creature* pTemp11 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1));
-                    Creature* pTemp12 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2));
+                    Creature* pTemp7 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_7));
+                    Creature* pTemp8 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_8));
+                    Creature* pTemp9 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_9));
+                    Creature* pTemp10 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_10));
+                    Creature* pTemp11 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_1));
+                    Creature* pTemp12 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_2));
                     if (pTemp7 && pTemp8 && pTemp9 && pTemp10 && pTemp11 && pTemp12) 
                     {
                         if (!pTemp7->isAlive() && !pTemp8->isAlive() && !pTemp9->isAlive() && !pTemp10->isAlive() && !pTemp11->isAlive() && !pTemp12->isAlive())
@@ -841,10 +841,10 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                         m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                         m_creature->SetVisibility(VISIBILITY_ON);
 
-                        if(Creature *pGarrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                        if(Creature *pGarrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
                             DoScriptText(SAY_VICTORY_HORDE, pGarrosh);
 
-                        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                        if(Creature *pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                             DoScriptText(SAY_OUTRO_TIRION, pTirion);
 
                         if(m_uiResilienceAchievTimer <= 60000)
@@ -875,21 +875,21 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
             // crusaders -> horde
         case 4: 
             {
-                Creature* pTemp1 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_1));
-                Creature* pTemp2 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_2));
-                Creature* pTemp3 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_3));
-                Creature* pTemp4 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_4));
-                Creature* pTemp5 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_5));
-                Creature* pTemp6 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_6));
+                Creature* pTemp1 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_1));
+                Creature* pTemp2 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_2));
+                Creature* pTemp3 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_3));
+                Creature* pTemp4 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_4));
+                Creature* pTemp5 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_5));
+                Creature* pTemp6 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_6));
 
                 if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 {
-                    Creature* pTemp7 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_7));
-                    Creature* pTemp8 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_8));
-                    Creature* pTemp9 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_9));
-                    Creature* pTemp10 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_2_10));
-                    Creature* pTemp11 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_1));
-                    Creature* pTemp12 = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_CRUSADER_0_2));
+                    Creature* pTemp7 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_7));
+                    Creature* pTemp8 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_8));
+                    Creature* pTemp9 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_9));
+                    Creature* pTemp10 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_10));
+                    Creature* pTemp11 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_1));
+                    Creature* pTemp12 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_2));
                     if (pTemp7 && pTemp8 && pTemp9 && pTemp10 && pTemp11 && pTemp12) 
                     {
                         if (!pTemp7->isAlive() && !pTemp8->isAlive() && !pTemp9->isAlive() && !pTemp10->isAlive() && !pTemp11->isAlive() && !pTemp12->isAlive())
@@ -917,10 +917,10 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                         m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                         m_creature->SetVisibility(VISIBILITY_ON);
 
-                        if(Creature *pVarian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
+                        if(Creature *pVarian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VARIAN)))
                             DoScriptText(SAY_VICTORY_ALY, pVarian);
 
-                        if(Creature *pTirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                        if(Creature *pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                             DoScriptText(SAY_OUTRO_TIRION, pTirion);
 
                         if(m_uiResilienceAchievTimer <= 60000)
@@ -1026,7 +1026,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
                 pGromok->GetMotionMaster()->MovePoint(0, SpawnLoc[2].x, SpawnLoc[2].y - 15, SpawnLoc[2].z);
             }
 
-            if(Creature *Tirion = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(DATA_TIRION)))
+            if(Creature *Tirion = pCreature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                 DoScriptText(SAY_SUMMON_GORMOK, Tirion);
             if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
                 m_pInstance->DoUseDoorOrButton(pMainGate->GetGUID());
@@ -1039,7 +1039,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
             m_pInstance->SetData(TYPE_STAGE,2);
             pCreature->SetVisibility(VISIBILITY_OFF);
             pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-            if(Creature *pTirion = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(DATA_TIRION)))
+            if(Creature *pTirion = pCreature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                 ((npc_tirionAI*)pTirion->AI())->SetJaruIntro();
 
             if(GameObject* pMainGate = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_MAIN_GATE)))
@@ -1053,7 +1053,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
             pCreature->SetVisibility(VISIBILITY_OFF);
             pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
-            if(Creature *pTirion = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(DATA_TIRION)))
+            if(Creature *pTirion = pCreature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                 ((npc_tirionAI*)pTirion->AI())->SetChampIntro(1);
             break;
         };
@@ -1064,7 +1064,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
             pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pCreature->SetVisibility(VISIBILITY_OFF);
 
-            if(Creature *pTirion = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(DATA_TIRION)))
+            if(Creature *pTirion = pCreature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                 ((npc_tirionAI*)pTirion->AI())->SetChampIntro(2);
             break;
         };
@@ -1075,7 +1075,7 @@ bool GossipSelect_npc_crusader_anouncer(Player* pPlayer, Creature* pCreature, ui
             m_pInstance->SetData(TYPE_TWIN_VALKYR,IN_PROGRESS);
             pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pCreature->SetVisibility(VISIBILITY_OFF);
-            if(Creature *Tirion = (Creature*)Unit::GetUnit((*pCreature),m_pInstance->GetData64(DATA_TIRION)))
+            if(Creature *Tirion = pCreature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                 DoScriptText(SAY_TIRION_TWINS_INTRO1, Tirion);
             if (Creature* pFjola = pCreature->SummonCreature(NPC_FJOLA, SpawnLoc[28].x + 5, SpawnLoc[28].y, SpawnLoc[28].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
             {
@@ -1158,7 +1158,7 @@ struct MANGOS_DLL_DECL npc_lich_kingAI : public ScriptedAI
         switch(IntroStep)
         {
         case 1:
-            if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            if(Creature *Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                 DoScriptText(SAY_TIRION_ANUB_INTRO1, Tirion);
             ++IntroStep;
             IntroTimer = 18000;
@@ -1174,7 +1174,7 @@ struct MANGOS_DLL_DECL npc_lich_kingAI : public ScriptedAI
             IntroTimer = 5000;
             break;
         case 5:
-            if(Creature *Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+            if(Creature *Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                 DoScriptText(SAY_TIRION_ANUB_INTRO4, Tirion);
             ++IntroStep;
             IntroTimer = 8000;

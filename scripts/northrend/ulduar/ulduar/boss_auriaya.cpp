@@ -140,7 +140,7 @@ struct MANGOS_DLL_DECL mob_sanctum_sentryAI : public ScriptedAI
     {
         if (m_pInstance)
         {
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_AURIAYA))))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_AURIAYA)))
             {
                 if (pTemp->isAlive())
                     pTemp->SetInCombatWithZone();
@@ -169,7 +169,7 @@ struct MANGOS_DLL_DECL mob_sanctum_sentryAI : public ScriptedAI
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
         {
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_AURIAYA))))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_AURIAYA)))
             {
                 if (pTemp->isAlive())
                 {
@@ -258,15 +258,15 @@ struct MANGOS_DLL_DECL mob_feral_defenderAI : public ScriptedAI
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             if (m_creature->HasAura(SPELL_FERAL_ESSENCE))
             {
-				/*if(SpellAuraHolder* strenght = m_creature->GetSpellAuraHolder(SPELL_FERAL_ESSENCE))
+				if(SpellAuraHolder* strenght = m_creature->GetSpellAuraHolder(SPELL_FERAL_ESSENCE))
 				{
 					if(strenght->ModStackAmount(-1))
 						m_creature->RemoveAurasDueToSpell(SPELL_FERAL_ESSENCE);
-				}*/
+				}
 
 				// temp for old aura system
-				if(m_creature->GetAura(SPELL_FERAL_ESSENCE, EFFECT_INDEX_0)->modStackAmount(-1))	 	
-					m_creature->RemoveAurasDueToSpell(SPELL_FERAL_ESSENCE);
+				//if(m_creature->GetAura(SPELL_FERAL_ESSENCE, EFFECT_INDEX_0)->modStackAmount(-1))	 	
+				//	m_creature->RemoveAurasDueToSpell(SPELL_FERAL_ESSENCE);
 
                 m_uiRevive_Delay = 35000;
                 m_bIsDead = true;
@@ -282,21 +282,21 @@ struct MANGOS_DLL_DECL mob_feral_defenderAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		/*if(SpellAuraHolder* essence = m_creature->GetSpellAuraHolder(SPELL_FERAL_ESSENCE))
+		if(SpellAuraHolder* essence = m_creature->GetSpellAuraHolder(SPELL_FERAL_ESSENCE))
 		{
 			if(essence->GetStackAmount() < 9 && !m_bHasAura)
 			{
 				m_bHasAura = true;
 				essence->SetStackAmount(9);
 			}
-		}*/
+		}
 
 		// temp for the old aura system
-		if(m_creature->HasAura(SPELL_FERAL_ESSENCE, EFFECT_INDEX_0) && !m_bHasAura)
-		{
-			m_creature->GetAura(SPELL_FERAL_ESSENCE, EFFECT_INDEX_0)->SetStackAmount(9);
-			m_bHasAura = true;
-		}
+		//if(m_creature->HasAura(SPELL_FERAL_ESSENCE, EFFECT_INDEX_0) && !m_bHasAura)
+		//{
+		//	m_creature->GetAura(SPELL_FERAL_ESSENCE, EFFECT_INDEX_0)->SetStackAmount(9);
+		//	m_bHasAura = true;
+		//}
 
 		if (m_uiPounce_Timer < diff)
         {

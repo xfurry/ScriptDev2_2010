@@ -319,14 +319,14 @@ struct MANGOS_DLL_DECL boss_prince_taldaramAI : public ScriptedAI
 			if(m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != NOT_STARTED)
 				m_pInstance->SetData(TYPE_PRINCE_COUNCIL, NOT_STARTED);
 		}
-		if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+		if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 		{
 			if(pKeleseth->isAlive())
 				pKeleseth->AI()->EnterEvadeMode();
 			else
 				pKeleseth->Respawn();
 		}
-		if (Creature* pValanar = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALANAR))))
+		if (Creature* pValanar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALANAR)))
 		{
 			if(pValanar->isAlive())
 				pValanar->AI()->EnterEvadeMode();
@@ -351,9 +351,9 @@ struct MANGOS_DLL_DECL boss_prince_taldaramAI : public ScriptedAI
 			if(m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != IN_PROGRESS)
 				m_pInstance->SetData(TYPE_PRINCE_COUNCIL, IN_PROGRESS);
 		}
-		if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+		if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 			pKeleseth->AI()->AttackStart(pWho);
-		if (Creature* pValanar = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALANAR))))
+		if (Creature* pValanar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALANAR)))
 			pValanar->AI()->AttackStart(pWho);
 	}
 
@@ -365,9 +365,9 @@ struct MANGOS_DLL_DECL boss_prince_taldaramAI : public ScriptedAI
 			if(m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != DONE)
 				m_pInstance->SetData(TYPE_PRINCE_COUNCIL, DONE);
 		}
-		if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+		if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 			pKeleseth->DealDamage(pKeleseth, pKeleseth->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-		if (Creature* pValanar = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALANAR))))
+		if (Creature* pValanar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALANAR)))
 			pValanar->DealDamage(pValanar, pValanar->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 	}
 
@@ -382,13 +382,13 @@ struct MANGOS_DLL_DECL boss_prince_taldaramAI : public ScriptedAI
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		if (Creature* pValanar = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALANAR))))
+		if (Creature* pValanar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALANAR)))
 		{
 			if(m_creature->getVictim()->GetGUID() == pValanar->GetGUID()) 
                 EnterEvadeMode();
 		}
 
-		if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+		if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 		{
 			if(m_creature->getVictim()->GetGUID() == pKeleseth->GetGUID()) 
                 EnterEvadeMode();
@@ -480,14 +480,14 @@ struct MANGOS_DLL_DECL boss_prince_kelesethAI : public ScriptedAI
 			if(m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != NOT_STARTED)
 				m_pInstance->SetData(TYPE_PRINCE_COUNCIL, NOT_STARTED);
 		}
-		if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+		if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 		{
 			if(pTaldaram->isAlive())
 				pTaldaram->AI()->EnterEvadeMode();
 			else
 				pTaldaram->Respawn();
 		}
-		if (Creature* pValanar = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALANAR))))
+		if (Creature* pValanar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALANAR)))
 		{
 			if(pValanar->isAlive())
 				pValanar->AI()->EnterEvadeMode();
@@ -503,9 +503,9 @@ struct MANGOS_DLL_DECL boss_prince_kelesethAI : public ScriptedAI
 			if(m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != IN_PROGRESS)
 				m_pInstance->SetData(TYPE_PRINCE_COUNCIL, IN_PROGRESS);
 		}
-		if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+		if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 			pTaldaram->AI()->AttackStart(pWho);
-		if (Creature* pValanar = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALANAR))))
+		if (Creature* pValanar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALANAR)))
 			pValanar->AI()->AttackStart(pWho);
 	}
 
@@ -517,9 +517,9 @@ struct MANGOS_DLL_DECL boss_prince_kelesethAI : public ScriptedAI
 			if(m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != DONE)
 				m_pInstance->SetData(TYPE_PRINCE_COUNCIL, DONE);
 		}
-		if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+		if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 			pTaldaram->DealDamage(pTaldaram, pTaldaram->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-		if (Creature* pValanar = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALANAR))))
+		if (Creature* pValanar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALANAR)))
 			pValanar->DealDamage(pValanar, pValanar->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 	}
 
@@ -554,13 +554,13 @@ struct MANGOS_DLL_DECL boss_prince_kelesethAI : public ScriptedAI
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		if (Creature* pValanar = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALANAR))))
+		if (Creature* pValanar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALANAR)))
 		{
 			if(m_creature->getVictim()->GetGUID() == pValanar->GetGUID()) 
                 EnterEvadeMode();
 		}
 
-		if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+		if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 		{
 			if(m_creature->getVictim()->GetGUID() == pTaldaram->GetGUID()) 
                 EnterEvadeMode();
@@ -701,14 +701,14 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 				m_pInstance->SetData(TYPE_PRINCE_COUNCIL, NOT_STARTED);
 		}
 
-		if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+		if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 		{
 			if(pKeleseth->isAlive())
 				pKeleseth->AI()->EnterEvadeMode();
 			else
 				pKeleseth->Respawn();
 		}
-		if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+		if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 		{
 			if(pTaldaram->isAlive())
 				pTaldaram->AI()->EnterEvadeMode();
@@ -735,12 +735,12 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 		m_uiPrincesPhase = 1;
 		DoCast(m_creature, SPELL_INVOCATION_VALANAR);
 		DoScriptText(SAY_VALANAR_BLOOD, m_creature);
-		if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+		if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 		{
 			pKeleseth->AI()->AttackStart(pWho);
 			pKeleseth->SetHealth(1);
 		}
-		if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+		if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 		{
 			pTaldaram->AI()->AttackStart(pWho);
 			pTaldaram->SetHealth(1);
@@ -760,9 +760,9 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 			if(m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != DONE)
 				m_pInstance->SetData(TYPE_PRINCE_COUNCIL, DONE);
 		}
-		if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+		if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 			pKeleseth->DealDamage(pKeleseth, pKeleseth->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-		if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+		if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 			pTaldaram->DealDamage(pTaldaram, pTaldaram->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 	}
 
@@ -779,22 +779,22 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
             switch(m_uiIntroStep)
 			{
 			case 1:
-				if (Creature* pLanthel = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_LANATHEL))))
+				if (Creature* pLanthel = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_LANATHEL)))
 					DoScriptText(SAY_INTRO1, pLanthel);
 				++m_uiIntroStep;
 				m_uiIntroTimer = 16000;
 				break;
 			case 3:
-				if (Creature* pLanthel = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_LANATHEL))))
+				if (Creature* pLanthel = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_LANATHEL)))
 					DoScriptText(SAY_INTRO2, pLanthel);
 				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 				m_creature->SetStandState(UNIT_STAND_STATE_STAND);
-				if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+				if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 				{
 					pKeleseth->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 					pKeleseth->SetStandState(UNIT_STAND_STATE_STAND);
 				}
-				if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+				if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 				{
 					pTaldaram->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 					pTaldaram->SetStandState(UNIT_STAND_STATE_STAND);
@@ -821,13 +821,13 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+		if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 		{
 			if(m_creature->getVictim()->GetGUID() == pTaldaram->GetGUID()) 
                 EnterEvadeMode();
 		}
 
-		if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+		if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 		{
 			if(m_creature->getVictim()->GetGUID() == pKeleseth->GetGUID()) 
                 EnterEvadeMode();
@@ -869,7 +869,7 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 				// switch to Taldaram
 			case 1:
 				m_pInstance->SetData(TYPE_PRINCES_PHASE, PHASE_TALDARAM);
-				if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+				if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 				{
 					DoScriptText(SAY_TALDARAM_BLOOD, pTaldaram);
 					pTaldaram->CastSpell(pTaldaram, SPELL_INVOCATION_TALDARAM, false);
@@ -883,12 +883,12 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 				// switch to Keleseth
 			case 2:
 				m_pInstance->SetData(TYPE_PRINCES_PHASE, PHASE_KELESETH);
-				if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+				if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 				{
 					DoScriptText(SAY_KELESETH_BLOOD, pKeleseth);
 					pKeleseth->CastSpell(pKeleseth, SPELL_INVOCATION_KELESETH, false);
 					((boss_prince_kelesethAI*)pKeleseth->AI())->m_uiShadowLance = 15000;
-					if (Creature* pTaldaram = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TALDARAM))))
+					if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 					{
 						pKeleseth->SetHealth(pTaldaram->GetHealth());
 						pTaldaram->RemoveAurasDueToSpell(SPELL_INVOCATION_TALDARAM);
@@ -902,7 +902,7 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 				m_pInstance->SetData(TYPE_PRINCES_PHASE, PHASE_VALANAR);
 				DoCast(m_creature, SPELL_INVOCATION_VALANAR);
 				DoScriptText(SAY_VALANAR_BLOOD, m_creature);
-				if (Creature* pKeleseth = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_KELESETH))))
+				if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 				{
 					pKeleseth->RemoveAurasDueToSpell(SPELL_INVOCATION_KELESETH);
 					m_creature->SetHealth(pKeleseth->GetHealth());

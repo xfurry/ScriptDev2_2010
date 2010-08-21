@@ -483,7 +483,7 @@ struct MANGOS_DLL_DECL boss_RimefangAI : public ScriptedAI
 
         if (m_uiHoarfrostTimer < uiDiff)
         {
-            if (Unit* pTarget = Unit::GetUnit(*m_creature, m_uiMainTargetGUID))
+            if (Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiMainTargetGUID))
                 DoCast(pTarget, SPELL_HOARFROST);
             else if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, SPELL_HOARFROST);
@@ -494,7 +494,7 @@ struct MANGOS_DLL_DECL boss_RimefangAI : public ScriptedAI
 
         if (m_uiIcyBlastTimer < uiDiff)
         {
-            if (Unit* pTarget = Unit::GetUnit(*m_creature, m_uiMainTargetGUID))
+            if (Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiMainTargetGUID))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_ICY_BLAST : SPELL_ICY_BLAST_H);
             else if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_ICY_BLAST : SPELL_ICY_BLAST_H);
@@ -505,7 +505,7 @@ struct MANGOS_DLL_DECL boss_RimefangAI : public ScriptedAI
 
         if (m_uiIcyBlastSlowTimer < uiDiff)
         {
-            if (Unit* pTarget = Unit::GetUnit(*m_creature, m_uiMainTargetGUID))
+            if (Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiMainTargetGUID))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_ICY_BLAST_SLOW : SPELL_ICY_BLAST_SLOW_H);
             else if (Unit *pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(pTarget, m_bIsRegularMode ? SPELL_ICY_BLAST_SLOW : SPELL_ICY_BLAST_SLOW_H);

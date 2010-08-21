@@ -151,10 +151,10 @@ struct MANGOS_DLL_DECL npc_expedition_commanderAI : public ScriptedAI
 
     void GetRazorDown()
     {
-        if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_RAZORSCALE))))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RAZORSCALE)))
         {
             pTemp->SetInCombatWithZone();
-            if(Unit* pPlayer = Unit::GetUnit((*m_creature), m_uiPlayerGUID))
+            if(Unit* pPlayer = m_creature->GetMap()->GetUnit(m_uiPlayerGUID))
             {
                 pTemp->AddThreat(pPlayer,0.0f);
                 pTemp->AI()->AttackStart(pPlayer);
@@ -545,7 +545,7 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
         m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
         m_creature->GetMotionMaster()->MoveConfused();
 
-        if (Creature* pCommander = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_COMMANDER))))
+        if (Creature* pCommander = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COMMANDER)))
             pCommander->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
     }
 
@@ -699,7 +699,7 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
 
 		if (m_uiHarpoonsUsed == m_uiMaxHarpoons && m_bAirphase)
         {
-            if(Creature* pCommander = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_COMMANDER))))
+            if(Creature* pCommander = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COMMANDER)))
                 DoScriptText(SAY_GROUND, pCommander);
 			m_creature->GetMap()->CreatureRelocation(m_creature, PositionLoc[3].x, PositionLoc[3].y, PositionLoc[3].z, 1.5);
             m_creature->SendMonsterMove(PositionLoc[3].x, PositionLoc[3].y, PositionLoc[3].z, SPLINETYPE_FACINGSPOT, m_creature->GetSplineFlags(), 1);
@@ -722,7 +722,7 @@ struct MANGOS_DLL_DECL boss_razorscaleAI : public ScriptedAI
 
 		if (m_uiGround_Cast < uiDiff && m_bIsGrounded)
 		{
-            if (Creature* pCommander = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_COMMANDER))))
+            if (Creature* pCommander = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COMMANDER)))
                 m_creature->SetUInt64Value(UNIT_FIELD_TARGET, pCommander->GetGUID());
 			m_creature->RemoveAurasDueToSpell(SPELL_STUN);
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
@@ -832,7 +832,7 @@ bool GOHello_go_broken_harpoon(Player* pPlayer, GameObject* pGo)
         return false;
 
     pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
-    if (Creature* pRazor = ((Creature*)Unit::GetUnit((*pGo), pInstance->GetData64(NPC_RAZORSCALE))))
+    if (Creature* pRazor = pGo->GetMap()->GetCreature(pInstance->GetData64(NPC_RAZORSCALE)))
         ((boss_razorscaleAI*)pRazor->AI())->m_uiHarpoonsUsed += 1;
 
     return false;

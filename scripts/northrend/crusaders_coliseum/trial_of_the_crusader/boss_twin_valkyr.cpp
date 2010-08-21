@@ -258,7 +258,7 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
             m_pInstance->SetData(TYPE_TWIN_VALKYR, DONE);
             RemoveAllAuras();
         }
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        if(Creature *pBarret = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BARRET)))
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
@@ -328,7 +328,7 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
             }
         }
 
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        if(Creature *pBarret = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BARRET)))
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
@@ -695,7 +695,7 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
             DespawnAdds();
         }
 
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        if(Creature *pBarret = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BARRET)))
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);
@@ -785,7 +785,7 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
                 m_pInstance->SetData(TYPE_TWIN_VALKYR, NOT_STARTED);
             }
         }
-        if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+        if(Creature *pBarret = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BARRET)))
         {
             pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             pBarret->SetVisibility(VISIBILITY_ON);

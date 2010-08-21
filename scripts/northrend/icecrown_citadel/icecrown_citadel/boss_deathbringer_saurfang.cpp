@@ -372,13 +372,13 @@ struct MANGOS_DLL_DECL mob_blood_beastAI : public ScriptedAI
     void DamageDeal(Unit * pDoneTo, uint32 &uiDamage)
     {
         int temp1;
-        if (Creature* pSaurfang = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SAURFANG))))
+        if (Creature* pSaurfang = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SAURFANG)))
             temp1 = pSaurfang->GetPower(POWER_RAGE);
 
         int temp2 = 0.001 * uiDamage;
         temp1 = temp1 + temp2;
 
-        if (Creature* pSaurfang = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SAURFANG))))
+        if (Creature* pSaurfang = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SAURFANG)))
         {
             if(temp1 > 1000)
                 pSaurfang->SetPower(POWER_RAGE,1000);   

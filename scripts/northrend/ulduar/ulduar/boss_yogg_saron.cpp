@@ -523,7 +523,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                 m_uiKeepersActive += 1;
             }
 
-            if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SARA)))
+            if(Creature* pSara = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SARA)))
                 DoScriptText(SAY_AGGRO, pSara);
         }
     }
@@ -534,7 +534,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
         {
             m_pInstance->SetData(TYPE_YOGGSARON, NOT_STARTED);
 
-            if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SARA)))
+            if(Creature* pSara = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SARA)))
             {
                 if(!pSara->isAlive())
                     pSara->Respawn();
@@ -542,7 +542,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                     pSara->AI()->EnterEvadeMode();
             }
 
-            if (Creature* pYoggBrain = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGG_BRAIN))))
+            if (Creature* pYoggBrain = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGG_BRAIN)))
             {
                 if(!pYoggBrain->isAlive())
                     pYoggBrain->Respawn();
@@ -594,13 +594,13 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_NOT_GETTING_OLDER : ACHIEV_NOT_GETTING_OLDER_H);
         }
 
-        if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SARA)))
+        if(Creature* pSara = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SARA)))
         {
             if(pSara->isAlive())
                 pSara->DealDamage(pSara, pSara->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         }
 
-        if (Creature* pYoggBrain = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGG_BRAIN))))
+        if (Creature* pYoggBrain = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGG_BRAIN)))
         {
             if(pYoggBrain->isAlive())
                 pYoggBrain->DealDamage(pYoggBrain, pYoggBrain->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
@@ -611,7 +611,7 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
     {
         m_creature->SetVisibility(VISIBILITY_ON);
         DoCast(m_creature, SPELL_SHADOWY_BARRIER_YOGG);
-        StartSanity();
+        //StartSanity();
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
         GetCreatureListWithEntryInGrid(lClouds, m_creature, NPC_OMINOUS_CLOUD, DEFAULT_VISIBILITY_INSTANCE);
@@ -635,10 +635,10 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
 
 		m_uiSummonTimer = urand(15000, 20000);
 
-        if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SARA)))
+        if(Creature* pSara = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SARA)))
             pSara->ForcedDespawn();
 
-        if (Creature* pYoggBrain = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGG_BRAIN))))
+        if (Creature* pYoggBrain = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGG_BRAIN)))
             pYoggBrain->DealDamage(pYoggBrain, pYoggBrain->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
     }
 
@@ -976,7 +976,7 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
     {
         if(uiDamage > 0 && !m_bHasShattered)
         {
-            if (Creature* pYogg = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGGSARON))))
+            if (Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
 			{
 				((boss_yogg_saronAI*)pYogg->AI())->m_bIsShatter = true;
 				// spell bugged
@@ -1295,7 +1295,7 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
                 m_pInstance->SetData(TYPE_YOGG_PHASE, PHASE_OLD_GOD);
             }
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            if (Creature* pYogg = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGGSARON))))
+            if (Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
 			{
                 ((boss_yogg_saronAI*)pYogg->AI())->StartThirdPhase();
 				pYogg->RemoveAurasDueToSpell(SPELL_SHATTERED_ILLUSION);
@@ -1326,7 +1326,7 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
         // TODO: find the spell to induce madness
         if (m_uiMadnessTimer < uiDiff)
         {
-            if (Creature* pYogg = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGGSARON))))
+            if (Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
 			{
 				((boss_yogg_saronAI*)pYogg->AI())->m_bIsShatter = false;
 				((boss_yogg_saronAI*)pYogg->AI())->m_uiSummonTimer = urand(5000, 8000);
@@ -1545,7 +1545,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 		// summon portals
 		SummonPortals();
 		// start the vision
-		if (Creature* pYoggBrain = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_YOGG_BRAIN))))
+		if (Creature* pYoggBrain = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGG_BRAIN)))
 		{
 			if(pYoggBrain->isAlive())
 				((boss_brain_of_yogg_saronAI*)pYoggBrain->AI())->StartVisions();
@@ -1600,7 +1600,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
             {
                 if(!m_bIsOutro)
                 {
-                    if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
+                    if(Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
                     {
                         if(!pYogg->getVictim() || !pYogg->SelectHostileTarget() || pYogg->getVictim() == m_creature)
                         {
@@ -1628,7 +1628,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 
                     if (m_uiSarasFervorTimer < uiDiff)
                     {
-                        if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
+                        if(Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
                         {
                             if (Unit* pTarget = pYogg->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 							{
@@ -1643,7 +1643,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 
                     if (m_uiSarasBlessingTimer < uiDiff)
                     {
-                        if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
+                        if(Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
                         {
                             if (Unit* pTarget = pYogg->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
 							{
@@ -1680,7 +1680,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                         m_uiOutroTimer = 15000;
                         break;
                     case 5:
-                        if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
+                        if(Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
                         {
                             if (Unit* pTarget = pYogg->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                             {
@@ -1697,7 +1697,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
                         m_creature->SetHealth(m_creature->GetMaxHealth());
                         m_creature->GetMap()->CreatureRelocation(m_creature, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ() +  10, 5.9f);
                         m_creature->SendMonsterMove(m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ() +  10, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
-                        if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
+                        if(Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
                             ((boss_yogg_saronAI*)pYogg->AI())->StartSecondPhase();
                         m_uiPhaseYellTimer = 30000 + urand(5000, 10000);
                         m_pInstance->SetData(TYPE_YOGG_PHASE, PHASE_TENTACLES);
@@ -1719,7 +1719,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
             }
         case PHASE_TENTACLES:
             {
-                if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
+                if(Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
                 {
                     if(!pYogg->getVictim() || !pYogg->SelectHostileTarget())
                         pYogg->AI()->EnterEvadeMode();
@@ -1740,7 +1740,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 				if (m_uiPortalsTimer < uiDiff && m_uiAllVisions < 3)
 				{
 					SetVisionPhase();
-					if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
+					if(Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
 						DoScriptText(SAY_VISION, pYogg);
 					m_uiPortalsTimer = 85000;
 				}
@@ -1790,7 +1790,7 @@ struct MANGOS_DLL_DECL boss_saraAI : public ScriptedAI
 
                 if (m_uiDeathRayTimer < uiDiff)
                 {
-                    if(Creature* pYogg = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_YOGGSARON)))
+                    if(Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
                     {
                         for(int i = 0; i < irand(3, 4); i++)
                         {
@@ -2024,35 +2024,35 @@ struct MANGOS_DLL_DECL mob_immortal_guardianAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		/*if(SpellAuraHolder* empoweredAura = m_creature->GetSpellAuraHolder(SPELL_EMPOWERED))
+		if(SpellAuraHolder* empoweredAura = m_creature->GetSpellAuraHolder(SPELL_EMPOWERED))
 		{
 			if(empoweredAura->GetStackAmount() < 9 && !m_bHasAura)
 			{
 				m_bHasAura = true;
 				empoweredAura->SetStackAmount(9);
 			}
-		}*/
+		}
 
 		// temp for the old aura system
-		if(m_creature->HasAura(SPELL_EMPOWERED, EFFECT_INDEX_0) && !m_bHasAura)
-		{
-			m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0)->SetStackAmount(9);
-			m_bHasAura = true;
-		}
+		//if(m_creature->HasAura(SPELL_EMPOWERED, EFFECT_INDEX_0) && !m_bHasAura)
+		//{
+		//	m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0)->SetStackAmount(9);
+		//	m_bHasAura = true;
+		//}
 
         if(m_creature->GetHealthPercent() > 10)
         {
             if(m_creature->GetHealthPercent() < m_uiHealth)
             {
-				/*if(SpellAuraHolder* empoweredAura = m_creature->GetSpellAuraHolder(SPELL_EMPOWERED))
+				if(SpellAuraHolder* empoweredAura = m_creature->GetSpellAuraHolder(SPELL_EMPOWERED))
 				{
 					if(empoweredAura->ModStackAmount(-1))
 						m_creature->RemoveAurasDueToSpell(SPELL_EMPOWERED);
-				}*/
+				}
 
 				// temp for old aura system
-				if(m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0)->modStackAmount(-1))	 	
-					m_creature->RemoveAurasDueToSpell(SPELL_EMPOWERED);
+				//if(m_creature->GetAura(SPELL_EMPOWERED, EFFECT_INDEX_0)->modStackAmount(-1))	 	
+				//	m_creature->RemoveAurasDueToSpell(SPELL_EMPOWERED);
                 m_uiHealth -= 10;
             }
         }
@@ -2106,7 +2106,7 @@ struct MANGOS_DLL_DECL mob_guardian_of_yogg_saronAI : public ScriptedAI
 				m_creature->SetHealth(m_creature->GetMaxHealth());
 
 				// workaround for dmg Sara
-				if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SARA)))
+				if(Creature* pSara = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SARA)))
 				{
 					if(m_creature->IsWithinDist2d(pSara->GetPositionX(), pSara->GetPositionY(), 15.0f))
 					{
@@ -2132,7 +2132,7 @@ struct MANGOS_DLL_DECL mob_guardian_of_yogg_saronAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if(Creature* pSara = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SARA)))
+        if(Creature* pSara = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SARA)))
         {
             if(m_creature->getVictim() == pSara)
             {
@@ -2264,7 +2264,7 @@ struct MANGOS_DLL_DECL mob_constrictor_tentacleAI : public ScriptedAI
         {
             if (m_uiVictimGUID)
             {
-                if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+                if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
                     pVictim->RemoveAurasDueToSpell(m_bIsRegularMode ? SPELL_SQUEEZE : SPELL_SQUEEZE_H);
             }
         }
@@ -2272,7 +2272,7 @@ struct MANGOS_DLL_DECL mob_constrictor_tentacleAI : public ScriptedAI
 
     void JustDied(Unit* pKiller)
     {
-        if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+        if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
             pVictim->RemoveAurasDueToSpell(m_bIsRegularMode ? SPELL_SQUEEZE : SPELL_SQUEEZE_H);
 
         if (pKiller)
@@ -2289,7 +2289,7 @@ struct MANGOS_DLL_DECL mob_constrictor_tentacleAI : public ScriptedAI
     {
         if (m_pInstance && m_pInstance->GetData(TYPE_YOGGSARON) != IN_PROGRESS)
         {
-            if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+            if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
                 pVictim->RemoveAurasDueToSpell(m_bIsRegularMode ? SPELL_SQUEEZE : SPELL_SQUEEZE_H);
             m_creature->ForcedDespawn();
         }

@@ -686,7 +686,7 @@ struct MANGOS_DLL_DECL npc_door_sealAI : public ScriptedAI
     {
         m_creature->Respawn();
 
-        if(Creature* pSinclari = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SINCLARI)))
+        if(Creature* pSinclari = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SINCLARI)))
             pSinclari->DealDamage(pSinclari, pSinclari->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
         if(m_pInstance)
@@ -713,7 +713,7 @@ struct MANGOS_DLL_DECL npc_door_sealAI : public ScriptedAI
                     SpellCorrupt_Timer = 0;
                 }
 
-                if(Creature* pSinclari = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SINCLARI)))
+                if(Creature* pSinclari = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SINCLARI)))
                 {
                     if (m_pInstance->GetCurrentSealCount() <= m_uiHealthPoint)
                     {
@@ -1187,7 +1187,7 @@ struct MANGOS_DLL_DECL npc_azure_saboteurAI : public ScriptedAI
         case 13: // Zuramat
             m_uiType = TYPE_ZURAMAT;
             m_uiBossGUID = m_pInstance->GetData64(NPC_ZURAMAT);
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_ZURAMAT))))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ZURAMAT)))
                 DoScriptText(SAY_ZURAMAT_SPAWN, pTemp);
             break;
         case 9: // Moragg
@@ -1197,19 +1197,19 @@ struct MANGOS_DLL_DECL npc_azure_saboteurAI : public ScriptedAI
         case 8: // Erekem
             m_uiType = TYPE_EREKEM;
             m_uiBossGUID = m_pInstance->GetData64(NPC_EREKEM);
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_EREKEM))))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_EREKEM)))
                 DoScriptText(SAY_EREKEM_SPAWN, pTemp);
             break;
         case 10: // Ichoron
             m_uiType = TYPE_ICHORON;
             m_uiBossGUID = m_pInstance->GetData64(NPC_ICHORON);
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_ICHORON))))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ICHORON)))
                 DoScriptText(SAY_ICHORON_SPAWN, pTemp);
             break;
         case 11: // Xevozz
             m_uiType = TYPE_XEVOZZ;
             m_uiBossGUID = m_pInstance->GetData64(NPC_XEVOZZ);
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_XEVOZZ))))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_XEVOZZ)))
                 DoScriptText(SAY_XEVOZZ_SPAWN, pTemp);
             break;
         case 0: // No boss

@@ -136,35 +136,35 @@ struct MANGOS_DLL_DECL toc5_champion_baseAI: public ScriptedAI
         {
             m_pInstance->SetData(TYPE_STAGE, 1);
 
-            if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_JACOB)))
+            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JACOB)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
                 else
                     pTemp->Respawn();
             }
-            if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_AMBROSE)))
+            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_AMBROSE)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
                 else
                     pTemp->Respawn();
             }
-            if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_COLOSOS)))
+            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COLOSOS)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
                 else
                     pTemp->Respawn();
             }
-            if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_JAELYNE)))
+            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JAELYNE)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
                 else
                     pTemp->Respawn();
             }
-            if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_LANA)))
+            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_LANA)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
@@ -176,35 +176,35 @@ struct MANGOS_DLL_DECL toc5_champion_baseAI: public ScriptedAI
         {
             m_pInstance->SetData(TYPE_STAGE, 1);
 
-            if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_MOKRA)))
+            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOKRA)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
                 else
                     pTemp->Respawn();
             }
-            if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_ERESSEA)))
+            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ERESSEA)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
                 else
                     pTemp->Respawn();
             }
-            if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_RUNOK)))
+            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RUNOK)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
                 else
                     pTemp->Respawn();
             }
-            if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_ZULTORE)))
+            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ZULTORE)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
                 else
                     pTemp->Respawn();
             }
-            if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_VISCERI)))
+            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VISCERI)))
             {
                 if(pTemp->isAlive())
                     pTemp->AI()->AttackStart(m_creature->getVictim());
@@ -224,35 +224,35 @@ struct MANGOS_DLL_DECL toc5_champion_baseAI: public ScriptedAI
                 // rewpawn dead champs
                 if(TeamInInstance == HORDE)
                 {
-                    if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_JACOB)))
+                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JACOB)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
                         else
                             pTemp->AI()->EnterEvadeMode();
                     }
-                    if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_AMBROSE)))
+                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_AMBROSE)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
                         else
                             pTemp->AI()->EnterEvadeMode();
                     }
-                    if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_COLOSOS)))
+                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COLOSOS)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
                         else
                             pTemp->AI()->EnterEvadeMode();
                     }
-                    if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_JAELYNE)))
+                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JAELYNE)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
                         else
                             pTemp->AI()->EnterEvadeMode();
                     }
-                    if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_LANA)))
+                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_LANA)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
@@ -262,35 +262,35 @@ struct MANGOS_DLL_DECL toc5_champion_baseAI: public ScriptedAI
                 }
                 else if(TeamInInstance == ALLIANCE)
                 {
-                    if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_MOKRA)))
+                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOKRA)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
                         else
                             pTemp->AI()->EnterEvadeMode();
                     }
-                    if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_ERESSEA)))
+                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ERESSEA)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
                         else
                             pTemp->AI()->EnterEvadeMode();
                     }
-                    if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_RUNOK)))
+                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RUNOK)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
                         else
                             pTemp->AI()->EnterEvadeMode();
                     }
-                    if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_ZULTORE)))
+                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ZULTORE)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
                         else
                             pTemp->AI()->EnterEvadeMode();
                     }
-                    if(Creature* pTemp = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_VISCERI)))
+                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VISCERI)))
                     {
                         if(!pTemp->isAlive())
                             pTemp->Respawn();
@@ -326,7 +326,7 @@ struct MANGOS_DLL_DECL toc5_champion_baseAI: public ScriptedAI
         bool empty = true;
         for(itr = tList.begin(); itr!=tList.end(); ++itr)
         {
-            Unit* pUnit = Unit::GetUnit((*m_creature), (*itr)->getUnitGuid());
+            Unit* pUnit = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());
             if (pUnit && m_creature->getThreatManager().getThreat(pUnit))
             {
                 if(pUnit->GetTypeId()==TYPEID_PLAYER)

@@ -148,7 +148,7 @@ struct MANGOS_DLL_DECL boss_skadiAI : public ScriptedAI
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->Unmount();
 
-        if(Creature* pGrauf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_GRAUF))))
+        if(Creature* pGrauf = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_GRAUF)))
         {
             pGrauf->setFaction(14);
             pGrauf->SetVisibility(VISIBILITY_ON);
@@ -192,7 +192,7 @@ struct MANGOS_DLL_DECL boss_skadiAI : public ScriptedAI
             if(m_pInstance)
                 m_pInstance->SetData(TYPE_SKADI, IN_PROGRESS);
 
-            if(Creature* pGrauf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_GRAUF))))
+            if(Creature* pGrauf = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_GRAUF)))
             {
                 pGrauf->setFaction(35);
                 pGrauf->SetVisibility(VISIBILITY_OFF);

@@ -171,7 +171,7 @@ struct MANGOS_DLL_DECL miniboss_stinkyAI : public ScriptedAI
 
     void JustDied(Unit *killer)
     {
-        if (Creature* pFestergut = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FESTERGUT))))
+        if (Creature* pFestergut = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FESTERGUT)))
             DoScriptText(SAY_DEATH_STINKY, pFestergut);
     }
 
@@ -231,7 +231,7 @@ struct MANGOS_DLL_DECL miniboss_preciousAI : public ScriptedAI
 
     void JustDied(Unit *killer)
     {
-        if (Creature* pRotface = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_ROTFACE))))
+        if (Creature* pRotface = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ROTFACE)))
             DoScriptText(SAY_DEATH_PRECIOUS, pRotface);
     }
 
@@ -3351,7 +3351,7 @@ struct MANGOS_DLL_DECL mob_valkyr_spearAI : public ScriptedAI
         {
             if (m_uiVictimGUID)
             {
-                if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+                if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
                     pVictim->RemoveAurasDueToSpell(SPELL_IMPALING_SPEAR_AURA);
             }
         }
@@ -3365,13 +3365,13 @@ struct MANGOS_DLL_DECL mob_valkyr_spearAI : public ScriptedAI
 
     void JustDied(Unit* Killer)
     {
-        if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+        if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
             pVictim->RemoveAurasDueToSpell(SPELL_IMPALING_SPEAR_AURA);
 
         if (Killer)
             Killer->RemoveAurasDueToSpell(SPELL_IMPALING_SPEAR_AURA);
 
-		if (Creature* pSvalna = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SVALNA))))
+		if (Creature* pSvalna = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SVALNA)))
 			pSvalna->RemoveAurasDueToSpell(SPELL_AETHER_SHIELD);
     }
 
@@ -3379,7 +3379,7 @@ struct MANGOS_DLL_DECL mob_valkyr_spearAI : public ScriptedAI
     {
 		if(m_pInstance && m_pInstance->GetData(TYPE_SVALNA) != IN_PROGRESS)
         {
-            if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+            if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
 				pVictim->RemoveAurasDueToSpell(SPELL_IMPALING_SPEAR_AURA);
             m_creature->ForcedDespawn();
         }
@@ -3461,7 +3461,7 @@ struct MANGOS_DLL_DECL mob_crok_scourgebaneAI : public ScriptedAI
 
 	void AdvanceAttack()
 	{
-		if(Unit* pTarget = Unit::GetUnit(*m_creature, m_uiVictimGUID))
+		if(Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
 		{
 			m_creature->AI()->AttackStart(pTarget);
 			if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_ARNATH, DEFAULT_VISIBILITY_INSTANCE))
@@ -3567,7 +3567,7 @@ struct MANGOS_DLL_DECL mob_crok_scourgebaneAI : public ScriptedAI
 					m_uiSpeech_Timer = 8000;
 					break;
 				case 3:
-					if (Creature* pSvalna = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SVALNA))))
+					if (Creature* pSvalna = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SVALNA)))
 					{
 						DoScriptText(SAY_SVALNA_TAUNT, pSvalna);
 						pSvalna->GetMotionMaster()->MoveIdle();

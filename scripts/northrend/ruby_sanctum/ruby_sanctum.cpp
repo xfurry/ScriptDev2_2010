@@ -66,7 +66,7 @@ struct MANGOS_DLL_DECL mob_charscale_invokerAI : public ScriptedAI
         {
 			if (m_pInstance->GetData(TYPE_ZARITHRIAN) == IN_PROGRESS)
             {
-				if (Unit* pZarithrian = Unit::GetUnit(*m_creature,m_pInstance->GetData64(NPC_ZARITHRIAN)))
+				if (Creature* pZarithrian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ZARITHRIAN)))
                 {
                     if (pZarithrian->getVictim())
                     {
@@ -141,7 +141,7 @@ struct MANGOS_DLL_DECL mob_charscale_assaulterAI : public ScriptedAI
         {
 			if (m_pInstance->GetData(TYPE_ZARITHRIAN) == IN_PROGRESS)
             {
-				if (Unit* pZarithrian = Unit::GetUnit(*m_creature,m_pInstance->GetData64(NPC_ZARITHRIAN)))
+				if (Creature* pZarithrian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ZARITHRIAN)))
                 {
                     if (pZarithrian->getVictim())
                     {
@@ -214,7 +214,7 @@ struct MANGOS_DLL_DECL mob_charscale_commanderAI : public ScriptedAI
         {
 			if (m_pInstance->GetData(TYPE_ZARITHRIAN) == IN_PROGRESS)
             {
-				if (Unit* pZarithrian = Unit::GetUnit(*m_creature,m_pInstance->GetData64(NPC_ZARITHRIAN)))
+				if (Creature* pZarithrian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ZARITHRIAN)))
                 {
                     if (pZarithrian->getVictim())
                     {
@@ -278,7 +278,7 @@ struct MANGOS_DLL_DECL mob_charscale_eliteAI : public ScriptedAI
         {
 			if (m_pInstance->GetData(TYPE_ZARITHRIAN) == IN_PROGRESS)
             {
-				if (Unit* pZarithrian = Unit::GetUnit(*m_creature,m_pInstance->GetData64(NPC_ZARITHRIAN)))
+				if (Creature* pZarithrian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ZARITHRIAN)))
                 {
                     if (pZarithrian->getVictim())
                     {

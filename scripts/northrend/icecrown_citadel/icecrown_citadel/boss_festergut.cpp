@@ -122,7 +122,7 @@ struct MANGOS_DLL_DECL boss_festergutAI : public ScriptedAI
     void Aggro(Unit *who) 
     {
         DoScriptText(SAY_AGGRO, m_creature);
-        if (Creature* pPutricide = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_PUTRICIDE))))
+        if (Creature* pPutricide = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_PUTRICIDE)))
             DoScriptText(SAY_GAS_CLOUD, pPutricide);
         // cast gas dmg aura
         DoCast(m_creature, SPELL_GASEOUS_BLIGHT_0);
@@ -143,7 +143,7 @@ struct MANGOS_DLL_DECL boss_festergutAI : public ScriptedAI
     void JustDied(Unit *killer)
     {
         DoScriptText(SAY_DEATH1, m_creature);
-        if (Creature* pPutricide = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_PUTRICIDE))))
+        if (Creature* pPutricide = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_PUTRICIDE)))
             DoScriptText(SAY_DEATH2, pPutricide);
         if(m_pInstance) 
             m_pInstance->SetData(TYPE_FESTERGUT, DONE);

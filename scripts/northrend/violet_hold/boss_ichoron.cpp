@@ -106,7 +106,7 @@ struct MANGOS_DLL_DECL boss_ichoronAI : public ScriptedAI
 
     void JustReachedHome()
     {
-        if(Creature* pSinclari = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SINCLARI)))
+        if(Creature* pSinclari = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SINCLARI)))
             pSinclari->DealDamage(pSinclari, pSinclari->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
         if (m_pInstance)
@@ -161,7 +161,7 @@ struct MANGOS_DLL_DECL boss_ichoronAI : public ScriptedAI
 
         for(std::list<uint64>::iterator itr = m_lWaterElementsGUIDList.begin(); itr != m_lWaterElementsGUIDList.end(); ++itr)
         {
-            if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(*itr))
             {
                 if (pTemp->isAlive())
                     pTemp->ForcedDespawn();
@@ -225,7 +225,7 @@ struct MANGOS_DLL_DECL boss_ichoronAI : public ScriptedAI
                     if (!m_lWaterElementsGUIDList.empty())
                     {
                         for(std::list<uint64>::iterator itr = m_lWaterElementsGUIDList.begin(); itr != m_lWaterElementsGUIDList.end(); ++itr)
-                            if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
+                            if (Creature* pTemp = m_creature->GetMap()->GetCreature(*itr))
                                 if (pTemp->isAlive())
                                     bIsWaterElementsAlive = true;
                     }
@@ -340,7 +340,7 @@ struct MANGOS_DLL_DECL mob_ichor_globuleAI : public ScriptedAI
         {
             if (m_pInstance)
             {
-                if (Creature* pIchoron = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_ICHORON))))
+                if (Creature* pIchoron = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ICHORON)))
                 {
                     float fDistance = m_creature->GetDistance2d(pIchoron);
                     if (fDistance <= 2)

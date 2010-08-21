@@ -91,7 +91,7 @@ struct MANGOS_DLL_DECL boss_anubrekhanAI : public ScriptedAI
         for (int i = 0; i < MAX_CRYPT_GUARDS; i++)
         {
             //delete creature
-            Unit* pUnit = Unit::GetUnit((*m_creature), guidCryptGuards[i]);
+            Unit* pUnit = m_creature->GetMap()->GetUnit(guidCryptGuards[i]);
             if (pUnit)
                 pUnit->AddObjectToRemoveList();
             guidCryptGuards[i] = 0;

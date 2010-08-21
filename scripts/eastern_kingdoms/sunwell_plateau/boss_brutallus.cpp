@@ -240,13 +240,13 @@ struct MANGOS_DLL_DECL boss_brutallusAI : public ScriptedAI
             std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
             {
-                Unit *BurnedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+                Unit *BurnedPlayer = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());
                 if (BurnedPlayer && BurnedPlayer->GetTypeId() == TYPEID_PLAYER && BurnedPlayer->HasAura(SPELL_BURN_AURA_EFFECT))
                 {
                     std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
                     for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
                     {
-                        Unit *TargetedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());  
+                        Unit *TargetedPlayer = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());  
                         if (TargetedPlayer && TargetedPlayer->GetTypeId() == TYPEID_PLAYER && TargetedPlayer->IsWithinDistInMap(BurnedPlayer, 6) && !TargetedPlayer->HasAura(SPELL_BURN_AURA_EFFECT))
                             TargetedPlayer->CastSpell(TargetedPlayer,SPELL_BURN_AURA_EFFECT,true);
                     }

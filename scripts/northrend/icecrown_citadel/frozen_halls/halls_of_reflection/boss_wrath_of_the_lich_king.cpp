@@ -171,12 +171,12 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public npc_escortAI
             m_pInstance->SetData(TYPE_ESCAPE, NOT_STARTED);
 
         // Jaina & Sylvanas
-        if(Creature* pJaina = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_JAINA))))
+        if(Creature* pJaina = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_JAINA)))
         {
             if(!pJaina->isAlive())
                 pJaina->Respawn();
         }
-        if(Creature* pSylvanas = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_SYLVANAS))))
+        if(Creature* pSylvanas = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_SYLVANAS)))
         {
             if(!pSylvanas->isAlive())
                 pSylvanas->Respawn();
@@ -212,7 +212,7 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public npc_escortAI
 
             if(TeamInInstance == ALLIANCE)
             {
-                if(Creature* pJaina = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_JAINA))))
+                if(Creature* pJaina = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_JAINA)))
                 {
                     pJaina->setFaction(1);
                     pJaina->Attack(m_creature, true);
@@ -225,7 +225,7 @@ struct MANGOS_DLL_DECL boss_lich_king_hor_endAI: public npc_escortAI
 
             if(TeamInInstance == HORDE)
             {
-                if(Creature* pSylvanas = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_SYLVANAS))))
+                if(Creature* pSylvanas = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_SYLVANAS)))
                 {
                     pSylvanas->setFaction(2);
                     pSylvanas->Attack(m_creature, true);
@@ -468,7 +468,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_endAI: public npc_escortAI
         {
         case 1:
             //m_creature->SummonGameobject(GO_ICE_WALL, IceWall[0].x, IceWall[0].y, IceWall[0].z, IceWall[0].o, 0);
-            if(Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LICH_KING))))
+            if(Creature* pLichKing = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_LICH_KING)))
             {
                 DoScriptText(SAY_LICH_KING_FIRST_WALL, pLichKing);
                 pLichKing->GetMotionMaster()->MoveChase(m_creature);
@@ -491,7 +491,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_endAI: public npc_escortAI
             break;
         case 3:
             //m_creature->SummonGameobject(GO_ICE_WALL, IceWall[1].x, IceWall[1].y, IceWall[1].z, IceWall[1].o, 0);
-            if(Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LICH_KING))))
+            if(Creature* pLichKing = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_LICH_KING)))
             {
                 DoScriptText(SAY_LICH_KING_SECOND_WALL, pLichKing);
                 pLichKing->GetMotionMaster()->MoveChase(m_creature);
@@ -513,7 +513,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_endAI: public npc_escortAI
             break;
         case 5:
             //m_creature->SummonGameobject(GO_ICE_WALL, IceWall[2].x, IceWall[2].y, IceWall[2].z, IceWall[2].o, 0);
-            if(Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LICH_KING))))
+            if(Creature* pLichKing = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_LICH_KING)))
             {
                 DoScriptText(SAY_LICH_KING_THIRD_WALL, pLichKing);
                 pLichKing->GetMotionMaster()->MoveChase(m_creature);
@@ -535,7 +535,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_endAI: public npc_escortAI
             break;
         case 7:
             //m_creature->SummonGameobject(GO_ICE_WALL, IceWall[3].x, IceWall[3].y, IceWall[3].z, IceWall[3].o, 0);
-            if(Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LICH_KING))))
+            if(Creature* pLichKing = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_LICH_KING)))
             {
                 DoScriptText(SAY_LICH_KING_FINAL_WALL, pLichKing);
                 pLichKing->GetMotionMaster()->MoveChase(m_creature);
@@ -611,7 +611,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_endAI: public npc_escortAI
                 switch(m_uiOutro_Phase)
                 {
                 case 0:
-                    if(Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_LICH_KING))))
+                    if(Creature* pLichKing = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_LICH_KING)))
                     {
                         pLichKing->GetMotionMaster()->Clear();
                         pLichKing->GetMotionMaster()->MovePoint(0, 5278.043f, 1697.554f, 785.836f);
@@ -663,7 +663,7 @@ struct MANGOS_DLL_DECL npc_sylvanas_jaina_hor_endAI: public npc_escortAI
                             DoScriptText(SAY_CAPTAIN_HORDE_OUTRO4, pCaptain);
                         break;
                     }
-                    m_creature->SummonGameobject(GO_GUNSHIP_STAIRS, 5235.58f, 1649.965f, 784.3f,  0.863f, 0);
+                    //m_creature->SummonGameobject(GO_GUNSHIP_STAIRS, 5235.58f, 1649.965f, 784.3f,  0.863f, 0);
                     ++m_uiOutro_Phase;
                     m_uiSpeech_Timer = 8000;
                     break;
@@ -740,7 +740,7 @@ bool GossipSelect_npc_slyvanas_jaina_hor_end(Player* pPlayer, Creature* pCreatur
     case GOSSIP_ACTION_INFO_DEF+1:
         if (npc_sylvanas_jaina_hor_endAI* pEscortAI = dynamic_cast<npc_sylvanas_jaina_hor_endAI*>(pCreature->AI()))
             pEscortAI->Start(false, pPlayer->GetGUID());
-        if(Creature *pLichKing = ((Creature*)Unit::GetUnit((*pCreature), m_pInstance->GetData64(DATA_LICH_KING))))
+        if(Creature *pLichKing = pCreature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_LICH_KING)))
             ((boss_lich_king_hor_endAI*)pLichKing->AI())->StartChase();
         pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
         pPlayer->CLOSE_GOSSIP_MENU();

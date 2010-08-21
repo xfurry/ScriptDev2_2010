@@ -166,7 +166,7 @@ struct MANGOS_DLL_DECL npc_keeper_remulosAI : public npc_escortAI
 
         --m_uiSummonCount;
         if (m_uiEvent_Count == 2 && m_uiSummonCount < 1)
-            if (Creature *pEranikus = (Creature*)Unit::GetUnit(*m_creature,m_uiEranikusGUID))
+            if (Creature *pEranikus = m_creature->GetMap()->GetCreature(m_uiEranikusGUID))
                 if (Player* pPlayer = GetPlayerForEscort())
                 {
                     pEranikus->AI()->AttackStart(pPlayer);
@@ -204,7 +204,7 @@ struct MANGOS_DLL_DECL npc_keeper_remulosAI : public npc_escortAI
             break;
         case 15:DoScriptText(YELL_REMULOS_1,m_creature,pPlayer); break;
         case 16:
-            if (Unit *pEranikus = Unit::GetUnit(*m_creature,m_uiEranikusGUID))
+            if (Creature *pEranikus = m_creature->GetMap()->GetCreature(m_uiEranikusGUID))
             {
                 DoScriptText(EMOTE_ERANIKUS_2,pEranikus);
                 DoScriptText(YELL_ERANIKUS_2,pEranikus);
@@ -212,7 +212,7 @@ struct MANGOS_DLL_DECL npc_keeper_remulosAI : public npc_escortAI
             break;
         case 17:DoScriptText(YELL_REMULOS_2,m_creature,pPlayer); break;
         case 18:
-            if (Unit *pEranikus = Unit::GetUnit(*m_creature,m_uiEranikusGUID))
+            if (Creature *pEranikus = m_creature->GetMap()->GetCreature(m_uiEranikusGUID))
             {
                 DoScriptText(YELL_ERANIKUS_3,pEranikus);
                 DoScriptText(EMOTE_ERANIKUS_3,pEranikus);
@@ -223,7 +223,7 @@ struct MANGOS_DLL_DECL npc_keeper_remulosAI : public npc_escortAI
         case 20:DoScriptText(SAY_REMULOS_7,m_creature,pPlayer); break;
         case 23:
             DoScriptText(SAY_REMULOS_8,m_creature,pPlayer);
-            if(Unit *pEranikus = Unit::GetUnit(*m_creature,m_uiEranikusGUID))
+            if(Creature *pEranikus = m_creature->GetMap()->GetCreature(m_uiEranikusGUID))
                 DoScriptText(YELL_ERANIKUS_4,pEranikus);
             for (uint8 i = 0; i < 5; ++i)
                 m_creature->SummonCreature(NPC_NIGHTMARE_PHANTASM,Adds[i].x,Adds[i].y,Adds[i].z,0,TEMPSUMMON_CORPSE_DESPAWN,0);
@@ -238,8 +238,8 @@ struct MANGOS_DLL_DECL npc_keeper_remulosAI : public npc_escortAI
 
     void UpdateEscortAI(const uint32 uiDiff)
     {
-        Unit *pEranikus = Unit::GetUnit(*m_creature,m_uiEranikusGUID);
-        Unit *pRedeemed = Unit::GetUnit(*m_creature,m_uiRedeemedGUID);
+        Unit *pEranikus = m_creature->GetMap()->GetCreature(m_uiEranikusGUID);
+        Unit *pRedeemed = m_creature->GetMap()->GetCreature(m_uiRedeemedGUID);
         if (pEranikus||pRedeemed)
         {
             if (m_bIsInFight)
@@ -266,7 +266,7 @@ struct MANGOS_DLL_DECL npc_keeper_remulosAI : public npc_escortAI
                     }
                     else
                     {
-                        if (Unit *pTyrande = Unit::GetUnit(*m_creature,m_uiTyrandeGUID))
+                        if (Creature *pTyrande = m_creature->GetMap()->GetCreature(m_uiTyrandeGUID))
                         {
                             switch(m_uiEvent_Count)
                             {
@@ -291,22 +291,22 @@ struct MANGOS_DLL_DECL npc_keeper_remulosAI : public npc_escortAI
                                 m_uiEvent_Timer = 5000;
                                 break;
                             case 12:
-                                if(Unit *pRedeemed = Unit::GetUnit(*m_creature,m_uiRedeemedGUID))
+                                if(Creature *pRedeemed = m_creature->GetMap()->GetCreature(m_uiRedeemedGUID))
                                     DoScriptText(SAY_REDEEMED1,pRedeemed);
                                 m_uiEvent_Timer = 15000;
                                 break;
                             case 13:
-                                if(Unit *pRedeemed = Unit::GetUnit(*m_creature,m_uiRedeemedGUID))
+                                if(Creature *pRedeemed = m_creature->GetMap()->GetCreature(m_uiRedeemedGUID))
                                     DoScriptText(SAY_REDEEMED2,pRedeemed);
                                 m_uiEvent_Timer = 15000;
                                 break;
                             case 14:
-                                if(Unit *pRedeemed = Unit::GetUnit(*m_creature,m_uiRedeemedGUID))
+                                if(Creature *pRedeemed = m_creature->GetMap()->GetCreature(m_uiRedeemedGUID))
                                     DoScriptText(SAY_REDEEMED3,pRedeemed);
                                 break;
                                 m_uiEvent_Timer = 5000;
                             case 15:
-                                if(Unit *pRedeemed = Unit::GetUnit(*m_creature,m_uiRedeemedGUID))
+                                if(Creature *pRedeemed = m_creature->GetMap()->GetCreature(m_uiRedeemedGUID))
                                     DoScriptText(SAY_REDEEMED4,pRedeemed);
                                 break;
                                 m_uiEvent_Timer = 5000;

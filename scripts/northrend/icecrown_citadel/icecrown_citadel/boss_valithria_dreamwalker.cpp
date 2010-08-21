@@ -184,7 +184,7 @@ struct MANGOS_DLL_DECL mob_risen_archmageAI : public ScriptedAI
 		m_uiFrostvTimer                = urand(7000, 11000);
 		m_uiManavoidTimer              = 15000;
 
-		if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALITHRIA))))
+		if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
 			DoCast(pTarget, SPELL_CORRUPTION_CHANNEL);
 	}
 
@@ -195,7 +195,7 @@ struct MANGOS_DLL_DECL mob_risen_archmageAI : public ScriptedAI
 
 	void JustDied(Unit* pKiller)
 	{
-		if (Creature* pValithria = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALITHRIA))))
+		if (Creature* pValithria = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
 			((boss_valithriaAI*)pValithria->AI())->m_uiArchmageDied += 1;
 	}
 
@@ -366,7 +366,7 @@ struct MANGOS_DLL_DECL mob_suppresserAI : public ScriptedAI
 
 		if (m_uiSuppressionTimer < uiDiff && !m_bHasSuppresed)
         {
-			if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VALITHRIA))))
+			if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
 			    DoCast(pTarget, SPELL_SUPPRESSION);
 			m_bHasSuppresed = true;
         }

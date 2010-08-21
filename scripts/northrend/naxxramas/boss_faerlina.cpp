@@ -236,7 +236,7 @@ struct MANGOS_DLL_DECL mob_worshippersAI : public ScriptedAI
             //DoCast(m_creature, SPELL_WIDOWS_EMBRACE);
 
             if (m_pInstance)
-                if (Creature* pFaerlina = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FAERLINA))))
+                if (Creature* pFaerlina = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FAERLINA)))
                 {
                     if (m_creature->GetDistance2d(pFaerlina) <= 5 && pFaerlina->HasAura(m_bIsRegularMode ? H_SPELL_ENRAGE : SPELL_ENRAGE))
                         pFaerlina->RemoveAurasDueToSpell(m_bIsRegularMode ? H_SPELL_ENRAGE : SPELL_ENRAGE);

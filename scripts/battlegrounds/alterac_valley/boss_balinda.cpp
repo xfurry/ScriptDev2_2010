@@ -74,7 +74,7 @@ struct MANGOS_DLL_DECL mob_water_elementalAI : public ScriptedAI
         // check if creature is not outside of building
         if (uiResetTimer < diff)
         {
-            if (Creature *pBalinda = ((Creature*)Unit::GetUnit((*m_creature), uiBalindaGUID)))
+            if (Creature *pBalinda = m_creature->GetMap()->GetCreature(uiBalindaGUID))
             {
                 float x, y, z;
                 pBalinda->GetPosition(x, y, z);

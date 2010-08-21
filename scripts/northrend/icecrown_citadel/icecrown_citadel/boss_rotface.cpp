@@ -158,7 +158,7 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
     void JustDied(Unit *killer)
     {
         DoScriptText(SAY_DEATH1, m_creature);
-        if (Creature* pPutricide = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_PUTRICIDE))))
+		if (Creature* pPutricide = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_PUTRICIDE)))
             DoScriptText(SAY_DEATH2, pPutricide);
         if(m_pInstance) 
             m_pInstance->SetData(TYPE_ROTFACE, DONE);
@@ -171,7 +171,7 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
 
         if (m_uiOozeFloodTimer < uiDiff)
         {
-            if (Creature* pPutricide = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_PUTRICIDE))))
+            if (Creature* pPutricide = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_PUTRICIDE)))
             {
                 switch(urand(0, 1))
                 {
@@ -234,7 +234,7 @@ struct MANGOS_DLL_DECL boss_rotfaceAI : public ScriptedAI
 
         if (m_uiMutatedSummonTimer < uiDiff)
         {
-            if (Unit* target = Unit::GetUnit((*m_creature),m_uiOozeTargetGUID)) 
+            if (Unit* target = m_creature->GetMap()->GetUnit(m_uiOozeTargetGUID)) 
                 DoCast(target, SPELL_MUTATED_INFECTION);
             m_uiOozeCount += 1;
             m_uiWaitTimer = 10000;
@@ -431,7 +431,7 @@ struct MANGOS_DLL_DECL mob_big_oozeAI : public ScriptedAI
                 if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                     DoCast(m_creature, SPELL_OOZE_EXPLOSION_25HC);
 
-                if (Creature* pRotface = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_ROTFACE))))
+                if (Creature* pRotface = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ROTFACE)))
                 {
                     DoScriptText(SAY_OOZE_EXPLODE, pRotface);
                     ((boss_rotfaceAI*)pRotface->AI())->m_uiOozeCount = 0;

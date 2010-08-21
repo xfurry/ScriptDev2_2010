@@ -114,8 +114,7 @@ struct MANGOS_DLL_DECL boss_gortokAI : public ScriptedAI
             if(GameObject* pGenerator = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(DATA_STATIS_GENERATOR)))
                 pGenerator->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
 
-            Unit* pTemp = NULL;
-            if (pTemp = Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_WORGEN)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_WORGEN)))
             {
                 if (pTemp->isDead())
                     ((Creature*)pTemp)->Respawn();
@@ -123,7 +122,7 @@ struct MANGOS_DLL_DECL boss_gortokAI : public ScriptedAI
                 pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             }
 
-            if (pTemp = Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_FURBOLG)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FURBOLG)))
             {
                 if (pTemp->isDead())
                     ((Creature*)pTemp)->Respawn();
@@ -131,7 +130,7 @@ struct MANGOS_DLL_DECL boss_gortokAI : public ScriptedAI
                 pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             }
 
-            if (pTemp = Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_JORMUNGAR)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JORMUNGAR)))
             {
                 if (pTemp->isDead())
                     ((Creature*)pTemp)->Respawn();
@@ -139,7 +138,7 @@ struct MANGOS_DLL_DECL boss_gortokAI : public ScriptedAI
                 pTemp->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             }
 
-            if (pTemp = Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_RHINO)))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RHINO)))
             {
                 if (pTemp->isDead())
                     ((Creature*)pTemp)->Respawn();
@@ -221,13 +220,13 @@ struct MANGOS_DLL_DECL boss_gortokAI : public ScriptedAI
                 Creature* pTemp = NULL;
 
                 if (m_uiAnimalCounter == 1)
-                    pTemp = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(NPC_WORGEN));
+                    pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_WORGEN));
                 if (m_uiAnimalCounter == 2)
-                    pTemp = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(NPC_FURBOLG));
+                    pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FURBOLG));
                 if (m_uiAnimalCounter == 3)
-                    pTemp = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(NPC_JORMUNGAR));
+                    pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JORMUNGAR));
                 if (m_uiAnimalCounter == 4)
-                    pTemp = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(NPC_RHINO));
+                    pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RHINO));
 
                 if (pTemp)
                 {
@@ -315,7 +314,7 @@ struct MANGOS_DLL_DECL mob_massive_jormungarAI : public ScriptedAI
         AcidSplatter_timer = 12000;
         PoisonBreath_timer = 10000;
         if (m_pInstance)
-            if (Creature* pPalehoof = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
+            if (Creature* pPalehoof = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
                 ((boss_gortokAI*)pPalehoof->AI())->EnterEvadeMode();
 
         DoCast(m_creature, SPELL_FREEZE_ANIM);
@@ -410,7 +409,7 @@ struct MANGOS_DLL_DECL mob_ferocious_rhinoAI : public ScriptedAI
         GrievousWound_timer = 20000;
 
         if (m_pInstance)
-            if (Creature* pPalehoof = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
+            if(Creature* pPalehoof = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
                 ((boss_gortokAI*)pPalehoof->AI())->EnterEvadeMode();
 
         DoCast(m_creature, SPELL_FREEZE_ANIM);
@@ -489,7 +488,7 @@ struct MANGOS_DLL_DECL mob_ravenous_furbolgAI : public ScriptedAI
         TerrifyingRoar_timer = 15000;
 
         if (m_pInstance)
-            if (Creature* pPalehoof = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
+            if (Creature* pPalehoof = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
                 ((boss_gortokAI*)pPalehoof->AI())->EnterEvadeMode();
 
         DoCast(m_creature, SPELL_FREEZE_ANIM);
@@ -568,7 +567,7 @@ struct MANGOS_DLL_DECL mob_frenzied_worgenAI : public ScriptedAI
         Enrage2_timer = 10000;
 
         if (m_pInstance)
-            if (Creature* pPalehoof = (Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
+            if (Creature* pPalehoof = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GORTOK_PALEHOOF)))
                 ((boss_gortokAI*)pPalehoof->AI())->EnterEvadeMode();
 
         DoCast(m_creature, SPELL_FREEZE_ANIM);

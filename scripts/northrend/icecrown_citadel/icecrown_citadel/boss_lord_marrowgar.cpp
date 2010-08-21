@@ -412,7 +412,7 @@ struct MANGOS_DLL_DECL mob_bone_spikeAI : public ScriptedAI
         {
             if (m_uiVictimGUID)
             {
-                if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+                if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
                     pVictim->RemoveAurasDueToSpell(SPELL_IMPALED);
             }
         }
@@ -426,7 +426,7 @@ struct MANGOS_DLL_DECL mob_bone_spikeAI : public ScriptedAI
 
     void JustDied(Unit* Killer)
     {
-        if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+        if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
             pVictim->RemoveAurasDueToSpell(SPELL_IMPALED);
 
         if (Killer)
@@ -437,7 +437,7 @@ struct MANGOS_DLL_DECL mob_bone_spikeAI : public ScriptedAI
     {
         if(m_pInstance && m_pInstance->GetData(TYPE_MARROWGAR) != IN_PROGRESS)
         {
-            if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+            if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
                 pVictim->RemoveAurasDueToSpell(SPELL_IMPALED);
             m_creature->ForcedDespawn();
         }

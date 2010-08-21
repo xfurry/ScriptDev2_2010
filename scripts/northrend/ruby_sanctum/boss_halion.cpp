@@ -159,7 +159,7 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
 		if(m_pInstance)
 			m_pInstance->SetData(TYPE_HALION, FAIL);
 
-		if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_HALION_TWILIGHT))))
+		if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HALION_TWILIGHT)))
 			pTarget->AI()->EnterEvadeMode();
     }
 
@@ -190,7 +190,7 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
 			m_pInstance->SetData(TYPE_HALION, IN_PROGRESS);  
 			m_pInstance->SetData(TYPE_HALION_PHASE, PHASE_REAL);
 
-			if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_HALION_TWILIGHT))))
+			if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HALION_TWILIGHT)))
 				pTarget->SetInCombatWithZone();
 		}
 
@@ -202,7 +202,7 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
     void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
     {
 		// split damage to the twilight version
-		if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_HALION_TWILIGHT))))
+		if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HALION_TWILIGHT)))
 			m_creature->DealDamage(pTarget, uiDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
 		if(m_creature->GetHealthPercent() < 75.0f && m_pInstance->GetData(TYPE_HALION_PHASE) == PHASE_REAL)
@@ -275,7 +275,7 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
 		{
 			m_creature->InterruptNonMeleeSpells(true);
 			DoCast(m_creature, SPELL_BERSERK);
-			if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_HALION_TWILIGHT))))
+			if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HALION_TWILIGHT)))
 				pTarget->CastSpell(pTarget, SPELL_BERSERK, false);
 			m_uiBerserkTimer = 30000;
 		}
@@ -324,7 +324,7 @@ struct MANGOS_DLL_DECL boss_halion_twilightAI : public ScriptedAI
 
 		DoCast(m_creature, SPELL_TWILIGHT_REALM);
 
-		if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_HALION_REAL))))
+		if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HALION_REAL)))
 			pTarget->AI()->EnterEvadeMode();
     }
 
@@ -348,7 +348,7 @@ struct MANGOS_DLL_DECL boss_halion_twilightAI : public ScriptedAI
 
     void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
     {
-		if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_HALION_REAL))))
+		if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HALION_REAL)))
 			m_creature->DealDamage(pTarget, uiDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
 		if(m_creature->GetHealthPercent() < 50.0f && m_pInstance->GetData(TYPE_HALION_PHASE) == PHASE_TWILIGHT)
@@ -357,7 +357,7 @@ struct MANGOS_DLL_DECL boss_halion_twilightAI : public ScriptedAI
 			m_pInstance->SetData(TYPE_HALION_PHASE, PHASE_DUAL);
 			DoCast(m_creature, SPELL_TWILIGHT_DIVISION);
 
-			if(Creature* pTarget = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_HALION_REAL))))
+			if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HALION_REAL)))
 				pTarget->RemoveAurasDueToSpell(SPELL_TWILIGHT_PHASING);
 
 			if(m_pInstance)

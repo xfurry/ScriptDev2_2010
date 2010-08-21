@@ -267,7 +267,7 @@ struct MANGOS_DLL_DECL npc_amanitar_mushroomAI : public ScriptedAI
                 ThreatList const& tList = m_creature->getThreatManager().getThreatList();
                     for (ThreatList::const_iterator iter = tList.begin();iter != tList.end(); ++iter)
                     {
-                        Unit* pUnit = Unit::GetUnit((*m_creature), (*iter)->getUnitGuid());
+                        Unit* pUnit = m_creature->GetMap()->GetUnit((*iter)->getUnitGuid());
                         if (pUnit && (pUnit->GetTypeId() == TYPEID_PLAYER))
                         {
                             if (pUnit->HasAura(SPELL_MINI))

@@ -170,7 +170,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
         if (m_pInstance)
             m_pInstance->SetData(TYPE_LICH_KING, FAIL);
 
-		if (Creature* pTirion = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_TIRION_FINAL))))
+		if (Creature* pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TIRION_FINAL)))
 		{
 			if(pTirion->isAlive())
 				pTirion->SetVisibility(VISIBILITY_ON);
@@ -203,7 +203,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
         {
             for (std::list<uint64>::iterator itr = List.begin(); itr != List.end(); ++itr)
             {
-                if (Creature* pSummon = (Creature*)Unit::GetUnit((*m_creature), *itr))
+                if (Creature* pSummon = m_creature->GetMap()->GetCreature(*itr))
                     pSummon->ForcedDespawn();
             }
             List.clear();
@@ -444,7 +444,7 @@ struct MANGOS_DLL_DECL npc_tirion_finalAI : public ScriptedAI
         m_uiIntro_Phase     = 0;
 
 		// start here
-		if (Creature* pLichKing = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_LICH_KING))))
+		if (Creature* pLichKing = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_LICH_KING)))
 		{
 			if(pLichKing->isAlive())
 			{

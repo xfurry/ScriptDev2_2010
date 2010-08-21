@@ -531,7 +531,7 @@ struct MANGOS_DLL_DECL boss_prophet_velenAI : public ScriptedAI
 
         if (m_uiPrayerOfHealingTimer < uiDiff)
         {
-            Unit *pAly = Unit::GetUnit((*m_creature),(SelectRandomAly(FriendlyList)));
+            Unit *pAly = m_creature->GetMap()->GetUnit((SelectRandomAly(FriendlyList)));
             if (pAly && pAly->isAlive() && m_creature->GetDistance(pAly) < 30)
                 DoCast(pAly, SPELL_PRAYER_OF_HEALING);
             m_uiPrayerOfHealingTimer = urand(10000, 15000);

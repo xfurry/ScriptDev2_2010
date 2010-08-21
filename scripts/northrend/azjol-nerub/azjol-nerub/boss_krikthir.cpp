@@ -133,9 +133,9 @@ struct MANGOS_DLL_DECL boss_krikthirAI : public ScriptedAI
         if (m_pInstance)
             m_pInstance->SetData(TYPE_KRIKTHIR, IN_PROGRESS);
 
-        Creature* pGashra = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_WATCHER_GASHRA)));
-        Creature* pSilthik = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_WATCHER_SILTHIK)));
-        Creature* pNarjil = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_WATCHER_NARJIL)));;
+        Creature* pGashra = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_WATCHER_GASHRA));
+        Creature* pSilthik = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_WATCHER_SILTHIK));
+        Creature* pNarjil = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_WATCHER_NARJIL));
 
         if (pGashra && pSilthik && pNarjil)
         {
@@ -167,9 +167,9 @@ struct MANGOS_DLL_DECL boss_krikthirAI : public ScriptedAI
         if (m_pInstance)
             m_pInstance->SetData(TYPE_KRIKTHIR, DONE);
 
-        Creature* pGashra = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_WATCHER_GASHRA)));
-        Creature* pSilthik = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_WATCHER_SILTHIK)));
-        Creature* pNarjil = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_WATCHER_NARJIL)));;
+        Creature* pGashra = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_WATCHER_GASHRA));
+        Creature* pSilthik = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_WATCHER_SILTHIK));
+        Creature* pNarjil = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_WATCHER_NARJIL));;
 
         if (pGashra && pSilthik && pNarjil)
             if(pGashra->isAlive() && pSilthik->isAlive() && pNarjil->isAlive() && !m_bIsRegularMode)

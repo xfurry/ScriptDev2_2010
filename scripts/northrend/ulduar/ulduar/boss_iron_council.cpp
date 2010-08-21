@@ -334,11 +334,11 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
             // remove supercharge from players -> spell bug
             m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_SUPERCHARGE);
             // if the others are dead then give loot
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
             {
                 if (!pTemp->isAlive())
                 {
-                    if (Creature* p2Temp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+                    if (Creature* p2Temp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOLGEIM)))
                     {
                         if (!p2Temp->isAlive())
                         {
@@ -357,12 +357,12 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
             }
 
             // else make them full hp
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
             {
                 if (pTemp->isAlive())
                     pTemp->SetHealth(pTemp->GetMaxHealth());
             }
-            if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOLGEIM)))
             {
                 if (pTemp->isAlive())
                     pTemp->SetHealth(pTemp->GetMaxHealth());
@@ -377,12 +377,12 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
 
 	void Aggro(Unit* pWho)
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
         {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
         }
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOLGEIM)))
         {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
@@ -398,12 +398,12 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
 
 	void JustReachedHome()
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
         {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
         }
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOLGEIM)))
         {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
@@ -522,7 +522,7 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
 		{
 			if (!m_bIsSteelbreakerDead)
             {
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+				if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
                 {
 					if (!pTemp->isAlive())
 					{
@@ -544,7 +544,7 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
             }
 			if (!m_bIsMolgeimDead)
             {
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+				if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOLGEIM)))
                 {
 					if (!pTemp->isAlive())
 					{
@@ -665,11 +665,11 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
             // remove supercharge from players -> spell bug
             m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_SUPERCHARGE);
             // if the others are dead then give loot
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+			if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
             {
 				if (!pTemp->isAlive())
                 {
-					if (Creature* p2Temp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+					if (Creature* p2Temp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
                     {
 						if (!p2Temp->isAlive())
 						{
@@ -688,12 +688,12 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
             }
 
             // else make them full hp
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+			if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
             {
 				if (pTemp->isAlive())
 					pTemp->SetHealth(pTemp->GetMaxHealth());
             }
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+			if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
             {
 				if (pTemp->isAlive())
 					pTemp->SetHealth(pTemp->GetMaxHealth());
@@ -708,12 +708,12 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
 
 	void Aggro(Unit* pWho)
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
         {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
         }
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
         {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
@@ -729,12 +729,12 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
 
 	void JustReachedHome()
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
         {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
         }
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
         {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
@@ -771,7 +771,7 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
             switch(urand(0, 2))
             {
             case 0:
-                if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+                if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
                 {
                     if (pTemp->isAlive())
                         DoCast(pTemp, SPELL_RUNE_OF_POWER);
@@ -780,7 +780,7 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
                 }
                 break;
             case 1:
-                if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+                if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
                 {
                     if (pTemp->isAlive())
                         DoCast(pTemp, SPELL_RUNE_OF_POWER);
@@ -831,7 +831,7 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
 		{
 			if (!m_bSteelbreakerDead)
             {
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STEELBREAKER))))
+				if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STEELBREAKER)))
                 {
 					if (!pTemp->isAlive())
 					{
@@ -851,7 +851,7 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
             }
 			if (!m_bBrundirDead)
             {
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+				if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
                 {
 					if (!pTemp->isAlive())
 					{
@@ -984,11 +984,11 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
             // remove supercharge from players -> spell bug
             m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_SUPERCHARGE);
             // if the others are dead then give loot
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+			if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOLGEIM)))
             {
 				if (!pTemp->isAlive())
                 {
-					if (Creature* p2Temp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+					if (Creature* p2Temp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
                     {
 						if (!p2Temp->isAlive())
 						{
@@ -1008,12 +1008,12 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
             }
 
             // else make them full hp
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+			if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
             {
 				if (pTemp->isAlive())
 					pTemp->SetHealth(pTemp->GetMaxHealth());
             }
-			if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+			if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOLGEIM)))
             {
 				if (pTemp->isAlive())
 					pTemp->SetHealth(pTemp->GetMaxHealth());
@@ -1028,12 +1028,12 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
 
 	void Aggro(Unit* pWho)
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOLGEIM)))
         {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
         }
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
         {
 			if (pTemp->isAlive())
 				pTemp->SetInCombatWithZone();
@@ -1050,12 +1050,12 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
 
 	void JustReachedHome()
     {
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOLGEIM)))
         {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
         }
-		if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+		if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
         {
 			if (!pTemp->isAlive())
 				pTemp->Respawn();
@@ -1113,7 +1113,7 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
 		{
 			if (!m_bBrundirDead)
             {
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRUNDIR))))
+				if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRUNDIR)))
                 {
 					if (!pTemp->isAlive())
 					{
@@ -1133,7 +1133,7 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
             }
 			if (!m_bMolgeimDead)
             {
-				if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_MOLGEIM))))
+				if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOLGEIM)))
                 {
 					if (!pTemp->isAlive())
 					{

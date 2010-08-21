@@ -280,7 +280,7 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
 			{
 				for(std::list<uint64>::iterator iter = m_lAddsGUIDList.begin(); iter != m_lAddsGUIDList.end(); ++iter)
 				{
-					if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *iter))
+					if (Creature* pTemp = m_creature->GetMap()->GetCreature(*iter))
 					{
 						if(pTemp->isAlive())
 						{
@@ -294,7 +294,7 @@ struct MANGOS_DLL_DECL boss_svalaAI : public ScriptedAI
 
 			if(m_bIsSacrifice)
 			{
-				if(Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiPlayerGUID))
+				if(Unit* pPlayer = m_creature->GetMap()->GetCreature(m_uiPlayerGUID))
 					m_creature->DealDamage(pPlayer, pPlayer->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 				m_bIsSacrifice = false;
 			}

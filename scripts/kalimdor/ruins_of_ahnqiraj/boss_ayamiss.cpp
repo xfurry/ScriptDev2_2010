@@ -111,7 +111,7 @@ struct MANGOS_DLL_DECL boss_ayamissAI : public ScriptedAI
     {
         //disabled for testing
         if (pSummoned->GetEntry() == NPC_HIVEZARA_LARVA)
-            if (Unit* pLarvaTarget = Unit::GetUnit(*m_creature,m_uiLarvaTargetGUID))
+            if (Unit* pLarvaTarget = m_creature->GetMap()->GetUnit(m_uiLarvaTargetGUID))
                 pSummoned->AI()->AttackStart(pLarvaTarget);
         
         if (pSummoned->GetEntry() == NPC_HIVEZARA_SWARMER)
@@ -232,7 +232,7 @@ struct MANGOS_DLL_DECL mob_zara_larvaAI : public ScriptedAI
         if (!m_creature->getVictim() || !m_creature->SelectHostileTarget())
             return;
 
-        if (Unit* pTarget = Unit::GetUnit(*m_creature,m_uiTargetGUID))
+        if (Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiTargetGUID))
             if (m_creature->IsWithinDistInMap(pTarget,ATTACK_DISTANCE))
                 if(m_creature->getVictim()->HasAura(SPELL_PARALYZE))
                     DoCast(pTarget, SPELL_FEED);

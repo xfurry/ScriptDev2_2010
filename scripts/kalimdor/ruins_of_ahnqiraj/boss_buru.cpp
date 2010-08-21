@@ -147,7 +147,7 @@ struct MANGOS_DLL_DECL mob_buru_eggAI : public ScriptedAI
         if (!m_pInstance)
             return;
 
-        if (Creature* pBuru = (Creature*)Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_BURU)))
+        if (Creature* pBuru = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BURU)))
             if (pBuru->isAlive())
             {
                 pBuru->GetMotionMaster()->MoveChase(pWho);
@@ -168,7 +168,7 @@ struct MANGOS_DLL_DECL mob_buru_eggAI : public ScriptedAI
         if (!m_pInstance)
             return;
 
-        if (Unit* pBuru = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_BURU)))
+        if (Creature* pBuru = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BURU)))
             if (pBuru->isAlive())
             {
                 pBuru->GetMotionMaster()->MoveChase(pKiller);

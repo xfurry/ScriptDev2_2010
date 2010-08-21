@@ -140,9 +140,9 @@ struct MANGOS_DLL_DECL boss_vaelAI : public ScriptedAI
                     case 2:
                         m_creature->setFaction(103);
                         m_creature->SetMaxHealth(int(m_creature->GetMaxHealth()*.3));
-                        if (PlayerGUID && Unit::GetUnit((*m_creature),PlayerGUID))
+                        if (PlayerGUID && m_creature->GetMap()->GetPlayer(PlayerGUID))
                         {
-                            AttackStart(Unit::GetUnit((*m_creature),PlayerGUID));
+                            AttackStart(m_creature->GetMap()->GetPlayer(PlayerGUID));
                             DoCastSpellIfCan(m_creature,SPELL_ESSENCEOFTHERED);
                         }
                         SpeachTimer = 0;

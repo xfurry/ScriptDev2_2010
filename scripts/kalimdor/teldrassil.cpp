@@ -270,7 +270,7 @@ struct MANGOS_DLL_DECL boss_fandral_staghelmAI : public ScriptedAI
 
         if (m_uiRejuvinationTimer < uiDiff)
         {
-            Unit *pAly = Unit::GetUnit((*m_creature),(SelectRandomAly(FriendlyList)));
+            Unit *pAly = m_creature->GetMap()->GetUnit(SelectRandomAly(FriendlyList));
             if (pAly && pAly->isAlive() && m_creature->GetDistance(pAly) < 30)
                 DoCast(pAly, SPELL_REJUVENATION);
             m_uiRejuvinationTimer = urand(10000, 15000);

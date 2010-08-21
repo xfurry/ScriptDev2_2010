@@ -678,21 +678,21 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
         if(m_pInstance) 
         {
             // respawn runic colossus
-            if (Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_RUNIC_COLOSSUS))))
+            if (Creature* pColossus = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RUNIC_COLOSSUS)))
             {
                 if (!pColossus->isAlive())
                     pColossus->Respawn();
             }
 
             // respawn ancient rune giant
-            if (Creature* pRuneGiant = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_RUNE_GIANT))))
+            if (Creature* pRuneGiant = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RUNE_GIANT)))
             {
                 if (!pRuneGiant->isAlive())
                     pRuneGiant->Respawn();
             }
 
 			// respawn jormungar
-			if (Creature* pJormungar = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_JORMUNGAR_BEHEMOTH))))
+			if (Creature* pJormungar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JORMUNGAR_BEHEMOTH)))
             {
                 if (!pJormungar->isAlive())
                     pJormungar->Respawn();
@@ -1267,7 +1267,7 @@ struct MANGOS_DLL_DECL boss_runic_colossusAI : public ScriptedAI
     {
 		if(m_uiSmashTimer < uiDiff && m_bIsSmash && m_bMustSmash)
 		{
-			if(Unit* pTarget = Unit::GetUnit(*m_creature, m_uiSmashTargetGUID))
+			if(Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiSmashTargetGUID))
 				DoCast(pTarget, SPELL_RUNIC_SMASH_DMG);
 			m_uiSmashTimer = 10000;
 		}
@@ -1462,7 +1462,7 @@ struct MANGOS_DLL_DECL mob_thorim_preaddsAI : public ScriptedAI
 
 	void JustDied(Unit *killer)
 	{
-		if (Creature* pThorim = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_THORIM))))
+		if (Creature* pThorim = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_THORIM)))
 		{
 			if(pThorim->isAlive())
 				((boss_thorimAI*)pThorim->AI())->m_uiPreAddsKilled += 1;

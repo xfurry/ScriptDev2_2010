@@ -143,31 +143,31 @@ struct MANGOS_DLL_DECL npc_jainaAI : public ScriptedAI
             switch(OutroStep)
             {
             case 1:
-                if(Creature* Garrosh = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_GARROSH)))
+                if(Creature* Garrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
                     DoScriptText(SAY_GARROSH_JARU_OUTRO2, Garrosh);
                 ++OutroStep;
                 OutroTimer = 10000;
                 break;
             case 3:
-                if(Creature* Varian = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_VARIAN)))
+                if(Creature* Varian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VARIAN)))
                     DoScriptText(SAY_VARIAN_JARU_OUTRO3, Varian);
                 ++OutroStep;
                 OutroTimer = 8000;
                 break;
             case 5:
-                if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                     DoScriptText(SAY_TIRION_JARU_OUTRO4, Tirion);
                 ++OutroStep;
                 OutroTimer = 15000;
                 break;
             case 7:
-                if(Creature* Tirion = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_TIRION)))
+                if(Creature* Tirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
                     DoScriptText(SAY_TIRION_JARU_OUTRO1, Tirion);
                 ++OutroStep;
                 OutroTimer = 15000;
                 break;
             case 9:
-                if(Creature *pBarret = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(DATA_BARRET)))
+                if(Creature *pBarret = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_BARRET)))
                 {
                     pBarret->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                     pBarret->SetVisibility(VISIBILITY_ON);
@@ -366,21 +366,21 @@ struct MANGOS_DLL_DECL boss_jaraxxusAI : public ScriptedAI
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
 			return;
 
-		/*if(SpellAuraHolder* netherAura = m_creature->GetSpellAuraHolder(SPELL_NETHER_POWER))
+		if(SpellAuraHolder* netherAura = m_creature->GetSpellAuraHolder(SPELL_NETHER_POWER))
 		{
 			if(netherAura->GetStackAmount() < m_uiMaxNetherPower && !m_bHasAura)
 			{
 				m_bHasAura = true;
 				netherAura->SetStackAmount(m_uiMaxNetherPower);
 			}
-		}*/
+		}
 
 		// temp for the old aura system
-		if(m_creature->HasAura(SPELL_NETHER_POWER, EFFECT_INDEX_0) && !m_bHasAura)
-		{
-			m_creature->GetAura(SPELL_NETHER_POWER, EFFECT_INDEX_0)->SetStackAmount(m_uiMaxNetherPower);
-			m_bHasAura = true;
-		}
+		//if(m_creature->HasAura(SPELL_NETHER_POWER, EFFECT_INDEX_0) && !m_bHasAura)
+		//{
+		//	m_creature->GetAura(SPELL_NETHER_POWER, EFFECT_INDEX_0)->SetStackAmount(m_uiMaxNetherPower);
+		//	m_bHasAura = true;
+		//}
 
         // spells
         if (m_uiIncinerateFleshTimer < uiDiff)

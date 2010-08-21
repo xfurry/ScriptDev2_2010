@@ -186,7 +186,7 @@ struct MANGOS_DLL_DECL boss_BronjahnAI : public ScriptedAI
 
         if(m_uiCorruptSoulSummon < uiDiff && !m_bIsSoulStorm)
         {
-            if(Unit* pTarget = Unit::GetUnit(*m_creature, m_uiCorruptTargetGUID))
+            if(Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiCorruptTargetGUID))
                 pTarget->CastSpell(pTarget, SPELL_DRAW_SOUL, false);
             m_uiCorruptSoulSummon = 60000;
         }

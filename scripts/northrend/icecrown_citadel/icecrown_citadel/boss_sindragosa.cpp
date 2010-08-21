@@ -434,7 +434,7 @@ struct MANGOS_DLL_DECL miniboss_rimefangAI : public ScriptedAI
 	void Aggro(Unit* pWho)
 	{
 		DoCast(m_creature, SPELL_FROST_AURA);
-		if (Creature* pSplinestalker = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SPLINESTALKER))))
+		if (Creature* pSplinestalker = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SPLINESTALKER)))
 			pSplinestalker->AI()->AttackStart(pWho);
 
 		// make land
@@ -458,7 +458,7 @@ struct MANGOS_DLL_DECL miniboss_rimefangAI : public ScriptedAI
 		}
 
 		// check if splinestalker is alive && summon Sindragosa
-		if (Creature* pSplinestalker = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_SPLINESTALKER))))
+		if (Creature* pSplinestalker = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SPLINESTALKER)))
 		{
 			if(!pSplinestalker->isAlive())
 			{
@@ -541,7 +541,7 @@ struct MANGOS_DLL_DECL miniboss_spinestalkerAI : public ScriptedAI
 
 	void Aggro(Unit* pWho)
 	{
-		if (Creature* pRimefang = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_RIMEFANG))))
+		if (Creature* pRimefang = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RIMEFANG)))
 			pRimefang->AI()->AttackStart(pWho);
 		// make land
 		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
@@ -564,7 +564,7 @@ struct MANGOS_DLL_DECL miniboss_spinestalkerAI : public ScriptedAI
 		}
 
 		// check if rimefang is alive && summon Sindragosa
-		if (Creature* pRimefang = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_RIMEFANG))))
+		if (Creature* pRimefang = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RIMEFANG)))
 		{
 			if(!pRimefang->isAlive())
 			{

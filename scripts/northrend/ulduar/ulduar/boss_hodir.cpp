@@ -142,7 +142,7 @@ struct MANGOS_DLL_DECL mob_flashFreezeAI : public ScriptedAI
 
     void JustDied(Unit* Killer)
     {
-        if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+        if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
             pVictim->RemoveAurasDueToSpell(SPELL_FLASH_FREEZE_STUN);
 
         if (Killer)
@@ -672,7 +672,7 @@ struct MANGOS_DLL_DECL npc_hodir_druidAI : public ScriptedAI
                     DoCast(pHodir, SPELL_WRATH);
                 break;
             case 1:
-                Unit *pTemp = Unit::GetUnit((*m_creature),(SelectRandomPlayer()));
+                Unit *pTemp = m_creature->GetMap()->GetUnit(SelectRandomPlayer());
                 if (pTemp && pTemp->isAlive() && m_creature->GetDistance(pTemp) < 40)
                     DoCast(pTemp, SPELL_STARLIGHT);
                 break;
@@ -776,7 +776,7 @@ struct MANGOS_DLL_DECL npc_hodir_shamanAI : public ScriptedAI
                     DoCast(pHodir, SPELL_LAVA_BURST);
                 break;
             case 1:
-                Unit *pTemp = Unit::GetUnit((*m_creature),(SelectRandomPlayer()));
+                Unit *pTemp = m_creature->GetMap()->GetUnit(SelectRandomPlayer());
                 if (pTemp && pTemp->isAlive() && m_creature->GetDistance(pTemp) < 40)
                     DoCast(pTemp, m_bIsRegularMode ? SPELL_STORM_CLOUD : SPELL_STORM_CLOUD_H);
                 break;
@@ -887,7 +887,7 @@ struct MANGOS_DLL_DECL npc_hodir_mageAI : public ScriptedAI
                     DoCast(pTemp, SPELL_MELT_ICE);
                 break;
             case 4:
-                Unit *pTemp = Unit::GetUnit((*m_creature),(SelectRandomPlayer()));
+                Unit *pTemp = m_creature->GetMap()->GetUnit(SelectRandomPlayer());
                 if (pTemp && pTemp->isAlive() && m_creature->GetDistance(pTemp) < 40)
                     DoCast(pTemp, SPELL_TOASTY_FIRE);
                 break;
@@ -995,7 +995,7 @@ struct MANGOS_DLL_DECL npc_hodir_priestAI : public ScriptedAI
                     DoCast(pHealTarget, SPELL_GREAT_HEAL);
                 break;
             case 4:
-                if (Unit* pTemp = Unit::GetUnit((*m_creature),(SelectRandomPlayer())))
+                if (Unit* pTemp = m_creature->GetMap()->GetUnit(SelectRandomPlayer()))
                     DoCast(m_creature, SPELL_DISPEL_MAGIC);
                 break;
             }

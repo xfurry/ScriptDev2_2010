@@ -237,7 +237,7 @@ struct MANGOS_DLL_DECL mob_iron_rootsAI : public ScriptedAI
         {
             if (m_uiVictimGUID)
             {
-                if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+                if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
                 {
                     switch(m_uiCreatureEntry)
                     {
@@ -271,7 +271,7 @@ struct MANGOS_DLL_DECL mob_iron_rootsAI : public ScriptedAI
 
     void JustDied(Unit* Killer)
     {
-        if (Unit* pVictim = Unit::GetUnit((*m_creature), m_uiVictimGUID))
+        if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
         {
             switch(m_uiCreatureEntry)
             {
@@ -633,17 +633,17 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
         if(m_pInstance) 
         {
             // remove elder auras
-            if (Creature* pBrightleaf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRIGHTLEAF))))
+            if (Creature* pBrightleaf = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRIGHTLEAF)))
             {
                 if (pBrightleaf->isAlive())
                     pBrightleaf->RemoveAllAuras();
             }
-            if (Creature* pIronbranch = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_IRONBRACH))))
+            if (Creature* pIronbranch = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_IRONBRACH)))
             {
                 if (pIronbranch->isAlive())
                     pIronbranch->RemoveAllAuras();
             }
-            if (Creature* pStonebark = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STONEBARK))))
+            if (Creature* pStonebark = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STONEBARK)))
             {
                 if (pStonebark->isAlive())
                     pStonebark->RemoveAllAuras();
@@ -660,7 +660,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             m_pInstance->SetData(TYPE_FREYA, IN_PROGRESS);
 
             // check brightleaf
-            if (Creature* pBrightleaf = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_BRIGHTLEAF))))
+            if (Creature* pBrightleaf = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BRIGHTLEAF)))
             {
                 if (pBrightleaf->isAlive())
                 {
@@ -674,7 +674,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             }
 
             // check ironbranch
-            if (Creature* pIronbranch = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_IRONBRACH))))
+            if (Creature* pIronbranch = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_IRONBRACH)))
             {
                 if (pIronbranch->isAlive())
                 {
@@ -688,7 +688,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             }
 
             // check stonebark
-            if (Creature* pStonebark = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_STONEBARK))))
+            if (Creature* pStonebark = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STONEBARK)))
             {
                 if (pStonebark->isAlive())
                 {
@@ -846,21 +846,21 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
                 return;
 
-			/*if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+			if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
 			{
 				if(natureAura->GetStackAmount() < 150 && !m_bHasAura)
 				{
 					m_bHasAura = true;
 					natureAura->SetStackAmount(150);
 				}
-			}*/
+			}
 
 			// temp for the old aura system
-			if(m_creature->HasAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0) && !m_bHasAura)
-			{
-				m_creature->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->SetStackAmount(150);
-				m_bHasAura = true;
-			}
+			//if(m_creature->HasAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0) && !m_bHasAura)
+			//{
+			//	m_creature->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->SetStackAmount(150);
+			//	m_bHasAura = true;
+			//}
 
 			if(!m_creature->HasAura(m_bIsRegularMode ? SPELL_TOUCH_OF_EONAR : SPELL_TOUCH_OF_EONAR_H))
 				DoCast(m_creature, m_bIsRegularMode ? SPELL_TOUCH_OF_EONAR : SPELL_TOUCH_OF_EONAR_H);
@@ -876,15 +876,15 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
                     if(!pWaterSpirit->isAlive() && !pStormLasher->isAlive() && !pSnapLasher->isAlive())
                     {
                         m_bWaveCheck = false;
-						/*if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+						if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
 						{
 							if(natureAura->ModStackAmount(-30))
 								m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
-						}*/
+						}
 
 						// temp for old aura system
-						if(m_creature->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-30))	 	
-							m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
+						//if(m_creature->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-30))	 	
+						//	m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
 					}
                     else
                     {
@@ -1212,7 +1212,7 @@ struct MANGOS_DLL_DECL mob_freya_groundAI : public ScriptedAI
 
             if(m_uiEonarsGift_Timer < uiDiff)
             {
-                if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
+                if (Creature* pFreya = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FREYA)))
                     DoCast(pFreya, m_bIsRegularMode ? SPELL_LIFEBINDERS_GIFT : SPELL_LIFEBINDERS_GIFT_H);
                 m_uiEonarsGift_Timer = 1000;
             }else m_uiEonarsGift_Timer -= uiDiff;
@@ -1341,33 +1341,33 @@ struct MANGOS_DLL_DECL mob_freya_spawnedAI : public ScriptedAI
     {
         if (m_bAncientConservator)
 		{
-			if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
+			if (Creature* pFreya = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FREYA)))
 			{
-				/*if(SpellAuraHolder* natureAura = pFreya->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+				if(SpellAuraHolder* natureAura = pFreya->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
 				{
 					if(natureAura->ModStackAmount(-25))
 						m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
-				}*/
+				}
 
 				// temp for old aura system
-				if(pFreya->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-25))	 	
-					pFreya->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
+				//if(pFreya->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-25))	 	
+				//	pFreya->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
 			}
 		}
 
         if (m_bDetonatingLasher)
 		{
-			if (Creature* pFreya = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_FREYA))))
+			if (Creature* pFreya = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FREYA)))
 			{
-				/*if(SpellAuraHolder* natureAura = pFreya->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
+				if(SpellAuraHolder* natureAura = pFreya->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
 				{
 					if(natureAura->ModStackAmount(-2))
 						m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
-				}*/
+				}
 
 				// temp for old aura system
-				if(pFreya->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-2))	 	
-					pFreya->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
+				//if(pFreya->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-2))	 	
+				//	pFreya->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
 			}
 		}
     }

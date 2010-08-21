@@ -132,7 +132,7 @@ struct MANGOS_DLL_DECL boss_alythessAI : public ScriptedAI
         // Respawn Second Twin
         if(pInstance)
         {
-            if(Creature* Sacrolash = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_SACROLASH))))
+            if(Creature* Sacrolash = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_SACROLASH)))
                 if(!Sacrolash->isAlive())
                     Sacrolash->Respawn();
         }
@@ -170,7 +170,7 @@ struct MANGOS_DLL_DECL boss_alythessAI : public ScriptedAI
         {
             pInstance->SetData(TYPE_ALYSTHESS, DONE);
 
-            if(Creature* Sacrolash = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_SACROLASH))))
+            if(Creature* Sacrolash = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_SACROLASH)))
             {
                 if(!Sacrolash->isAlive())
                     pInstance->SetData(TYPE_EREDAR_TWINS, DONE);
@@ -191,7 +191,7 @@ struct MANGOS_DLL_DECL boss_alythessAI : public ScriptedAI
 
         if(m_uiConfCount == 10)
         {
-            if(Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiConfTargetGUID))
+            if(Unit* pPlayer = m_creature->GetMap()->GetUnit(m_uiConfTargetGUID))
                 pPlayer->RemoveAurasDueToSpell(AURA_CONF,0);
             ++m_uiConfCount;
         }
@@ -200,7 +200,7 @@ struct MANGOS_DLL_DECL boss_alythessAI : public ScriptedAI
         {
             if(m_uiConfTimer < diff)
             {
-                if(Unit* pPlayer = Unit::GetUnit(*m_creature, m_uiConfTargetGUID))
+                if(Unit* pPlayer = m_creature->GetMap()->GetUnit(m_uiConfTargetGUID))
                 {
                     DoScriptText(SAY_ALYTHESS_CANFLAGRATION, m_creature);
                     pPlayer->CastSpell(pPlayer, SPELL_CONFLAGRATION_DEV, true);
@@ -208,7 +208,7 @@ struct MANGOS_DLL_DECL boss_alythessAI : public ScriptedAI
                     std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
                     for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
                     {
-                        Unit *BurnedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+                        Unit *BurnedPlayer = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());
                         if (BurnedPlayer && BurnedPlayer->GetTypeId() == TYPEID_PLAYER && BurnedPlayer->IsWithinDistInMap(pPlayer, 8))
                         {
                             BurnedPlayer->CastSpell(BurnedPlayer, SPELL_CONFLAGRATION_DEV, true);
@@ -332,7 +332,7 @@ struct MANGOS_DLL_DECL boss_sacrolashAI : public ScriptedAI
 
         if(pInstance)
         {
-            if(Creature* Alythess = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ALYTHESS))))
+            if(Creature* Alythess = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ALYTHESS)))
                 if(!Alythess->isAlive())
                     Alythess->Respawn();
         }
@@ -368,7 +368,7 @@ struct MANGOS_DLL_DECL boss_sacrolashAI : public ScriptedAI
         {
             pInstance->SetData(TYPE_SACROLASH, DONE);
 
-            if(Creature* Alythess = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ALYTHESS))))
+            if(Creature* Alythess = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ALYTHESS)))
             {
                 if(!Alythess->isAlive())
                     pInstance->SetData(TYPE_EREDAR_TWINS, DONE);

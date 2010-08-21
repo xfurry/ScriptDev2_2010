@@ -348,7 +348,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
     {
         m_creature->SetInCombatWithZone();
         
-        if(Creature* pAnveena = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ANVEENA))))
+        if(Creature* pAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
             pAnveena->SetVisibility(VISIBILITY_OFF);
     }
 
@@ -449,7 +449,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
             if(m_uiFireBloomCount < 10)
                 for(uint8 i=0; i<5; ++i)
                 {
-                    if(Unit* FireTarget = Unit::GetUnit(*m_creature, m_uiFireBloomTarget[i]))
+                    if(Unit* FireTarget = m_creature->GetMap()->GetUnit(m_uiFireBloomTarget[i]))
                         FireTarget->CastSpell(FireTarget, SPELL_FIREBLOOM_EFF, true);
                 }
             ++m_uiFireBloomCount;
@@ -482,14 +482,14 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
 
         for(uint8 i=0; i<4; ++i)
         {
-            if(Unit* Dragon = Unit::GetUnit((*m_creature), m_uiDragonGUID[i]))
+            if(Unit* Dragon = m_creature->GetMap()->GetUnit(m_uiDragonGUID[i]))
                 if(Dragon && Dragon->HasAura(SPELL_SHIELD_OF_BLUE))
                 {
                     m_uiCancelShieldTimer = 5000;
                     std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
                     for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
                     {
-                        Unit *TargetedPlayer = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());  
+                        Unit *TargetedPlayer = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());  
                         if (TargetedPlayer && TargetedPlayer->GetTypeId() == TYPEID_PLAYER && TargetedPlayer->IsWithinDistInMap(Dragon, 10) && !TargetedPlayer->HasAura(AURA_BLUESHIELD))
                             TargetedPlayer->CastSpell(TargetedPlayer,AURA_BLUESHIELD,true);
                     }
@@ -501,7 +501,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
             std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
             {
-                Unit *ShieldedPlayer1 = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+                Unit *ShieldedPlayer1 = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());
                 if (ShieldedPlayer1 && ShieldedPlayer1->GetTypeId() == TYPEID_PLAYER && ShieldedPlayer1->HasAura(AURA_BLUESHIELD))
                 {
                     ShieldedPlayer1->RemoveAurasDueToSpell(AURA_BLUESHIELD);
@@ -536,7 +536,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
                         DoScriptText(SAY_ANVEENA_GOODBYE, pAnveena); 
                         //pAnveena->CastSpell(pAnveena, SPELL_ANVEENA_EXPLODE, false);
                         m_creature->CastSpell(m_creature, SPELL_SACRIFICE_OF_ANVEENA, false);
-                        if(Unit* Anveena = Unit::GetUnit((*m_creature), m_uiAnveenaGUID))
+                        if(Creature* Anveena = m_creature->GetMap()->GetCreature(m_uiAnveenaGUID))
                             if(Anveena && Anveena->isAlive())
                                 Anveena->SetVisibility(VISIBILITY_OFF);
                         m_uiKalecgosAnvenaTimer = 5000;
@@ -601,7 +601,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
                 m_uiSinisterCount = 12;
             for(uint8 i=0; i<m_uiSinisterCount; ++i)
 			{
-                if(Unit* Sinister = Unit::GetUnit((*m_creature), m_uiSinisterGUID[i][0]))
+                if(Unit* Sinister = m_creature->GetMap()->GetUnit(m_uiSinisterGUID[i][0]))
 				{
 					if(!Sinister->isDead())
 					{
@@ -733,7 +733,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
             m_bIsAnvena = true;
             m_uiKalecgosAnvenaCount = 0;
 
-            if(Creature* cAnveena = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ANVEENA))))
+            if(Creature* cAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
             //if(Creature* cAnveena = m_creature->SummonCreature(ID_ANVEENA, m_creature->GetPositionX()+urand(20,30), m_creature->GetPositionY()+urand(20,30), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 120000))
             {
                 m_uiAnveenaGUID = cAnveena->GetGUID();
@@ -823,7 +823,7 @@ struct MANGOS_DLL_DECL mob_deceiverAI : public ScriptedAI
         if(pInstance)
             pInstance->SetData(TYPE_DECIVER, NOT_STARTED);
 
-        if(Creature* pAnveena = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ANVEENA))))
+        if(Creature* pAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
             DoCast(pAnveena, SPELL_ENERGY_DRAIN);
     }
     
@@ -835,7 +835,7 @@ struct MANGOS_DLL_DECL mob_deceiverAI : public ScriptedAI
         if(!m_creature->getVictim())
 			m_creature->AI()->AttackStart(who);
 
-        if(Creature* pAnveena = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ANVEENA))))
+        if(Creature* pAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
             pAnveena->RemoveAurasDueToSpell(SPELL_ANVEENAS_PRISON);
 
         m_creature->CastStop();
@@ -1134,14 +1134,14 @@ struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
 
             if(pInstance->GetData(TYPE_KILJAEDEN) != DONE)
             {
-                if(Creature* pAnveena = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_ANVEENA))))
+                if(Creature* pAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
                 {
                     pAnveena->CastSpell(pAnveena, SPELL_ANVEENAS_PRISON, false);
                     pAnveena->SetVisibility(VISIBILITY_ON);
                     pAnveena->GetMap()->CreatureRelocation(pAnveena, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation());
                 }
 
-                if(Creature* pKiljaeden = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_KILJAEDEN))))
+                if(Creature* pKiljaeden = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_KILJAEDEN)))
                 {
                     pKiljaeden->AI()->EnterEvadeMode();
                     pKiljaeden->SetHealth(pKiljaeden->GetMaxHealth());

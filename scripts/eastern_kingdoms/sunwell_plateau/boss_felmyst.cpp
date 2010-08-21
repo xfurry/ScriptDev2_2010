@@ -249,7 +249,7 @@ struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
         {
             if(m_uiEncapsulateAOETimer < diff)
             {
-                if(Unit* target = Unit::GetUnit(*m_creature, m_uiEncapsulateGUID))
+                if(Unit* target = m_creature->GetMap()->GetUnit(m_uiEncapsulateGUID))
                 {
                     target->CastSpell(target, SPELL_ENCAPSULATE_AOE, true);
                     ++m_uiEncapsulateCount;
@@ -385,7 +385,7 @@ struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
             {
                 if(m_uiBreathCount < 5)
                 {
-                    if(Unit* Victim = Unit::GetUnit(*m_creature, m_uiVictimGUID))
+                    if(Unit* Victim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
                         m_creature->SummonCreature(MOB_VAPOR, Victim->GetPositionX(), Victim->GetPositionY(), Victim->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 20000);
                     m_uiDemonicVaporTimer = 2000;
                     ++m_uiBreathCount;
@@ -488,7 +488,7 @@ struct MANGOS_DLL_DECL mob_deathcloudAI : public Scripted_NoMovementAI
         {
             for(uint8 i=0; i<m_uiImageCount; ++i)
 			{
-                if(Unit* cImage = Unit::GetUnit((*m_creature), m_uiImageGUID[i][0]))
+                if(Unit* cImage = m_creature->GetMap()->GetUnit(m_uiImageGUID[i][0]))
 				{
 					if(!cImage->isDead())
 					{
@@ -506,7 +506,7 @@ struct MANGOS_DLL_DECL mob_deathcloudAI : public Scripted_NoMovementAI
             std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
             {
-                if(Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid()))
+                if(Unit *target = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid()))
                     if(target && target->GetTypeId() == TYPEID_PLAYER && target->IsWithinDistInMap(m_creature, 15))
                     {
                         //Kill Player
@@ -556,7 +556,7 @@ struct MANGOS_DLL_DECL mob_felmyst_vaporAI : public Scripted_NoMovementAI
             std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
             {
-                if(Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid()))
+                if(Unit *target = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid()))
                     if(target && target->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(target, 3))
                     {
                         Creature *Undead = m_creature->SummonCreature(MOB_DEAD, m_creature->GetPositionX()+urand(1,6), target->GetPositionY()+urand(1,6), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20000);

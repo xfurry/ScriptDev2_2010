@@ -928,7 +928,7 @@ struct MANGOS_DLL_DECL mob_tenebronAI : public dummy_dragonAI
         {
             for(std::list<uint64>::iterator itr = m_lEggsGUIDList.begin(); itr != m_lEggsGUIDList.end(); ++itr)
             {
-                if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
+                if (Creature* pTemp = m_creature->GetMap()->GetCreature(*itr))
                 {
                     if (pTemp->isAlive())
                     {
@@ -942,7 +942,7 @@ struct MANGOS_DLL_DECL mob_tenebronAI : public dummy_dragonAI
         {
             for(std::list<uint64>::iterator itr = m_lWhelpsGUIDList.begin(); itr != m_lWhelpsGUIDList.end(); ++itr)
             {
-                if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
+                if (Creature* pTemp = m_creature->GetMap()->GetCreature(*itr))
                 {
                     if (pTemp->isAlive())
                     {
@@ -1097,7 +1097,7 @@ struct MANGOS_DLL_DECL mob_shadronAI : public dummy_dragonAI
 
     void KillDisciple()
     {
-        if(Unit* pDisciple = Unit::GetUnit(*m_creature, m_uiDiscipleGUID))
+        if(Unit* pDisciple = m_creature->GetMap()->GetUnit(m_uiDiscipleGUID))
             pDisciple->DealDamage(pDisciple, m_creature->GetMaxHealth(),NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
         m_creature->RemoveAurasDueToSpell(SPELL_GIFT_OF_TWILIGTH_SHA);
@@ -1228,7 +1228,7 @@ struct MANGOS_DLL_DECL mob_vesperonAI : public dummy_dragonAI
 
     void KillDisciple()
     {
-        if(Unit* pDisciple = Unit::GetUnit(*m_creature, m_uiDiscipleGUID))
+        if(Unit* pDisciple = m_creature->GetMap()->GetUnit(m_uiDiscipleGUID))
             pDisciple->DealDamage(pDisciple, m_creature->GetMaxHealth(),NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
         m_creature->RemoveAurasDueToSpell(SPELL_TWILIGHT_TORMENT_VESP);
@@ -1810,7 +1810,7 @@ struct MANGOS_DLL_DECL mob_onyx_flight_captainAI : public ScriptedAI
         {
             if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
             {
-                if (Unit* pSart = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_SARTHARION)))
+                if (Creature* pSart = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_SARTHARION)))
                 {
                     if (pSart->getVictim())
                     {
@@ -1880,7 +1880,7 @@ struct MANGOS_DLL_DECL mob_onyx_sanctum_guardianAI : public ScriptedAI
         {
             if (m_pInstance->GetData(TYPE_SARTHARION_EVENT) == IN_PROGRESS)
             {
-                if (Unit* pSart = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_SARTHARION)))
+                if (Creature* pSart = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_SARTHARION)))
                 {
                     if (pSart->getVictim())
                     {
@@ -1977,7 +1977,7 @@ struct MANGOS_DLL_DECL npc_flame_tornadoAI : public ScriptedAI
                 m_uiStepTimer = urand(2000, 6000);
                 break;
             case 3:
-                if (Creature* pSartharion = (Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_SARTHARION)))
+                if (Creature* pSartharion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_SARTHARION)))
                 {
                     // TODO: Fix lava blaze!!!
                     /*if (Unit* target = pSartharion->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
@@ -2014,7 +2014,7 @@ struct MANGOS_DLL_DECL npc_flame_tornadoAI : public ScriptedAI
             // movement
             if(m_uiMovementTimer < uiDiff)
             {
-                if(Creature* pSartharion = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_SARTHARION))))
+                if(Creature* pSartharion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_SARTHARION)))
                 {
                     float angle = (M_PI / 10) * m_uiMovingSteps;
                     float X = CX + 1 * cos(angle);

@@ -158,21 +158,21 @@ struct MANGOS_DLL_DECL mob_iron_constructAI : public ScriptedAI
         if (!m_pInstance)
             return;
 
-        if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_IGNIS))))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_IGNIS)))
         {
             if (pTemp->isAlive())
             {
 				if (pTemp->HasAura(BUFF_STRENGHT_OF_CREATOR))
 				{
-					/*if(SpellAuraHolder* strenght = pTemp->GetSpellAuraHolder(BUFF_STRENGHT_OF_CREATOR))
+					if(SpellAuraHolder* strenght = pTemp->GetSpellAuraHolder(BUFF_STRENGHT_OF_CREATOR))
 					{
 						if(strenght->ModStackAmount(-1))
 							pTemp->RemoveAurasDueToSpell(BUFF_STRENGHT_OF_CREATOR);
-					}*/
+					}
 
 					// temp for old aura system
-					if(pTemp->GetAura(BUFF_STRENGHT_OF_CREATOR, EFFECT_INDEX_0)->modStackAmount(-1))	 	
-						pTemp->RemoveAurasDueToSpell(BUFF_STRENGHT_OF_CREATOR);
+					//if(pTemp->GetAura(BUFF_STRENGHT_OF_CREATOR, EFFECT_INDEX_0)->modStackAmount(-1))	 	
+					//	pTemp->RemoveAurasDueToSpell(BUFF_STRENGHT_OF_CREATOR);
 				}
             }
         }
@@ -214,7 +214,7 @@ struct MANGOS_DLL_DECL mob_iron_constructAI : public ScriptedAI
             m_creature->RemoveAurasDueToSpell(SPELL_FREEZE_ANIM);
         m_bIsInCombat = true;
 
-        if (Creature* pTemp = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_IGNIS))))
+        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_IGNIS)))
         {
             if (pTemp->isAlive())
             {
@@ -447,7 +447,7 @@ struct MANGOS_DLL_DECL boss_ignisAI : public ScriptedAI
 
         if (m_uiSlag_Pot_Dmg_Timer < uiDiff && m_bHasSlagPotCasted)
         {
-            if (Unit* pPotTarget = Unit::GetUnit(*m_creature, m_uiPotTargetGUID))
+            if (Unit* pPotTarget = m_creature->GetMap()->GetUnit(m_uiPotTargetGUID))
             {
                 if (m_uiPotDmgCount < 10)
                     DoCast(pPotTarget, m_bIsRegularMode ? SPELL_SLAG_POT_DMG : SPELL_SLAG_POT_DMG_H);

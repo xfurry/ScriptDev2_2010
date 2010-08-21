@@ -230,7 +230,7 @@ struct MANGOS_DLL_DECL boss_eadricAI: public ScriptedAI
         if (m_uiHammerVisualTimer < uiDiff)
         {
             DoScriptText(SAY_EADRIC_HAMMER, m_creature);
-            if (Unit* pHammerTarget = Unit::GetUnit(*m_creature, m_uiHammerTargetGUID))
+            if (Unit* pHammerTarget = m_creature->GetMap()->GetUnit(m_uiHammerTargetGUID))
                 DoCast(pHammerTarget, SPELL_HAMMER);
             m_uiHammer_Dmg_Timer = 2500;
             m_uiHammerVisualTimer = 40000;
@@ -240,7 +240,7 @@ struct MANGOS_DLL_DECL boss_eadricAI: public ScriptedAI
 
         if (m_uiHammer_Dmg_Timer < uiDiff)
         {
-            if (Unit* pHammerTarget = Unit::GetUnit(*m_creature, m_uiHammerTargetGUID))
+            if (Unit* pHammerTarget = m_creature->GetMap()->GetUnit(m_uiHammerTargetGUID))
             {
                 if(pHammerTarget->HasAura(SPELL_STUN_AURA, EFFECT_INDEX_0))
                     DoCast(pHammerTarget, m_bIsRegularMode ? SPELL_HAMMER_DMG : SPELL_HAMMER_DMG_H);

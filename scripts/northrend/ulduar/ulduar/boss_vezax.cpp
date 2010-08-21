@@ -220,7 +220,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
 
         m_bHasSimphon = false;
         Map *map = m_creature->GetMap();
-        Unit* pTarget = Unit::GetUnit(*m_creature, m_uiTargetGUID);
+        Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiTargetGUID);
         if (map->IsDungeon())
         {
             Map::PlayerList const &PlayerList = map->GetPlayers();
@@ -359,7 +359,7 @@ struct MANGOS_DLL_DECL mob_saronite_animusAI : public ScriptedAI
     {
         if(m_pInstance)
         {
-            if (Creature* pVezax = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_VEZAX))))
+            if (Creature* pVezax = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VEZAX)))
             {
                 if (pVezax->isAlive())
                 {

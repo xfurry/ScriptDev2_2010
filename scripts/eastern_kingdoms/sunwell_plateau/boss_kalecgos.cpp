@@ -146,7 +146,7 @@ struct MANGOS_DLL_DECL boss_kalecgosAI : public ScriptedAI
                 }
             }
 
-            if(Creature* pKalecgnosHuman = ((Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(DATA_KALECGOS_HUMAN))))
+            if(Creature* pKalecgnosHuman = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_KALECGOS_HUMAN)))
             {
                 if(!pKalecgnosHuman->isAlive())
                     pKalecgnosHuman->Respawn();
@@ -536,7 +536,7 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
 
         for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
         {
-            Unit* pTarget = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+            Unit* pTarget = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());
             if (pTarget && pTarget->GetTypeId() == TYPEID_PLAYER)
             {
                 pTarget->InterruptNonMeleeSpells(true);
@@ -568,7 +568,7 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
         if(pWho && !pWho->IsInRange(m_creature, 0.0f, 50.0f, true))
         {
             m_creature->AddThreat(pWho, -100000.0f);
-            if(Unit* pKalec = Unit::GetUnit(*m_creature, m_uiKalecGUID))
+            if(Unit* pKalec = m_creature->GetMap()->GetUnit(m_uiKalecGUID))
             {
                 m_creature->AI()->AttackStart(pKalec);
                 m_creature->AddThreat(pKalec, 100000.0f);
@@ -580,7 +580,7 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
             }
         } 
 
-        if (Unit* pKalec = Unit::GetUnit(*m_creature, m_uiKalecGUID))
+        if (Unit* pKalec = m_creature->GetMap()->GetUnit(m_uiKalecGUID))
             if (!pKalec->isAlive())
             {
                 TeleportAllPlayersBack();
@@ -629,7 +629,7 @@ struct MANGOS_DLL_DECL boss_sathrovarrAI : public ScriptedAI
 
             for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
             {
-                Unit* pTarget = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+                Unit* pTarget = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());
                 if (pTarget && pTarget->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pTarget, 40))              
                 {
                     if (pTarget->HasAura(SPELL_ARCANE_BUFFET))
@@ -738,7 +738,7 @@ struct MANGOS_DLL_DECL boss_kalecgos_humanoidAI : public ScriptedAI
 
         if (RevitalizeTimer < diff)
         {
-            Unit *pAly = Unit::GetUnit((*m_creature),(SelectRandomAly(FriendlyList)));
+            Unit *pAly = m_creature->GetMap()->GetUnit((SelectRandomAly(FriendlyList)));
             if (pAly && pAly->isAlive() && m_creature->GetDistance(pAly) < 50)
                 DoCastSpellIfCan(pAly, SPELL_REVITALIZE);
             RevitalizeTimer = 30000;

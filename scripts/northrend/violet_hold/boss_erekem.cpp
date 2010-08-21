@@ -111,7 +111,7 @@ struct MANGOS_DLL_DECL boss_erekemAI : public ScriptedAI
 
     void JustReachedHome()
     {
-        if(Creature* pSinclari = (Creature*)Unit::GetUnit((*m_creature),m_pInstance->GetData64(NPC_SINCLARI)))
+        if(Creature* pSinclari = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SINCLARI)))
             pSinclari->DealDamage(pSinclari, pSinclari->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
         if (m_pInstance)
@@ -362,7 +362,7 @@ struct MANGOS_DLL_DECL mob_erekem_guardAI : public ScriptedAI
     void JustDied(Unit* pKiller)
     {
         if (m_pInstance)
-            if (Creature* pErekem = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_ARAKKOA))))
+            if (Creature* pErekem = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ARAKKOA)))
                 if (pErekem->isAlive())
                 {
                     DoScriptText(SAY_ADD_KILED, pErekem);

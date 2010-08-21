@@ -94,7 +94,7 @@ struct MANGOS_DLL_DECL boss_lethonAI : public ScriptedAI
             DoScriptText(SAY_SUMMONSHADE, m_creature);
             std::vector<Unit*> target_list;
             for (std::list<HostileReference*>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
-                if (Unit *pTarget = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid()))
+				if (Unit *pTarget = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid()))
                     m_creature->SummonCreature(NPC_SPIRIT_SHADE,pTarget->GetPositionX(),pTarget->GetPositionY(),pTarget->GetPositionZ(),0,TEMPSUMMON_CORPSE_DESPAWN,0);
         }
     }

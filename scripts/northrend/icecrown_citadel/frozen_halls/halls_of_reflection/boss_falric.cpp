@@ -128,7 +128,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
         }
         if(TeamInInstance == ALLIANCE)
         {
-            if(Creature *pJaina = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_JAINA_INTRO))))
+            if(Creature *pJaina = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_JAINA_INTRO)))
             {
                 pJaina->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                 pJaina->SetVisibility(VISIBILITY_ON);
@@ -138,7 +138,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
         }
         else if(TeamInInstance == HORDE) 
         {
-            if(Creature *pSylvanas = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_SYLVANAS_INTRO))))
+            if(Creature *pSylvanas = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_SYLVANAS_INTRO)))
             {
                 pSylvanas->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                 pSylvanas->SetVisibility(VISIBILITY_ON);
@@ -210,7 +210,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 				// no random
 				//advance(iter, urand(0, m_lSoldiersGUIDList.size()-1));
 
-				if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *iter))
+				if (Creature* pTemp = m_creature->GetMap()->GetCreature(*iter))
 				{
 					if(pTemp->isAlive())
 					{

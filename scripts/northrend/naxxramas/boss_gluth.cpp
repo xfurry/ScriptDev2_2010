@@ -199,7 +199,7 @@ struct MANGOS_DLL_DECL boss_gluthAI : public ScriptedAI
                 std::advance(itr, 1);
                 for(; itr!= t_list.end(); ++itr)
                 {
-                    Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+                    Unit *target = m_creature->GetMap()->GetCreature((*itr)->getUnitGuid());
                     if (target && target->isAlive() && target->GetTypeId() == TYPEID_PLAYER &&
                         (target->GetHealth() > target->GetMaxHealth() * 0.05))
                         target->SetHealth(target->GetMaxHealth() * 0.05);
@@ -209,7 +209,7 @@ struct MANGOS_DLL_DECL boss_gluthAI : public ScriptedAI
             if (!m_lZombieGUIDList.empty())
             {
                 for(std::list<uint64>::iterator itr = m_lZombieGUIDList.begin(); itr != m_lZombieGUIDList.end(); ++itr)
-                    if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
+                    if (Creature* pTemp = m_creature->GetMap()->GetCreature(*itr))
                         if (pTemp->isAlive())
                         {
                             ((mob_zombie_chowsAI*)pTemp->AI())->bIsForceMove = true;
@@ -235,7 +235,7 @@ struct MANGOS_DLL_DECL boss_gluthAI : public ScriptedAI
             if (!m_lZombieGUIDList.empty())
             {
                 for(std::list<uint64>::iterator itr = m_lZombieGUIDList.begin(); itr != m_lZombieGUIDList.end(); ++itr)
-                    if (Creature* pTemp = (Creature*)Unit::GetUnit(*m_creature, *itr))
+                    if (Creature* pTemp = m_creature->GetMap()->GetCreature(*itr))
                         if (pTemp->isAlive() && m_creature->IsWithinDistInMap(pTemp, ATTACK_DISTANCE))
                         {
                             DoScriptText(EMOTE_ZOMBIE, m_creature);

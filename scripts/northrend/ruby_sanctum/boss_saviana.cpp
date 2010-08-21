@@ -193,11 +193,11 @@ struct MANGOS_DLL_DECL boss_savianaAI : public ScriptedAI
 		if(m_uiConflagrateTimer < uiDiff && m_bIsInFly)
 		{
 			// workaround for conflagration
-			if(Unit* pTarget = Unit::GetUnit(*m_creature, m_uiTarget1GUID))
+			if(Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiTarget1GUID))
 				DoCast(pTarget, SPELL_CONFLAGRATION_AURA);
-			if(Unit* pTarget = Unit::GetUnit(*m_creature, m_uiTarget2GUID))
+			if(Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiTarget2GUID))
 				DoCast(pTarget, SPELL_CONFLAGRATION_AURA);
-			if(Unit* pTarget = Unit::GetUnit(*m_creature, m_uiTarget3GUID))
+			if(Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiTarget3GUID))
 				DoCast(pTarget, SPELL_CONFLAGRATION_AURA);
 			m_uiConflagrateTimer = 60000;
 		}

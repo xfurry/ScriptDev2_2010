@@ -343,11 +343,9 @@ struct MANGOS_DLL_DECL npc_annhyldeAI : public ScriptedAI
 
         m_creature->GetPosition(x,y,z);
         DoTeleportPlayer(m_creature, x+1, y, z+30, m_creature->GetOrientation());
-        Unit* ingvar = Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_INGVAR));
-        if(ingvar)
+		if(Creature* pIngvar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_INGVAR)))
         {
             m_creature->GetMotionMaster()->MovePoint(1,x,y,z+15);
-
             DoScriptText(SAY_RESSURECT,m_creature);
         }
     }
@@ -356,15 +354,14 @@ struct MANGOS_DLL_DECL npc_annhyldeAI : public ScriptedAI
     {
         if(type != POINT_MOTION_TYPE)
             return;
-        Unit* ingvar = Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_INGVAR));
-        if(ingvar)
+        if(Creature* pIngvar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_INGVAR)))
         {
             switch (id)
             {
             case 1:
-                ingvar->RemoveAura(SPELL_SUMMON_BANSHEE,EFFECT_INDEX_1);
-                ingvar->CastSpell(ingvar,SPELL_SCOURG_RESURRECTION_DUMMY,true);
-                DoCast(ingvar,SPELL_SCOURG_RESURRECTION_BEAM);
+                pIngvar->RemoveAura(SPELL_SUMMON_BANSHEE,EFFECT_INDEX_1);
+                pIngvar->CastSpell(pIngvar,SPELL_SCOURG_RESURRECTION_DUMMY,true);
+                DoCast(pIngvar,SPELL_SCOURG_RESURRECTION_BEAM);
                 Resurect_Timer = 8000;
                 Resurect_Phase = 1;
                 break;
@@ -386,26 +383,23 @@ struct MANGOS_DLL_DECL npc_annhyldeAI : public ScriptedAI
             {
                 if(Resurect_Phase == 1)
                 {
-                    Unit* ingvar = Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_INGVAR));
-                    if(ingvar)
+                    if(Creature* pIngvar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_INGVAR)))
                     {
-                        ingvar->SetStandState(UNIT_STAND_STATE_STAND);
-                        ingvar->CastSpell(ingvar,SPELL_SCOURG_RESURRECTION_HEAL,false);
-                        ingvar->SetHealth(ingvar->GetMaxHealth());
+                        pIngvar->SetStandState(UNIT_STAND_STATE_STAND);
+                        pIngvar->CastSpell(pIngvar,SPELL_SCOURG_RESURRECTION_HEAL,false);
+                        pIngvar->SetHealth(pIngvar->GetMaxHealth());
                     }
                     Resurect_Timer = 3000;
                     Resurect_Phase = 2;
                 }else if (Resurect_Phase == 2)
                 {
-                    Unit* ingvar = Unit::GetUnit((*m_creature), m_pInstance->GetData64(DATA_INGVAR));
-                    if(ingvar)
+                    if(Creature* pIngvar = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_INGVAR)))
                     {
-                        ingvar->RemoveAurasDueToSpell(SPELL_SCOURG_RESURRECTION_DUMMY);
-                        ingvar->CastSpell(ingvar,SPELL_INGVAR_TRANSFORM,false);
-                        ingvar->SetUInt32Value(UNIT_FIELD_DISPLAYID, MODEL_INGVAR_UNDEAD); // Visual Hack - when he dies he becomes human model -> wrong
-                        Creature* c_ingvar = (Creature*)ingvar;
+                        pIngvar->RemoveAurasDueToSpell(SPELL_SCOURG_RESURRECTION_DUMMY);
+                        pIngvar->CastSpell(pIngvar,SPELL_INGVAR_TRANSFORM,false);
+                        pIngvar->SetUInt32Value(UNIT_FIELD_DISPLAYID, MODEL_INGVAR_UNDEAD); // Visual Hack - when he dies he becomes human model -> wrong
 
-                        ((boss_ingvarAI*)(c_ingvar->AI()))->StartZombiePhase();
+                        ((boss_ingvarAI*)pIngvar->AI())->StartZombiePhase();
 
                         m_creature->GetMotionMaster()->MovePoint(2,x+1,y,z+30);
                         Resurect_Phase++;

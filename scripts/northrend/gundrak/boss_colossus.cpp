@@ -246,7 +246,7 @@ struct MANGOS_DLL_DECL boss_drakkari_elementalAI : public ScriptedAI
     void JustReachedHome()
     {
         m_creature->ForcedDespawn();
-        if(Creature* pColossus = GetClosestCreatureWithEntry(m_creature, NPC_COLOSSUS, 100.0f))
+        if(Creature* pColossus = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COLOSSUS)))
         {
             if(!pColossus->isAlive())
                 pColossus->Respawn();
@@ -282,7 +282,7 @@ struct MANGOS_DLL_DECL boss_drakkari_elementalAI : public ScriptedAI
             m_creature->InterruptNonMeleeSpells(false);
             m_creature->SetVisibility(VISIBILITY_OFF);
             //DoCast(m_creature, SPELL_MERGE);
-            if(Creature* pColossus = GetClosestCreatureWithEntry(m_creature, NPC_COLOSSUS, 100.0f))
+            if(Creature* pColossus = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COLOSSUS)))
             {
                 if(pColossus->isAlive())
                     ((boss_colossusAI*)pColossus->AI())->StartPhase();
@@ -338,7 +338,7 @@ struct MANGOS_DLL_DECL npc_living_mojoAI : public ScriptedAI
     void Aggro(Unit* pWho)
     {
         //Check if the npc is near of Drakkari Colossus.
-        if(Creature* pColossus = ((Creature*)Unit::GetUnit((*m_creature), m_pInstance->GetData64(NPC_COLOSSUS))))
+        if(Creature* pColossus = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COLOSSUS)))
         {
             if(pColossus->isAlive() && m_creature->IsWithinDist(pColossus, 15.0f))
                 m_creature->GetMotionMaster()->MovePoint(0, pColossus->GetPositionX(), pColossus->GetPositionY(), pColossus->GetPositionZ());

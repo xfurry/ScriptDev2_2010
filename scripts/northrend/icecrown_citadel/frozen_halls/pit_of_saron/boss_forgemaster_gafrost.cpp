@@ -331,7 +331,7 @@ struct MANGOS_DLL_DECL boss_GarfrostAI : public ScriptedAI
             ThreatList const& tList = m_creature->getThreatManager().getThreatList();
             for (ThreatList::const_iterator iter = tList.begin();iter != tList.end(); ++iter)
             {
-                Unit *pTarget = Unit::GetUnit(*m_creature, (*iter)->getUnitGuid());
+                Unit *pTarget = m_creature->GetMap()->GetUnit((*iter)->getUnitGuid());
                 if (!pTarget || pTarget->GetTypeId() != TYPEID_PLAYER)
                     continue;
 

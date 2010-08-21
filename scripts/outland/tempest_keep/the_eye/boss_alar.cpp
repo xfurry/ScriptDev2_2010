@@ -643,15 +643,13 @@ struct MANGOS_DLL_DECL mob_ember_of_alarAI : public ScriptedAI
         if(pInstance)
             if (pInstance->GetData(TYPE_ALAR) == 2)
             {
-                Unit* Alar = NULL;
-                Alar = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_ALAR));
-                if (Alar)
+				if(Creature* pAlar = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ALAR)))
                 {
-                    int AlarHealth = Alar->GetHealth() - Alar->GetMaxHealth()*0.03;
+                    int AlarHealth = pAlar->GetHealth() - pAlar->GetMaxHealth()*0.03;
                     if (AlarHealth > 0)
-                        Alar->SetHealth(AlarHealth);
+                        pAlar->SetHealth(AlarHealth);
                     else
-                        Alar->SetHealth(1);
+                        pAlar->SetHealth(1);
                 }
             }
         Die = true;

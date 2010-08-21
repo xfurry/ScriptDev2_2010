@@ -212,7 +212,7 @@ struct MANGOS_DLL_DECL boss_rajaxxAI : public ScriptedAI
     {
         if (!m_pInstance)
             return;
-        if (Unit* pAndorov = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_ANDOROV)))
+        if (Creature* pAndorov = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_ANDOROV)))
         {
             pAndorov->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             DoScriptText(SAY_ANDOROV_INTRO,pAndorov);
@@ -239,11 +239,11 @@ struct MANGOS_DLL_DECL boss_rajaxxAI : public ScriptedAI
         if (!entry)
             return;
 
-        if (Creature *pCommander = (Creature*)Unit::GetUnit(*m_creature,m_pInstance->GetData64(entry)))
+        if (Creature *pCommander = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(entry)))
         {
             pCommander->CallForHelp(20.0f);
             pCommander->SetInCombatWithZone();
-            if (Creature* pAndorov = (Creature*)Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_ANDOROV)))
+            if (Creature* pAndorov = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_ANDOROV)))
             {
                 if (pAndorov->isInCombat())
                     pAndorov->CombatStop(true);
@@ -299,7 +299,7 @@ struct MANGOS_DLL_DECL boss_rajaxxAI : public ScriptedAI
             return true;
 
         //simplify this!
-        if (Unit* pCommander = Unit::GetUnit(*m_creature,m_pInstance->GetData64(entry)))
+        if (Creature* pCommander = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(entry)))
             if (pCommander->isAlive())
                 if (!pCommander->isInCombat())
                 {
@@ -365,7 +365,7 @@ struct MANGOS_DLL_DECL boss_rajaxxAI : public ScriptedAI
         {
             Unit *pKaldorei = m_creature->SummonCreature(NPC_KALDOREI_ELITE,NPCs[i].x,NPCs[i].y,NPCs[i].z,NPCs[i].an,TEMPSUMMON_CORPSE_DESPAWN,0);
                 if (pKaldorei)
-                if (Unit *pAndorov = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_ANDOROV)))
+                if (Creature *pAndorov = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_ANDOROV)))
                     pKaldorei->GetMotionMaster()->MoveFollow(pAndorov,2,i+1.5);
         }
     }  
@@ -462,7 +462,7 @@ struct MANGOS_DLL_DECL npc_andorovAI : public ScriptedAI
 
     void JustDied(Unit *pKiller)
     {
-        if (Unit *pRajaxx = Unit::GetUnit(*m_creature,m_pInstance->GetData64(DATA_RAJAXX)))
+        if (Creature *pRajaxx = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_RAJAXX)))
             if (pRajaxx->isAlive())
                 DoScriptText(SAY_KILLS_ANDOROV,pRajaxx);
     }

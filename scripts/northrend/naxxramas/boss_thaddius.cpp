@@ -571,8 +571,8 @@ struct MANGOS_DLL_DECL boss_thaddiusAI : public Scripted_NoMovementAI
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_SUBSTRACTION : ACHIEV_SUBSTRACTION_H);
 
             // Force Despawn of Adds
-            Creature* pFeugen  = ((Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(NPC_FEUGEN)));
-            Creature* pStalagg = ((Creature*)Unit::GetUnit(*m_creature, m_pInstance->GetData64(NPC_STALAGG)));
+            Creature* pFeugen  = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_FEUGEN));
+            Creature* pStalagg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_STALAGG));
 
             if (pFeugen)
                 pFeugen->DealDamage(pFeugen, pFeugen->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
