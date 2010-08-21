@@ -789,15 +789,24 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 					DoScriptText(SAY_INTRO2, pLanthel);
 				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 				m_creature->SetStandState(UNIT_STAND_STATE_STAND);
+				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_29);		// remove feign death
+				m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);	// remove dead flag
+				m_creature->SetHealth(m_creature->GetMaxHealth());
 				if (Creature* pKeleseth = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_KELESETH)))
 				{
 					pKeleseth->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 					pKeleseth->SetStandState(UNIT_STAND_STATE_STAND);
+					pKeleseth->SetHealth(pKeleseth->GetMaxHealth());
+					pKeleseth->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_29);		// remove feign death
+					pKeleseth->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);	// remove dead flag
 				}
 				if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
 				{
 					pTaldaram->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 					pTaldaram->SetStandState(UNIT_STAND_STATE_STAND);
+					pTaldaram->SetHealth(pTaldaram->GetMaxHealth());
+					pTaldaram->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_29);		// remove feign death
+					pTaldaram->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);	// remove dead flag
 				}
 				if(m_pInstance)
 					m_pInstance->SetData(TYPE_PRINCES_PHASE, PHASE_VALANAR);

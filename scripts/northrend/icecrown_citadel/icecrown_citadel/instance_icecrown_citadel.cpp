@@ -211,26 +211,26 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 				if(m_auiEncounter[10] == DONE)
 					pCreature->SetVisibility(VISIBILITY_ON);
 				break;
-			case NPC_SPLINESTALKER:	m_uiSplinestalkerGUID	= pCreature->GetGUID(); break;
-			case NPC_RIMEFANG:		m_uiRimefangGUID		= pCreature->GetGUID(); break;
+			case NPC_SPLINESTALKER:	
+				m_uiSplinestalkerGUID = pCreature->GetGUID(); 
+				if(m_auiEncounter[11] != DONE)
+				{
+					if(!pCreature->isAlive())
+						pCreature->Respawn();
+				}
+				break;
+			case NPC_RIMEFANG:		
+				m_uiRimefangGUID = pCreature->GetGUID(); 
+				if(m_auiEncounter[11] != DONE)
+				{
+					if(!pCreature->isAlive())
+						pCreature->Respawn();
+				}
+				break;
 			case NPC_LICH_KING:		m_uiLichKingGUID		= pCreature->GetGUID(); break;
 			case NPC_TIRION_FINAL:  m_uiTirionFinalGUID		= pCreature->GetGUID(); break;
 			case NPC_TIRION_START:
 				m_uiTirionGUID = pCreature->GetGUID();
-				// summon sindragosa in case the minibosses are already dead
-				Creature* pRimefang = instance->GetCreature(m_uiRimefangGUID);
-				Creature* pSplinestalker = instance->GetCreature(m_uiSplinestalkerGUID);
-				if(pRimefang && pSplinestalker)
-				{
-					if(!pRimefang->isAlive() && !pSplinestalker->isAlive())
-					{
-						if(Creature* pSindragosa = pCreature->SummonCreature(NPC_SINDRAGOSA, 4453.670f, 2484.251f, 240.797f, 3.15f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY))
-						{
-							pSindragosa->GetMap()->CreatureRelocation(pSindragosa, 4453.670f, 2484.251f, 240.797f, 3.15f);
-							pSindragosa->SendMonsterMove(4453.670f, 2484.251f, 240.797f, SPLINETYPE_NORMAL, pSindragosa->GetSplineFlags(), 1);
-						}
-					}
-				}
 				break;
         }
     }
@@ -270,6 +270,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 break;
 			case GO_DEATHWHISPER_ELEVATOR:
 				m_uiDeathwhisperElevatorGUID = pGo->GetGUID();
+				pGo->SetGoState(GO_STATE_ACTIVE);
 				if (m_auiEncounter[1] == DONE)
 				{
 					pGo->SetUInt32Value(GAMEOBJECT_LEVEL, 0);
@@ -285,9 +286,11 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 // plagueworks
             case GO_GREEN_MONSTER_ENTRANCE:
                 m_uiRotfaceDoorGUID = pGo->GetGUID();
+				pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_ORANGE_MONSTER_ENTRANCE:
                 m_uiFestergutDoorGUID = pGo->GetGUID();
+				pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_SCIENTIST_ENTRANCE:
                 m_uiScientistDoorGUID = pGo->GetGUID();
@@ -342,8 +345,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 // crimson halls
             case GO_BLOODWING_DOOR:
                 m_uiBloodwingDoorGUID = pGo->GetGUID();
-                if(m_auiEncounter[6] == DONE)
-                    pGo->SetGoState(GO_STATE_ACTIVE);
+				pGo->SetGoState(GO_STATE_READY);
                 break;
             case GO_CRIMSON_HALL_DOOR:
                 m_uiCrimsonHallDoorGUID = pGo->GetGUID();
@@ -361,6 +363,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 break;
             case GO_BLOODQUEEN_DOOR:
                 m_uiBloodQueedDoorGUID = pGo->GetGUID();
+				pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_EMPOWERING_BLOOD_ORB:
                 m_uiBloodOrbGUID = pGo->GetGUID();
@@ -371,15 +374,21 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 // frostwyrm halls
 			case GO_SINDRAGOSA_ENTRANCE:
 				m_uiSindragosaEntranceGUID = pGo->GetGUID();
+				pGo->SetGoState(GO_STATE_ACTIVE);
 				break;
 			case GO_SINDRAGOSA_EXIT:
 				m_uiSindragosaExitGUID = pGo->GetGUID();
+				if(m_auiEncounter[11] == DONE)
+					pGo->SetGoState(GO_STATE_ACTIVE);
 				break;
 			case GO_SINDRAGOSA_SHORT_ENT:
 				m_uiSindragosaDoorGUID = pGo->GetGUID();
+				if(m_auiEncounter[11] == DONE)
+					pGo->SetGoState(GO_STATE_ACTIVE);
 				break;
 			case GO_FROSTWING_DOOR: 
 				m_uiFrostWingDoorGUID = pGo->GetGUID();
+				pGo->SetGoState(GO_STATE_READY);
 				break;
 			case GO_GREEN_DRAGON_ENTRANCE:
 				m_uiDragonEntranceGUID = pGo->GetGUID();

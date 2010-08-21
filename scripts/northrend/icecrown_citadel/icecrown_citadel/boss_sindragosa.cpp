@@ -52,10 +52,15 @@ enum
 	SPELL_BLISTERINGCOLD_25	= 71047,
 
 	SPELL_FROSTBEACON		= 70126,
-	SPELL_ICETOMB			= 70157,
+	SPELL_ICETOMB_AURA		= 70157,
+	SPELL_ICETOMB_DUMMY		= 69675,
+	SPELL_ICETOMB_DMG		= 71330,	// not used
+	NPC_ICETOMB				= 36980,
+	SPELL_AXPHYXIATION		= 71665,
 	SPELL_FROSTBOMB			= 71053,
 	SPELL_FROSTBOMB_SUMMON	= 69846,
 	SPELL_MYSTICBUFFET		= 70128,
+	NPC_FROST_BOMB			= 37186,
 
 	SPELL_BERSERK			= 26662,
 
@@ -102,7 +107,10 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 	// general
 	uint32 m_uiBerserkTimer;
 	bool m_bStartAttack;
+	uint32 m_uiMaxTargets;
     uint32 m_uiAttackStartTimer;
+	std::list<uint64> m_lTargetsGUIDList;
+	uint64 m_uiFrostTargetGUID;
 
 	void Reset()
 	{
@@ -113,7 +121,7 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 		m_uiIcyGripTimer		= 30000;
 		m_uiBlisteringColdTimer	= 30500;
 		m_uiFrostBeaconTimer	= 3000;
-		m_uiBombTimer			= 10000;
+		m_uiBombTimer			= 60000;
 
 		m_bHasBuffet			= false;
 		m_uiMagicTimer			= 30000;
@@ -121,6 +129,10 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 		m_uiTailSmashTimer		= urand(8000, 13000);
 		m_uiFrostBreathTimer	= urand(13000, 16000);
         m_uiAttackStartTimer    = 5000;
+		m_lTargetsGUIDList.clear();
+		m_uiFrostTargetGUID		= 0;
+
+		m_uiMaxTargets = (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL) ? 2 : 5;
 
 		// make fly
 		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
@@ -182,6 +194,12 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 			m_pInstance->SetData(TYPE_SINDRAGOSA, NOT_STARTED);
 	}
 
+	void JustSummoned(Creature* pSummon)
+	{
+		if(pSummon->GetEntry() == NPC_FROST_BOMB)
+			pSummon->CastSpell(pSummon, SPELL_FROSTBOMB, false);
+	}
+
 	void UpdateAI(const uint32 uiDiff)
 	{
 		if (m_uiAttackStartTimer < uiDiff && !m_bStartAttack)
@@ -213,17 +231,26 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 				//frost beacon
 				if(m_uiFrostBeaconTimer < uiDiff)
 				{
-					//if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
-					//DoCast(pTarget, SPELL_FROSTBEACON);
-					m_uiFrostBeaconTimer = 10000; // 10s before next beacon
+					if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
+					{
+						DoCast(pTarget, SPELL_FROSTBEACON);
+						m_uiFrostTargetGUID = pTarget->GetGUID();
+					}
+					m_uiIceTombTimer		= 5000;
+					m_uiFrostBeaconTimer	= 10000;
 				}
 				else m_uiFrostBeaconTimer -=uiDiff;
 
 				//ice tomb
 				if(m_uiIceTombTimer < uiDiff)
 				{
-					//TODO: select the beaconed target to cast ice tomb on him
-					m_uiIceTombTimer = m_uiFrostBeaconTimer + 7000; // ~10s before next ice tomb (3s remaining till next beacon + 7s for ice tomb)
+					if(Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiFrostTargetGUID))
+					{
+						DoCast(pTarget, SPELL_ICETOMB_DUMMY);
+						if(Creature* pTomb = m_creature->SummonCreature(NPC_ICETOMB, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000))
+							pTomb->AddThreat(pTarget, 1000.0f);
+					}
+					m_uiIceTombTimer = 30000;
 				}
 				else m_uiIceTombTimer -=uiDiff;
 
@@ -327,12 +354,13 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 				//frost beacon
 				if(m_uiFrostBeaconTimer < uiDiff)
 				{
-					uint8 count = (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL) ? 2 : 5;
-
-					for(uint8 i=0; i<count; i++)
+					for(uint8 i = 0; i < m_uiMaxTargets; i++)
 					{
 						if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
-						DoCast(pTarget, SPELL_FROSTBEACON);
+						{
+							DoCast(pTarget, SPELL_FROSTBEACON);
+							m_lTargetsGUIDList.push_back(pTarget->GetGUID());
+						}
 					}
 					m_uiFrostBeaconTimer = 60000; // no more beacon this phase
 					m_uiIceTombTimer = 5000;
@@ -342,15 +370,30 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 				//ice tomb
 				if(m_uiIceTombTimer < uiDiff)
 				{
-					//TODO: select the beaconed targets to cast ice tomb on them
-					m_uiIceTombTimer = 60000; //no more ice tomb this phase
+					if (!m_lTargetsGUIDList.empty())
+					{
+						for(std::list<uint64>::iterator itr = m_lTargetsGUIDList.begin(); itr != m_lTargetsGUIDList.end(); ++itr)
+						{
+							if (Unit* pTarget = m_creature->GetMap()->GetCreature(*itr))
+							{
+								if (pTarget->isAlive())
+								{
+									DoCast(pTarget, SPELL_ICETOMB_DUMMY);
+									if(Creature* pTomb = m_creature->SummonCreature(NPC_ICETOMB, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000))
+										pTomb->AddThreat(pTarget, 1000.0f);
+								}
+							}
+						}
+					}
+					m_uiBombTimer		= 10000;
+					m_uiIceTombTimer	= 60000; //no more ice tomb this phase
 				}
 				else m_uiIceTombTimer -=uiDiff;
 
 				//frost bomb x4
 				if(m_uiBombTimer < uiDiff)
 				{
-					if(m_uiBombCount > 3)
+					if(m_uiBombCount > 4)
 					{
 						m_uiBombCount = 0;
 						m_uiPhase = PHASE_ONE;
@@ -368,13 +411,16 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 						// make land
 						m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
 						m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
-						return;
+						m_lTargetsGUIDList.clear();
 					}
-					//drop a bomb
-					if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-						DoCast(pTarget, SPELL_FROSTBOMB);
-					m_uiBombCount += 1;
-					m_uiBombTimer = 10000; //drop another bomb after 10 seconds
+					else
+					{
+						//drop a bomb
+						if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+							DoCast(pTarget, SPELL_FROSTBOMB_SUMMON);
+						m_uiBombCount += 1;
+						m_uiBombTimer = 10000; //drop another bomb after 10 seconds
+					}
 				}
 				else m_uiBombTimer -=uiDiff;
 				break;
@@ -395,6 +441,99 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 CreatureAI* GetAI_boss_sindragosa(Creature* pCreature)
 {
     return new boss_sindragosaAI(pCreature);
+}
+
+struct MANGOS_DLL_DECL mob_ice_tombAI : public ScriptedAI
+{
+    mob_ice_tombAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        Reset();
+    }
+
+    ScriptedInstance *m_pInstance;
+    uint64 m_uiVictimGUID;
+
+    void Reset()
+    {
+        SetCombatMovement(false);
+        m_creature->SetInCombatWithZone();
+    }
+
+    void Aggro(Unit* pWho)
+    {
+        m_creature->SetInCombatWith(pWho);
+        pWho->SetInCombatWith(m_creature);
+        DoCast(pWho, SPELL_ICETOMB_AURA);
+		pWho->CastSpell(pWho, SPELL_AXPHYXIATION, false);
+		pWho->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        m_uiVictimGUID = pWho->GetGUID();
+    }
+
+    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+    {
+        if (uiDamage > m_creature->GetHealth())
+        {
+            if (m_uiVictimGUID)
+            {
+                if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
+				{
+                    pVictim->RemoveAurasDueToSpell(SPELL_ICETOMB_AURA);
+					pVictim->RemoveAurasDueToSpell(SPELL_AXPHYXIATION);
+					pVictim->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+				}
+            }
+        }
+    }
+
+    void KilledUnit(Unit* pVictim)
+    {
+        if (pVictim) 
+		{
+            pVictim->RemoveAurasDueToSpell(SPELL_ICETOMB_AURA);
+			pVictim->RemoveAurasDueToSpell(SPELL_AXPHYXIATION);
+			pVictim->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+		}
+    }
+
+    void JustDied(Unit* pKiller)
+    {
+        if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
+		{
+            pVictim->RemoveAurasDueToSpell(SPELL_ICETOMB_AURA);
+			pVictim->RemoveAurasDueToSpell(SPELL_AXPHYXIATION);
+			pVictim->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+		}
+
+        if (pKiller)
+		{
+            pKiller->RemoveAurasDueToSpell(SPELL_ICETOMB_AURA);
+			pKiller->RemoveAurasDueToSpell(SPELL_AXPHYXIATION);
+			pKiller->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+		}
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if(m_pInstance && m_pInstance->GetData(TYPE_SINDRAGOSA) != IN_PROGRESS)
+        {
+            if (Unit* pVictim = m_creature->GetMap()->GetUnit(m_uiVictimGUID))
+			{
+                pVictim->RemoveAurasDueToSpell(SPELL_ICETOMB_AURA);
+				pVictim->RemoveAurasDueToSpell(SPELL_AXPHYXIATION);
+				pVictim->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+			}
+            m_creature->ForcedDespawn();
+        }
+
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+            return;
+    }
+};
+
+CreatureAI* GetAI_mob_ice_tomb(Creature* pCreature)
+{
+    return new mob_ice_tombAI(pCreature);
 }
 
 enum
@@ -631,5 +770,10 @@ void AddSC_boss_sindragosa()
     NewScript = new Script;
     NewScript->Name = "miniboss_rimefang";
     NewScript->GetAI = &GetAI_miniboss_rimefang;
+    NewScript->RegisterSelf();
+
+	NewScript = new Script;
+    NewScript->Name = "mob_icc_ice_tomb";
+    NewScript->GetAI = &GetAI_mob_ice_tomb;
     NewScript->RegisterSelf();
 }

@@ -43,6 +43,7 @@ enum
 	SPELL_DREAM_SPLIT				= 71196,
 	SPELL_COLUMN_OF_FROST			= 70702,
 	NPC_NIGHTMARE_CLOUD				= 38421,
+	NPC_NIGHTMARE_PORTAL			= 38430,
 };
 
 struct Locations
@@ -91,13 +92,14 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 	{
 		m_uiPhase	= PHASE_IDLE;
 		m_uiArchmageDied	= 0;
+		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_29);		// remove feign death
 		DoCast(m_creature, SPELL_CORRUPTION);
 	}
 
 	void MoveInLineOfSight(Unit* pWho)
 	{
 		// start intro speech
-		if(m_uiPhase == PHASE_IDLE)
+		/*if(m_uiPhase == PHASE_IDLE)
 		{
 			if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsIntro &&
 				pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 50) && m_creature->IsWithinLOSInMap(pWho))
@@ -105,7 +107,7 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 				m_uiPhase = PHASE_EVENT;
 				m_bIsIntro = true;
 			}
-		}
+		}*/
 	}
 
 	void JustDied(Unit* pKiller)
@@ -119,6 +121,11 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 
 	void JustRespawned()
 	{
+	}
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
 	}
 
 	void JustSummoned(Creature* pSummon)

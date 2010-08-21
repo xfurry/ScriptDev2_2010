@@ -636,6 +636,7 @@ struct MANGOS_DLL_DECL mob_nerubar_broodkeeperAI : public ScriptedAI
 		if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bStartAttack && 
 			pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDist3d(pWho->GetPositionX(), pWho->GetPositionY(), pWho->GetPositionZ(), 70) && m_creature->IsWithinLOSInMap(pWho))
 		{
+			m_creature->SetStandState(UNIT_STAND_STATE_STAND);
 			m_bStartAttack = true;
 			m_creature->SetInCombatWithZone();
 		}
@@ -3079,6 +3080,8 @@ struct MANGOS_DLL_DECL miniboss_sister_svalnaAI : public ScriptedAI
 		DoCast(m_creature, SPELL_DIVINE_SURGE);
 		m_bIsGauntlet = false;
 		m_creature->GetMotionMaster()->MoveChase(pWho);
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 0);
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
 	}
 
 	void JustReachedHome()
@@ -3087,11 +3090,14 @@ struct MANGOS_DLL_DECL miniboss_sister_svalnaAI : public ScriptedAI
 			m_pInstance->SetData(TYPE_SVALNA, NOT_STARTED);
 		DoScriptText(SAY_SVALNA_WIPE, m_creature);
 
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
+
 		// reset mobs
 		std::list<Creature*> lMobs;
 		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37132, 200.0f);
-        GetCreatureListWithEntryInGrid(lMobs, m_creature, 38125, 200.0f);
-        GetCreatureListWithEntryInGrid(lMobs, m_creature, 37133, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 38125, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37133, 200.0f);
 		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37134, 200.0f);
 		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37127, 200.0f);
 		GetCreatureListWithEntryInGrid(lMobs, m_creature, 38154, 200.0f);
@@ -3443,6 +3449,7 @@ struct MANGOS_DLL_DECL mob_crok_scourgebaneAI : public ScriptedAI
         m_uiIntro_Phase         = 0;
         m_uiSpeech_Timer        = 1000;
 		m_uiVictimGUID			= 0;
+		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PASSIVE);
 	}
 
 	void Aggro(Unit* pWho)
@@ -3457,6 +3464,38 @@ struct MANGOS_DLL_DECL mob_crok_scourgebaneAI : public ScriptedAI
 			pTemp->AI()->AttackStart(m_creature->getVictim());
 		if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_RUPERT, DEFAULT_VISIBILITY_INSTANCE))
 			pTemp->AI()->AttackStart(m_creature->getVictim());
+		ReviveTrash();
+	}
+
+	void ReviveTrash()
+	{
+		// revive trash
+		std::list<Creature*> lMobs;
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37132, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 38125, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37133, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37134, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 37127, 200.0f);
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, 38154, 200.0f);
+
+		if (!lMobs.empty())
+		{
+			for(std::list<Creature*>::iterator iter = lMobs.begin(); iter != lMobs.end(); ++iter)
+			{
+				if(*iter)
+				{
+					if ((*iter)->isAlive())
+					{
+						(*iter)->setFaction(14);
+						(*iter)->SetHealth(m_creature->GetMaxHealth());
+						(*iter)->SetStandState(UNIT_STAND_STATE_STAND);
+						(*iter)->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_6);		// don't know the meaning but must be removed
+						(*iter)->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15);	// don't know the meaning but must be removed
+						(*iter)->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);	// remove dead flag
+					}
+				}
+			}
+		}
 	}
 
 	void AdvanceAttack()
@@ -3571,6 +3610,7 @@ struct MANGOS_DLL_DECL mob_crok_scourgebaneAI : public ScriptedAI
 					{
 						DoScriptText(SAY_SVALNA_TAUNT, pSvalna);
 						pSvalna->GetMotionMaster()->MoveIdle();
+						pSvalna->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PASSIVE);
 						((miniboss_sister_svalnaAI*)pSvalna->AI())->m_bIsGauntlet = true;
 					}
 					++m_uiIntro_Phase;

@@ -78,13 +78,11 @@ REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('706
 update creature_template set scriptName = 'boss_sindragosa' where entry = 36853;
 update creature_template set scriptName = 'miniboss_spinestalker' where entry = 37534;
 update creature_template set scriptName = 'miniboss_rimefang' where entry = 37533;
+update creature_template set scriptName = 'mob_icc_ice_tomb' where entry = 36980;
 
 -- Lich King
 update creature_template set scriptName = 'boss_the_lich_king' where entry = 36597;
 update creature_template set npcflag = 1, scriptName = 'npc_tirion_final' where entry = 38995;
--- LK platform
--- delete from gameobject where id in (202438);
--- insert into gameobject VALUES (115000,202438,631,16,65535,494.463, -2520.409 ,1040.860,3.275,0,0,0,0,604800,0,1);
 
 -- Minibossed: Stinky, Precious, Svalna
 UPDATE creature_template SET ScriptName = 'miniboss_stinky' WHERE entry = 37025;
