@@ -3486,12 +3486,11 @@ struct MANGOS_DLL_DECL mob_crok_scourgebaneAI : public ScriptedAI
 				{
 					if ((*iter)->isAlive())
 					{
-						(*iter)->setFaction(14);
+						(*iter)->setFaction(2212);
 						(*iter)->SetHealth(m_creature->GetMaxHealth());
 						(*iter)->SetStandState(UNIT_STAND_STATE_STAND);
 						(*iter)->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_6);		// don't know the meaning but must be removed
 						(*iter)->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15);	// don't know the meaning but must be removed
-						(*iter)->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);	// remove dead flag
 					}
 				}
 			}
@@ -4023,6 +4022,7 @@ struct MANGOS_DLL_DECL mob_ymirjar_battlemaidenAI : public ScriptedAI
 {
     mob_ymirjar_battlemaidenAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
+		pCreature->setFaction(2212);
         Reset();
     }
 
@@ -4187,6 +4187,7 @@ struct MANGOS_DLL_DECL mob_ymirjar_warlordAI : public ScriptedAI
 {
     mob_ymirjar_warlordAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
+		pCreature->setFaction(2212);
         Reset();
     }
 
@@ -4244,6 +4245,7 @@ struct MANGOS_DLL_DECL mob_ymirjar_huntressAI : public ScriptedAI
     mob_ymirjar_huntressAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
 		Difficulty = pCreature->GetMap()->GetDifficulty();
+		pCreature->setFaction(2212);
         Reset();
     }
 

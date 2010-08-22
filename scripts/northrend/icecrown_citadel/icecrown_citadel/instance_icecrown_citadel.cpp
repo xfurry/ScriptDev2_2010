@@ -626,6 +626,8 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 				{
 					DoUseDoorOrButton(m_uiDragonExitGUID);
                     DoRespawnGameObject(m_uiDreamwalkerCacheGUID, 30* MINUTE);
+					if(Creature* pValithria = instance->GetCreature(m_uiValithriaHumanGUID))
+						pValithria->SetVisibility(VISIBILITY_ON);
 				}
                 break;
             case TYPE_SINDRAGOSA:

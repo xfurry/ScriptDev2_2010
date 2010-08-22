@@ -404,7 +404,7 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
             m_creature->SetInCombatWith(pWho);
             pWho->SetInCombatWith(m_creature);
 			if(m_creature->GetEntry() == MOB_PHANTOM_HALLUCINATION || m_creature->GetEntry() == MOB_PHANTOM_MAGE || m_creature->GetEntry() == MOB_GHOSTLY_PRIEST || m_creature->GetEntry() == MOB_TORTURED_RIFLEMAN)
-				DoStartMovement(pWho, 20.0f);
+				DoStartMovement(pWho, 10.0f);
 			else
 				DoStartMovement(pWho);
         }

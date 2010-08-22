@@ -72,7 +72,9 @@ update creature_template set scriptName = 'mob_blazing_skeleton' where entry = 3
 update creature_template set scriptName = 'mob_suppresser' where entry = 37863;
 update creature_template set scriptName = 'mob_blistering_zombie' where entry = 37934;
 update creature_template set scriptName = 'mob_gluttonous_abomination' where entry = 37886;
+update creature_template set scriptName = 'mob_nightmare_cloud' where entry = 38421;
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70602', '1', '36789');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70588', '1', '36789');
 
 -- Sindragosa
 update creature_template set scriptName = 'boss_sindragosa' where entry = 36853;
@@ -89,10 +91,10 @@ UPDATE creature_template SET ScriptName = 'miniboss_stinky' WHERE entry = 37025;
 UPDATE creature_template SET ScriptName = 'miniboss_precious' WHERE entry = 37217;
 
 -- Frostwing
-update creature_template set scriptName = 'mob_ymirjar_battlemaiden' where entry = 37132;
+update creature_template set scriptName = 'mob_ymirjar_battlemaiden', `unit_flags` = 0 where entry = 37132;
 update creature_template set scriptName = 'mob_ymirjar_deathbringer' where entry = 38125;
-update creature_template set scriptName = 'mob_ymirjar_warlord' where entry = 37133;
-update creature_template set scriptName = 'mob_ymirjar_huntress' where entry = 37134;
+update creature_template set scriptName = 'mob_ymirjar_warlord', `unit_flags` = 0 where entry = 37133;
+update creature_template set scriptName = 'mob_ymirjar_huntress', `unit_flags` = 0 where entry = 37134;
 update creature_template set scriptName = 'mob_ymirjar_frostbinder' where entry = 37127;
 update creature_template set scriptName = 'mob_frostwarden_handler' where entry = 37531;
 update creature_template set scriptName = 'mob_frostwarden_whelp' where entry = 37532;

@@ -91,14 +91,41 @@ enum
     SPELL_RISE_TELEPORT = 70858,
 
     NPC_SHAMNLING_HORROR = 37698,
+};
 
-    //PHASES
-    PHASE_ONE = 1,
-    PHASE_TWO = 2,
-    PHASE_THREE = 3,
-    PHASE_FINAL = 4,
-    PHASE_TRANSITION_1 = 5,
-    PHASE_TRANSITION_2 = 6
+enum Phases
+{
+	PHASE_IDLE		= 0,
+	PHASE_INTRO		= 1,
+	PHASE_ONE		= 2,
+	PHASE_TRANS_ONE	= 3,
+	PHASE_TWO		= 4,
+	PHASE_TRANS_TWO	= 5,
+	PHASE_THREE		= 6,
+	PHASE_FINAL		= 7,
+};
+
+enum Common
+{
+     FINAL_ARTHAS_MOVIE             = 16,
+};
+
+struct Locations
+{
+    float x, y, z;
+    uint32 id;
+};
+
+static Locations SpawnLoc[]=
+{
+    {459.93689f, -2124.638184f, 1040.860107f},    // 0 Lich King Intro
+    {503.15652f, -2124.516602f, 1040.860107f},    // 1 Lich king move end
+    {491.27118f, -2124.638184f, 1040.860107f},    // 2 Tirion 1
+    {481.69797f, -2124.638184f, 1040.860107f},    // 3 Tirion 2
+    {498.00448f, -2201.573486f, 1046.093872f},    // 4 Valkyrs?
+    {517.48291f, -2124.905762f, 1040.861328f},    // 5 Tirion?
+    {529.85302f, -2124.709961f, 1040.859985f},    // 6 Lich king final, o=3.1146
+    {520.311f, -2124.709961f, 1040.859985f},      // 7 Frostmourne
 };
 /*
 ***************************************
@@ -187,10 +214,38 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
         }
     }
 
+	void DoSendCinematic()
+    {
+        Map::PlayerList const &pList = m_creature->GetMap()->GetPlayers();
+        if (pList.isEmpty()) return;
+        for (Map::PlayerList::const_iterator i = pList.begin(); i != pList.end(); ++i)
+             if (Player* pPlayer = i->getSource())
+                 if (pPlayer && pPlayer->isAlive() && pPlayer->IsInMap(m_creature))
+                     pPlayer->SendMovieStart(FINAL_ARTHAS_MOVIE);
+    }
+
+    void DoRevivePlayers()
+    {
+        Map::PlayerList const &pList = m_creature->GetMap()->GetPlayers();
+        if (pList.isEmpty()) return;
+        for (Map::PlayerList::const_iterator i = pList.begin(); i != pList.end(); ++i)
+            {
+               if (Player* pPlayer = i->getSource())
+               {
+                   if (pPlayer && !pPlayer->isAlive() /*&& pPlayer->IsInMap(pMenethil)*/)
+                   {
+                       //pMenethil->CastSpell(pPlayer, SPELL_REVALL, true);
+                       pPlayer->ResurrectPlayer(100, false);
+                   }
+                }
+             };
+    }
+
     //boss yells, when he dies
     void JustDied(Unit* pKiller)
     {
         DoScriptText(SAY_DEATH, m_creature);
+		DoSendCinematic();
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_LICH_KING, DONE);
@@ -323,7 +378,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
             DoMeleeAttackIfReady();
             break;
 
-        case PHASE_TRANSITION_1:
+        case PHASE_TRANS_ONE:
             if (!PhaseDone)
             {
                 if (Phase_Timer <= uiDiff)
@@ -362,7 +417,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
             DoMeleeAttackIfReady(); 
             break;
 
-        case PHASE_TRANSITION_2:
+        case PHASE_TRANS_TWO:
             if (!PhaseDone)
             {
                 if (Phase_Timer <= uiDiff)

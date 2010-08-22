@@ -17,7 +17,7 @@
 /* ScriptData
 SDName: boss_valithria
 SD%Complete: 0%
-SDComment:
+SDComment: ToDo: implement nightmare portals event
 SDCategory: Icecrown Citadel
 EndScriptData */
 
@@ -35,6 +35,7 @@ enum
 	SAY_BERSERK						= -1609536,
 	SAY_VICTORY						= -1609537,
 
+	SPELL_IMMUNITY					= 72724,
 	SPELL_NIGHTMARE_PORTALS			= 72482,
 	SPELL_NIGHTMARE_VISUAL			= 71977,
 	SPELL_EMERAL_VIGOR				= 70873,
@@ -42,8 +43,18 @@ enum
 	SPELL_CORRUPTION				= 70904,
 	SPELL_DREAM_SPLIT				= 71196,
 	SPELL_COLUMN_OF_FROST			= 70702,
+	SPELL_COLUMN_OF_FROST_SUMMON	= 71747,
+	NPC_COLUMN_OF_FROST				= 37918,
+	NPC_NIGHTMARE_PREPORTAL			= 38429,
 	NPC_NIGHTMARE_CLOUD				= 38421,
 	NPC_NIGHTMARE_PORTAL			= 38430,
+
+	// Adds
+	NPC_RISEN_ARCHMAGE				= 37868,
+	NPC_SKELETON					= 36791,
+	NPC_SUPPRESOR					= 37863,
+	NPC_ZOMBIE						= 37934,
+	NPC_ABOMINATION					= 37886,
 };
 
 struct Locations
@@ -78,50 +89,111 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		Difficulty = pCreature->GetMap()->GetDifficulty();
 		SetCombatMovement(false);
+		m_bIsIntro = false;
         Reset();
     }
 
 	ScriptedInstance *m_pInstance;
 	uint32 Difficulty;
 
+	uint32 m_uiBerserkTimer;
+	uint32 m_uiPortalTimer;
+	uint8 m_uiMaxPortals;
+	uint32 m_uiSummonTimer;
+	uint32 m_uiColumnOfFrostTimer;
+	uint32 m_uiDespawnTimer;
+	uint8 m_uiLocId;
+	uint32 m_uiAddEntry;
+	bool m_bHasLessHealth;
+	bool m_bHasMoreHealth;
+	bool m_bIsBerserk;
+
     uint8 m_uiPhase;
 	uint8 m_uiArchmageDied;
 	bool m_bIsIntro;
+	std::list<uint64> m_lAddsGUIDList;
 		
 	void Reset()
 	{
+		m_uiBerserkTimer		= 600000;	// 10 min
+		m_uiPortalTimer			= 30000;
+		m_uiColumnOfFrostTimer	= 30000;
+		m_uiSummonTimer			= 10000;
+		m_uiDespawnTimer		= 5000;
+		m_uiLocId				= 1;
+		m_uiAddEntry			= 0;
+		m_bHasLessHealth		= false;
+		m_bHasMoreHealth		= false;
+		m_bIsBerserk			= false;
+		m_lAddsGUIDList.clear();
+
+		m_uiMaxPortals = (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL) ? 3 : 6;
+
+		m_creature->SetHealth(m_creature->GetMaxHealth() * 0.5);
 		m_uiPhase	= PHASE_IDLE;
 		m_uiArchmageDied	= 0;
 		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_29);		// remove feign death
-		DoCast(m_creature, SPELL_CORRUPTION);
+		
+		ReviveMages();
 	}
 
-	void MoveInLineOfSight(Unit* pWho)
+	void ReviveMages()				
 	{
-		// start intro speech
-		/*if(m_uiPhase == PHASE_IDLE)
+		// revive mages
+		std::list<Creature*> lMobs;
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, NPC_RISEN_ARCHMAGE, 100.0f);
+
+		if (!lMobs.empty())
 		{
-			if (pWho->isTargetableForAttack() && pWho->isInAccessablePlaceFor(m_creature) && !m_bIsIntro &&
-				pWho->GetTypeId() == TYPEID_PLAYER && m_creature->IsWithinDistInMap(pWho, 50) && m_creature->IsWithinLOSInMap(pWho))
+			for(std::list<Creature*>::iterator iter = lMobs.begin(); iter != lMobs.end(); ++iter)
 			{
-				m_uiPhase = PHASE_EVENT;
-				m_bIsIntro = true;
+				if(*iter)
+				{
+					if (!(*iter)->isAlive())
+						(*iter)->Respawn();
+				}
 			}
-		}*/
+		}
+	}
+
+	void DespawnAdds()
+	{
+		if (!m_lAddsGUIDList.empty())
+		{
+			for(std::list<uint64>::iterator itr = m_lAddsGUIDList.begin(); itr != m_lAddsGUIDList.end(); ++itr)
+			{
+				if (Creature* pTemp = m_creature->GetMap()->GetCreature(*itr))
+				{
+					if (pTemp->isAlive())
+						pTemp->ForcedDespawn();
+				}
+			}
+		}
 	}
 
 	void JustDied(Unit* pKiller)
 	{
-		// start event here
-	}
-
-	void JustReachedHome()
-	{
+		DoScriptText(SAY_DEATH, m_creature);
+		DespawnAdds();
+		m_creature->Respawn();
 	}
 
 	void JustRespawned()
 	{
+		if(m_pInstance)
+			m_pInstance->SetData(TYPE_DREAMWALKER, NOT_STARTED);
+		Reset();
 	}
+
+	void MoveInLineOfSight(Unit* pWho)
+    {
+        if(!m_bIsIntro && m_creature->IsWithinDistInMap(pWho, 50) && m_creature->IsWithinLOSInMap(pWho))
+		{
+			// some lich king yell here
+            m_bIsIntro = true;
+		}
+        ScriptedAI::MoveInLineOfSight(pWho);  
+    }
 
 	void AttackStart(Unit* pWho)
 	{
@@ -130,7 +202,55 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 
 	void JustSummoned(Creature* pSummon)
 	{
-		pSummon->AddThreat(m_creature, 10000.0f);
+		if(pSummon->GetEntry() != NPC_NIGHTMARE_PREPORTAL && pSummon->GetEntry() != NPC_COLUMN_OF_FROST)
+		{
+			pSummon->AddThreat(m_creature, 10000.0f);
+			pSummon->AI()->AttackStart(m_creature);
+		}
+		else if(pSummon->GetEntry() == NPC_NIGHTMARE_PREPORTAL)
+		{
+			pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+			pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+			pSummon->GetMotionMaster()->MoveIdle();
+			pSummon->AttackStop();
+		}
+		else if(pSummon->GetEntry() == NPC_COLUMN_OF_FROST)
+		{
+			pSummon->CastSpell(pSummon, SPELL_COLUMN_OF_FROST, false);
+			pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+			pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+			pSummon->GetMotionMaster()->MoveIdle();
+			pSummon->AttackStop();
+		}
+	}
+
+	void SummonAdds()
+	{
+		switch(urand(0, 7))
+		{
+		case 0:
+			m_uiAddEntry = NPC_RISEN_ARCHMAGE;
+			break;
+		case 1:
+		case 2:
+			m_uiAddEntry = NPC_SKELETON;
+			break;
+		case 3:
+		case 4:
+			m_uiAddEntry = NPC_SUPPRESOR;
+			break;
+		case 5:
+		case 6:
+			m_uiAddEntry = NPC_ZOMBIE;
+			break;
+		case 7:
+			m_uiAddEntry = NPC_ABOMINATION;
+			break;
+		}
+
+		m_uiLocId = urand(1, 4);
+		if(Creature* pTemp = m_creature->SummonCreature(m_uiAddEntry, SpawnLoc[m_uiLocId].x, SpawnLoc[m_uiLocId].y, SpawnLoc[m_uiLocId].z, 0, TEMPSUMMON_CORPSE_DESPAWN, 1000))
+			m_lAddsGUIDList.push_back(pTemp->GetGUID());
 	}
 
     void UpdateAI(const uint32 uiDiff)
@@ -138,12 +258,92 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 		switch(m_uiPhase)
 		{
 		case PHASE_IDLE:
+
+			if(m_pInstance->GetData(TYPE_SVALNA) == DONE && !m_creature->HasAura(SPELL_CORRUPTION))
+				DoCast(m_creature, SPELL_CORRUPTION);
+
 			if(m_uiArchmageDied == 4)
+			{
 				m_uiPhase = PHASE_EVENT;
+				DoScriptText(SAY_START, m_creature);
+				if(m_pInstance)
+					m_pInstance->SetData(TYPE_DREAMWALKER, IN_PROGRESS);
+			}
 			break;
 		case PHASE_EVENT:
+
+			if(m_uiBerserkTimer < uiDiff && !m_bIsBerserk)
+			{
+				DoScriptText(SAY_BERSERK, m_creature);
+				m_bIsBerserk = true;
+			}
+			else m_uiBerserkTimer -= uiDiff;
+
+			if(m_uiColumnOfFrostTimer < uiDiff)
+			{
+				float angle = (float) rand()*360/RAND_MAX + 1;
+				float homeX = m_creature->GetPositionX() + urand(30, 40)*cos(angle*(M_PI/180));
+				float homeY = m_creature->GetPositionY() + urand(30, 40)*sin(angle*(M_PI/180));
+				m_creature->SummonCreature(NPC_COLUMN_OF_FROST, homeX, homeY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 5000);
+				m_uiColumnOfFrostTimer = 40000;
+			}
+			else m_uiColumnOfFrostTimer -= uiDiff;
+
+			if(m_uiPortalTimer < uiDiff)
+			{
+				DoCast(m_creature, SPELL_NIGHTMARE_VISUAL);
+				// summon portals here
+				for(int i = 0; i < m_uiMaxPortals; i++)
+				{
+					float angle = (float) rand()*360/RAND_MAX + 1;
+					float homeX = m_creature->GetPositionX() + 35*cos(angle*(M_PI/180));
+					float homeY = m_creature->GetPositionY() + 35*sin(angle*(M_PI/180));
+					//m_creature->SummonCreature(NPC_NIGHTMARE_PREPORTAL, homeX, homeY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
+				}
+				DoScriptText(SAY_PORTALS, m_creature);
+				m_uiPortalTimer = 50000;
+			}
+			else m_uiPortalTimer -= uiDiff;
+
+			if(m_uiSummonTimer < uiDiff)
+			{
+				SummonAdds();
+				m_uiSummonTimer = m_bIsBerserk ? 500 : 5000;
+			}
+			else m_uiSummonTimer -= uiDiff;
+
+			if(m_creature->GetHealthPercent() < 25.0f && !m_bHasLessHealth)
+			{
+				DoScriptText(SAY_25HEALTH, m_creature);
+				m_bHasLessHealth = true;
+				m_bHasMoreHealth = false;
+			}
+
+			if(m_creature->GetHealthPercent() > 75.0f && !m_bHasMoreHealth)
+			{
+				DoScriptText(SAY_75HEALTH, m_creature);
+				m_bHasLessHealth = false;
+				m_bHasMoreHealth = true;
+			}
+
+			if(m_creature->GetHealthPercent() == 100)
+			{
+				m_creature->RemoveAurasDueToSpell(SPELL_CORRUPTION);
+				DoCast(m_creature, SPELL_DREAMWALKERS_RAGE);
+				DoScriptText(SAY_VICTORY, m_creature);
+				m_uiPhase = PHASE_OUTRO;
+			}
 			break;
 		case PHASE_OUTRO:
+
+			if(m_uiDespawnTimer < uiDiff)
+			{
+				m_creature->ForcedDespawn();
+				if(m_pInstance)
+					m_pInstance->SetData(TYPE_DREAMWALKER, DONE);
+			}
+			else m_uiDespawnTimer -= uiDiff;
+
 			break;
 		}
 	}
@@ -153,6 +353,53 @@ CreatureAI* GetAI_boss_valithria(Creature* pCreature)
 {
     return new boss_valithriaAI(pCreature);
 }
+
+struct MANGOS_DLL_DECL mob_nightmare_cloudAI : public ScriptedAI
+{
+    mob_nightmare_cloudAI(Creature *pCreature) : ScriptedAI(pCreature) 
+    {
+        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        pCreature->GetMotionMaster()->MoveRandom();
+        pCreature->SetDisplayId(29352);
+		SetCombatMovement(false); 
+        Reset();
+    }
+
+    ScriptedInstance* m_pInstance;
+    bool m_bPortalCasted;
+
+    void Reset()
+    {
+        m_bPortalCasted = false;
+    }
+
+	void MoveInLineOfSight(Unit* pWho) 
+	{
+		if (pWho->isAlive() && pWho->GetTypeId() == TYPEID_PLAYER && pWho->IsWithinDistInMap(m_creature, 2.0f) && !m_bPortalCasted)
+		{
+			DoCast(pWho, SPELL_EMERAL_VIGOR);
+			m_bPortalCasted = true;
+		}
+	}
+
+    void AttackStart(Unit *pWho)
+    {
+        return;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if(m_pInstance->GetData(TYPE_DREAMWALKER) != IN_PROGRESS || m_bPortalCasted)
+			m_creature->ForcedDespawn();
+    }
+
+};
+
+CreatureAI* GetAI_mob_nightmare_cloud(Creature *pCreature)
+{
+    return new mob_nightmare_cloudAI(pCreature);
+};
 
 enum
 {
@@ -185,26 +432,100 @@ struct MANGOS_DLL_DECL mob_risen_archmageAI : public ScriptedAI
     uint32 m_uiCorruptionTimer;
 	uint32 m_uiFrostvTimer;
 	uint32 m_uiManavoidTimer;
+
+	std::list<uint64> m_lAddsGUIDList;
 		
 	void Reset()
 	{
 		m_uiFrostvTimer                = urand(7000, 11000);
 		m_uiManavoidTimer              = 15000;
+		m_lAddsGUIDList.clear();
 
 		if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
 			DoCast(pTarget, SPELL_CORRUPTION_CHANNEL);
 	}
 
+	void AttackStart(Unit* pWho)
+    {
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+			DoStartMovement(pWho, 20.0f);
+        }
+    }
+
 	void Aggro(Unit* pWho)
 	{
 		m_creature->CastStop();
+		std::list<Creature*> lMobs;
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, NPC_RISEN_ARCHMAGE, 100.0f);
+
+		if (!lMobs.empty())
+		{
+			for(std::list<Creature*>::iterator iter = lMobs.begin(); iter != lMobs.end(); ++iter)
+			{
+				if(*iter)
+				{
+					if ((*iter)->isAlive())
+						(*iter)->AI()->AttackStart(pWho);
+				}
+			}
+		}
+	}
+
+	void JustReachedHome()
+	{
+		if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
+			DoCast(pTarget, SPELL_CORRUPTION_CHANNEL);
+
+		std::list<Creature*> lMobs;
+		GetCreatureListWithEntryInGrid(lMobs, m_creature, NPC_RISEN_ARCHMAGE, 100.0f);
+
+		if (!lMobs.empty())
+		{
+			for(std::list<Creature*>::iterator iter = lMobs.begin(); iter != lMobs.end(); ++iter)
+			{
+				if(*iter)
+				{
+					if ((*iter)->isAlive())
+						(*iter)->AI()->EnterEvadeMode();
+				}
+			}
+		}
 	}
 
 	void JustDied(Unit* pKiller)
 	{
-		if (Creature* pValithria = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
-			((boss_valithriaAI*)pValithria->AI())->m_uiArchmageDied += 1;
+		if(m_pInstance->GetData(TYPE_SVALNA) == DONE)
+		{
+			if (Creature* pValithria = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
+				((boss_valithriaAI*)pValithria->AI())->m_uiArchmageDied += 1;
+		}
+		DespawnAdds();
 	}
+
+	void DespawnAdds()
+	{
+		if (!m_lAddsGUIDList.empty())
+		{
+			for(std::list<uint64>::iterator itr = m_lAddsGUIDList.begin(); itr != m_lAddsGUIDList.end(); ++itr)
+			{
+				if (Creature* pTemp = m_creature->GetMap()->GetCreature(*itr))
+				{
+					if (pTemp->isAlive())
+						pTemp->ForcedDespawn();
+				}
+			}
+		}
+	}
+
+	void KilledUnit(Unit* pVictim)
+    {
+       if (Creature* pValithria = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
+            DoScriptText(SAY_SLAY, pValithria);
+    }
 
 	void JustSummoned(Creature* pSummon)
 	{
@@ -215,6 +536,7 @@ struct MANGOS_DLL_DECL mob_risen_archmageAI : public ScriptedAI
         pSummon->setFaction(14);
 		pSummon->AttackStop();
 		pSummon->GetMotionMaster()->MoveConfused();
+		m_lAddsGUIDList.push_back(pSummon->GetGUID());
 	}
 
     void UpdateAI(const uint32 uiDiff)
@@ -290,6 +612,23 @@ struct MANGOS_DLL_DECL mob_blazing_skeletonAI : public ScriptedAI
 		m_uiLayWasteTimer              = 15000;
 	}
 
+	void AttackStart(Unit* pWho)
+    {
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+			DoStartMovement(pWho, 20.0f);
+        }
+    }
+
+	void KilledUnit(Unit* pVictim)
+    {
+       if (Creature* pValithria = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
+            DoScriptText(SAY_SLAY, pValithria);
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
 		if(m_pInstance->GetData(TYPE_DREAMWALKER) != IN_PROGRESS)
@@ -363,6 +702,12 @@ struct MANGOS_DLL_DECL mob_suppresserAI : public ScriptedAI
 		m_bHasSuppresed			 = false;
 	}
 
+	void KilledUnit(Unit* pVictim)
+    {
+       if (Creature* pValithria = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
+            DoScriptText(SAY_SLAY, pValithria);
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
 		if(m_pInstance->GetData(TYPE_DREAMWALKER) != IN_PROGRESS)
@@ -375,7 +720,8 @@ struct MANGOS_DLL_DECL mob_suppresserAI : public ScriptedAI
         {
 			if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
 			    DoCast(pTarget, SPELL_SUPPRESSION);
-			m_bHasSuppresed = true;
+			m_bHasSuppresed		 = true;
+			//m_uiSuppressionTimer = 5000;
         }
         else m_uiSuppressionTimer -= uiDiff;
 
@@ -441,6 +787,12 @@ struct MANGOS_DLL_DECL mob_blistering_zombieAI : public ScriptedAI
 		}
 	}
 
+	void KilledUnit(Unit* pVictim)
+    {
+       if (Creature* pValithria = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
+            DoScriptText(SAY_SLAY, pValithria);
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
 		if(m_pInstance->GetData(TYPE_DREAMWALKER) != IN_PROGRESS)
@@ -464,8 +816,6 @@ CreatureAI* GetAI_mob_blistering_zombie(Creature* pCreature)
 
 enum
 {
-
-	
 	SPELL_GUT_SPRAY_10      = 70633,
 	SPELL_GUT_SPRAY_25      = 71283,
 	SPELL_GUT_SPRAY_10HC    = 72025,
@@ -505,6 +855,12 @@ struct MANGOS_DLL_DECL mob_gluttonous_abominationAI : public ScriptedAI
 			pTemp->CastSpell(pTemp, SPELL_ROT_WORM, false);
 	}
 
+	void KilledUnit(Unit* pVictim)
+    {
+       if (Creature* pValithria = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VALITHRIA)))
+            DoScriptText(SAY_SLAY, pValithria);
+    }
+
     void UpdateAI(const uint32 uiDiff)
     {
 		if(m_pInstance->GetData(TYPE_DREAMWALKER) != IN_PROGRESS)
@@ -543,6 +899,11 @@ void AddSC_boss_valithria()
 	newscript = new Script;
     newscript->Name = "boss_valithria";
     newscript->GetAI = &GetAI_boss_valithria;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_nightmare_cloud";
+    newscript->GetAI = &GetAI_mob_nightmare_cloud;
     newscript->RegisterSelf();
 
 	newscript = new Script;

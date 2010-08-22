@@ -499,7 +499,7 @@ INSERT INTO `script_texts` VALUES
 ('-1609530','Heroes, lend me your aid! I... I cannot hold them off much longer! You must heal my wounds!', '', '', '', '', '', '', '', '','17064','1','0','0','aggro'),
 ('-1609531','I have opened a portal into the Dream. Your salvation lies within, heroes.', '', '', '', '', '', '', '', '','17068','1','0','0','open portal'),
 ('-1609532','My strength is returning! Press on, heroes!', '', '', '', '', '', '', '', '','17070','1','0','0','75% health'),
-('-1609533','I will not last much longer!', '', '', '', '', '', '', '', '','17070','1','0','0','25% health'),
+('-1609533','I will not last much longer!', '', '', '', '', '', '', '', '','17069','1','0','0','25% health'),
 ('-1609534','Forgive me for what I do! I... cannot... stop... ONLY NIGHTMARES REMAIN!', '', '', '', '', '', '', '', '','17072','1','0','0','0% health'),
 ('-1609535','A tragic loss...', '', '', '', '', '', '', '', '','17066','1','0','0','a player dies'),
 ('-1609536','FAILURES!', '', '', '', '', '', '', '', '','17067','1','0','0','berserk'),
@@ -524,7 +524,7 @@ INSERT INTO `script_texts` VALUES
 ('-1609552','The Lich King yells: You will learn of that first hand. When my work is complete, you will beg for mercy -- and I will deny you. Your anguished cries will be testament to my unbridled power.', '', '', '', '', '', '', '', '','17350','1','0','0','lk intro03'),
 ('-1609553','Highlord Tirion Fordring yells: So be it. Champions, attack!', '', '', '', '', '', '', '', '','17391','1','0','0','lk intro04'),
 ('-1609554','The Lich King yells: I\'ll keep you alive to witness the end, Fordring. I would not want the Light\'s greatest champion to miss seeing this wretched world remade in my image.', '', '', '', '', '', '', '', '','17351','1','0','0','lk intro05'),
--- Intro End
+-- Event
 ('-1609555','Come then champions, feed me your rage!', '', '', '', '', '', '', '', '','17352','1','0','0','aggro'),
 ('-1609556','I will freeze you from within until all that remains is an icy husk!', '', '', '', '', '', '', '', '','17369','1','0','0','casting remorseless winter'),
 ('-1609557','Watch as the world around you collapses!', '', '', '', '', '', '', '', '','17370','1','0','0','arena shatters'),

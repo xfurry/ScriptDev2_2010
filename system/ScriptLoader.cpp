@@ -342,6 +342,7 @@ extern void AddSC_blood_prince_council();
 extern void AddSC_boss_blood_queen_lanathel();
 extern void AddSC_boss_valithria();
 extern void AddSC_boss_sindragosa();
+extern void AddSC_boss_the_lich_king();
 extern void AddSC_boss_anubrekhan();                        //naxxramas
 extern void AddSC_boss_four_horsemen();
 extern void AddSC_boss_faerlina();
@@ -851,6 +852,7 @@ void AddScripts()
 	AddSC_boss_blood_queen_lanathel();
 	AddSC_boss_valithria();
 	AddSC_boss_sindragosa();
+	AddSC_boss_the_lich_king();
     AddSC_boss_anubrekhan();                                //naxxramas
     AddSC_boss_four_horsemen();
     AddSC_boss_faerlina();
