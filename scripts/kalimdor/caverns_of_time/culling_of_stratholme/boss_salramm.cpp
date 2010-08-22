@@ -74,7 +74,7 @@ struct MANGOS_DLL_DECL boss_salrammAI : public ScriptedAI
         StealTimer = (urand(9000, 17000));
         SummonTimer = (urand(12000, 17000));
         if(m_pInstance)
-            m_pInstance->SetData64(NPC_SALRAMM, m_creature->GetGUID());
+            m_pInstance->SetData64(NPC_SALRAMM_THE_FLESHCRAFTER, m_creature->GetGUID());
     }
 
     void Aggro(Unit* who)
@@ -88,12 +88,12 @@ struct MANGOS_DLL_DECL boss_salrammAI : public ScriptedAI
         if(m_pInstance)
         {
             m_pInstance->SetData(TYPE_ENCOUNTER, DONE);
-            m_pInstance->DoUpdateWorldState(WORLD_STATE_COS_WAVE_COUNT, 0);
+            m_pInstance->DoUpdateWorldState(WORLD_STATE_WAVE, 0);
 
-            if(m_pInstance->GetData(TYPE_SALRAMM) == DONE)
+            if(m_pInstance->GetData(TYPE_SALRAMM_EVENT) == DONE)
                 m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
             else
-                m_pInstance->SetData(TYPE_SALRAMM, DONE);
+                m_pInstance->SetData(TYPE_SALRAMM_EVENT, DONE);
         }
     }
 
@@ -227,7 +227,7 @@ struct MANGOS_DLL_DECL npc_salramm_gnoulAI : public ScriptedAI
 
         if(m_uiBlowTimer < uiDiff)
         {           
-            if(Creature* pSalramm = m_pInstance->instance->GetCreature(m_pInstance->GetData64(NPC_SALRAMM)))
+            if(Creature* pSalramm = m_pInstance->instance->GetCreature(m_pInstance->GetData64(NPC_SALRAMM_THE_FLESHCRAFTER)))
             {
                 if(pSalramm->isDead()) return;
 

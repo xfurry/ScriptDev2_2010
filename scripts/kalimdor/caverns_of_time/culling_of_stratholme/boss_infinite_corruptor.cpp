@@ -60,43 +60,21 @@ struct MANGOS_DLL_DECL boss_infinite_corruptorAI : public ScriptedAI
         DoScriptText(SAY_AGGRO, m_creature);
         if(m_pInstance)
         {
-            m_pInstance->SetData(TYPE_BONUS, SPECIAL);
-            m_pInstance->DoUpdateWorldState(WORLD_STATE_COS_TIME_ON, 0);
+			m_pInstance->SetData(TYPE_INFINITE_CORRUPTER, DONE);
+            m_pInstance->DoUpdateWorldState(WORLD_STATE_TIME, 0);
         }
     }
 
-    void JustDied(Unit *killer)
-    {
-        DoScriptText(SAY_DEATH, m_creature);
-        if(m_pInstance)
-        {
-            if(m_pInstance->GetData(TYPE_BONUS) == DONE)
-                m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-            else
-            {
-                m_pInstance->SetData(TYPE_BONUS, DONE);
-                m_pInstance->DoCompleteAchievement(ACHIEV_CULLING_TIME);
-            }
-        }
-    }
+	void JustDied(Unit *killer)
+	{
+		DoScriptText(SAY_DEATH, m_creature);
+		if(m_pInstance)
+			m_pInstance->DoCompleteAchievement(ACHIEV_CULLING_TIME);
+	}
 
     void EnterEvadeMode()
     {
-        if(!m_pInstance) return;
-
-        m_creature->RemoveAllAuras();
-        m_creature->DeleteThreatList();
-        m_creature->CombatStop(true);
-        m_creature->LoadCreaturesAddon();
-        if(m_pInstance)
-            m_pInstance->SetData(TYPE_BONUS, IN_PROGRESS);
-
-        if(m_creature->isAlive())
-            m_creature->GetMotionMaster()->MoveTargetedHome();
-
-        m_creature->SetLootRecipient(NULL);
-
-        Reset();
+		m_creature->ForcedDespawn();
     }
 
     void UpdateAI(const uint32 diff)
@@ -110,16 +88,16 @@ struct MANGOS_DLL_DECL boss_infinite_corruptorAI : public ScriptedAI
         {
             if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_COURSE);
-
             m_uiCourseTimer = 17000;
-        }else m_uiCourseTimer -= diff;
+        }
+		else m_uiCourseTimer -= diff;
 
         if (m_uiStrikeTimer < diff)
         {
             DoCast(m_creature->getVictim(), SPELL_STRIKE);
-
             m_uiStrikeTimer = 5000;
-        }else m_uiStrikeTimer -= diff;
+        }
+		else m_uiStrikeTimer -= diff;
     }
 };
 

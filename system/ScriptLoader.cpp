@@ -222,7 +222,6 @@ extern void AddSC_boss_lieutenant_drake();
 extern void AddSC_instance_old_hillsbrad();
 extern void AddSC_old_hillsbrad();
 extern void AddSC_culling_of_stratholme();                  //Culling of Stratholme
-extern void AddSC_culling_of_stratholmeAI();
 extern void AddSC_instance_culling_of_stratholme();
 extern void AddSC_trash_culling_of_stratholme();
 extern void AddSC_boss_infinite_corruptor();
@@ -733,7 +732,6 @@ void AddScripts()
     AddSC_old_hillsbrad();
     AddSC_culling_of_stratholme();                          // Culling of Stratholme
     AddSC_instance_culling_of_stratholme();
-    AddSC_culling_of_stratholmeAI();
     AddSC_trash_culling_of_stratholme();
     AddSC_boss_infinite_corruptor();
     AddSC_boss_lord_epoch();

@@ -57,9 +57,9 @@ insert into `script_texts` (`entry`,`content_default`,`content_loc8`,`sound`,`ty
 (-1594082, 'Have I? Lord Uther, by my right of succession and the sovereignty of my crown, I hereby relieve you of your commnad and suspend your paladins from service.', 'Неужели? Лорд Утер. Властью данной мне по праву наследования, я отстраняю вас от командования, и освобождаю от службы ваших паладинов. ', 12834,0,0,1, '34587'),
 (-1594083, 'Arthas! You cant just...', 'Артас? Ты не можешь так просто...', 12837,0,0,1, '34587'),
 (-1594084, 'Its done! those of you who have the will to save this land, follow me! The rest of you... get out of my sight!', 'Это уже сделано! Те из вас кто действительно хочет спасти эту землю за мной, остальные прочь с глаз моих.', 12835,0,0,0, '34587'),
-(-1594085, 'Youve just crossed a terrible inreshold, Arthas!', 'Ты пересек опасную черту, артас.', 12844,0,0,25, '34587'),
+(-1594085, 'You\'ve just crossed a terrible inreshold, Arthas!', 'Ты пересек опасную черту, артас.', 12844,0,0,25, '34587'),
 (-1594086, 'Jaina?', 'Джайна?', 12836,0,0,1, '34587'),
-(-1594087, 'Im sorry Arthas. I cant watch you do this.', 'Прости Артас, но я не могу смотреть на это.', 12838,0,0,1, '34587'),
+(-1594087, 'I\'m sorry Arthas. I cant watch you do this.', 'Прости Артас, но я не могу смотреть на это.', 12838,0,0,1, '34587'),
 (-1594088, 'Take position here, I\'ll will lead a small force in Stratholme and start the culling. We must contain and purge the infected people for the sake all of Lordaeron.', 'Обустройте позицию тут, а я пока поведу небольшой отряд в стратхольм и начну очищение. Мы должны изолировать и уничтожить зараженных жителей ради всего Лордерона.', 14327,1,0,1, '34587'),
 #ARTHAS ENTER IN THE CITY
 (-1594089, 'Enveryone looks ready. Remember these people are all infected with the plague and will die soon. We must purge Stratholme to protect the remainder of Lorderon from the Scourge. Lets go!', 'Похоже все готовы! Помните эти люди заражены чумой и скоро умрут. Мы должны очистить Стратхольм и защитить Лордерон от Плети. Вперед.', 14293,0,0,1, '26499'),

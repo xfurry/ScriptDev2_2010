@@ -61,12 +61,9 @@ struct MANGOS_DLL_DECL boss_malganisAI : public ScriptedAI
     ScriptedInstance* m_pInstance;
     bool m_bIsHeroic;
 
-    Unit* pTarget;
     bool Sleep;
     bool Vampire;
     uint32 Phase;
-    Creature* Malganis;
-    Creature* Arthas;
 
     uint32 Swamp_Timer;
     uint32 MindBlast_Timer;
@@ -87,7 +84,7 @@ struct MANGOS_DLL_DECL boss_malganisAI : public ScriptedAI
     {
         if(m_pInstance->GetData(TYPE_PHASE) > 9) return;
 
-        if(m_pInstance->GetData(TYPE_MALGANIS) != IN_PROGRESS) return;
+        if(m_pInstance->GetData(TYPE_MALGANIS_EVENT) != IN_PROGRESS) return;
 
         if(!who || who == m_creature)
             return;
@@ -115,7 +112,6 @@ struct MANGOS_DLL_DECL boss_malganisAI : public ScriptedAI
         {
             uiDamage = 0;
             m_pInstance->SetData(TYPE_PHASE, 10);
-            //m_pInstance->SetData(TYPE_MALGANIS, DONE);
             EnterEvadeMode();
         }
     }
@@ -229,10 +225,8 @@ struct MANGOS_DLL_DECL boss_malganisAI : public ScriptedAI
         if(m_creature->GetHealthPercent() < 5.0f)
         { 
             m_pInstance->SetData(TYPE_PHASE, 10);
-            //m_pInstance->SetData(TYPE_MALGANIS, DONE);
             EnterEvadeMode();
         }
-
     }
 };
 

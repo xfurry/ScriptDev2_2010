@@ -86,10 +86,6 @@ update creature_template set scriptName = 'mob_icc_ice_tomb' where entry = 36980
 update creature_template set scriptName = 'boss_the_lich_king' where entry = 36597;
 update creature_template set npcflag = 1, scriptName = 'npc_tirion_final' where entry = 38995;
 
--- Minibossed: Stinky, Precious, Svalna
-UPDATE creature_template SET ScriptName = 'miniboss_stinky' WHERE entry = 37025;
-UPDATE creature_template SET ScriptName = 'miniboss_precious' WHERE entry = 37217;
-
 -- Frostwing
 update creature_template set scriptName = 'mob_ymirjar_battlemaiden', `unit_flags` = 0 where entry = 37132;
 update creature_template set scriptName = 'mob_ymirjar_deathbringer' where entry = 38125;
@@ -112,6 +108,8 @@ update creature_template set scriptName = 'mob_plague_scientist' where entry = 3
 update creature_template set scriptName = 'mob_blighted_abomination' where entry = 37022;
 update creature_template set scriptName = 'mob_vengefull_fleshreaper' where entry = 37038;
 update creature_template set scriptName = 'mob_decaying_colossus' where entry = 36880;
+UPDATE creature_template SET ScriptName = 'miniboss_stinky' WHERE entry = 37025;
+UPDATE creature_template SET ScriptName = 'miniboss_precious' WHERE entry = 37217;
 -- Aly & Horde trash:
 update creature_template set scriptName = 'mob_gunship_luminary' where entry in (37016, 37031);
 update creature_template set scriptName = 'mob_gunship_primalist' where entry in (37027, 37030);

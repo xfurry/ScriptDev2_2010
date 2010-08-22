@@ -72,10 +72,10 @@ struct MANGOS_DLL_DECL boss_lord_epochAI : public ScriptedAI
     {
         if(m_pInstance)
         {
-            if(m_pInstance->GetData(TYPE_EPOCH) == DONE)
+            if(m_pInstance->GetData(TYPE_EPOCH_EVENT) == DONE)
                 m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
             else
-                m_pInstance->SetData(TYPE_EPOCH, DONE);
+                m_pInstance->SetData(TYPE_EPOCH_EVENT, DONE);
         }
         DoScriptText(SAY_EPOCH_DEATH, m_creature);
     }

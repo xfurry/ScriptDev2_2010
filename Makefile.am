@@ -272,7 +272,6 @@ scripts/kalimdor/caverns_of_time/culling_of_stratholme/boss_lord_epoch.cpp \
 scripts/kalimdor/caverns_of_time/culling_of_stratholme/boss_malganis.cpp \
 scripts/kalimdor/caverns_of_time/culling_of_stratholme/boss_meathook.cpp \
 scripts/kalimdor/caverns_of_time/culling_of_stratholme/boss_salramm.cpp \
-scripts/kalimdor/caverns_of_time/culling_of_stratholme/culling_of_stratholmeAI.cpp \
 scripts/kalimdor/caverns_of_time/culling_of_stratholme/trash_culling_of_stratholme.cpp \
 scripts/kalimdor/caverns_of_time/dark_portal/boss_aeonus.cpp \
 scripts/kalimdor/caverns_of_time/dark_portal/boss_chrono_lord_deja.cpp \

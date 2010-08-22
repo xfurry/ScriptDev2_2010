@@ -75,10 +75,10 @@ struct MANGOS_DLL_DECL boss_meathookAI : public ScriptedAI
         {
             m_pInstance->SetData(TYPE_PHASE, 3);
 
-            if(m_pInstance->GetData(TYPE_MEATHOOK) == DONE)
+            if(m_pInstance->GetData(TYPE_MEATHOOK_EVENT) == DONE)
                 m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
             else
-                m_pInstance->SetData(TYPE_MEATHOOK, DONE);
+                m_pInstance->SetData(TYPE_MEATHOOK_EVENT, DONE);
         }
     }
 

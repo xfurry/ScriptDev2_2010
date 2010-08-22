@@ -75,7 +75,7 @@ INSERT INTO `creature_loot_template` VALUES
 (33995, 45442, 0, 1, 1, 1, 0, 0, 0);
 
 -- Iron council
-UPDATE creature_template SET mechanic_immune_mask=619395071, scriptname='boss_brundir' WHERE entry=32857;
+UPDATE creature_template SET mechanic_immune_mask=617299711, scriptname='boss_brundir' WHERE entry=32857;
 UPDATE creature_template SET mechanic_immune_mask=617299803, scriptname='boss_molgeim' WHERE entry=32927;
 UPDATE creature_template SET mechanic_immune_mask=617299803, scriptname='boss_steelbreaker' WHERE entry=32867;
 UPDATE creature_template SET ScriptName = "mob_rune_of_power" WHERE entry = 33705;

@@ -1,487 +1,646 @@
 /* Copyright (C) 2006 - 2010 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 /* ScriptData
-SDName: Instance Culling of Stratholme
-SD%Complete: 
-SDComment: 
-SDCategory: Caverns of Time, The Culling of Stratholme
+SDName: Instance_culling_of_stratholme
+SD%Complete: 80%
+SDComment:
+SDCategory: Culling of Stratholme
 EndScriptData */
 
 #include "precompiled.h"
 #include "culling_of_stratholme.h"
 
-struct MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
+enum
 {
-    instance_culling_of_stratholme(Map* pMap) : ScriptedInstance(pMap) {Initialize();};
+    MAX_ARTHAS_SPAWN_POS = 5,
+    SAY_CHROMIE_HURRY    = -1000000                         // TODO
+};
 
-    std::string strInstData;
+struct sSpawnLocation
+{
+    float m_fX, m_fY, m_fZ, m_fO;
+};
 
-    uint8 m_uiCratesCount;
-    uint32 m_auiEncounter[11];
-    uint32 m_uiHeroicTimer;
-    uint32 m_uiLastTimer;
-    uint32 m_uiZombieCount;
-    uint32 m_uiZombieTimer;
+static sSpawnLocation m_aArthasSpawnLocs[] =                // need tuning
+{
+    {1969.73f, 1287.12f, 145.48f, 3.14f},
+    {2049.43f, 1287.43f, 142.75f, 0.06f},
+    {2365.54f, 1194.85f, 131.98f, 0.47f},
+    {2534.46f, 1125.99f, 130.75f, 0.27f},
+    {2363.77f, 1406.31f, 128.64f, 3.23f}
+};
 
-    uint64 m_uiChromi01GUID;
-    uint64 m_uiChromi02GUID;
-    uint64 m_uiMikeGUID;
-    uint64 m_uiMalCoricsGUID;
-    uint64 m_uiGrianStoneGUID;
-    uint64 m_uiJamesGUID;
-    uint64 m_uiFrasCiabiGUID;
-    uint64 m_uiForrestenGUID;
-    uint64 m_uiRogerGUID;
-    uint64 m_uiMoriganGUID;
-    uint64 m_uiPerelliGUID;
-    uint64 m_uiJenaGUID;
-    uint64 m_uiMarthaGUID;
-    uint64 m_uiMalcolmGUID;
-    uint64 m_uiDogGUID;
-    uint64 m_uiBartlebyGUID;
-    uint64 m_uiArthasGUID;
-    uint64 m_uiUtherGUID;
-    uint64 m_uiJainaGUID;
-    uint64 m_uiSalrammGUID;
-    uint64 m_uiMalganisGUID;
-    uint64 m_uiCorruptorGUID;
+static sSpawnLocation m_aChromieSpawnLocs[] =               // need tuning, escpecially EndPositions!
+{
+    {1814.46f, 1283.97f, 142.30f, 4.32f},                   // near bridge
+    {2311.0f, 1502.4f, 127.9f, 3.96f},                      // End 
+    {1811.52f, 1285.92f, 142.37f, 4.47f},                   // Hourglass, near bridge
+    {2186.42f, 1323.77f, 129.91f, 0.0f},                    // Hourglass, End
+};
 
-    uint64 m_uiShkafGateGUID;
-    uint64 m_uiMalGate1GUID;
-    uint64 m_uiMalGate2GUID;
-    uint64 m_uiMalChestGUID;
-    uint64 m_uiExitGUID;
+instance_culling_of_stratholme::instance_culling_of_stratholme(Map* pMap) : ScriptedInstance(pMap),
+    m_uiGrainCrateCount(0),
+    m_uiRemoveCrateStateTimer(0),
+    m_uiArthasRespawnTimer(0),
 
-    void Initialize()
+    m_uiChromieInnGUID(0),
+    m_uiChromieEntranceGUID(0),
+    m_uiChromieEndGUID(0),
+    m_uiHourglassGUID(0),
+    m_uiArthasGUID(0),
+    m_uiMeathookGUID(0),
+    m_uiSalrammGUID(0),
+    m_uiEpochGUID(0),
+    m_uiCorrupterGUID(0),
+    m_uiLordaeronCrierGUID(0),
+        
+    m_uiBelfastGUID(0),
+    m_uiForrestenGUID(0),
+    m_uiSiabiGUID(0),
+    m_uiJamesGUID(0),
+    m_uiCorricksGUID(0),
+    m_uiStoutmantleGUID(0),
+
+    m_uiOwensGUID(0),
+    m_uiMoriganGUID(0),
+    m_uiAndersonGUID(0),
+    m_uiMooreGUID(0),
+    m_uiBattsonGUID(0),
+        
+	m_uiOReillyGUID(0),
+	m_uiUtherGUID(0),
+	m_uiJainaGUID(0),
+	m_uiDogGUID(0),
+	m_uiMarthaGUID(0),
+	m_uiPerelliGUID(0),
+
+	m_uiZombieCount(0),
+	m_uiZombieTimer(0),
+
+    m_uiDoorBookcaseGUID(0),
+    m_uiDarkRunedChestGUID(0),
+	m_uiMalGate1GUID(0),
+	m_uiMalGate2GUID(0),
+	m_uiExitGUID(0)
+{
+    Initialize();
+}
+
+void instance_culling_of_stratholme::Initialize()
+{
+    memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+}
+
+void instance_culling_of_stratholme::OnCreatureCreate(Creature* pCreature)
+{
+    switch(pCreature->GetEntry())
     {
-        m_uiHeroicTimer = 1500000;
-        m_uiLastTimer = 1500000;
-        m_uiZombieTimer = 1500000;
-        m_auiEncounter[0] = NOT_STARTED;    // crates
-        m_auiEncounter[1] = NOT_STARTED;
-        m_auiEncounter[2] = 0;
-        m_auiEncounter[3] = NOT_STARTED;
-        m_auiEncounter[4] = 0;
-        m_auiEncounter[5] = NOT_STARTED;    // corruptor
-        m_auiEncounter[6] = NOT_STARTED;    // malganis
-        m_auiEncounter[7] = NOT_STARTED;    // meathook
-        m_auiEncounter[8] = NOT_STARTED;    // salram
-        m_auiEncounter[9] = NOT_STARTED;    // epoch
-        m_auiEncounter[10] = NOT_STARTED;   // zombiefest
+        case NPC_CHROMIE_INN:                   m_uiChromieInnGUID = pCreature->GetGUID();      break;
+        case NPC_CHROMIE_ENTRANCE:              m_uiChromieEntranceGUID = pCreature->GetGUID(); break;
+        case NPC_CHROMIE_END:                   m_uiChromieEndGUID = pCreature->GetGUID();      break;
+        case NPC_HOURGLASS:                     m_uiHourglassGUID = pCreature->GetGUID();       break;
+        case NPC_ARTHAS:                        m_uiArthasGUID = pCreature->GetGUID();          break;
+        case NPC_MEATHOOK:                      m_uiMeathookGUID = pCreature->GetGUID();        break;
+        case NPC_SALRAMM_THE_FLESHCRAFTER:      m_uiSalrammGUID = pCreature->GetGUID();         break;
+        case NPC_CHRONO_LORD_EPOCH:             m_uiEpochGUID = pCreature->GetGUID();           break;
+        case NPC_MALGANIS:                      m_uiMalganisGUID = pCreature->GetGUID();        break;
+        case NPC_MICHAEL_BELFAST:               m_uiBelfastGUID = pCreature->GetGUID();         break;
+        case NPC_HEARTHSINGER_FORRESTEN:        m_uiForrestenGUID = pCreature->GetGUID();       break;
+        case NPC_FRAS_SIABI:                    m_uiSiabiGUID = pCreature->GetGUID();           break;
+        case NPC_FOOTMAN_JAMES:                 m_uiJamesGUID = pCreature->GetGUID();           break;
+        case NPC_MAL_CORRICKS:                  m_uiCorricksGUID = pCreature->GetGUID();        break;
+        case NPC_GRYAN_STOUTMANTLE:             m_uiStoutmantleGUID = pCreature->GetGUID();     break;
+        case NPC_ROGER_OWENS:                   m_uiOwensGUID = pCreature->GetGUID();           break;
+        case NPC_SERGEANT_MORIGAN:              m_uiMoriganGUID = pCreature->GetGUID();         break;
+        case NPC_JENA_ANDERSON:                 m_uiAndersonGUID = pCreature->GetGUID();        break;
+        case NPC_MALCOM_MOORE:                  m_uiMooreGUID = pCreature->GetGUID();           break;
+        case NPC_BARTLEBY_BATTSON:              m_uiBattsonGUID = pCreature->GetGUID();         break;
+        case NPC_PATRICIA_O_REILLY:             m_uiOReillyGUID = pCreature->GetGUID();         break;
+        case NPC_LORDAERON_CRIER:               m_uiLordaeronCrierGUID = pCreature->GetGUID();  break;
+		case NPC_INFINITE_CORRUPTER:            m_uiCorrupterGUID = pCreature->GetGUID();       break;
+		case NPC_PERELLI:
+			pCreature->SetActiveObjectState(true);
+			m_uiPerelliGUID = pCreature->GetGUID();
+			break;
+		case NPC_MARTHA:
+			pCreature->CastSpell(pCreature, 58925, false);
+			pCreature->SetActiveObjectState(true);
+			m_uiMarthaGUID = pCreature->GetGUID();
+			break;
+		case NPC_DOG:
+			pCreature->SetActiveObjectState(true);
+			m_uiDogGUID = pCreature->GetGUID();
+			break;
+		case NPC_JAINA:
+			pCreature->SetActiveObjectState(true);
+			m_uiJainaGUID = pCreature->GetGUID();
+			break;
+		case NPC_UTHER:
+			m_uiUtherGUID = pCreature->GetGUID();
+			break;
 
-        DoUpdateWorldState(WORLD_STATE_COS_CRATE_COUNT, 0);
-        DoUpdateWorldState(WORLD_STATE_COS_CRATE_ON, 0);
-        DoUpdateWorldState(WORLD_STATE_COS_WAVE_COUNT, 0);
-        DoUpdateWorldState(WORLD_STATE_COS_TIME_COUNT, 0);
-        DoUpdateWorldState(WORLD_STATE_COS_TIME_ON, 0);
+        case NPC_CRATES_BUNNY:                  m_lCratesBunnyList.push_back(pCreature);        break;
+        case NPC_LORDAERON_FOOTMAN:             m_lFootmanList.push_back(pCreature);            break;
 
-        m_uiCratesCount = 0;
-        m_uiZombieCount = 0;
-        m_uiMikeGUID = 0;
-        m_uiChromi01GUID = 0;
-        m_uiChromi02GUID = 0;
-        m_uiMalCoricsGUID = 0;
-        m_uiGrianStoneGUID = 0;
-        m_uiJamesGUID = 0;
-        m_uiFrasCiabiGUID = 0;
-        m_uiForrestenGUID = 0;
-        m_uiRogerGUID = 0;
-        m_uiMoriganGUID = 0;
-        m_uiPerelliGUID = 0;
-        m_uiJenaGUID = 0;
-        m_uiMarthaGUID = 0;
-        m_uiMalcolmGUID = 0;
-        m_uiDogGUID = 0;
-        m_uiBartlebyGUID = 0;
-        m_uiArthasGUID = 0;
-        m_uiUtherGUID = 0;
-        m_uiJainaGUID = 0;
-        m_uiShkafGateGUID = 0;
-        m_uiSalrammGUID = 0;
-        m_uiCorruptorGUID = 0;
-        m_uiMalganisGUID = 0;
-        m_uiMalGate1GUID = 0;
-        m_uiMalGate2GUID = 0;
-        m_uiMalChestGUID = 0;
-        m_uiExitGUID = 0;
+        case NPC_STRATHOLME_CITIZEN:
+        case NPC_STRATHOLME_RESIDENT:
+            if (m_auiEncounter[TYPE_ARTHAS_INTRO_EVENT] == DONE)
+                pCreature->UpdateEntry(NPC_ZOMBIE);
+            else
+                m_lResidentList.push_back(pCreature);
+            break;
+        case NPC_AGIATED_STRATHOLME_CITIZEN:    m_lAgiatedCitizenGUIDList.push_back(pCreature->GetGUID());  break;
+        case NPC_AGIATED_STRATHOLME_RESIDENT:   m_lAgiatedResidentGUIDList.push_back(pCreature->GetGUID()); break;
     }
+}
 
-    void OnPlayerEnter(Player *m_player)
-    {
-        /*if(m_auiEncounter[0] != DONE)
-        {
-            DoUpdateWorldState(WORLD_STATE_COS_CRATE_ON, 1);
-            DoUpdateWorldState(WORLD_STATE_COS_CRATE_COUNT, m_uiCratesCount);
-        }*/     
-    }
+void instance_culling_of_stratholme::OnObjectCreate(GameObject* pGo)
+{
+	switch(pGo->GetEntry())
+	{
+	case GO_DOOR_BOOKCASE:
+		m_uiDoorBookcaseGUID = pGo->GetGUID();
+		if (m_auiEncounter[TYPE_EPOCH_EVENT] == DONE)
+			pGo->SetGoState(GO_STATE_ACTIVE);
+		break;
+	case GO_DARK_RUNED_CHEST:
+		if(instance->IsRegularDifficulty())
+			m_uiDarkRunedChestGUID = pGo->GetGUID();
+		break;
+	case GO_DARK_RUNED_CHEST_H:
+		if(!instance->IsRegularDifficulty())
+			m_uiDarkRunedChestGUID = pGo->GetGUID();
+		break;
+	case GO_MALGANIS_GATE1:
+		m_uiMalGate1GUID = pGo->GetGUID();
+		break;
+	case GO_MALGANIS_GATE2:
+		m_uiMalGate2GUID = pGo->GetGUID();
+		break;
+	case GO_EXIT:
+		m_uiExitGUID = pGo->GetGUID();
+		break;
+	}
+}
 
-    void OnCreatureCreate(Creature* pCreature)
+void instance_culling_of_stratholme::ChromiWhispers()
+{
+
+	Map::PlayerList const &PlayerList = instance->GetPlayers();
+
+	if (PlayerList.isEmpty())
+		return;
+
+	for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+	{
+		if(Creature* pChromi = instance->GetCreature(m_uiChromieInnGUID))
+			pChromi->MonsterWhisper("Good work with crates! Come to me in front of Stratholme for your next assighment!", i->getSource()->GetGUID(), false);
+	}
+}
+
+Player* instance_culling_of_stratholme::GetPlayerInMap()
+{
+    Map::PlayerList const& players = instance->GetPlayers();
+
+    if (!players.isEmpty())
     {
-        switch(pCreature->GetEntry())
+        for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
         {
-        case NPC_CHROMI01: 
-            pCreature->SetActiveObjectState(true);
-            m_uiChromi01GUID = pCreature->GetGUID();
-            break;
-        case NPC_CHROMI02:
-            pCreature->SetActiveObjectState(true);
-            m_uiChromi02GUID = pCreature->GetGUID();
-            break;
-        case NPC_MIKE: 
-            m_uiMikeGUID = pCreature->GetGUID();
-            break;
-        case NPC_MAL_CORICS: 
-            pCreature->SetActiveObjectState(true);
-            m_uiMalCoricsGUID = pCreature->GetGUID();
-            break;
-        case NPC_GRIAN_STONE: 
-            pCreature->SetActiveObjectState(true);
-            pCreature->SetStandState(UNIT_STAND_STATE_SIT_MEDIUM_CHAIR);
-            m_uiGrianStoneGUID = pCreature->GetGUID();
-            break;
-        case NPC_JAMES: 
-            pCreature->SetActiveObjectState(true);
-            pCreature->SetStandState(UNIT_STAND_STATE_SIT_MEDIUM_CHAIR);
-            m_uiJamesGUID = pCreature->GetGUID();
-            break;
-        case NPC_FRAS_FRASIABI:
-            pCreature->SetActiveObjectState(true);
-            pCreature->SetStandState(UNIT_STAND_STATE_SIT_MEDIUM_CHAIR); 
-            m_uiFrasCiabiGUID = pCreature->GetGUID();
-            break;
-        case NPC_FORRESTER: 
-            pCreature->SetActiveObjectState(true);
-            pCreature->SetStandState(UNIT_STAND_STATE_SIT_MEDIUM_CHAIR);
-            m_uiForrestenGUID = pCreature->GetGUID();
-            break;
-        case NPC_ROGER:
-            m_uiRogerGUID = pCreature->GetGUID();
-            break;
-        case NPC_MORIGAN:
-            m_uiMoriganGUID = pCreature->GetGUID();
-            break;
-        case NPC_PERELLI:
-            pCreature->SetActiveObjectState(true);
-            m_uiPerelliGUID = pCreature->GetGUID();
-            break;
-        case NPC_JENA:
-            m_uiJenaGUID = pCreature->GetGUID();
-            break;
-        case NPC_MARTHA:
-            pCreature->CastSpell(pCreature, 58925, false);
-            pCreature->SetActiveObjectState(true);
-            m_uiMarthaGUID = pCreature->GetGUID();
-            break;
-        case NPC_MALCOLM:
-            m_uiMalcolmGUID = pCreature->GetGUID();
-            break;
-        case NPC_DOG:
-            pCreature->SetActiveObjectState(true);
-            m_uiDogGUID = pCreature->GetGUID();
-            break;
-        case NPC_BARTLEBY:
-            m_uiBartlebyGUID = pCreature->GetGUID();
-            break;
-        case NPC_UTHER:
-            m_uiUtherGUID = pCreature->GetGUID();
-            break;
-        case NPC_ARTHAS:
-            m_uiArthasGUID = pCreature->GetGUID();
-            break;
-        case NPC_JAINA:
-            pCreature->SetActiveObjectState(true);
-            m_uiJainaGUID = pCreature->GetGUID();
-            break;
-        case NPC_INFINITE_CORRUPTOR: 
-            pCreature->SetPhaseMask(0, true);
-            m_uiCorruptorGUID = pCreature->GetGUID();
-            break;
+            if (Player* plr = itr->getSource())
+                return plr;
         }
     }
+    return NULL;
+}
 
-    void OnObjectCreate(GameObject* pGo)
+void instance_culling_of_stratholme::UpdateQuestCredit()
+{
+    Map::PlayerList const& players = instance->GetPlayers();
+    if (!players.isEmpty())
     {
-        if (pGo->GetEntry() == GO_SHKAF_GATE)
-            m_uiShkafGateGUID = pGo->GetGUID();
-
-        if (pGo->GetEntry() == GO_MALGANIS_GATE1)
-            m_uiMalGate1GUID = pGo->GetGUID();
-
-        if (pGo->GetEntry() == GO_MALGANIS_GATE2)
-            m_uiMalGate2GUID = pGo->GetGUID();
-
-        if (pGo->GetEntry() == GO_MALGANIS_CHEST)
+        for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
         {
-            if(instance->IsRegularDifficulty())
-                m_uiMalChestGUID = pGo->GetGUID();
-            //pGo->SetUInt32Value(GAMEOBJECT_FACTION, 1375);
-        }
-
-        if (pGo->GetEntry() == GO_MALGANIS_CHEST_H)
-        {
-            if(!instance->IsRegularDifficulty())
-                m_uiMalChestGUID = pGo->GetGUID();
-        }
-
-        if (pGo->GetEntry() == GO_EXIT)
-            m_uiExitGUID = pGo->GetGUID();
-    }
-
-    void ChromiWhispers()
-    {
-
-        Map::PlayerList const &PlayerList = instance->GetPlayers();
-
-        if (PlayerList.isEmpty())
-            return;
-
-        for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-        {
-            if(Creature* pChromi = instance->GetCreature(m_uiChromi01GUID))
-                pChromi->MonsterWhisper("Good work with crates! Come to me in front of Stratholme for your next assighment!", i->getSource()->GetGUID(), false);
+            if (Player* pPlayer = itr->getSource())
+                pPlayer->KilledMonsterCredit(NPC_CRATES_BUNNY);
         }
     }
+}
 
-    void SetData(uint32 uiType, uint32 uiData)
+void instance_culling_of_stratholme::DoChromieHurrySpeech()
+{
+    if (Creature* pChromie = instance->GetCreature(m_uiChromieEntranceGUID))
     {
-        switch(uiType)
+        Map::PlayerList const& players = instance->GetPlayers();
+        if (!players.isEmpty())
         {
-        case TYPE_QUEST:
-            m_auiEncounter[0] = uiData;
-            break; 
-        case TYPE_CRATES_COUNT:
-            m_uiCratesCount = m_uiCratesCount + uiData;
-            if(m_uiCratesCount == 5)
+            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
             {
-                m_auiEncounter[0] = DONE;
-                ChromiWhispers();
+                if (Player* pPlayer = itr->getSource())
+                    DoScriptText(SAY_CHROMIE_HURRY, pChromie, pPlayer);
             }
-            DoUpdateWorldState(WORLD_STATE_COS_CRATE_COUNT, m_uiCratesCount);
-            break;
-        case TYPE_INTRO:
-            m_auiEncounter[1] = uiData;
-            break;
-        case TYPE_PHASE:
-            m_auiEncounter[2] = uiData;
-            break;
-        case TYPE_ENCOUNTER:
-            m_auiEncounter[3] = uiData;
-            break;
-        case TYPE_WING:
-            m_auiEncounter[4] = uiData;
-            break;
-        case TYPE_BONUS:
-            m_auiEncounter[5] = uiData;
-            if(uiData == IN_PROGRESS)
+        }
+    }
+}
+
+void instance_culling_of_stratholme::SetData(uint32 uiType, uint32 uiData)
+{
+    switch(uiType)
+    {
+        case TYPE_GRAIN_EVENT:
+            m_auiEncounter[TYPE_GRAIN_EVENT] = uiData;
+            if (uiData == SPECIAL)
+                DoUpdateWorldState(WORLD_STATE_CRATES, 1);
+            else if (uiData == IN_PROGRESS)
             {
-                if(Creature* Corruptor = instance->GetCreature(m_uiCorruptorGUID))
-                    Corruptor->SetPhaseMask(1, true);
-                DoUpdateWorldState(WORLD_STATE_COS_TIME_ON, 1);
-                DoUpdateWorldState(WORLD_STATE_COS_TIME_COUNT, 25);  
-            } 
-            break;
-        case TYPE_MALGANIS:
-            m_auiEncounter[6] = uiData;
-            break;
-        case TYPE_MEATHOOK:
-            m_auiEncounter[7] = uiData;
-            break;
-        case TYPE_SALRAMM:
-            m_auiEncounter[8] = uiData;
-            break;
-        case TYPE_EPOCH:
-            m_auiEncounter[9] = uiData;
-            break;
-        case TYPE_ZOMBIEFEST:
-            m_auiEncounter[10] = uiData;
-            if(uiData == IN_PROGRESS)
-                m_uiZombieTimer = 0;
-            break;
-        case TYPE_ZOMBIE_COUNT:
-            m_uiZombieCount = m_uiZombieCount + uiData;
-            break;
-        }
+                if (m_uiGrainCrateCount >= 5)
+                    return;
 
-        if (uiData == DONE)
-        {
-            OUT_SAVE_INST_DATA;
+                ++m_uiGrainCrateCount;
+                DoUpdateWorldState(WORLD_STATE_CRATES_COUNT, m_uiGrainCrateCount);
 
-            std::ostringstream saveStream;
-            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[5] << " " << m_auiEncounter[6] << " "
-                << m_auiEncounter[7] << " " << m_auiEncounter[8] << " " << m_auiEncounter[9];
-
-            strInstData = saveStream.str();
-
-            SaveToDB();
-            OUT_SAVE_INST_DATA_COMPLETE;
-        }
-    }
-
-    const char* Save()
-    {
-        return strInstData.c_str();
-    }
-
-    void Load(const char* chrIn)
-    {
-        if (!chrIn)
-        {
-            OUT_LOAD_INST_DATA_FAIL;
-            return;
-        }
-
-        OUT_LOAD_INST_DATA(chrIn);
-
-        std::istringstream loadStream(chrIn);
-        loadStream >> m_auiEncounter[0] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7]
-        >> m_auiEncounter[8] >> m_auiEncounter[9];
-
-        for(uint8 i = 0; i < 11; ++i)
-        {
-            if (m_auiEncounter[i] == IN_PROGRESS)
-                m_auiEncounter[i] = NOT_STARTED;
-        }
-
-        OUT_LOAD_INST_DATA_COMPLETE;
-    }
-
-    void SetData64(uint32 uiData, uint64 uiGuid)
-    {
-        switch(uiData)
-        {
-        case NPC_SALRAMM:
-            m_uiSalrammGUID = uiGuid;
-            break; 
-        case NPC_MALGANIS:
-            m_uiMalganisGUID = uiGuid;
-            break; 
-        }
-    }
-
-    uint32 GetData(uint32 uiType)
-    {
-        switch(uiType)
-        {
-        case TYPE_QUEST:
-            return m_auiEncounter[0];
-        case TYPE_INTRO:
-            return m_auiEncounter[1];
-        case TYPE_PHASE:
-            return m_auiEncounter[2];
-        case TYPE_ENCOUNTER:
-            return m_auiEncounter[3];
-        case TYPE_WING:
-            return m_auiEncounter[4];
-        case TYPE_BONUS:
-            return m_auiEncounter[5];
-        case TYPE_MALGANIS:
-            return m_auiEncounter[6];
-        case TYPE_MEATHOOK:
-            return m_auiEncounter[7];
-        case TYPE_SALRAMM:
-            return m_auiEncounter[8];
-        case TYPE_EPOCH:
-            return m_auiEncounter[9];
-        case TYPE_ZOMBIEFEST:
-            return m_auiEncounter[10];
-        }
-        return 0;
-    }
-
-    uint64 GetData64(uint32 uiData)
-    {
-        switch(uiData)
-        {
-        case NPC_FORRESTER: return m_uiForrestenGUID;
-        case NPC_JAMES: return m_uiJamesGUID;
-        case NPC_FRAS_FRASIABI: return m_uiFrasCiabiGUID;
-        case NPC_MAL_CORICS: return m_uiMalCoricsGUID;
-        case NPC_GRIAN_STONE: return m_uiGrianStoneGUID;
-        case NPC_ROGER: return m_uiRogerGUID;
-        case NPC_MORIGAN: return m_uiMoriganGUID;
-        case NPC_PERELLI: return m_uiPerelliGUID;
-        case NPC_JENA: return m_uiJenaGUID;
-        case NPC_MARTHA: return m_uiMarthaGUID;
-        case NPC_MALCOLM: return m_uiMalcolmGUID;
-        case NPC_DOG: return m_uiDogGUID;
-        case NPC_BARTLEBY: return m_uiBartlebyGUID;
-        case NPC_UTHER: return m_uiUtherGUID;
-        case NPC_ARTHAS: return m_uiArthasGUID;
-        case NPC_JAINA: return m_uiJainaGUID;
-        case NPC_SALRAMM: return m_uiSalrammGUID;
-        case NPC_MALGANIS: return m_uiMalganisGUID;
-        case NPC_CHROMI01: return m_uiChromi01GUID;
-        case NPC_CHROMI02: return m_uiChromi02GUID;
-        case GO_SHKAF_GATE: return m_uiShkafGateGUID;
-        case GO_MALGANIS_GATE1: return m_uiMalGate1GUID;
-        case GO_MALGANIS_GATE2: return m_uiMalGate2GUID;
-        case GO_MALGANIS_CHEST: return m_uiMalChestGUID;
-        case GO_MALGANIS_CHEST_H: return m_uiMalChestGUID;
-        case GO_EXIT: return m_uiExitGUID;
-        }
-
-        return 0;
-    }
-
-    void Update(uint32 uiDiff)
-    {
-        if(m_auiEncounter[5] == IN_PROGRESS)
-        {
-            if(m_uiHeroicTimer < uiDiff)
-            {
-                m_auiEncounter[5] = FAIL;
-                DoUpdateWorldState(WORLD_STATE_COS_TIME_ON, 0);
-                if(Creature* Corruptor = instance->GetCreature(m_uiCorruptorGUID))
+                if (m_uiGrainCrateCount == 5)
                 {
-                    Corruptor->SetPhaseMask(0, true);
-                    DoScriptText(SAY_INFINITE_DEPARTURE, Corruptor);
+                    UpdateQuestCredit();
+					ChromiWhispers();
+                    m_uiRemoveCrateStateTimer = 20000;
+                    SetData(TYPE_GRAIN_EVENT, DONE);
                 }
-
-            }else m_uiHeroicTimer -= uiDiff;
-
-            if(m_uiHeroicTimer < m_uiLastTimer - 60000)
-            {
-                m_uiLastTimer = m_uiHeroicTimer;
-                uint32 tMinutes = m_uiHeroicTimer / 60000;
-                DoUpdateWorldState(WORLD_STATE_COS_TIME_COUNT, tMinutes);
             }
-        }
-
-        if(m_auiEncounter[10] == IN_PROGRESS)
-        {
-            m_uiZombieTimer += uiDiff;
-
-            if (m_uiZombieTimer > 60000)
+            break;
+        case TYPE_ARTHAS_INTRO_EVENT:
+            m_auiEncounter[TYPE_ARTHAS_INTRO_EVENT] = uiData;
+            break;
+        case TYPE_ARTHAS_ESCORT_EVENT:
+            m_auiEncounter[TYPE_ARTHAS_ESCORT_EVENT] = uiData;
+            break;
+        case TYPE_MEATHOOK_EVENT:
+            m_auiEncounter[TYPE_MEATHOOK_EVENT] = uiData;
+            if (uiData == DONE)
+                SetData(TYPE_SALRAMM_EVENT, IN_PROGRESS);
+            break;
+        case TYPE_SALRAMM_EVENT:
+            m_auiEncounter[TYPE_SALRAMM_EVENT] = uiData;
+            if (uiData == DONE)
+                DoUpdateWorldState(WORLD_STATE_WAVE, 0);    // Remove WaveCounter
+            break;
+        case TYPE_EPOCH_EVENT:
+            m_auiEncounter[TYPE_EPOCH_EVENT] = uiData;
+            break;
+        case TYPE_MALGANIS_EVENT:
+            m_auiEncounter[TYPE_MALGANIS_EVENT] = uiData;
+            if (uiData == DONE)
             {
-                m_uiZombieCount = 0;
-                m_uiZombieTimer = 1500000;
-                m_auiEncounter[10] = FAIL;
+                DoRespawnGameObject(m_uiDarkRunedChestGUID, 30*MINUTE);
+                DoSpawnChromieIfNeeded();
             }
-            else if(m_uiZombieCount >= 100)
+            break;
+        case TYPE_INFINITE_CORRUPTER_TIME:
+            m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME] = uiData;
+            if (!uiData)
             {
-                DoCompleteAchievement(ACHIEV_ZOMBIEFEST);
-                m_uiZombieCount = 0;
-                m_auiEncounter[10] = DONE;
+                DoUpdateWorldState(WORLD_STATE_TIME, 0);    // Remove Timer
+                DoUpdateWorldState(WORLD_STATE_TIME_COUNTER, 0);
             }
-        }
+            else
+                DoUpdateWorldState(WORLD_STATE_TIME_COUNTER, uiData/(MINUTE*IN_MILLISECONDS));
+            break;
+        case TYPE_INFINITE_CORRUPTER:
+            m_auiEncounter[TYPE_INFINITE_CORRUPTER] = uiData;              
+            switch(uiData)
+            {
+                case IN_PROGRESS:
+                    if (!m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME])
+                        SetData(TYPE_INFINITE_CORRUPTER_TIME, MINUTE*25*IN_MILLISECONDS);
+                    DoUpdateWorldState(WORLD_STATE_TIME, 1);// Show Timer
+                    break;
+                case DONE:
+                    SetData(TYPE_INFINITE_CORRUPTER_TIME, 0);
+                    break;
+                case SPECIAL:
+                    DoChromieHurrySpeech();
+                    break;
+                case FAIL:
+                    SetData(TYPE_INFINITE_CORRUPTER_TIME, 0);
+                    if (Creature* pCorrupter = instance->GetCreature(m_uiCorrupterGUID))
+                        if (pCorrupter->isAlive())
+                            pCorrupter->ForcedDespawn();
+                    break;
+            }
+			break;
+		case TYPE_PHASE:
+			m_auiEncounter[TYPE_PHASE] = uiData;
+			break;
+		case TYPE_ENCOUNTER:
+			m_auiEncounter[TYPE_ENCOUNTER] = uiData;
+			break;
+		case TYPE_WING:
+			m_auiEncounter[TYPE_WING] = uiData;
+			break;
+		case TYPE_ZOMBIEFEST:
+			m_auiEncounter[TYPE_ZOMBIEFEST] = uiData;
+			if(uiData == IN_PROGRESS)
+				m_uiZombieTimer = 0;
+			break;
+		case TYPE_ZOMBIE_COUNT:
+			m_uiZombieCount = m_uiZombieCount + uiData;
+			break;
+	}
 
+    if (uiData == DONE || (uiType == TYPE_INFINITE_CORRUPTER && uiData == FAIL))
+    {
+        OUT_SAVE_INST_DATA;
+
+        std::ostringstream saveStream;
+        saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
+            << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " "
+            << m_auiEncounter[6] << " " << m_auiEncounter[7] << " " << m_auiEncounter[8];
+
+        strInstData = saveStream.str();
+
+        SaveToDB();
+        OUT_SAVE_INST_DATA_COMPLETE;
+    }
+}
+
+void instance_culling_of_stratholme::Load(const char* chrIn)
+{
+    if (!chrIn)
+    {
+        OUT_LOAD_INST_DATA_FAIL;
         return;
     }
-};
+
+    OUT_LOAD_INST_DATA(chrIn);
+
+    std::istringstream loadStream(chrIn);
+    loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3]
+        >> m_auiEncounter[4] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7] >> m_auiEncounter[8];
+
+    for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
+        if (i != TYPE_INFINITE_CORRUPTER_TIME)
+            if (m_auiEncounter[i] == IN_PROGRESS)
+                m_auiEncounter[i] = NOT_STARTED;
+
+    // If already started counting down time, the event is "in progress"
+    if (m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME])
+        m_auiEncounter[TYPE_INFINITE_CORRUPTER] = IN_PROGRESS;
+
+    OUT_LOAD_INST_DATA_COMPLETE;
+}
+
+void instance_culling_of_stratholme::OnPlayerEnter(Player* pPlayer)
+{
+    if (instance->GetPlayersCountExceptGMs() == 0)
+    {
+        DoSpawnArthasIfNeeded();
+        DoSpawnChromieIfNeeded();
+        
+        // Show World States if needed, TODO verify if needed and if this is the right way
+        if (m_auiEncounter[TYPE_GRAIN_EVENT] == IN_PROGRESS || m_auiEncounter[TYPE_GRAIN_EVENT] == SPECIAL)
+            DoUpdateWorldState(WORLD_STATE_CRATES, 1);      // Show Crates Counter
+        else
+            DoUpdateWorldState(WORLD_STATE_CRATES, 0);      // Remove Crates Counter
+        
+        if (m_auiEncounter[TYPE_MEATHOOK_EVENT] == IN_PROGRESS)
+            DoUpdateWorldState(WORLD_STATE_WAVE, 1);        // Add WaveCounter
+        else if (m_auiEncounter[TYPE_SALRAMM_EVENT] == IN_PROGRESS)
+            DoUpdateWorldState(WORLD_STATE_WAVE, 6);        // Add WaveCounter
+        else
+            DoUpdateWorldState(WORLD_STATE_WAVE, 0);        // Remove WaveCounter
+
+        if (m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME])
+            DoUpdateWorldState(WORLD_STATE_TIME, 1);        // Show Timer
+        else
+            DoUpdateWorldState(WORLD_STATE_TIME, 0);        // Remove Timer
+    }
+}
+
+uint32 instance_culling_of_stratholme::GetData(uint32 uiType)
+{
+    switch(uiType)
+    {
+        case TYPE_GRAIN_EVENT:             return m_auiEncounter[0];
+        case TYPE_ARTHAS_INTRO_EVENT:      return m_auiEncounter[1];
+        case TYPE_MEATHOOK_EVENT:          return m_auiEncounter[2];
+        case TYPE_SALRAMM_EVENT:           return m_auiEncounter[3];
+        case TYPE_EPOCH_EVENT:             return m_auiEncounter[4];
+        case TYPE_ARTHAS_ESCORT_EVENT:     return m_auiEncounter[5];
+        case TYPE_MALGANIS_EVENT:          return m_auiEncounter[6];
+        case TYPE_INFINITE_CORRUPTER_TIME: return m_auiEncounter[7];
+		case TYPE_INFINITE_CORRUPTER:      return m_auiEncounter[8];
+		case TYPE_PHASE:				   return m_auiEncounter[9];
+		case TYPE_ENCOUNTER:			   return m_auiEncounter[10];
+		case TYPE_WING:					   return m_auiEncounter[11];
+		case TYPE_ZOMBIEFEST:			   return m_auiEncounter[12];
+    }
+    return 0;
+}
+
+uint64 instance_culling_of_stratholme::GetData64(uint32 uiData)
+{
+    switch(uiData)
+    {
+        case NPC_CHROMIE_INN:              return m_uiChromieInnGUID;
+        case NPC_CHROMIE_ENTRANCE:         return m_uiChromieEntranceGUID;
+        case NPC_CHROMIE_END:              return m_uiChromieEndGUID;
+        case NPC_HOURGLASS:                return m_uiHourglassGUID;
+        case NPC_ARTHAS:                   return m_uiArthasGUID;
+        case NPC_MEATHOOK:                 return m_uiMeathookGUID;
+        case NPC_SALRAMM_THE_FLESHCRAFTER: return m_uiSalrammGUID;
+        case NPC_CHRONO_LORD_EPOCH:        return m_uiEpochGUID;
+        case NPC_MALGANIS:                 return m_uiMalganisGUID;
+        case NPC_INFINITE_CORRUPTER:       return m_uiCorrupterGUID;
+        case NPC_MICHAEL_BELFAST:          return m_uiBelfastGUID;
+        case NPC_HEARTHSINGER_FORRESTEN:   return m_uiForrestenGUID;
+        case NPC_FRAS_SIABI:               return m_uiSiabiGUID;
+        case NPC_FOOTMAN_JAMES:            return m_uiJamesGUID;
+        case NPC_MAL_CORRICKS:             return m_uiCorricksGUID;
+        case NPC_GRYAN_STOUTMANTLE:        return m_uiStoutmantleGUID;
+        case NPC_ROGER_OWENS:              return m_uiOwensGUID;
+        case NPC_SERGEANT_MORIGAN:         return m_uiMoriganGUID;
+        case NPC_JENA_ANDERSON:            return m_uiAndersonGUID;
+        case NPC_MALCOM_MOORE:             return m_uiMooreGUID;
+		case NPC_BARTLEBY_BATTSON:         return m_uiBattsonGUID;
+		case NPC_PATRICIA_O_REILLY:        return m_uiOReillyGUID;
+		case NPC_DOG:					   return m_uiDogGUID;
+		case NPC_MARTHA:				   return m_uiMarthaGUID;
+		case NPC_PERELLI:				   return m_uiPerelliGUID;
+		case NPC_JAINA:					   return m_uiJainaGUID;
+		case NPC_UTHER:					   return m_uiUtherGUID;
+		case GO_DOOR_BOOKCASE:             return m_uiDoorBookcaseGUID;
+		case GO_MALGANIS_GATE1:			   return m_uiMalGate1GUID;
+		case GO_MALGANIS_GATE2:			   return m_uiMalGate2GUID;
+		case GO_DARK_RUNED_CHEST:		   return m_uiDarkRunedChestGUID;
+		case GO_DARK_RUNED_CHEST_H:		   return m_uiDarkRunedChestGUID;
+        case GO_EXIT:					   return m_uiExitGUID;
+    }
+    return 0;
+}
+
+uint8 instance_culling_of_stratholme::GetInstancePosition()
+{
+    if (m_auiEncounter[TYPE_MALGANIS_EVENT] == DONE)
+        return POS_INSTANCE_FINISHED;
+    else if (m_auiEncounter[TYPE_ARTHAS_ESCORT_EVENT] == DONE)
+        return POS_ARTHAS_MALGANIS;
+    else if (m_auiEncounter[TYPE_EPOCH_EVENT] == DONE)
+        return POS_ARTHAS_ESCORTING;
+    else if (m_auiEncounter[TYPE_SALRAMM_EVENT] == DONE)
+        return POS_ARTHAS_TOWNHALL;
+    else if (m_auiEncounter[TYPE_MEATHOOK_EVENT] == DONE)
+        return POS_ARTHAS_WAVES;
+    else if (m_auiEncounter[TYPE_ARTHAS_INTRO_EVENT] == DONE)
+        return POS_ARTHAS_WAVES;
+    else if (m_auiEncounter[TYPE_GRAIN_EVENT] == DONE)
+        return POS_ARTHAS_INTRO;
+    else
+        return 0;
+}
+
+static bool sortFromEastToWest(Creature* pFirst, Creature* pSecond)
+{
+    return pFirst && pSecond && pFirst->GetPositionY() < pSecond->GetPositionY();
+}
+
+static bool sortFromSouthToNorth(Creature* pFirst, Creature* pSecond)
+{
+    return pFirst && pSecond && pFirst->GetPositionX() < pSecond->GetPositionX();
+}
+
+void instance_culling_of_stratholme::GetCratesBunnyOrderedList(std::list<Creature*> &lList)
+{
+    m_lCratesBunnyList.sort(sortFromEastToWest);
+    lList = m_lCratesBunnyList;
+}
+
+Creature* instance_culling_of_stratholme::GetStratIntroFootman()
+{
+    m_lFootmanList.sort(sortFromSouthToNorth);
+    if (m_lFootmanList.empty())
+        return NULL;
+    else
+        return *m_lFootmanList.begin();
+}
+
+void instance_culling_of_stratholme::GetResidentOrderedList(std::list<Creature*> &lList)
+{
+    m_lResidentList.sort(sortFromSouthToNorth);
+    lList = m_lResidentList;
+}
+
+void instance_culling_of_stratholme::ArthasJustDied()
+{
+    m_uiArthasRespawnTimer = 10000;                         // TODO, could be instant
+}
+
+void instance_culling_of_stratholme::DoSpawnArthasIfNeeded()
+{
+    Creature* pArthas = instance->GetCreature(m_uiArthasGUID);
+    if (pArthas && pArthas->isAlive())
+        return;
+
+    uint8 uiPosition = GetInstancePosition();
+    if (uiPosition && uiPosition <= MAX_ARTHAS_SPAWN_POS)
+        if (Player* pPlayer = GetPlayerInMap())
+            pPlayer->SummonCreature(NPC_ARTHAS, m_aArthasSpawnLocs[uiPosition-1].m_fX, m_aArthasSpawnLocs[uiPosition-1].m_fY, m_aArthasSpawnLocs[uiPosition-1].m_fZ, m_aArthasSpawnLocs[uiPosition-1].m_fO, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
+}
+
+// Atm here only new Chromies are spawned - despawning depends on Mangos featuring such a thing
+// The hourglass also is not yet spawned/ relocated.
+void instance_culling_of_stratholme::DoSpawnChromieIfNeeded()
+{
+    Player* pPlayer = GetPlayerInMap();
+    if (!pPlayer)
+        return;
+
+    if (GetInstancePosition() == POS_INSTANCE_FINISHED)
+    {
+        Creature* pChromie = instance->GetCreature(m_uiChromieEndGUID);
+        if (!pChromie)
+            pPlayer->SummonCreature(NPC_CHROMIE_END, m_aChromieSpawnLocs[1].m_fX, m_aChromieSpawnLocs[1].m_fY, m_aChromieSpawnLocs[1].m_fZ, m_aChromieSpawnLocs[1].m_fO, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
+    }
+    else if (GetInstancePosition() >= POS_ARTHAS_INTRO)
+    {
+        Creature* pChromie = instance->GetCreature(m_uiChromieEntranceGUID);
+        if (!pChromie)
+            pPlayer->SummonCreature(NPC_CHROMIE_ENTRANCE, m_aChromieSpawnLocs[0].m_fX, m_aChromieSpawnLocs[0].m_fY, m_aChromieSpawnLocs[0].m_fZ, m_aChromieSpawnLocs[0].m_fO, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
+    }
+}
+
+void instance_culling_of_stratholme::Update(uint32 uiDiff)
+{
+    // 25min Run - decrease time, update worldstate every ~20s
+    // as the time is always saved by m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME], there is no need for an extra timer
+    if (m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME])
+    {
+        if (m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME] <= uiDiff)
+            SetData(TYPE_INFINITE_CORRUPTER, FAIL);
+        else
+        {
+            m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME] -= uiDiff;
+            if (m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME]/IN_MILLISECONDS % 20 == 0)
+                SetData(TYPE_INFINITE_CORRUPTER_TIME, m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME]);
+        }
+
+        // This part is needed for a small "hurry up guys" note, TODO, verify 20min
+        if (m_auiEncounter[TYPE_INFINITE_CORRUPTER] == IN_PROGRESS && m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME] <= 24*MINUTE*IN_MILLISECONDS)
+            SetData(TYPE_INFINITE_CORRUPTER, SPECIAL);
+    }
+
+    // Small Timer, to remove Grain-Crate WorldState and Spawn Second Chromie
+    if (m_uiRemoveCrateStateTimer)
+        if (m_uiRemoveCrateStateTimer <= uiDiff)
+        {
+            DoUpdateWorldState(WORLD_STATE_CRATES, 0);
+            DoSpawnChromieIfNeeded();
+            m_uiRemoveCrateStateTimer = 0;
+        }
+        else
+            m_uiRemoveCrateStateTimer -= uiDiff;
+
+    // Respawn Arthas after some time
+    if (m_uiArthasRespawnTimer)
+        if (m_uiArthasRespawnTimer <= uiDiff)
+        {
+            DoSpawnArthasIfNeeded();
+            m_uiArthasRespawnTimer = 0;
+        }
+        else
+            m_uiArthasRespawnTimer -= uiDiff;
+
+	// Check for Zombiefest
+	if(m_auiEncounter[10] == IN_PROGRESS)
+	{
+		m_uiZombieTimer += uiDiff;
+
+		if (m_uiZombieTimer > 60000)
+		{
+			m_uiZombieCount = 0;
+			m_uiZombieTimer = 1500000;
+			m_auiEncounter[12] = FAIL;
+		}
+		else if(m_uiZombieCount >= 100)
+		{
+			DoCompleteAchievement(ACHIEV_ZOMBIEFEST);
+			m_uiZombieCount = 0;
+			m_auiEncounter[12] = DONE;
+		}
+	}
+}
 
 InstanceData* GetInstanceData_instance_culling_of_stratholme(Map* pMap)
 {
@@ -490,9 +649,10 @@ InstanceData* GetInstanceData_instance_culling_of_stratholme(Map* pMap)
 
 void AddSC_instance_culling_of_stratholme()
 {
-    Script *newscript;
-    newscript = new Script;
-    newscript->Name = "instance_culling_of_stratholme";
-    newscript->GetInstanceData = &GetInstanceData_instance_culling_of_stratholme;
-    newscript->RegisterSelf();
+    Script* pNewScript;
+
+    pNewScript = new Script;
+    pNewScript->Name = "instance_culling_of_stratholme";
+    pNewScript->GetInstanceData = &GetInstanceData_instance_culling_of_stratholme;
+    pNewScript->RegisterSelf();
 }

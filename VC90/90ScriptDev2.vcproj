@@ -1398,10 +1398,6 @@
 							>
 						</File>
 						<File
-							RelativePath="..\scripts\kalimdor\caverns_of_time\culling_of_stratholme\culling_of_stratholmeAI.cpp"
-							>
-						</File>
-						<File
 							RelativePath="..\scripts\kalimdor\caverns_of_time\culling_of_stratholme\instance_culling_of_stratholme.cpp"
 							>
 						</File>
