@@ -16,12 +16,10 @@
 
 /* ScriptData
 SDName: boss_halion
-SD%Complete: 20%
-SDComment: by notagain, corrected by /dev/rsa
+SD%Complete: 
+SDComment: ToDo: implement corporeallity
 SDCategory: ruby_sanctum
 EndScriptData */
-
-//TODO: Add meteor/portal mechanics, twilight cutter (2 orbs), sql spells, sql npcs, TEST
 
 #include "precompiled.h"
 #include "ruby_sanctum.h"
@@ -201,6 +199,12 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
 
     void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
     {
+		if(m_pInstance->GetData(TYPE_HALION_PHASE) == PHASE_TWILIGHT && pDoneBy->GetTypeId() == TYPEID_PLAYER)
+		{
+			uiDamage = 0;
+			return;
+		}
+
 		// split damage to the twilight version
 		if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HALION_TWILIGHT)))
 			m_creature->DealDamage(pTarget, uiDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
@@ -208,8 +212,10 @@ struct MANGOS_DLL_DECL boss_halion_realAI : public ScriptedAI
 		if(m_creature->GetHealthPercent() < 75.0f && m_pInstance->GetData(TYPE_HALION_PHASE) == PHASE_REAL)
 		{
 			m_pInstance->SetData(TYPE_HALION_PHASE, PHASE_TWILIGHT);
-			DoCast(m_creature, SPELL_TWILIGHT_PHASING);
+			//DoCast(m_creature, SPELL_TWILIGHT_PHASING);
 			// summon some portals
+			if(GameObject* pPortal = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_HALION_PORTAL_1)))
+				m_pInstance->DoRespawnGameObject(pPortal->GetGUID());
 		}
     }
 
@@ -359,6 +365,11 @@ struct MANGOS_DLL_DECL boss_halion_twilightAI : public ScriptedAI
 
 			if(Creature* pTarget = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HALION_REAL)))
 				pTarget->RemoveAurasDueToSpell(SPELL_TWILIGHT_PHASING);
+
+			if(GameObject* pPortal = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_HALION_PORTAL_2)))
+				m_pInstance->DoRespawnGameObject(pPortal->GetGUID());
+			if(GameObject* pPortal = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_HALION_PORTAL_3)))
+				m_pInstance->DoRespawnGameObject(pPortal->GetGUID());
 
 			if(m_pInstance)
 			{
@@ -510,199 +521,59 @@ CreatureAI* GetAI_mob_halion_flame(Creature* pCreature)
 /*######
 ## halion_orbs
 ######*/
-struct MANGOS_DLL_DECL mob_halion_orb_0AI : public ScriptedAI
+struct MANGOS_DLL_DECL mob_halion_orbAI : public ScriptedAI
 {
-	mob_halion_orb_0AI(Creature *pCreature) : ScriptedAI(pCreature)
+	mob_halion_orbAI(Creature *pCreature) : ScriptedAI(pCreature)
 	{
-		pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+		m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+		SetCombatMovement(false);
 		Reset();
 	}
 
-	ScriptedInstance *pInstance;
-	uint32 timer;
-	uint32 tick;
-	uint64 orb_targetGUID;
+	ScriptedInstance* m_pInstance;
+	
+	uint32 m_uiCutterTimer;
 
 	void Reset()
 	{
-		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-
-		timer = 1000;
-		tick =0;
-		orb_targetGUID = 0;
+		m_uiCutterTimer = 50000;
 	}
 
 	void AttackStart(Unit *who)
 	{
-		//ignore all attackstart commands
 		return;
 	}
 
-    /*void UpdateAI(const uint32 uiDiff)
-    {
-        //TODO
-  //MOVEMENT 16 point circle
-  if (timer < uiDiff)
-        {
-   tick ++;
-   timer = 1000;
-        }else timer -= uiDiff;
-  
-  if (tick == 25) //WARNING 5 sec pre warn on cutting
-  {
-   DoScriptText(EMOTE_WARNING, m_creature);
-  }
-   
-  if (tick == 30) // cutting using other orb as target
-  {
-  /* if (pInstance->GetData(DATA_ORB) == 1)
-   {
-
-    if (temp)
-    {
-     orb_targetGUID = temp->GetGUID();
-
-     if (Unit *orb_target = Unit::GetUnit(*m_creature, orb_targetGUID))
-     {
-      orb_target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-      orb_target->SetDisplayId(11686);
-      DoCastSpellIfCan(orb_target, SPELL_TWILIGHT_CUTTER);
-     }
-
-     if (Unit *orb_target = Unit::GetUnit(*m_creature, orb_targetGUID))
-     {
-      orb_target->CastSpell(m_creature, SPELL_TWILIGHT_CUTTER, true);
-     }
-   }
-  }
-   tick = 0;
-  }
-
-    }*/
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if(m_pInstance->GetData(TYPE_HALION_PHASE) != PHASE_REAL)
+		{
+			if(m_uiCutterTimer < uiDiff)
+			{
+				//DoScriptText(EMOTE_WARNING, m_creature);
+				// implement cutting event here
+				//DoCast(m_creature, SPELL_TWILIGHT_CUTTER):
+				m_uiCutterTimer = 30000;
+			}
+			else m_uiCutterTimer -= uiDiff;
+		}
+	}
 };
-CreatureAI* GetAI_mob_halion_orb_0(Creature* pCreature)
+CreatureAI* GetAI_mob_halion_orb(Creature* pCreature)
 {
-    return new mob_halion_orb_0AI(pCreature);
+    return new mob_halion_orbAI(pCreature);
 }
 
-struct MANGOS_DLL_DECL mob_halion_orb_1AI : public ScriptedAI
+bool GOHello_go_halion_portal(Player* pPlayer, GameObject* pGo)
 {
-    mob_halion_orb_1AI(Creature *pCreature) : ScriptedAI(pCreature)
-    {
-        pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
-        Reset();
-    }
+	if (pPlayer->HasAura(SPELL_TWILIGHT_REALM, EFFECT_INDEX_0))
+		pPlayer->RemoveAurasDueToSpell(SPELL_TWILIGHT_REALM);
+	else
+		pPlayer->CastSpell(pPlayer, SPELL_TWILIGHT_REALM, false);
 
-    ScriptedInstance *pInstance;
-
-    void Reset()
-    {
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-    }
-
-    void AttackStart(Unit *who)
-    {
-        //ignore all attackstart commands
-        return;
-    }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        //TODO
-  //MOVEMENT 16 point circle
-  //WARNING 5 sec pre warn on cutting (EMOTE)
-  //CAST cutter on other orb  with 
-  //REPEAT every 30 sec
-    }
-};
-CreatureAI* GetAI_mob_halion_orb_1(Creature* pCreature)
-{
-    return new mob_halion_orb_1AI(pCreature);
-}
-
-struct MANGOS_DLL_DECL mob_halion_portal_inAI : public ScriptedAI
-{
-    mob_halion_portal_inAI(Creature* pCreature) : ScriptedAI(pCreature) {
-    pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-    Reset();
-    }
-    ScriptedInstance* pInstance;
-
-    void Reset() 
-    {
-    }
-
-    void AttackStart(Unit *who)
-    {
-        //ignore all attackstart commands
-        return;
-    }
- 
- void UpdateAI(const uint32 uiDiff)
-    {
-  //none
-    }
-};
-
-CreatureAI* GetAI_mob_halion_portal_in(Creature* pCreature)
-{
-    return new mob_halion_portal_inAI(pCreature);
-};
-
-bool GossipHello_mob_halion_portal_in(Player *player, Creature* pCreature)
-{
-    ScriptedInstance *pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
-    if(!pInstance) 
-  return true;
-
-    player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, pCreature->GetGUID());
-    //player->CastSpell(player,SPELL_TWILIGHT_ENTER,false);
-    player->CLOSE_GOSSIP_MENU();
-    return true;
-};
-
-struct MANGOS_DLL_DECL mob_halion_portal_outAI : public ScriptedAI
-{
-    mob_halion_portal_outAI(Creature* pCreature) : ScriptedAI(pCreature) {
-    pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-    Reset();
-    }
-    ScriptedInstance* pInstance;
-
-    void Reset() 
-    {
-    }
-
-    void AttackStart(Unit *who)
-    {
-        //ignore all attackstart commands
-        return;
-    }
- 
- void UpdateAI(const uint32 uiDiff)
-    {
-  //none
-    }
-};
-
-CreatureAI* GetAI_mob_halion_portal_out(Creature* pCreature)
-{
-    return new mob_halion_portal_outAI(pCreature);
-};
-
-bool GossipHello_mob_halion_portal_out(Player *player, Creature* pCreature)
-{
-    ScriptedInstance *pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
-    if(!pInstance) 
-  return true;
-
-    player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, pCreature->GetGUID());
-    //PLEASE FIX THIS
- //player->RemoveAurasDueToSpell(SPELL_TWILIGHT_ENTER);
-    player->CLOSE_GOSSIP_MENU();
-    return true;
+	return true;
 }
 
 /*######
@@ -710,147 +581,25 @@ bool GossipHello_mob_halion_portal_out(Player *player, Creature* pCreature)
 ######*/
 struct MANGOS_DLL_DECL mob_halion_controlAI : public ScriptedAI
 {
-	mob_halion_controlAI(Creature* pCreature) : ScriptedAI(pCreature) {
-		pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+	mob_halion_controlAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		Reset();
 	}
-	ScriptedInstance* pInstance;
-	uint32 timer;
-	uint32 timer2;
-	uint32 timer3;
+	ScriptedInstance* m_pInstance;
 
 	void Reset() 
 	{
-		timer = 1000;
-		timer2 = 5000;
-		timer3 = 3000;
 	}
 
 	void AttackStart(Unit *who)
 	{
 		return;
 	}
- 
- /*void UpdateAI(const uint32 diff)
-    {
-  //corporeality get damage every second
-  if (timer < diff)
-        {
-   //CORPOREALITY
-   pInstance->SetData(DATA_P_0, (pInstance->GetData(DATA_P_0) + (pInstance->GetData(DATA_P_1))));
-   pInstance->SetData(DATA_T_0, (pInstance->GetData(DATA_T_0) + (pInstance->GetData(DATA_T_1))));
-   timer = 1000;
-        }else timer -= diff;
 
-  //average it out
-  if (timer2 < diff)
-        {
-   //CORPOREALITY
-   pInstance->SetData(DATA_P_2, (pInstance->GetData(DATA_P_0) / 5));
-   pInstance->SetData(DATA_T_2, (pInstance->GetData(DATA_T_0) / 5));
-   //clean up
-   pInstance->SetData(DATA_P_0, 0);
-   pInstance->SetData(DATA_T_0, 0);
-   pInstance->SetData(DATA_P_1, 0);
-   pInstance->SetData(DATA_T_1, 0);
-   //the buff Physical side
-   if(pInstance->GetData(DATA_P_2) > (pInstance->GetData(DATA_T_2) + 1500) && pInstance->GetData(DATA_P_2) < (pInstance->GetData(DATA_T_2) + 2999))
-   {
-    //BUFF LVL 1
-    pInstance->SetData(DATA_P_BUFF, 1);
-    pInstance->SetData(DATA_T_BUFF, 6);
-   }
-   if(pInstance->GetData(DATA_P_2) > (pInstance->GetData(DATA_T_2) + 3000) && pInstance->GetData(DATA_P_2) < (pInstance->GetData(DATA_T_2) + 4499))
-   {
-    //BUFF LVL 2
-    pInstance->SetData(DATA_P_BUFF, 2);
-    pInstance->SetData(DATA_T_BUFF, 7);
-   }
-   if(pInstance->GetData(DATA_P_2) > (pInstance->GetData(DATA_T_2) + 4500) && pInstance->GetData(DATA_P_2) < (pInstance->GetData(DATA_T_2) + 5999))
-   {
-    //BUFF LVL 3
-    pInstance->SetData(DATA_P_BUFF, 3);
-    pInstance->SetData(DATA_T_BUFF, 8);
-   }
-   if(pInstance->GetData(DATA_P_2) > (pInstance->GetData(DATA_T_2) + 6000) && pInstance->GetData(DATA_P_2) < (pInstance->GetData(DATA_T_2) + 7499))
-   {
-    //BUFF LVL 4PT_BUFF, 1);
-    pInstance->SetData(DATA_P_BUFF, 4);
-    pInstance->SetData(DATA_T_BUFF, 9);
-   }
-   if(pInstance->GetData(DATA_P_2) > (pInstance->GetData(DATA_T_2) + 7500))
-   {
-    //BUFF LVL 5
-    pInstance->SetData(DATA_P_BUFF, 5);
-    pInstance->SetData(DATA_T_BUFF, 10);
-   }
-   else
-    //NORMAL BUFF
-    pInstance->SetData(DATA_P_BUFF, 0);
-
-   //the buff twilight side
-   if(pInstance->GetData(DATA_T_2) > (pInstance->GetData(DATA_P_2) + 1500) && pInstance->GetData(DATA_T_2) < (pInstance->GetData(DATA_P_2) + 2999))
-   {
-    //BUFF LVL 1
-    pInstance->SetData(DATA_P_BUFF, 6);
-    pInstance->SetData(DATA_T_BUFF, 1);
-   }
-   if(pInstance->GetData(DATA_T_2) > (pInstance->GetData(DATA_P_2) + 3000) && pInstance->GetData(DATA_T_2) < (pInstance->GetData(DATA_P_2) + 4499))
-   {
-    //BUFF LVL 2
-    pInstance->SetData(DATA_P_BUFF, 7);
-    pInstance->SetData(DATA_T_BUFF, 2);
-   }
-   if(pInstance->GetData(DATA_T_2) > (pInstance->GetData(DATA_P_2) + 4500) && pInstance->GetData(DATA_T_2) < (pInstance->GetData(DATA_P_2) + 5999))
-   {
-    //BUFF LVL 3
-    pInstance->SetData(DATA_P_BUFF, 8);
-    pInstance->SetData(DATA_T_BUFF, 3);
-   }
-   if(pInstance->GetData(DATA_T_2) > (pInstance->GetData(DATA_P_2) + 6000) && pInstance->GetData(DATA_T_2) < (pInstance->GetData(DATA_P_2) + 7499))
-   {
-    //BUFF LVL 4
-    pInstance->SetData(DATA_P_BUFF, 9);
-    pInstance->SetData(DATA_T_BUFF, 4);
-   }
-   if(pInstance->GetData(DATA_T_2) > (pInstance->GetData(DATA_P_2) + 7500))
-   {
-    //BUFF LVL 5
-    pInstance->SetData(DATA_P_BUFF, 10);
-    pInstance->SetData(DATA_T_BUFF, 5);
-   }
-   else
-    //NORMAL BUFF
-    pInstance->SetData(DATA_T_BUFF, 0);
-   
-    
-    
-    
-   timer2 = 5000;
-        }else timer2 -= diff;
-
-  if (timer3 < diff)
-        {
-   //RND FLAME DIRECTION
-   switch (urand(0,3))
-   {
-    case 0:
-     pInstance->SetData(DATA_RND, 0);
-     break;
-    case 1:
-     pInstance->SetData(DATA_RND, 1);
-     break;
-    case 2:
-     pInstance->SetData(DATA_RND, 2);
-     break;
-    case 3:
-     pInstance->SetData(DATA_RND, 3);
-     break;
-   };
-
-   timer3 = 3000;
-        }else timer3 -= diff;
-    }*/
+	void UpdateAI(const uint32 uiDiff)
+	{
+	}
 };
 
 CreatureAI* GetAI_mob_halion_control(Creature* pCreature)
@@ -883,24 +632,14 @@ void AddSC_boss_halion()
 	newscript->RegisterSelf();
 
 	newscript = new Script;
-	newscript->Name = "mob_halion_orb_0";
-	newscript->GetAI = &GetAI_mob_halion_orb_0;
+	newscript->Name = "mob_halion_orb";
+	newscript->GetAI = &GetAI_mob_halion_orb;
 	newscript->RegisterSelf();
 
 	newscript = new Script;
-	newscript->Name = "mob_halion_orb_1";
-	newscript->GetAI = &GetAI_mob_halion_orb_1;
-	newscript->RegisterSelf();
-
-	newscript = new Script;
-	newscript->Name = "mob_halion_portal_in";
-	newscript->GetAI = &GetAI_mob_halion_portal_in;
-	newscript->RegisterSelf();
-
-	newscript = new Script;
-	newscript->Name = "mob_halion_portal_out";
-	newscript->GetAI = &GetAI_mob_halion_portal_out;
-	newscript->RegisterSelf();
+    newscript->pGOHello = &GOHello_go_halion_portal;
+    newscript->Name = "go_halion_portal";
+    newscript->RegisterSelf();
 
 	newscript = new Script;
 	newscript->Name = "mob_halion_control";

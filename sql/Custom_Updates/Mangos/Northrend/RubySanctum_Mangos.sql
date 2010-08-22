@@ -5,12 +5,17 @@ UPDATE `creature_template` SET `ScriptName`='boss_halion_real', unit_flags = 0 W
 UPDATE `creature_template` SET `ScriptName`='boss_halion_twilight', unit_flags = 0 WHERE `entry`= 40142;
 UPDATE `creature_template` SET `ScriptName`='mob_halion_control' WHERE `entry` = 40146;
 UPDATE `creature_template` SET `ScriptName`='mob_halion_meteor' WHERE `entry` = 40029;
-
+UPDATE gameobject_template SET ScriptName="go_halion_portal" WHERE entry in (202794, 202795, 202796);
+-- insert 3 portals
+DELETE FROM `gameobject` WHERE `id` in (202794, 202795, 202796);
+INSERT INTO `gameobject` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`position_x`,`position_y`,`position_z`,`orientation`,`rotation0`,`rotation1`,`rotation2`,`rotation3`,`spawntimesecs`,`animprogress`,`state`) VALUES
+(800500, 202794, 724, 15, 1, 3188.023, 538.893, 72.930, 3.108, 0, 0, 0, 0, -604800, 100, 1);
+INSERT INTO `gameobject` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`position_x`,`position_y`,`position_z`,`orientation`,`rotation0`,`rotation1`,`rotation2`,`rotation3`,`spawntimesecs`,`animprogress`,`state`) VALUES
+(800501, 202795, 724, 15, 32, 3134.239, 505.739, 72.871, 0.819, 0, 0, 0, 0, -604800, 100, 1);
+INSERT INTO `gameobject` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`position_x`,`position_y`,`position_z`,`orientation`,`rotation0`,`rotation1`,`rotation2`,`rotation3`,`spawntimesecs`,`animprogress`,`state`) VALUES
+(800502, 202796, 724, 15, 32, 3131.327, 568.850, 72.871, 5.296, 0, 0, 0, 0, -604800, 100, 1);
 -- UPDATE `creature_template` SET `ScriptName`='mob_halion_flame' WHERE `entry` IN (36673,36674);
-UPDATE `creature_template` SET `ScriptName`='mob_halion_portal_out', `AIName` ='' WHERE `entry` IN (36676);
-UPDATE `creature_template` SET `ScriptName`='mob_halion_portal_in', `AIName` ='' WHERE `entry` IN (36675);
-UPDATE `creature_template` SET `ScriptName`='mob_halion_orb_0', `AIName` ='' WHERE `entry` IN (40144);
-UPDATE `creature_template` SET `ScriptName`='mob_halion_orb_1', `AIName` ='' WHERE `entry` IN (40145);
+UPDATE `creature_template` SET `ScriptName`='mob_halion_orb', `AIName` ='' WHERE `entry` IN (40144, 40145);
 
 -- Baltharus
 UPDATE `creature_template` SET `ScriptName`='boss_baltharus' WHERE `entry` = 39751;

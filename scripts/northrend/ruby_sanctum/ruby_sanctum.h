@@ -35,9 +35,9 @@ enum
     NPC_ORB_CARRIER                = 40081,
     NPC_ORB_ROTATION_FOCUS         = 40091,
 
-    GO_HALION_PORTAL_1             = 202794, //1327 ENTRY
-    GO_HALION_PORTAL_2             = 202795, //1327 ENTRY
-    GO_HALION_PORTAL_3             = 202796, //1327 EXIT
+    GO_HALION_PORTAL_1             = 202794, //real -> twilight
+    GO_HALION_PORTAL_2             = 202795, //twilight -> real
+    GO_HALION_PORTAL_3             = 202796, //twilight -> real
 
     GO_FIRE_FIELD                  = 203005,	// xerestrasza door
     GO_FLAME_WALLS                 = 203006,	// zarithrian ring

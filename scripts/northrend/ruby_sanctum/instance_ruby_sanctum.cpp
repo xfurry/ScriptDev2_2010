@@ -46,6 +46,10 @@ struct MANGOS_DLL_DECL instance_ruby_sanctum : public ScriptedInstance
 	uint64 m_uiFlameWallsGUID;
 	uint64 m_uiFlameRingGUID;
 
+	uint64 m_uiPortal1GUID;
+	uint64 m_uiPortal2GUID;
+	uint64 m_uiPortal3GUID;
+
 	void Initialize()
 	{
 		memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
@@ -61,6 +65,10 @@ struct MANGOS_DLL_DECL instance_ruby_sanctum : public ScriptedInstance
 		m_uiFireFieldGUID	= 0;
 		m_uiFlameWallsGUID	= 0;
 		m_uiFlameRingGUID	= 0;
+
+		m_uiPortal1GUID		= 0;
+		m_uiPortal2GUID		= 0;
+		m_uiPortal3GUID		= 0;
 	}
 
 	bool IsEncounterInProgress() const
@@ -116,6 +124,15 @@ struct MANGOS_DLL_DECL instance_ruby_sanctum : public ScriptedInstance
 			m_uiFireFieldGUID = pGo->GetGUID(); 
 			if(m_auiEncounter[1] == DONE)
 				pGo->SetGoState(GO_STATE_ACTIVE);
+			break;
+		case GO_HALION_PORTAL_1:
+			m_uiPortal1GUID = pGo->GetGUID();
+			break;
+		case GO_HALION_PORTAL_2:
+			m_uiPortal2GUID = pGo->GetGUID();
+			break;
+		case GO_HALION_PORTAL_3:
+			m_uiPortal3GUID = pGo->GetGUID();
 			break;
 		}
 	}
@@ -224,6 +241,12 @@ struct MANGOS_DLL_DECL instance_ruby_sanctum : public ScriptedInstance
 			return m_uiHalionTwilightGUID;
 		case NPC_XERESTRASZA:
 			return m_uiXerestraszaGUID;
+		case GO_HALION_PORTAL_1:
+			return m_uiPortal1GUID;
+		case GO_HALION_PORTAL_2:
+			return m_uiPortal2GUID;
+		case GO_HALION_PORTAL_3:
+			return m_uiPortal3GUID;
 		}
 		return 0;
 	}
