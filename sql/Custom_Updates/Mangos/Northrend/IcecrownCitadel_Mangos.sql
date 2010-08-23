@@ -83,8 +83,18 @@ update creature_template set scriptName = 'miniboss_rimefang' where entry = 3753
 update creature_template set scriptName = 'mob_icc_ice_tomb' where entry = 36980;
 
 -- Lich King
-update creature_template set scriptName = 'boss_the_lich_king' where entry = 36597;
+update creature_template set `unit_flags` = 256, `type_flags` = 104, scriptName = 'boss_the_lich_king' where entry = 36597;
+-- original: 268435564
 update creature_template set npcflag = 1, scriptName = 'npc_tirion_final' where entry = 38995;
+-- adds
+update creature_template set scriptName = 'mob_shambling_horror' where entry = 37698;
+update creature_template set scriptName = 'mob_valkyr_shadowguard' where entry = 36609;
+update creature_template set scriptName = 'mob_icc_vile_spirit' where entry = 37799;
+update creature_template set scriptName = 'mob_icc_raging_spirit' where entry = 36701;
+update creature_template set scriptName = 'mob_icc_ice_sphere' where entry = 36633;
+update creature_template set scriptName = 'npc_terenas_menethil' where entry = 36823;
+update creature_template set scriptName = 'mob_spirit_warden' where entry = 36824;
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('71614', '1', '38995');
 
 -- Frostwing
 update creature_template set scriptName = 'mob_ymirjar_battlemaiden', `unit_flags` = 0 where entry = 37132;
@@ -145,18 +155,38 @@ UPDATE instance_template SET scriptName ='instance_icecrown_citadel' WHERE map =
 
 -- Instance teleporters: light's hammer, oratory of dammed, rampart of skulls, deathbringers rise, sindragosa, central spire, upper spire;
 UPDATE gameobject_template SET ScriptName="icecrown_citadel_teleporter", `flags` = 32 WHERE entry in (202242, 202243, 202244, 202245, 202246, 202223, 202235);
+
 -- In oder to proper activate this, delete id 5718 from areatrigger_teleport
 delete from areatrigger_teleport where id = 5718;
 UPDATE `gameobject_template` SET `flags` = 32 WHERE `entry` = 202223; -- original flag = 48
+
+-- Delete the buff from DB: will be added later
+delete from spell_area where spell in (73822, 73828);
+#insert into spell_area values
+#(73822,4812,0,0,0,0,690,2,1), 	-- horde
+#(73828,4812,0,0,0,0,1101,2,1);	-- aly
+-- buff info:
+-- aly - horde - percent
+-- 73762 - 73816 - 5%
+-- 73824 - 73818 - 10%
+-- 73825 - 73819 - 15%
+-- 73826 - 73820 - 20%
+-- 73827 - 73821 - 25%
+-- 73828 - 73822 - 30%
+
+-- doors
 update gameobject_template set faction = 114 where entry in (201857, 201563, 201370, 201371, 201372, 201618, 201617, 201614, 201613,
 201182, 202181, 202183, 201377, 201378);
 update gameobject_template set faction = 0 where entry in (201920, 201919);
+
+-- loot
 -- deathbringers & dreamwalkers loot
 UPDATE gameobject_template SET faction = 0, flags = 0 WHERE entry in (202238, 202239, 202240, 202241, 201959, 202338, 202339, 202340);
 update gameobject set spawntimesecs = -604800 where id in (202238, 202239, 202240, 202241, 201959, 202338, 202339, 202340);
 -- gunship battle loot -> not on the map yet
 UPDATE gameobject_template SET faction = 0, flags = 0 WHERE entry in (201872, 201873, 201874, 201875, 202177, 202178, 202179, 202180);
 #update gameobject set spawntimesecs = -604800 where id in (201872, 201873, 201874, 201875, 202177, 202178, 202179, 202180);
+
 -- game tele
 delete from game_tele where id = 1502;
 insert into game_tele values (1502, 5867.100, 2107.9404, 635.998, 3.582, 571, 'IcecrownCitadel');

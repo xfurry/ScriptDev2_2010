@@ -125,7 +125,8 @@ bool GoSelect_icecrown_citadel_teleporter( Player *pPlayer, GameObject *pGO, uin
         pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_SINDRAGOSAS_LAIR, false);
         pPlayer->CLOSE_GOSSIP_MENU(); break;
     case FROZEN_THRONE:
-        pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_FROZEN_THRONE, false);
+        //pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_FROZEN_THRONE, false);
+		pPlayer->TeleportTo(631, 529.3f, -2124.7f, 1050.0f, 3.14159f);
         pPlayer->CLOSE_GOSSIP_MENU(); break;
     }
     return true;

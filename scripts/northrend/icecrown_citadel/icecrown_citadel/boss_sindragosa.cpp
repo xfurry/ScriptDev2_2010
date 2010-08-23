@@ -273,8 +273,10 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 						DoScriptText(SAY_TAKEOFF, m_creature);
 						SetCombatMovement(false);
 						m_uiPhase = PHASE_AIR;
+						m_creature->GetMotionMaster()->MovePoint(0, posSindragosa[0], posSindragosa[1], posSindragosa[2]);
 						m_creature->GetMap()->CreatureRelocation(m_creature, posSindragosa[0], posSindragosa[1], posSindragosa[2], posSindragosa[3]);
 						m_creature->SendMonsterMove(posSindragosa[0], posSindragosa[1], posSindragosa[2], SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+						m_creature->GetMotionMaster()->MoveIdle();
 						// make fly
 						m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
 						m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);

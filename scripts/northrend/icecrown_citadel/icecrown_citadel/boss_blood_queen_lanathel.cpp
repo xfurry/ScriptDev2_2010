@@ -165,6 +165,7 @@ struct MANGOS_DLL_DECL boss_blood_queen_lanathelAI : public ScriptedAI
 				m_creature->GetMotionMaster()->MovePoint(0, 4595.89f, 2769.25f, 420.02f);
 				m_creature->GetMap()->CreatureRelocation(m_creature, 4595.89f, 2769.25f, 420.02f, 3.20f);
                 m_creature->SendMonsterMove(4595.89f, 2769.25f, 420.02f, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+				m_creature->GetMotionMaster()->MoveIdle();
 				++m_uiBloodBoltPhase;
 				m_uiBloodboltWhirlTimer = 3000;
 				break;

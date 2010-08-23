@@ -853,7 +853,8 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 
 		if(m_uiKineticBombTimer < uiDiff)
 		{
-			DoCast(m_creature, SPELL_KINETIC_BOMB);	// summons the target
+			// FIX THIS!!! it makes crash
+			//DoCast(m_creature, SPELL_KINETIC_BOMB);	// summons the target
 			m_uiKineticBombTimer = 27000;
 		}
 		else m_uiKineticBombTimer -= uiDiff;
