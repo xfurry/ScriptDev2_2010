@@ -47,7 +47,7 @@ enum teleport
     SPELL_TELEPORT_DEATHBRINGER     = 70858,
     SPELL_TELEPORT_UPPER_SPIRE      = 70859,
     SPELL_TELEPORT_SINDRAGOSAS_LAIR = 70861,
-    SPELL_TELEPORT_FROZEN_THRONE    = 70860,
+    SPELL_TELEPORT_FROZEN_THRONE    = 70860,	// tele pos: map: 631; x: 529.3; y: -2124.7; z = 1050; o: 3.14159
 };
 
 bool GoHello_icecrown_citadel_teleporter( Player *pPlayer, GameObject *pGO )

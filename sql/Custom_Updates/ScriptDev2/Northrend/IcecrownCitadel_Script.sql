@@ -519,11 +519,11 @@ INSERT INTO `script_texts` VALUES
 
 -- Lich King
 -- Intro
-('-1609550','The Lich King yells: So...the Light\'s vaunted justice has finally arrived. Shall I lay down Frostmourne and throw myself at your mercy, Fordring?', '', '', '', '', '', '', '', '','17349','1','0','0','lk intro01'),
-('-1609551','Highlord Tirion Fordring yells: We will grant you a swift death, Arthas. More than can be said for the thousands you\'ve tortured and slain.', '', '', '', '', '', '', '', '','17390','1','0','0','lk intro02'),
-('-1609552','The Lich King yells: You will learn of that first hand. When my work is complete, you will beg for mercy -- and I will deny you. Your anguished cries will be testament to my unbridled power.', '', '', '', '', '', '', '', '','17350','1','0','0','lk intro03'),
-('-1609553','Highlord Tirion Fordring yells: So be it. Champions, attack!', '', '', '', '', '', '', '', '','17391','1','0','0','lk intro04'),
-('-1609554','The Lich King yells: I\'ll keep you alive to witness the end, Fordring. I would not want the Light\'s greatest champion to miss seeing this wretched world remade in my image.', '', '', '', '', '', '', '', '','17351','1','0','0','lk intro05'),
+('-1609550','So...the Light\'s vaunted justice has finally arrived. Shall I lay down Frostmourne and throw myself at your mercy, Fordring?', '', '', '', '', '', '', '', '','17349','1','0','0','lk intro01'),
+('-1609551','We will grant you a swift death, Arthas. More than can be said for the thousands you\'ve tortured and slain.', '', '', '', '', '', '', '', '','17390','1','0','0','lk intro02'),
+('-1609552','You will learn of that first hand. When my work is complete, you will beg for mercy -- and I will deny you. Your anguished cries will be testament to my unbridled power.', '', '', '', '', '', '', '', '','17350','1','0','0','lk intro03'),
+('-1609553','So be it. Champions, attack!', '', '', '', '', '', '', '', '','17391','1','0','0','lk intro04'),
+('-1609554','I\'ll keep you alive to witness the end, Fordring. I would not want the Light\'s greatest champion to miss seeing this wretched world remade in my image.', '', '', '', '', '', '', '', '','17351','1','0','0','lk intro05'),
 -- Event
 ('-1609555','Come then champions, feed me your rage!', '', '', '', '', '', '', '', '','17352','1','0','0','aggro'),
 ('-1609556','I will freeze you from within until all that remains is an icy husk!', '', '', '', '', '', '', '', '','17369','1','0','0','casting remorseless winter'),
@@ -531,9 +531,9 @@ INSERT INTO `script_texts` VALUES
 ('-1609558','Val\'kyr, your master calls!', '', '', '', '', '', '', '', '','17373','1','0','0','summon valkyr'),
 ('-1609559','Frostmourne hungers...', '', '', '', '', '', '', '', '','17373','1','0','0','casting harvest soul'),
 -- Inside Frostmourne :     
-('-1609560','Terenas Menethil II yells: You have come to bring Arthas to justice? To see the Lich King destroyed?', '', '', '', '', '', '', '', '','17394','1','0','0','in FM 01'),
-('-1609561','Terenas Menethil II yells: First, you must escape Frostmourne\'s hold, or be damned as I am; trapped within this cursed blade for all eternity.', '', '', '', '', '', '', '', '','17395','1','0','0','in FM 02'),
-('-1609562','Terenas Menethil II yells: Aid me in destroying these tortured souls! Together we will loosen Frostmourne\'s hold and weaken the Lich King from within!', '', '', '', '', '', '', '', '','17396','1','0','0','in FM 03 this is not heard on 10/25 man hc '),
+('-1609560','You have come to bring Arthas to justice? To see the Lich King destroyed?', '', '', '', '', '', '', '', '','17394','1','0','0','in FM 01'),
+('-1609561','First, you must escape Frostmourne\'s hold, or be damned as I am; trapped within this cursed blade for all eternity.', '', '', '', '', '', '', '', '','17395','1','0','0','in FM 02'),
+('-1609562','Aid me in destroying these tortured souls! Together we will loosen Frostmourne\'s hold and weaken the Lich King from within!', '', '', '', '', '', '', '', '','17396','1','0','0','in FM 03 this is not heard on 10/25 man hc '),
 ('-1609563','Argh... Frostmourne, obey me!', '', '', '', '', '', '', '', '','17367','1','0','0','player escapes FM'),
 ('-1609564','Frostmourne feeds on the soul of your fallen ally!', '', '', '', '', '', '', '', '','17368','1','0','0','player dies in FM'),
 ('-1609565','Apocalypse!', '', '', '', '', '', '', '', '','17371','1','0','0','special01'),
@@ -543,16 +543,16 @@ INSERT INTO `script_texts` VALUES
 ('-1609569','The end has come!', '', '', '', '', '', '', '', '','17364','1','0','0','slay02'),
 ('-1609570','Face now your tragic end!', '', '', '', '', '', '', '', '','17365','1','0','0','enrage'),
 -- Outro
-('-1609571','The Lich King yells: No question remains unanswered. No doubts linger. You are Azeroth\'s greatest champions! You overcame every challenge I laid before you. My mightiest servants have fallen before your relentless onslaught, your unbridled fury...', '', '', '', '', '', '', '', '','17353','1','0','0','outro01'),
+('-1609571','No question remains unanswered. No doubts linger. You are Azeroth\'s greatest champions! You overcame every challenge I laid before you. My mightiest servants have fallen before your relentless onslaught, your unbridled fury...', '', '', '', '', '', '', '', '','17353','1','0','0','outro01'),
 ('-1609572','Is it truly righteousness that drives you? I wonder', '', '', '', '', '', '', '', '','17354','1','0','0','outro02'),
-('-1609573','The Lich King yells: You trained them well, Fordring. You delivered the greatest fighting force this world has ever known... right into my hands -- exactly as I intended. You shall be rewarded for your unwitting sacrifice.', '', '', '', '', '', '', '', '','17355','1','0','0','outro03'),
-('-1609574','The Lich King yells: Watch now as I raise them from the dead to become masters of the Scourge. They will shroud this world in chaos and destruction. Azeroth\'s fall will come at their hands -- and you will be the first to die.', '', '', '', '', '', '', '', '','17356','1','0','0','outro04'),
-('-1609575','The Lich King yells: I delight in the irony.', '', '', '', '', '', '', '', '','17357','1','0','0','outro05'),
-('-1609576','Highlord Tirion Fordring yells: LIGHT, GRANT ME ONE FINAL BLESSING. GIVE ME THE STRENGTH... TO SHATTER THESE BONDS!', '', '', '', '', '', '', '', '','17392','1','0','0','outro06'),
-('-1609577','The Lich King yells: Impossible...', '', '', '', '', '', '', '', '','17358','1','0','0','outro07'),
-('-1609578','Highlord Tirion Fordring yells: No more, Arthas! No more lives will be consumed by your hatred!', '', '', '', '', '', '', '', '','17393','1','0','0','outro08'),
-('-1609579','Terenas Menethil II yells: Free at last! It is over, my son. This is the moment of reckoning.', '', '', '', '', '', '', '', '','17397','1','0','0','outro09'),
-('-1609580','Terenas Menethil II yells: Rise up, champions of the Light!', '', '', '', '', '', '', '', '','17398','1','0','0','outro10'),
-('-1609581','The Lich King yells: Now I stand, the lion before the lambs... and they do not fear.', '', '', '', '', '', '', '', '','17361','1','0','0','outro11'),
-('-1609582','The Lich King yells: They cannot fear.', '', '', '', '', '', '', '', '','17362','1','0','0','outro12'),
-('-1609583','no text just emote of LK dying', '', '', '', '', '', '', '', '','17374','1','0','0','outro13');
+('-1609573','You trained them well, Fordring. You delivered the greatest fighting force this world has ever known... right into my hands -- exactly as I intended. You shall be rewarded for your unwitting sacrifice.', '', '', '', '', '', '', '', '','17355','1','0','0','outro03'),
+('-1609574','Watch now as I raise them from the dead to become masters of the Scourge. They will shroud this world in chaos and destruction. Azeroth\'s fall will come at their hands -- and you will be the first to die.', '', '', '', '', '', '', '', '','17356','1','0','0','outro04'),
+('-1609575','I delight in the irony.', '', '', '', '', '', '', '', '','17357','1','0','0','outro05'),
+('-1609576','LIGHT, GRANT ME ONE FINAL BLESSING. GIVE ME THE STRENGTH... TO SHATTER THESE BONDS!', '', '', '', '', '', '', '', '','17392','1','0','0','outro06'),
+('-1609577','Impossible...', '', '', '', '', '', '', '', '','17358','1','0','0','outro07'),
+('-1609578','No more, Arthas! No more lives will be consumed by your hatred!', '', '', '', '', '', '', '', '','17393','1','0','0','outro08'),
+('-1609579','Free at last! It is over, my son. This is the moment of reckoning.', '', '', '', '', '', '', '', '','17397','1','0','0','outro09'),
+('-1609580','Rise up, champions of the Light!', '', '', '', '', '', '', '', '','17398','1','0','0','outro10'),
+('-1609581','Now I stand, the lion before the lambs... and they do not fear.', '', '', '', '', '', '', '', '','17361','1','0','0','outro11'),
+('-1609582','They cannot fear.', '', '', '', '', '', '', '', '','17362','1','0','0','outro12'),
+('-1609583','The Lich King dies', '', '', '', '', '', '', '', '','17374','2','0','0','outro13');
