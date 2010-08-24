@@ -50,11 +50,6 @@ enum
     SPELL_NUMBING_ROAR      = 55100,
 };
 
-enum eArchivements
-{
-    ACHIEVEMENT_LESS_RABI       =   2040
-};
-
 /*######
 ## boss_moorabi
 ######*/
@@ -116,12 +111,6 @@ struct MANGOS_DLL_DECL boss_moorabiAI : public ScriptedAI
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_MOORABI, DONE);
-
-        if (!m_bIsRegularMode && !m_bMammothPhase)
-        {
-            if(m_pInstance)
-                m_pInstance->DoCompleteAchievement(ACHIEVEMENT_LESS_RABI);
-        }
     }
 
     void UpdateAI(const uint32 uiDiff)

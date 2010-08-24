@@ -24,16 +24,6 @@ EndScriptData */
 #include "precompiled.h"
 #include "gundrak.h"
 
-enum WaterEventState
-{
-    WATERSTATE_NONE     = 0,
-    WATERSTATE_FRENZY   = 1,
-    WATERSTATE_SCALDING = 2
-};
-
-#define SPELL_SCALDINGWATER 37284
-#define MOB_DRAKKARI_FRENZY 29834
-
 bool GOHello_go_gundrak_altar(Player* pPlayer, GameObject* pGo)
 {
     ScriptedInstance* pInstance = (ScriptedInstance*)pGo->GetInstanceData();
@@ -50,7 +40,7 @@ bool GOHello_go_gundrak_altar(Player* pPlayer, GameObject* pGo)
 
     pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
     return true;
-};
+}
 
 struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
 {
@@ -67,20 +57,12 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
     uint64 m_uiSnakeKeyGUID;
     uint64 m_uiMammothKeyGUID;
     uint64 m_uiTrollKeyGUID;
-    uint64 m_uiGaldarahKeyGUID;
     uint64 m_uiAltarOfSladranGUID;
     uint64 m_uiAltarOfMoorabiGUID;
     uint64 m_uiAltarOfColossusGUID;
     uint64 m_uiBridgeGUID;
-    uint64 m_uiCollisionGUID;
 
     uint64 m_uiSladranGUID;
-    uint64 m_uiColossusGUID;
-
-    uint32 WaterCheckTimer;
-    uint32 FrenzySpawnTimer;
-    uint32 Water;
-    bool DoSpawnFrenzy;
 
     void Initialize()
     {
@@ -97,17 +79,9 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         m_uiSnakeKeyGUID          = 0;
         m_uiTrollKeyGUID          = 0;
         m_uiMammothKeyGUID        = 0;
-        m_uiGaldarahKeyGUID       = 0;
         m_uiBridgeGUID            = 0;
-        m_uiCollisionGUID         = 0;
 
         m_uiSladranGUID           = 0;
-        m_uiColossusGUID          = 0;
-
-        WaterCheckTimer = 500;
-        FrenzySpawnTimer = 2000;
-        Water = WATERSTATE_FRENZY;
-        DoSpawnFrenzy = false;
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -115,7 +89,6 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         switch(pCreature->GetEntry())
         {
             case NPC_SLADRAN: m_uiSladranGUID = pCreature->GetGUID(); break;
-            case NPC_COLOSSUS: m_uiColossusGUID = pCreature->GetGUID(); break;
         }
     }
 
@@ -126,25 +99,26 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
             case GO_ECK_DOOR:
                 m_uiEckDoorGUID = pGo->GetGUID();
                 if ((m_auiEncounter[1] == DONE) && !instance->IsRegularDifficulty())
-                    pGo->SetGoState(GO_STATE_ACTIVE);
+                    DoUseDoorOrButton(m_uiEckDoorGUID);
                 break;
             case GO_ECK_UNDERWATER_DOOR:
                 m_uiEckUnderwaterDoorGUID = pGo->GetGUID();
                 if (m_auiEncounter[4] == DONE)
-                    pGo->SetGoState(GO_STATE_ACTIVE);
+                    DoUseDoorOrButton(m_uiEckUnderwaterDoorGUID);
                 break;
             case GO_GALDARAH_DOOR: 
                 m_uiGaldarahDoorGUID = pGo->GetGUID();
+                DoUseDoorOrButton(m_uiGaldarahDoorGUID);
                 break;
             case GO_EXIT_DOOR_L:
                 m_uiExitDoorLeftGUID = pGo->GetGUID();
                 if (m_auiEncounter[3] == DONE)
-                    pGo->SetGoState(GO_STATE_ACTIVE);
+                    DoUseDoorOrButton(m_uiExitDoorLeftGUID);
                 break;
             case GO_EXIT_DOOR_R:
                 m_uiExitDoorRightGUID = pGo->GetGUID();
                 if (m_auiEncounter[3] == DONE)
-                    pGo->SetGoState(GO_STATE_ACTIVE);
+                    DoUseDoorOrButton(m_uiExitDoorRightGUID);
                 break;
             case GO_ALTAR_OF_SLADRAN:
                 m_uiAltarOfSladranGUID = pGo->GetGUID();
@@ -164,48 +138,21 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
             case GO_SNAKE_KEY: 
                 m_uiSnakeKeyGUID = pGo->GetGUID();
                 if (m_auiEncounter[0] == SPECIAL)
-					pGo->SetGoState(GO_STATE_READY);
+                    DoUseDoorOrButton(m_uiSnakeKeyGUID);
                 break;
             case GO_TROLL_KEY:
                 m_uiTrollKeyGUID = pGo->GetGUID();
                 if (m_auiEncounter[1] == SPECIAL)
-                    pGo->SetGoState(GO_STATE_READY);
+                    DoUseDoorOrButton(m_uiTrollKeyGUID);
                 break;
             case GO_MAMMOTH_KEY:
                 m_uiMammothKeyGUID = pGo->GetGUID();
                 if (m_auiEncounter[2] == SPECIAL)
-                    pGo->SetGoState(GO_STATE_READY);
-                break;
-            case GO_GALDARAH_KEY:
-                m_uiGaldarahKeyGUID = pGo->GetGUID();
-                pGo->SetGoState(GO_STATE_READY);
+                    DoUseDoorOrButton(m_uiMammothKeyGUID);
                 break;
             case GO_BRIDGE: 
                 m_uiBridgeGUID = pGo->GetGUID();
                 break;
-            case GO_COLLISION:
-				pGo->SetGoState(GO_STATE_READY);
-                m_uiCollisionGUID = pGo->GetGUID();
-				SwitchBridge();
-                break;
-        }
-    }
-
-    void SwitchBridge()
-    {
-        if(m_auiEncounter[0] == SPECIAL && m_auiEncounter[1] == SPECIAL && m_auiEncounter[2] == SPECIAL)
-        {
-            //DoUseDoorOrButton(m_uiBridgeGUID);
-			if(GameObject* pBridge = instance->GetGameObject(m_uiCollisionGUID))
-				pBridge->SetGoState(GO_STATE_ACTIVE);
-			if(GameObject* pKey = instance->GetGameObject(m_uiGaldarahKeyGUID))
-				pKey->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
-			if(GameObject* pKey = instance->GetGameObject(m_uiTrollKeyGUID))
-				pKey->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
-			if(GameObject* pKey = instance->GetGameObject(m_uiMammothKeyGUID))
-				pKey->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
-			if(GameObject* pKey = instance->GetGameObject(m_uiSnakeKeyGUID))
-				pKey->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
         }
     }
     
@@ -218,15 +165,10 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
             case TYPE_SLADRAN:
                 m_auiEncounter[0] = uiData;
                 if (uiData == DONE)
-				{
                     if (GameObject* pGo = instance->GetGameObject(m_uiAltarOfSladranGUID))
                         pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
-				}
                 if (uiData == SPECIAL)
-                {
                     DoUseDoorOrButton(m_uiSnakeKeyGUID);
-                    SwitchBridge();
-                }
                 break;
             case TYPE_MOORABI:
                 m_auiEncounter[1] = uiData;
@@ -238,23 +180,15 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
                         pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
                 }
                 if (uiData == SPECIAL)
-                {
                     DoUseDoorOrButton(m_uiMammothKeyGUID);
-                    SwitchBridge();
-                }
                 break;
             case TYPE_COLOSSUS:
                 m_auiEncounter[2] = uiData;
                 if (uiData == DONE)
-				{
                     if (GameObject* pGo = instance->GetGameObject(m_uiAltarOfColossusGUID))
                         pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
-				}
                 if (uiData == SPECIAL)
-                {
                     DoUseDoorOrButton(m_uiTrollKeyGUID);
-                    SwitchBridge();
-                }
                 break;
             case TYPE_GALDARAH:
                 m_auiEncounter[3] = uiData;
@@ -275,7 +209,7 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
                 break;
         }
 
-		if (uiData == DONE || uiData == SPECIAL)
+        if (uiData == DONE)
         {
             OUT_SAVE_INST_DATA;
 
@@ -341,60 +275,8 @@ struct MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         {
             case NPC_SLADRAN:
                 return m_uiSladranGUID;
-            case NPC_COLOSSUS:
-                return m_uiColossusGUID;
         }
         return 0;
-    }
-
-    void Update (uint32 diff)
-    {
-        //Water checks
-        if (WaterCheckTimer <= diff)
-        {
-            Water = WATERSTATE_FRENZY;
-            Map::PlayerList const &PlayerList = instance->GetPlayers();
-            if (PlayerList.isEmpty())
-                return;
-            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-            {
-                if (Player* pPlayer = i->getSource())
-                {
-                    if (pPlayer->isAlive() && /*i->getSource()->GetPositionZ() <= -21.434931f*/pPlayer->IsInWater())
-                    {
-                        if(Water == WATERSTATE_SCALDING)
-                        {
-
-                            if(!pPlayer->HasAura(SPELL_SCALDINGWATER))
-                            {
-                                pPlayer->CastSpell(pPlayer, SPELL_SCALDINGWATER,true);
-                            }
-                        } else if(Water == WATERSTATE_FRENZY)
-                        {
-                            //spawn frenzy
-                            if(DoSpawnFrenzy)
-                            {
-                                if(Creature* frenzy = pPlayer->SummonCreature(MOB_DRAKKARI_FRENZY,pPlayer->GetPositionX(),pPlayer->GetPositionY(),pPlayer->GetPositionZ(),pPlayer->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,2000))
-                                {
-                                    frenzy->Attack(pPlayer,false);
-                                    frenzy->SetSplineFlags(SPLINEFLAG_UNKNOWN12);
-                                }
-                                DoSpawnFrenzy = false;
-                            }
-                        }
-                    }
-                    if(!pPlayer->IsInWater())
-                        pPlayer->RemoveAurasDueToSpell(SPELL_SCALDINGWATER);
-                }
-
-            }
-            WaterCheckTimer = 500;//remove stress from core
-        } else WaterCheckTimer -= diff;
-        if (FrenzySpawnTimer <= diff)
-        {
-            DoSpawnFrenzy = true;
-            FrenzySpawnTimer = 2000;
-        } else FrenzySpawnTimer -= diff;
     }
 };
 
