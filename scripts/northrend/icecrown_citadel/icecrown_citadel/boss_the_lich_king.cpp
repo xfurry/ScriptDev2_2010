@@ -1137,6 +1137,46 @@ CreatureAI* GetAI_mob_spirit_warden(Creature* pCreature)
     return new mob_spirit_wardenAI(pCreature);
 }
 
+struct MANGOS_DLL_DECL mob_defile_targetAI : public ScriptedAI
+{
+    mob_defile_targetAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetDisplayId(11686);     // make invisible
+        pCreature->setFaction(14);
+        SetCombatMovement(false);
+        Reset();
+    }
+
+    ScriptedInstance *m_pInstance;
+
+	uint32 m_uiDespawnTimer;
+
+    void Reset()
+    {
+		DoCast(m_creature, SPELL_DEFILE_TRIGG);
+        m_creature->SetRespawnDelay(DAY);
+		m_uiDespawnTimer = 60000;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		if (m_pInstance && m_pInstance->GetData(TYPE_LICH_KING) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
+		if(m_uiDespawnTimer < uiDiff)
+			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+		else m_uiDespawnTimer -= uiDiff;
+    }
+};
+
+CreatureAI* GetAI_mob_defile_target(Creature* pCreature)
+{
+    return new mob_defile_targetAI (pCreature);
+}
+
 void AddSC_boss_the_lich_king()
 {
     Script* NewScript;
@@ -1184,6 +1224,11 @@ void AddSC_boss_the_lich_king()
 	NewScript = new Script;
     NewScript->Name = "mob_spirit_warden";
     NewScript->GetAI = &GetAI_mob_spirit_warden;
+    NewScript->RegisterSelf();
+
+	NewScript = new Script;
+    NewScript->Name = "mob_defile_target";
+    NewScript->GetAI = &GetAI_mob_defile_target;
     NewScript->RegisterSelf();
 }
 

@@ -194,12 +194,6 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 			m_pInstance->SetData(TYPE_SINDRAGOSA, NOT_STARTED);
 	}
 
-	void JustSummoned(Creature* pSummon)
-	{
-		if(pSummon->GetEntry() == NPC_FROST_BOMB)
-			pSummon->CastSpell(pSummon, SPELL_FROSTBOMB, false);
-	}
-
 	void UpdateAI(const uint32 uiDiff)
 	{
 		if (m_uiAttackStartTimer < uiDiff && !m_bStartAttack)
@@ -538,6 +532,79 @@ CreatureAI* GetAI_mob_ice_tomb(Creature* pCreature)
     return new mob_ice_tombAI(pCreature);
 }
 
+// frost bomb
+struct MANGOS_DLL_DECL mob_icc_frost_bombAI : public ScriptedAI
+{
+	mob_icc_frost_bombAI(Creature* pCreature) : ScriptedAI(pCreature)
+	{
+		m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+		pCreature->SetDisplayId(11686);     // make invisible
+		pCreature->setFaction(14);
+		SetCombatMovement(false);
+		Reset();
+	}
+
+	ScriptedInstance *m_pInstance;
+
+	uint32 m_uiDieTimer;
+	bool m_bMustDie;
+	bool m_bSetPath;
+
+	void Reset()
+	{
+	    m_bMustDie = false;
+		m_bSetPath = false;
+	}
+
+	void MovementInform(uint32 uiType, uint32 uiPointId)
+	{
+		if(uiType != POINT_MOTION_TYPE)
+			return;
+
+		if(uiPointId == 1)
+		{
+			DoCast(m_creature, SPELL_FROSTBOMB);
+			m_uiDieTimer = 500;
+			m_bMustDie = true;
+		}
+	}
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if (m_pInstance && m_pInstance->GetData(TYPE_SINDRAGOSA) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
+		if(!m_bSetPath)
+		{
+			float angle = (float) rand()*360/RAND_MAX + 1;
+			float homeX = 4408.099f + urand(25, 30)*cos(angle*(M_PI/180));
+			float homeY = 2484.570f + urand(25, 30)*sin(angle*(M_PI/180));
+			float homeZ = 203.374f;
+			m_creature->SetSpeedRate(MOVE_RUN, 2.0f);
+			m_creature->RemoveSplineFlag(SPLINEFLAG_WALKMODE);
+			m_creature->GetMotionMaster()->MovePoint(1, homeX, homeY, homeZ);
+			m_bSetPath = true;
+		}
+
+		if(m_uiDieTimer < uiDiff && m_bMustDie)
+			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+		else m_uiDieTimer -= uiDiff;
+	}
+
+};
+
+CreatureAI* GetAI_mob_icc_frost_bomb(Creature* pCreature)
+{
+    return new mob_icc_frost_bombAI(pCreature);
+}
+
 enum
 {
 	SPELL_FROST_AURA					= 71387,
@@ -777,5 +844,10 @@ void AddSC_boss_sindragosa()
 	NewScript = new Script;
     NewScript->Name = "mob_icc_ice_tomb";
     NewScript->GetAI = &GetAI_mob_ice_tomb;
+    NewScript->RegisterSelf();
+
+	NewScript = new Script;
+    NewScript->Name = "mob_icc_frost_bomb";
+    NewScript->GetAI = &GetAI_mob_icc_frost_bomb;
     NewScript->RegisterSelf();
 }

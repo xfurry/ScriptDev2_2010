@@ -90,7 +90,8 @@ enum BossSpells
     SPELL_SHADOW_LANCE                      = 71405,
     SPELL_EMPOWERED_SHADOW_LANCE            = 71815,
     SPELL_SHADOW_RESONANCE                  = 71943,	// summon
-    SPELL_SHADOW_RESONANCE_AURA	            = 71911,	//71822
+    SPELL_SHADOW_RESONANCE_AURA	            = 71911,	// 
+	SPELL_SHADOW_RESONANCE_DEBUFF			= 71822,	// should be triggered
     NPC_DARK_NUCLEUS                        = 38369,
 
 	SPELL_BERSERK							= 26662,
@@ -122,17 +123,14 @@ struct MANGOS_DLL_DECL mob_conjured_flameAI : public ScriptedAI
 
 	uint32 m_uiDieTimer;
 	bool m_bMustDie;
+	bool m_bSetPath;
 
 	void Reset()
 	{
 	    m_bMustDie = false;
+		m_bSetPath = false;
 		if(m_creature->GetEntry() == NPC_EMPOWERED_CONJURED_FLAME)
 			DoCast(m_creature, SPELL_EMPOWERED_FLAMES);
-	}
-
-	void SetDestination(float posX, float posY, float posZ)
-	{
-		m_creature->GetMotionMaster()->MovePoint(0, posX, posY, posZ);
 	}
 
 	void MovementInform(uint32 uiType, uint32 uiPointId)
@@ -140,7 +138,7 @@ struct MANGOS_DLL_DECL mob_conjured_flameAI : public ScriptedAI
 		if(uiType != POINT_MOTION_TYPE)
 			return;
 
-		if(uiPointId == 0)
+		if(uiPointId == 1)
 		{
 			DoCast(m_creature, SPELL_FLAMES);
 			m_uiDieTimer = 1000;
@@ -160,6 +158,16 @@ struct MANGOS_DLL_DECL mob_conjured_flameAI : public ScriptedAI
 
 		if(!m_creature->HasAura(SPELL_FLAMES_VISUAL, EFFECT_INDEX_0))
 			DoCast(m_creature, SPELL_FLAMES_VISUAL);
+
+		if(!m_bSetPath)
+		{
+			if (Creature* pTaldaram = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TALDARAM)))
+			{
+				if (Unit* pTarget = pTaldaram->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
+					m_creature->GetMotionMaster()->MovePoint(1, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ());
+			}
+			m_bSetPath = true;
+		}
 
 		if(m_uiDieTimer < uiDiff && m_bMustDie)
 			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
@@ -191,23 +199,23 @@ struct MANGOS_DLL_DECL mob_kinetic_bombAI : public ScriptedAI
 
 	uint32 m_uiDieTimer;
 	bool m_bMustDie;
-	bool m_bIsFalling;
 	float m_fSpeedRate;
 	float m_fTargetX;
 	float m_fTargetY;
 	float m_fTargetZ;
+	bool m_bSetPath;
 
 	void Reset()
 	{
 		DoCast(m_creature,SPELL_KINETIC_BOMB_VISUAL);
 		m_bMustDie = false;
-		m_bIsFalling = false;
+		m_bSetPath = false;
 		if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
 			m_fSpeedRate = 1.0f;
 		else
 			m_fSpeedRate = 0.5f;
 		m_creature->SetSpeedRate(MOVE_WALK, m_fSpeedRate);
-        m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
+        m_creature->AddSplineFlag(SPLINEFLAG_FLYING);
 	}
 
 	void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
@@ -215,28 +223,18 @@ struct MANGOS_DLL_DECL mob_kinetic_bombAI : public ScriptedAI
         if (uiDamage > 0)
         {
 			uiDamage = 0;
-			m_bIsFalling = false;
-			m_creature->NearTeleportTo(m_creature->GetPositionX(), m_creature->GetPositionY(), 391.0f, 0, false);
+			m_bSetPath = false;
 			m_creature->GetMap()->CreatureRelocation(m_creature, m_fTargetX, m_fTargetY, m_fTargetZ + 31, 0);
 			m_creature->SendMonsterMove(m_fTargetX, m_fTargetY, m_fTargetZ + 31, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
 		}
     }
-
-	void SetDestination(float posX, float posY, float posZ)
-	{
-		m_creature->GetMotionMaster()->MovePoint(0, posX, posY, posZ);
-		m_fTargetX = posX;
-		m_fTargetY = posY;
-		m_fTargetZ = posZ;
-		m_bIsFalling = true;
-	}
 
 	void MovementInform(uint32 uiType, uint32 uiPointId)
 	{
 		if(uiType != POINT_MOTION_TYPE)
 			return;
 
-		if(uiPointId == 0)
+		if(uiPointId == 1)
 		{
 			DoCast(m_creature, SPELL_KINETIC_BOMB_EXPLODE);
 			m_uiDieTimer = 1000;
@@ -254,12 +252,17 @@ struct MANGOS_DLL_DECL mob_kinetic_bombAI : public ScriptedAI
 		if (m_pInstance && m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != IN_PROGRESS) 
             m_creature->ForcedDespawn();
 
-		if(m_creature->GetPositionZ() > 390 && !m_bIsFalling)
+		if(!m_bSetPath)
 		{
-			m_creature->GetMotionMaster()->MovePoint(0, m_fTargetX, m_fTargetY, m_fTargetZ);
-			m_creature->SetSpeedRate(MOVE_WALK, m_fSpeedRate);
-			m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
-			m_bIsFalling = true;
+			if(Creature* pTemp = GetClosestCreatureWithEntry(m_creature, NPC_KINETIC_BOMB_TARGET, 100.0f))
+			{
+				m_fTargetX = pTemp->GetPositionX();
+				m_fTargetY = pTemp->GetPositionY();
+				m_fTargetZ = pTemp->GetPositionZ();
+				m_creature->SetSpeedRate(MOVE_WALK, m_fSpeedRate);
+				m_creature->GetMotionMaster()->MovePoint(1, m_fTargetX, m_fTargetY, m_fTargetZ);
+			}
+			m_bSetPath = true;
 		}
 
 		if(m_uiDieTimer < uiDiff && m_bMustDie)
@@ -332,15 +335,6 @@ struct MANGOS_DLL_DECL boss_prince_taldaramAI : public ScriptedAI
 				pValanar->AI()->EnterEvadeMode();
 			else
 				pValanar->Respawn();
-		}
-	}
-
-	void JustSummoned(Creature* pSummoned)
-	{
-		if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
-		{
-			pSummoned->SetInCombatWithZone();
-			((mob_conjured_flameAI*)pSummoned->AI())->SetDestination(pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ());
 		}
 	}
 
@@ -470,7 +464,6 @@ struct MANGOS_DLL_DECL boss_prince_kelesethAI : public ScriptedAI
 	void JustSummoned(Creature* pSummoned)
 	{
 		pSummoned->SetInCombatWithZone();
-		pSummoned->CastSpell(pSummoned, SPELL_SHADOW_RESONANCE_AURA, false);
 	}
 
 	void JustReachedHome()
@@ -660,28 +653,8 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 
 	void JustSummoned(Creature* pSummoned)
 	{
-		// set vortex
-		if(pSummoned->GetEntry() == NPC_SHOCK_VORTEX)
-		{
-			pSummoned->CastSpell(pSummoned, SPELL_SHOCK_VORTEX_DAMAGE, false);
-			pSummoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-			pSummoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-			pSummoned->setFaction(14);
-			pSummoned->CombatStop();
-			pSummoned->GetMotionMaster()->MoveIdle();
-		}
-		else if(pSummoned->GetEntry() == NPC_KINETIC_BOMB_TARGET)
-		{
-			pSummoned->SetDisplayId(11686);     // make invisible
-			if(Creature* pBomb = m_creature->SummonCreature(NPC_KINETIC_BOMB, pSummoned->GetPositionX(), pSummoned->GetPositionY(), pSummoned->GetPositionZ() + 10, 0, TEMPSUMMON_CORPSE_DESPAWN, 1000))
-			{
-				((mob_kinetic_bombAI*)pBomb->AI())->SetDestination(pSummoned->GetPositionX(), pSummoned->GetPositionY(), pSummoned->GetPositionZ());
-				pBomb->GetMap()->CreatureRelocation(pBomb, pSummoned->GetPositionX(), pSummoned->GetPositionY(), pSummoned->GetPositionZ() + 30, 0);
-                pBomb->SendMonsterMove(pSummoned->GetPositionX(), pSummoned->GetPositionY(), pSummoned->GetPositionZ() + 30, SPLINETYPE_NORMAL, pBomb->GetSplineFlags(), 1);
-				pBomb->AddSplineFlag(SPLINEFLAG_FLYING);
-				pBomb->SetInCombatWithZone();
-			}
-		}
+		if(pSummoned->GetEntry() == NPC_KINETIC_BOMB_TARGET)
+			pSummoned->SetDisplayId(11686);
 	}
 
 	void KilledUnit(Unit* pVictim)
@@ -853,8 +826,16 @@ struct MANGOS_DLL_DECL boss_prince_valanarAI : public ScriptedAI
 
 		if(m_uiKineticBombTimer < uiDiff)
 		{
-			// FIX THIS!!! it makes crash
-			//DoCast(m_creature, SPELL_KINETIC_BOMB);	// summons the target
+			DoCast(m_creature, SPELL_KINETIC_BOMB_SUMMON);	// summons the target
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
+			{
+				m_creature->SummonCreature(NPC_KINETIC_BOMB_TARGET, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 600000);
+				/*if(Creature* pBomb = m_creature->SummonCreature(NPC_KINETIC_BOMB, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ() + 30, 0, TEMPSUMMON_CORPSE_DESPAWN, 1000))
+				{
+					pBomb->GetMap()->CreatureRelocation(pBomb, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ() + 30, 0);
+					pBomb->SendMonsterMove(pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ() + 30, SPLINETYPE_NORMAL, pBomb->GetSplineFlags(), 1);
+				}*/
+			}
 			m_uiKineticBombTimer = 27000;
 		}
 		else m_uiKineticBombTimer -= uiDiff;
@@ -935,6 +916,84 @@ CreatureAI* GetAI_boss_prince_valanar(Creature* pCreature)
     return new boss_prince_valanarAI(pCreature);
 }
 
+struct MANGOS_DLL_DECL mob_dark_nucleusAI : public ScriptedAI
+{
+    mob_dark_nucleusAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        Reset();
+    }
+
+    ScriptedInstance *m_pInstance;
+
+	uint32 m_uiLoseHealthTimer;
+
+    void Reset()
+    {
+		DoCast(m_creature, SPELL_SHADOW_RESONANCE_AURA);
+        m_creature->SetRespawnDelay(DAY);
+		m_uiLoseHealthTimer = 1000;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		if (m_pInstance && m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
+		if(m_uiLoseHealthTimer < uiDiff)
+		{
+			m_creature->DealDamage(m_creature, m_creature->GetMaxHealth() * 0.01f, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+			m_uiLoseHealthTimer = 1000;
+		}
+		else m_uiLoseHealthTimer -= uiDiff;
+    }
+};
+
+CreatureAI* GetAI_mob_dark_nucleus(Creature* pCreature)
+{
+    return new mob_dark_nucleusAI (pCreature);
+}
+
+struct MANGOS_DLL_DECL mob_shock_vortexAI : public ScriptedAI
+{
+    mob_shock_vortexAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetDisplayId(11686);     // make invisible
+        pCreature->setFaction(14);
+        SetCombatMovement(false);
+        Reset();
+    }
+
+    ScriptedInstance *m_pInstance;
+
+	uint32 m_uiDespawnTimer;
+
+    void Reset()
+    {
+		DoCast(m_creature, SPELL_SHOCK_VORTEX_DAMAGE);
+        m_creature->SetRespawnDelay(DAY);
+		m_uiDespawnTimer = 20000;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		if (m_pInstance && m_pInstance->GetData(TYPE_PRINCE_COUNCIL) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
+		if(m_uiDespawnTimer < uiDiff)
+			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+		else m_uiDespawnTimer -= uiDiff;
+    }
+};
+
+CreatureAI* GetAI_mob_shock_vortex(Creature* pCreature)
+{
+    return new mob_shock_vortexAI (pCreature);
+}
+
 void AddSC_blood_prince_council()
 {
     Script* newscript;
@@ -962,5 +1021,15 @@ void AddSC_blood_prince_council()
 	newscript = new Script;
     newscript->Name = "mob_conjured_flame";
     newscript->GetAI = &GetAI_mob_conjured_flame;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_dark_nucleus";
+    newscript->GetAI = &GetAI_mob_dark_nucleus;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_shock_vortex";
+    newscript->GetAI = &GetAI_mob_shock_vortex;
     newscript->RegisterSelf();
 }

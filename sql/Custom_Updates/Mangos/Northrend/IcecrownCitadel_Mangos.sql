@@ -44,8 +44,10 @@ REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('716
 UPDATE creature_template SET ScriptName = 'boss_prince_taldaram' WHERE entry = 37973;
 UPDATE creature_template SET ScriptName = 'boss_prince_keleseth' WHERE entry = 37972;
 UPDATE creature_template SET ScriptName = 'boss_prince_valanar' WHERE entry = 37970;
-UPDATE creature_template SET ScriptName = 'mob_kinetic_bomb' WHERE entry = 38458;
+UPDATE creature_template SET ScriptName = 'mob_kinetic_bomb' WHERE entry = 38454;
 UPDATE creature_template SET ScriptName = 'mob_conjured_flame' WHERE entry in (38332, 38451);
+UPDATE creature_template SET ScriptName = 'mob_dark_nucleus' WHERE entry = 38369;
+UPDATE creature_template SET ScriptName = 'mob_shock_vortex' WHERE entry = 38422;
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70981', '1', '37972');
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70952', '1', '37970');
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70982', '1', '37973');
@@ -73,6 +75,9 @@ update creature_template set scriptName = 'mob_suppresser' where entry = 37863;
 update creature_template set scriptName = 'mob_blistering_zombie' where entry = 37934;
 update creature_template set scriptName = 'mob_gluttonous_abomination' where entry = 37886;
 update creature_template set scriptName = 'mob_nightmare_cloud' where entry = 38421;
+update creature_template set scriptName = 'mob_nightmare_preportal' where entry = 38429;
+update creature_template set scriptName = 'mob_nightmare_portal' where entry = 38430;
+update creature_template set scriptName = 'mob_column_of_frost' where entry = 37918;
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70602', '1', '36789');
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('70588', '1', '36789');
 
@@ -81,6 +86,7 @@ update creature_template set scriptName = 'boss_sindragosa' where entry = 36853;
 update creature_template set scriptName = 'miniboss_spinestalker' where entry = 37534;
 update creature_template set scriptName = 'miniboss_rimefang' where entry = 37533;
 update creature_template set scriptName = 'mob_icc_ice_tomb' where entry = 36980;
+update creature_template set scriptName = 'mob_icc_frost_bomb' where entry = 37186;
 
 -- Lich King
 update creature_template set `unit_flags` = 256, `type_flags` = 104, scriptName = 'boss_the_lich_king' where entry = 36597;
@@ -94,6 +100,7 @@ update creature_template set scriptName = 'mob_icc_raging_spirit' where entry = 
 update creature_template set scriptName = 'mob_icc_ice_sphere' where entry = 36633;
 update creature_template set scriptName = 'npc_terenas_menethil' where entry = 36823;
 update creature_template set scriptName = 'mob_spirit_warden' where entry = 36824;
+update creature_template set scriptName = 'mob_defile_target' where entry = 38757;
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('71614', '1', '38995');
 
 -- Frostwing

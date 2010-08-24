@@ -37,11 +37,16 @@ enum
 
 	SPELL_IMMUNITY					= 72724,
 	SPELL_NIGHTMARE_PORTALS			= 72482,
+	SPELL_NIGHTMARE_PORTAL_SUMMON	= 71987,
 	SPELL_NIGHTMARE_VISUAL			= 71977,
+	SPELL_DREAM_PREPORTAL_VISUAL	= 71304,
+	SPELL_DREAM_PORTAL_VISUAL		= 70763,
+	SPELL_DREAM_SPLIT				= 71196,
+	SPELL_GREEN_CLOUD_VISUAL		= 70876,
+	SPELL_DREAM_STATE				= 70766,	// phase = 16, fly effect
 	SPELL_EMERAL_VIGOR				= 70873,
 	SPELL_DREAMWALKERS_RAGE			= 71189,	// at full hp
 	SPELL_CORRUPTION				= 70904,
-	SPELL_DREAM_SPLIT				= 71196,
 	SPELL_COLUMN_OF_FROST			= 70702,
 	SPELL_COLUMN_OF_FROST_SUMMON	= 71747,
 	NPC_COLUMN_OF_FROST				= 37918,
@@ -101,6 +106,8 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 	uint8 m_uiMaxPortals;
 	uint32 m_uiSummonTimer;
 	uint32 m_uiColumnOfFrostTimer;
+	uint32 m_uiCloudsSummonTimer;
+	uint8 m_uiCloudStage;
 	uint32 m_uiDespawnTimer;
 	uint8 m_uiLocId;
 	uint32 m_uiAddEntry;
@@ -117,6 +124,8 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 	{
 		m_uiBerserkTimer		= 600000;	// 10 min
 		m_uiPortalTimer			= 30000;
+		m_uiCloudsSummonTimer	= 40000;
+		m_uiCloudStage			= 0;
 		m_uiColumnOfFrostTimer	= 30000;
 		m_uiSummonTimer			= 10000;
 		m_uiDespawnTimer		= 5000;
@@ -207,21 +216,6 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 			pSummon->AddThreat(m_creature, 10000.0f);
 			pSummon->AI()->AttackStart(m_creature);
 		}
-		else if(pSummon->GetEntry() == NPC_NIGHTMARE_PREPORTAL)
-		{
-			pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-			pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-			pSummon->GetMotionMaster()->MoveIdle();
-			pSummon->AttackStop();
-		}
-		else if(pSummon->GetEntry() == NPC_COLUMN_OF_FROST)
-		{
-			pSummon->CastSpell(pSummon, SPELL_COLUMN_OF_FROST, false);
-			pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-			pSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-			pSummon->GetMotionMaster()->MoveIdle();
-			pSummon->AttackStop();
-		}
 	}
 
 	void SummonAdds()
@@ -281,10 +275,13 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 
 			if(m_uiColumnOfFrostTimer < uiDiff)
 			{
-				float angle = (float) rand()*360/RAND_MAX + 1;
-				float homeX = m_creature->GetPositionX() + urand(30, 40)*cos(angle*(M_PI/180));
-				float homeY = m_creature->GetPositionY() + urand(30, 40)*sin(angle*(M_PI/180));
-				m_creature->SummonCreature(NPC_COLUMN_OF_FROST, homeX, homeY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 5000);
+				for(int i = 0; i < m_uiMaxPortals; i++)
+				{
+					float angle = (float) rand()*360/RAND_MAX + 1;
+					float homeX = m_creature->GetPositionX() + urand(30, 40)*cos(angle*(M_PI/180));
+					float homeY = m_creature->GetPositionY() + urand(30, 40)*sin(angle*(M_PI/180));
+					m_creature->SummonCreature(NPC_COLUMN_OF_FROST, homeX, homeY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
+				}
 				m_uiColumnOfFrostTimer = 40000;
 			}
 			else m_uiColumnOfFrostTimer -= uiDiff;
@@ -298,12 +295,39 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 					float angle = (float) rand()*360/RAND_MAX + 1;
 					float homeX = m_creature->GetPositionX() + 35*cos(angle*(M_PI/180));
 					float homeY = m_creature->GetPositionY() + 35*sin(angle*(M_PI/180));
-					//m_creature->SummonCreature(NPC_NIGHTMARE_PREPORTAL, homeX, homeY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
+					m_creature->SummonCreature(NPC_NIGHTMARE_PREPORTAL, homeX, homeY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
 				}
 				DoScriptText(SAY_PORTALS, m_creature);
 				m_uiPortalTimer = 50000;
+				m_uiCloudsSummonTimer = 10000;
 			}
 			else m_uiPortalTimer -= uiDiff;
+
+			if(m_uiCloudsSummonTimer < uiDiff)
+			{
+				// summon clouds here
+				for(int i = 0; i < 3 * m_uiMaxPortals; i++)
+				{
+					float angle = (float) rand()*360/RAND_MAX + 1;
+					float homeX = m_creature->GetPositionX() + urand(5, 35)*cos(angle*(M_PI/180));
+					float homeY = m_creature->GetPositionY() + urand(5, 35)*sin(angle*(M_PI/180));
+					float homeZ = m_creature->GetPositionZ() + urand(10, 15);
+					if(Creature* pTemp = m_creature->SummonCreature(NPC_NIGHTMARE_CLOUD, homeX, homeY, homeZ, 0, TEMPSUMMON_TIMED_DESPAWN, 10000))
+					{
+						pTemp->GetMap()->CreatureRelocation(pTemp, homeX, homeY, homeZ, 0);
+						pTemp->SendMonsterMove(homeX, homeY, homeZ, SPLINETYPE_NORMAL, pTemp->GetSplineFlags(), 1);
+					}
+				}
+				m_uiCloudStage += 1;
+				if(m_uiCloudStage < 4)
+					m_uiCloudsSummonTimer = 10000;
+				else
+				{
+					m_uiCloudStage = 0;
+					m_uiCloudsSummonTimer = 50000;
+				}
+			}
+			else m_uiCloudsSummonTimer -= uiDiff;
 
 			if(m_uiSummonTimer < uiDiff)
 			{
@@ -371,6 +395,9 @@ struct MANGOS_DLL_DECL mob_nightmare_cloudAI : public ScriptedAI
 
     void Reset()
     {
+		DoCast(m_creature, SPELL_GREEN_CLOUD_VISUAL);
+		m_creature->SetPhaseMask(16, true);
+		m_creature->GetMotionMaster()->MoveConfused();
         m_bPortalCasted = false;
     }
 
@@ -892,6 +919,140 @@ CreatureAI* GetAI_mob_gluttonous_abomination(Creature* pCreature)
     return new mob_gluttonous_abominationAI(pCreature);
 }
 
+struct MANGOS_DLL_DECL mob_nightmare_preportalAI : public ScriptedAI
+{
+    mob_nightmare_preportalAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetDisplayId(11686);     // make invisible
+        SetCombatMovement(false);
+        Reset();
+    }
+
+    ScriptedInstance *m_pInstance;
+
+	uint32 m_uiSummonTimer;
+
+    void Reset()
+    {
+		DoCast(m_creature, SPELL_DREAM_PREPORTAL_VISUAL);
+        m_creature->SetRespawnDelay(DAY);
+		m_uiSummonTimer = 8000;
+    }
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		if (m_pInstance && m_pInstance->GetData(TYPE_DREAMWALKER) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
+		if(m_uiSummonTimer < uiDiff)
+		{
+			m_creature->SummonCreature(NPC_NIGHTMARE_PORTAL, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 10000);
+			//DoCast(m_creature, SPELL_NIGHTMARE_PORTAL_SUMMON);
+			m_uiSummonTimer = 10000;
+		}
+		else m_uiSummonTimer -= uiDiff;
+    }
+};
+
+CreatureAI* GetAI_mob_nightmare_preportal(Creature* pCreature)
+{
+    return new mob_nightmare_preportalAI (pCreature);
+}
+
+struct MANGOS_DLL_DECL mob_nightmare_portalAI : public ScriptedAI
+{
+    mob_nightmare_portalAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetDisplayId(11686);     // make invisible
+        SetCombatMovement(false);
+        Reset();
+    }
+
+    ScriptedInstance *m_pInstance;
+
+	bool m_bHasCasted;
+
+    void Reset()
+    {
+		DoCast(m_creature, SPELL_DREAM_PORTAL_VISUAL);
+        m_creature->SetRespawnDelay(DAY);
+		m_bHasCasted = false;
+    }
+
+	void MoveInLineOfSight(Unit* pWho)
+    {
+		if(m_creature->IsWithinDistInMap(pWho, 2) && m_creature->IsWithinLOSInMap(pWho) && pWho->GetTypeId() == TYPEID_PLAYER && !m_bHasCasted)
+		{
+			pWho->CastSpell(pWho, SPELL_DREAM_STATE, false);
+            m_bHasCasted = true;
+		} 
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		if (m_pInstance && m_pInstance->GetData(TYPE_DREAMWALKER) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+    }
+};
+
+CreatureAI* GetAI_mob_nightmare_portal(Creature* pCreature)
+{
+    return new mob_nightmare_portalAI (pCreature);
+}
+
+struct MANGOS_DLL_DECL mob_column_of_frostAI : public ScriptedAI
+{
+    mob_column_of_frostAI(Creature *pCreature) : ScriptedAI(pCreature)
+    {
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetDisplayId(11686);     // make invisible
+        pCreature->setFaction(14);
+        SetCombatMovement(false);
+        Reset();
+    }
+
+    ScriptedInstance *m_pInstance;
+
+	uint32 m_uiCastTimer;
+
+    void Reset()
+    {
+        m_creature->SetRespawnDelay(DAY);
+		m_uiCastTimer = 5000;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		if (m_pInstance && m_pInstance->GetData(TYPE_DREAMWALKER) != IN_PROGRESS) 
+            m_creature->ForcedDespawn();
+
+		if(m_uiCastTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_COLUMN_OF_FROST);
+			m_uiCastTimer = 10000;
+		}
+		else m_uiCastTimer -= uiDiff;
+    }
+};
+
+CreatureAI* GetAI_mob_column_of_frost(Creature* pCreature)
+{
+    return new mob_column_of_frostAI (pCreature);
+}
+
 void AddSC_boss_valithria()
 {
 	Script *newscript;
@@ -929,5 +1090,20 @@ void AddSC_boss_valithria()
 	newscript = new Script;
     newscript->Name = "mob_gluttonous_abomination";
     newscript->GetAI = &GetAI_mob_gluttonous_abomination;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_nightmare_preportal";
+    newscript->GetAI = &GetAI_mob_nightmare_preportal;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_nightmare_portal";
+    newscript->GetAI = &GetAI_mob_nightmare_portal;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "mob_column_of_frost";
+    newscript->GetAI = &GetAI_mob_column_of_frost;
     newscript->RegisterSelf();
 }
