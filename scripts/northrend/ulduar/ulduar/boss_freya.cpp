@@ -589,7 +589,9 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
     uint32 m_uiGroundTremorTimer;
 
     uint32 m_uiThreeWaveCheckTimer;
+	uint32 m_uiWaveDeadCheckTimer;
     bool m_bWaveCheck;
+	bool m_bWaveDeadCheck;
     uint64 m_uiWaterSpiritGUID;
     uint64 m_uiStormLasherGUID;
     uint64 m_uiSnapLasherGUID;
@@ -616,8 +618,10 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
         m_uiGroundTremorTimer           = 20000;
         m_uiNatureBombTimer             = 7000;
         m_uiThreeWaveCheckTimer         = 1000;
+		m_uiWaveDeadCheckTimer			= 0;
         m_uiAchievProgress              = 10000;
         m_bWaveCheck                    = false;
+		m_bWaveDeadCheck				= false;
         m_uiWaterSpiritGUID             = 0;
         m_uiStormLasherGUID             = 0;
         m_uiSnapLasherGUID              = 0;
@@ -873,9 +877,30 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
 
                 if(pWaterSpirit && pStormLasher && pSnapLasher)
                 {
-                    if(!pWaterSpirit->isAlive() && !pStormLasher->isAlive() && !pSnapLasher->isAlive())
-                    {
-                        m_bWaveCheck = false;
+					if(!pWaterSpirit->isAlive() || !pStormLasher->isAlive() || !pSnapLasher->isAlive())
+					{
+						m_bWaveCheck = false;
+						m_bWaveDeadCheck = true;
+						m_uiWaveDeadCheckTimer = 10000;
+					}
+                }
+                m_uiThreeWaveCheckTimer = 2000;
+            }
+            else
+                m_uiThreeWaveCheckTimer -= uiDiff;
+
+			// check if all 3 are dead after 10 secs
+			if(m_uiWaveDeadCheckTimer < uiDiff && m_bWaveDeadCheck)
+			{
+				Creature* pWaterSpirit = m_pInstance->instance->GetCreature(m_uiWaterSpiritGUID);
+				Creature* pStormLasher = m_pInstance->instance->GetCreature(m_uiStormLasherGUID);
+				Creature* pSnapLasher = m_pInstance->instance->GetCreature(m_uiSnapLasherGUID);
+
+				if(pWaterSpirit && pStormLasher && pSnapLasher)
+				{
+					if(!pWaterSpirit->isAlive() && !pStormLasher->isAlive() && !pSnapLasher->isAlive())
+					{
+						m_bWaveDeadCheck = false;
 						if(SpellAuraHolder* natureAura = m_creature->GetSpellAuraHolder(SPELL_ATTUNED_TO_NATURE))
 						{
 							if(natureAura->ModStackAmount(-30))
@@ -886,21 +911,22 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
 						//if(m_creature->GetAura(SPELL_ATTUNED_TO_NATURE, EFFECT_INDEX_0)->modStackAmount(-30))	 	
 						//	m_creature->RemoveAurasDueToSpell(SPELL_ATTUNED_TO_NATURE);
 					}
-                    else
-                    {
-                        // respawn the dead ones
-                        if(!pWaterSpirit->isAlive())
-                            pWaterSpirit->Respawn();
-                        if(!pSnapLasher->isAlive())
-                            pSnapLasher->Respawn();
-                        if(!pStormLasher->isAlive())
-                            pStormLasher->Respawn();
-                    }
-                }
-                m_uiThreeWaveCheckTimer = 2000;
-            }
-            else
-                m_uiThreeWaveCheckTimer -= uiDiff;
+					else
+					{
+						m_bWaveCheck			= true;
+						m_bWaveDeadCheck		= false;
+						m_uiThreeWaveCheckTimer = 2000;
+						// respawn the dead ones
+						if(!pWaterSpirit->isAlive())
+							pWaterSpirit->Respawn();
+						if(!pSnapLasher->isAlive())
+							pSnapLasher->Respawn();
+						if(!pStormLasher->isAlive())
+							pStormLasher->Respawn();
+					}
+				}
+			}
+			else m_uiWaveDeadCheckTimer -= uiDiff;
 
             // Hardmode
             if(m_bIsBrightleafAlive)
