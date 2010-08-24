@@ -74,6 +74,11 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
     uint8 m_uiSummonCount;
     bool m_bHasIntro;
 
+	uint8 m_uiCalledSoldiers;
+	uint8 m_uiDeadSoldiers;
+	uint8 m_uiMaxMobs;
+	bool m_bDelaySet;
+
 	std::list<uint64> m_lSoldiersGUIDList;
 	uint32 m_uiLocNo;
 	bool m_bIsCall;
@@ -87,6 +92,11 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
         m_bIsPhase1             = false;
         m_bIsPhase2             = false;
         m_bIsPhase3             = false;
+
+		m_uiCalledSoldiers		= 0;
+		m_uiDeadSoldiers		= 0;
+		m_uiMaxMobs				= 3;
+		m_bDelaySet				= true;
         
         m_uiDespair_Timer       = m_bIsRegularMode ? 40000 : 30000;
         m_uiHorror_Timer        = urand(25000,35000);
@@ -156,7 +166,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 		uint32 m_uiSummonId;
 		m_uiLocNo = 0;
 
-		for(uint8 i = 0; i < 20; i++)
+		for(uint8 i = 0; i < 18; ++i)
 		{
 			switch(urand(0,3))
 			{
@@ -202,7 +212,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 
 	void CallFallSoldier()
 	{
-		for(uint8 i = 0; i < 5; ++i)
+		for(uint8 i = 0; i < m_uiMaxMobs; ++i)
 		{
 			if(!m_lSoldiersGUIDList.empty())
 			{
@@ -214,6 +224,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 				{
 					if(pTemp->isAlive())
 					{
+						m_uiCalledSoldiers += 1;
 						pTemp->setFaction(14);
 						pTemp->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 						pTemp->SetInCombatWithZone();
@@ -222,6 +233,11 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
 				}
 			}
 		}
+	}
+
+	void SummonedCreatureJustDied(Creature* pSummon)
+	{
+		m_uiDeadSoldiers += 1;
 	}
 
     void Aggro(Unit *who) 
@@ -311,6 +327,12 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
                Summon();
             }
 
+			if(m_uiDeadSoldiers == m_uiCalledSoldiers && !m_bDelaySet && m_uiSummonCount < 5)
+			{
+				m_uiSummon_Timer = 10000;
+				m_bDelaySet = true;
+			}
+
             if (m_uiSummon_Timer < uiDiff) 
             {
                 if(!m_bHasIntro)
@@ -323,7 +345,7 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
                 }
 
                 m_uiSummonCount += 1;
-                if (m_uiSummonCount > MOB_WAVES_NUM)
+                if (m_uiSummonCount > 4)
                 {
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     m_creature->SetInCombatWithZone();
@@ -337,9 +359,24 @@ struct MANGOS_DLL_DECL boss_falricAI : public ScriptedAI
                 {
                     if(m_pInstance)
                         m_pInstance->DoUpdateWorldState(UI_STATE_SPIRIT_WAVES_COUNT, m_uiSummonCount);
+					// change the no. of mobs per wave
+					switch(m_uiSummonCount)
+					{
+					case 1:
+						m_uiMaxMobs = 5;	// maybe just 3?
+						break;
+					case 2:
+					case 3:
+						m_uiMaxMobs = 4;
+						break;
+					case 4:
+						m_uiMaxMobs = 5;
+						break;
+					}
 					CallFallSoldier();
                 }
-                m_uiSummon_Timer = MOB_WAVES_DELAY;
+				m_bDelaySet = false;
+                m_uiSummon_Timer = 90000;
             } 
             else 
                 m_uiSummon_Timer -= uiDiff;

@@ -269,6 +269,8 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->setFaction(974);
         Reset();
     }
 
@@ -345,9 +347,6 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
         m_uiTorturedEnrageTimer = 15000;
 
 		m_uiExploitCheckTimer   = 1000;
-
-		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-		m_creature->setFaction(974);
     }
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
@@ -569,7 +568,7 @@ struct MANGOS_DLL_DECL mob_hallsOfReflectionSoulAI : public ScriptedAI
             m_uiFrostboltTimer = 7000;
         }else m_uiFrostboltTimer -= uiDiff;
 
-		if (m_creature->GetHealthPercent() < 25.0f && !m_bHasCasted)
+		if (m_creature->GetHealthPercent() < 15.0f && !m_bHasCasted)
         {
 			m_creature->InterruptNonMeleeSpells(true);
             DoCast(m_creature, SPELL_HALLUCINATION_MAGE);
