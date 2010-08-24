@@ -2032,6 +2032,12 @@ struct MANGOS_DLL_DECL npc_highlord_darion_mograineAI : public npc_escortAI
         SetEscortPaused(bOnHold);
     }
 
+	void JustRespawned()
+	{
+		m_creature->SetPhaseMask(128, true);
+		npc_escortAI::JustRespawned();
+	}
+
     void JustDied(Unit* pKiller)
     {
         // set world states
@@ -2039,7 +2045,6 @@ struct MANGOS_DLL_DECL npc_highlord_darion_mograineAI : public npc_escortAI
         UpdateWorldState(m_creature->GetMap(), WORLD_STATE_EVENT_BEGIN, 0);
         // respawn darion
         m_creature->Respawn();
-        m_creature->SetPhaseMask(128, true);
     }
 
     void WaypointReached(uint32 i)
