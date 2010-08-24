@@ -22,10 +22,12 @@ enum
     TYPE_ECK               = 5,
 
     NPC_SLADRAN            = 29304,
-    NPC_MOORABI            = 29307,
-    NPC_COLOSSUS           = 29305,
+    NPC_MOORABI            = 29305,
+    NPC_COLOSSUS           = 29307,
     NPC_GALDARAH           = 29306,
     NPC_ECK                = 29932,
+
+	MOB_DRAKKARI_FRENZY	   = 29834,
 
     GO_ECK_DOOR            = 192632,
     GO_ECK_UNDERWATER_DOOR = 192569,
@@ -61,6 +63,9 @@ class MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         uint32 GetData(uint32 uiType);
         uint64 GetData64(uint32 uiData);
 
+		void Update(uint32 uiDiff);
+		void DoSwitchBridgeIfCan();
+
         const char* Save() { return strInstData.c_str(); }
         void Load(const char* chrIn);
 
@@ -76,12 +81,17 @@ class MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         uint64 m_uiSnakeKeyGUID;
         uint64 m_uiMammothKeyGUID;
         uint64 m_uiTrollKeyGUID;
+		uint64 m_uiRhinoKeyGUID;
         uint64 m_uiAltarOfSladranGUID;
         uint64 m_uiAltarOfMoorabiGUID;
         uint64 m_uiAltarOfColossusGUID;
         uint64 m_uiBridgeGUID;
+		uint64 m_uiCollisionGUID;
 
         uint64 m_uiSladranGUID;
+		uint64 m_uiColossusGUID;
+
+		uint32 m_uiWaterCheckTimer;
 };
 
 #endif
