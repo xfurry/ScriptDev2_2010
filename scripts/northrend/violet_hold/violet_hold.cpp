@@ -817,6 +817,8 @@ struct MANGOS_DLL_DECL npc_sinclariAI : public npc_escortAI
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_MAIN, NOT_STARTED);
+
+		npc_escortAI::JustRespawned();
     }
 };
 
