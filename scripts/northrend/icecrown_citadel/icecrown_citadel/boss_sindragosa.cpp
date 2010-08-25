@@ -127,7 +127,7 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 		m_uiMagicTimer			= 30000;
 		m_uiCleaveTimer			= urand(4000, 7000);
 		m_uiTailSmashTimer		= urand(8000, 13000);
-		m_uiFrostBreathTimer	= urand(13000, 16000);
+		m_uiFrostBreathTimer	= 13000;
         m_uiAttackStartTimer    = 5000;
 		m_lTargetsGUIDList.clear();
 		m_uiFrostTargetGUID		= 0;
@@ -149,7 +149,15 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 
 		DoScriptText(SAY_AGGRO, m_creature);
 		if(m_pInstance) 
+		{
 			m_pInstance->SetData(TYPE_SINDRAGOSA, IN_PROGRESS);
+			m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_SHOW, 1);
+			m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_ATTEMPTS));
+			if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 9999);
+			else
+				m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_TOTAL, 25);
+		}
 
 		m_uiPhase = PHASE_ONE;
 
@@ -191,7 +199,11 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 	void JustReachedHome()
 	{
 		if(m_pInstance) 
+		{
 			m_pInstance->SetData(TYPE_SINDRAGOSA, NOT_STARTED);
+			m_pInstance->SetData(TYPE_ATTEMPTS, m_pInstance->GetData(TYPE_ATTEMPTS) - 1);
+            m_pInstance->DoUpdateWorldState(UPDATE_STATE_UI_COUNT, m_pInstance->GetData(TYPE_ATTEMPTS));
+		}
 	}
 
 	void UpdateAI(const uint32 uiDiff)
@@ -240,9 +252,12 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 				{
 					if(Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiFrostTargetGUID))
 					{
-						DoCast(pTarget, SPELL_ICETOMB_DUMMY);
-						if(Creature* pTomb = m_creature->SummonCreature(NPC_ICETOMB, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000))
-							pTomb->AddThreat(pTarget, 1000.0f);
+						if(pTarget->isAlive())
+						{
+							DoCast(pTarget, SPELL_ICETOMB_DUMMY);
+							if(Creature* pTomb = m_creature->SummonCreature(NPC_ICETOMB, pTarget->GetPositionX(), pTarget->GetPositionY(), pTarget->GetPositionZ(), 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000))
+								pTomb->AddThreat(pTarget, 1000.0f);
+						}
 					}
 					m_uiIceTombTimer = 30000;
 				}
@@ -314,7 +329,7 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 						DoCast(m_creature, SPELL_FROSTBREATH_10);
 					if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
 						DoCast(m_creature, SPELL_FROSTBREATH_25);
-					m_uiFrostBreathTimer = urand(13000, 16000);
+					m_uiFrostBreathTimer = 13000;
 				}
 				else m_uiFrostBreathTimer -= uiDiff;
 
@@ -338,6 +353,7 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 					if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
 						DoCast(m_creature, SPELL_BLISTERINGCOLD_25);
 					m_uiBlisteringColdTimer = 67000;
+					m_uiFrostBreathTimer = 13000;
 				}
 				else m_uiBlisteringColdTimer -= uiDiff;
 
@@ -359,7 +375,7 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 						}
 					}
 					m_uiFrostBeaconTimer = 60000; // no more beacon this phase
-					m_uiIceTombTimer = 5000;
+					m_uiIceTombTimer = 7000;
 				}
 				else m_uiFrostBeaconTimer -=uiDiff;
 
@@ -399,7 +415,7 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 						m_uiAirPhaseTimer		= 60000; //60 seconds to next air phase
 						m_uiCleaveTimer			= urand(4000, 7000);
 						m_uiTailSmashTimer		= urand(8000, 13000);
-						m_uiFrostBreathTimer	= urand(13000, 16000);
+						m_uiFrostBreathTimer	= 13000;
 						m_uiIcyGripTimer		= 35000;
 						m_uiMagicTimer			= 10000;
 						m_uiBlisteringColdTimer	= 35500;

@@ -89,7 +89,7 @@ update creature_template set scriptName = 'mob_icc_ice_tomb' where entry = 36980
 update creature_template set scriptName = 'mob_icc_frost_bomb' where entry = 37186;
 
 -- Lich King
-update creature_template set `unit_flags` = 256, `type_flags` = 104, scriptName = 'boss_the_lich_king' where entry = 36597;
+update creature_template set `unit_flags` = 0, `type_flags` = 104, scriptName = 'boss_the_lich_king' where entry = 36597;
 -- original: 268435564
 update creature_template set npcflag = 1, scriptName = 'npc_tirion_final' where entry = 38995;
 -- adds
@@ -102,6 +102,14 @@ update creature_template set scriptName = 'npc_terenas_menethil' where entry = 3
 update creature_template set scriptName = 'mob_spirit_warden' where entry = 36824;
 update creature_template set scriptName = 'mob_defile_target' where entry = 38757;
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('71614', '1', '38995');
+
+-- Dummy frostmourne platform until the real on is found
+DELETE FROM `gameobject_template` WHERE (`entry`=250001);
+INSERT INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `faction`, `flags`, `size`, `questItem1`, `questItem2`, `questItem3`, `questItem4`, `questItem5`, `questItem6`, `data0`, `data1`, `data2`, `data3`, `data4`, `data5`, `data6`, `data7`, `data8`, `data9`, `data10`, `data11`, `data12`, `data13`, `data14`, `data15`, `data16`, `data17`, `data18`, `data19`, `data20`, `data21`, `data22`, `data23`, `mingold`, `maxgold`, `ScriptName`) VALUES (250001, 33, 8387, 'Frostmourne Platform', '', '', '', 0, 0, 1, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 63, 0, 0, 0, 0, 0, 0, 0, '');
+-- On map
+DELETE FROM `gameobject` WHERE `id`=250001;
+INSERT INTO `gameobject` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`position_x`,`position_y`,`position_z`,`orientation`,`rotation0`,`rotation1`,`rotation2`,`rotation3`,`spawntimesecs`,`animprogress`,`state`) VALUES
+(800201, 250001, 631, 15, 65535, 487.033, -2520.054, 1036.61, 0, 0, 0, 0, 0, 300, 0, 1);
 
 -- Frostwing
 update creature_template set scriptName = 'mob_ymirjar_battlemaiden', `unit_flags` = 0 where entry = 37132;

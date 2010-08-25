@@ -105,6 +105,14 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 
 	// frozen throne
 	uint64 m_uiTirionFinalGUID;
+	uint64 m_uiStanding1GUID;
+	uint64 m_uiStanding2GUID;
+	uint64 m_uiStanding3GUID;
+	uint64 m_uiStanding4GUID;
+	uint64 m_uiFrostyWindGUID;
+	uint64 m_uiFrostyEdgeGUID;
+	uint64 m_uiSnowEdgeGUID;
+	uint64 m_uiArthasPlatformGUID;
 
     // loot
     uint64 m_uiDeathbringersCacheGUID;
@@ -182,6 +190,14 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 		// frozen throne
 		m_uiLichKingGUID				= 0;
 		m_uiTirionFinalGUID				= 0;
+		m_uiStanding1GUID				= 0;
+		m_uiStanding2GUID				= 0;
+		m_uiStanding3GUID				= 0;
+		m_uiStanding4GUID				= 0;
+		m_uiFrostyWindGUID				= 0;
+		m_uiFrostyEdgeGUID				= 0;
+		m_uiSnowEdgeGUID				= 0;
+		m_uiArthasPlatformGUID			= 0;
 
         // loot
         m_uiDeathbringersCacheGUID      = 0;
@@ -413,6 +429,30 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 				m_uiDragonDoor4GUID = pGo->GetGUID();
 				break;
                 // frozen throne
+			case GO_ICESHARD_STANDINGS_1:
+				m_uiStanding1GUID = pGo->GetGUID();
+				break;
+			case GO_ICESHARD_STANDINGS_2:
+				m_uiStanding2GUID = pGo->GetGUID();
+				break;
+			case GO_ICESHARD_STANDINGS_3:
+				m_uiStanding3GUID = pGo->GetGUID();
+				break;
+			case GO_ICESHARD_STANDINGS_4:
+				m_uiStanding4GUID = pGo->GetGUID();
+				break;
+			case GO_THRONE_FROSTY_EDGE:
+				m_uiFrostyEdgeGUID = pGo->GetGUID();
+				break;
+			case GO_THRONE_FROSTY_WIND:
+				m_uiFrostyWindGUID = pGo->GetGUID();
+				break;
+			case GO_SNOW_EDGE:
+				m_uiSnowEdgeGUID = pGo->GetGUID();
+				break;
+			case GO_ARTHAS_PLATFORM:
+				m_uiArthasPlatformGUID = pGo->GetGUID();
+				break;
 
                 // loot
             case GO_DEATHBRINGERS_CACHE_10:
@@ -776,6 +816,22 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 				return m_uiTirionFinalGUID;
 			case GO_DRINK_ME:
 				return m_uiDrinkMeGUID;
+			case GO_ICESHARD_STANDINGS_1:
+				return m_uiStanding1GUID;
+			case GO_ICESHARD_STANDINGS_2:
+				return m_uiStanding2GUID;
+			case GO_ICESHARD_STANDINGS_3:
+				return m_uiStanding3GUID;
+			case GO_ICESHARD_STANDINGS_4:
+				return m_uiStanding4GUID;
+			case GO_THRONE_FROSTY_EDGE:
+				return m_uiFrostyEdgeGUID;
+			case GO_THRONE_FROSTY_WIND:
+				return m_uiFrostyWindGUID;
+			case GO_SNOW_EDGE:
+				return m_uiSnowEdgeGUID;
+			case GO_ARTHAS_PLATFORM:
+				return m_uiArthasPlatformGUID;
         }
         return 0;
     }
