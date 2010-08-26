@@ -435,6 +435,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
 	// roleplay
 	uint32 m_uiSpeechTimer;
     uint32 m_uiSpeechPhase;
+	uint32 m_uiOldFlag;
     
     uint32 m_uiBerserkTimer;
 	uint32 m_uiYellTimer;
@@ -537,6 +538,13 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
 			pStanding->SetGoState(GO_STATE_READY);
 		if(GameObject* pEdge = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_SNOW_EDGE)))
 			pEdge->SetGoState(GO_STATE_READY);
+		if(GameObject* pWind = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_THRONE_FROSTY_WIND)))
+			pWind->SetGoState(GO_STATE_READY);
+		if (GameObject* pGoFloor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_ARTHAS_PLATFORM)))
+		{
+			pGoFloor->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK_10 | GO_FLAG_NODESPAWN);
+			pGoFloor->SetUInt32Value(GAMEOBJECT_BYTES_1, m_uiOldFlag);
+		}
 
 		/*if (Creature* pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_TIRION_FINAL)))
 		{
@@ -755,6 +763,8 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
 				m_creature->GetMap()->CreatureRelocation(m_creature, 502.935f, -2125.925f, 1040.860f, 0);
 				m_creature->SendMonsterMove(502.935f, -2125.925f, 1040.860f, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
 				m_creature->CastStop();
+				m_creature->GetMotionMaster()->MoveIdle();
+				SetCombatMovement(false);
 				DoCast(m_creature, SPELL_REMORSELESS_WINTER);
 				DoScriptText(SAY_WINTER, m_creature);
 				m_uiPhase = PHASE_TRANS_ONE;
@@ -767,6 +777,8 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
 					pStanding->SetGoState(GO_STATE_ACTIVE);
 				if(GameObject* pStanding = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_ICESHARD_STANDINGS_4)))
 					pStanding->SetGoState(GO_STATE_ACTIVE);
+				if(GameObject* pWind = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_THRONE_FROSTY_WIND)))
+					pWind->SetGoState(GO_STATE_ACTIVE);
 				m_uiPainAndSufferingTimer	= 5000;
 				m_uiSummonIceSphereTimer	= 6000;
 				m_uiRagingSpiritTimer		= 17000;
@@ -826,12 +838,22 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
 			{
 				m_creature->GetMap()->CreatureRelocation(m_creature, 502.935f, -2125.925f, 1040.860f, 0);
 				m_creature->SendMonsterMove(502.935f, -2125.925f, 1040.860f, SPLINETYPE_NORMAL, m_creature->GetSplineFlags(), 1);
+				m_creature->GetMotionMaster()->MoveIdle();
+				SetCombatMovement(false);
 				m_creature->CastStop();
 				DoCast(m_creature, SPELL_REMORSELESS_WINTER);
 				DoScriptText(SAY_WINTER, m_creature);
 				m_uiPhase = PHASE_TRANS_TWO;
 				if(GameObject* pEdge = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_SNOW_EDGE)))
 					pEdge->SetGoState(GO_STATE_READY);
+				if(GameObject* pWind = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_THRONE_FROSTY_WIND)))
+					pWind->SetGoState(GO_STATE_ACTIVE);
+				// restore
+				if (GameObject* pGoFloor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_ARTHAS_PLATFORM)))
+				{
+					pGoFloor->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK_10 | GO_FLAG_NODESPAWN);
+					pGoFloor->SetUInt32Value(GAMEOBJECT_BYTES_1, m_uiOldFlag);
+				}
 				m_uiPhaseEndTimer = 60000;
 				m_uiPainAndSufferingTimer	= 5000;
 				m_uiSummonIceSphereTimer	= 6000;
@@ -957,8 +979,19 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
 				DoCast(m_creature, SPELL_QUAKE);
 				if(GameObject* pEdge = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_SNOW_EDGE)))
 					pEdge->SetGoState(GO_STATE_ACTIVE);
+				if(GameObject* pWind = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_THRONE_FROSTY_WIND)))
+					pWind->SetGoState(GO_STATE_READY);
 				if(GameObject* pPlatform = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_ARTHAS_PLATFORM)))
 					pPlatform->SetGoState(GO_STATE_ACTIVE_ALTERNATIVE);
+				if (GameObject* pGoFloor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_ARTHAS_PLATFORM)))
+				{
+					pGoFloor->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK_10 | GO_FLAG_NODESPAWN);
+					m_uiOldFlag = pGoFloor->GetUInt32Value(GAMEOBJECT_BYTES_1);
+					pGoFloor->SetUInt32Value(GAMEOBJECT_BYTES_1,8449);
+				}
+				m_creature->GetMotionMaster()->Clear();
+				m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+				SetCombatMovement(true);
 				m_uiPhase = PHASE_TWO;
 				m_uiPhaseEndTimer = 60000;
 				break;
@@ -997,6 +1030,17 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
 				DoCast(m_creature, SPELL_QUAKE);
 				if(GameObject* pEdge = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_SNOW_EDGE)))
 					pEdge->SetGoState(GO_STATE_ACTIVE);
+				if(GameObject* pWind = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_THRONE_FROSTY_WIND)))
+					pWind->SetGoState(GO_STATE_READY);
+				if (GameObject* pGoFloor = m_pInstance->instance->GetGameObject(m_pInstance->GetData64(GO_ARTHAS_PLATFORM)))
+				{
+					pGoFloor->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK_10 | GO_FLAG_NODESPAWN);
+					m_uiOldFlag = pGoFloor->GetUInt32Value(GAMEOBJECT_BYTES_1);
+					pGoFloor->SetUInt32Value(GAMEOBJECT_BYTES_1,8449);
+				}
+				m_creature->GetMotionMaster()->Clear();
+				m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+				SetCombatMovement(true);
 				m_uiPhase = PHASE_THREE;
 				m_uiPhaseEndTimer = 60000;
 				break;

@@ -446,6 +446,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
 				break;
 			case GO_THRONE_FROSTY_WIND:
 				m_uiFrostyWindGUID = pGo->GetGUID();
+				pGo->SetGoState(GO_STATE_READY);
 				break;
 			case GO_SNOW_EDGE:
 				m_uiSnowEdgeGUID = pGo->GetGUID();
