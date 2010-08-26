@@ -30,30 +30,29 @@ EndScriptData */
 
 enum
 {
-    QUEST_DISPELLING_ILLUSIONS = 13149,
-    QUEST_A_ROYAL_ESCORT       = 13151,
+    QUEST_DISPELLING_ILLUSIONS  = 13149,
+    QUEST_A_ROYAL_ESCORT        = 13151,
 
-    ITEM_ARCANE_DISRUPTOR      = 37888,
+    ITEM_ARCANE_DISRUPTOR       = 37888,
 
-    GOSSIP_MENU_INN_1          = 12939,
-    GOSSIP_MENU_INN_2          = 12949,
-    GOSSIP_MENU_INN_3          = 12950,
-    GOSSIP_MENU_INN_4          = 12952,
+    GOSSIP_ITEM_ENTRANCE_1      = -3595000,
+    GOSSIP_ITEM_ENTRANCE_2      = -3595001,
+    GOSSIP_ITEM_ENTRANCE_3      = -3595002,
 
-    GOSSIP_MENU_ENTRANCE_1     = 12992,
-    GOSSIP_MENU_ENTRANCE_2     = 12993,
-    GOSSIP_MENU_ENTRANCE_3     = 12994,
-    GOSSIP_MENU_ENTRANCE_4     = 12995,
+    TEXT_ID_ENTRANCE_1          = 12992,
+    TEXT_ID_ENTRANCE_2          = 12993,
+    TEXT_ID_ENTRANCE_3          = 12994,
+    TEXT_ID_ENTRANCE_4          = 12995,
+
+    GOSSIP_ITEM_INN_1           = -3595003,
+    GOSSIP_ITEM_INN_2           = -3595004,
+    GOSSIP_ITEM_INN_3           = -3595005,
+
+    TEXT_ID_INN_1               = 12939,
+    TEXT_ID_INN_2               = 12949,
+    TEXT_ID_INN_3               = 12950,
+    TEXT_ID_INN_4               = 12952,
 };
-
-const std::string GOSSIP_ITEM_INN_1      = "Why have I been sent back to this particular place and time?";
-const std::string GOSSIP_ITEM_INN_2      = "What was this decision?";
-const std::string GOSSIP_ITEM_INN_3      = "So how does the Infinite Dragonflight plan to interfere?";
-
-const std::string GOSSIP_ITEM_ENTRANCE_1 = "What do you think they're up to?";
-const std::string GOSSIP_ITEM_ENTRANCE_2 = "You want me to do what?";
-const std::string GOSSIP_ITEM_ENTRANCE_3 = "Very well, Chromie";
-
 
 bool GossipHello_npc_chromie(Player *pPlayer, Creature *pCreature)
 {
@@ -68,18 +67,18 @@ bool GossipHello_npc_chromie(Player *pPlayer, Creature *pCreature)
                 if (m_pInstance->GetData(TYPE_GRAIN_EVENT) != DONE)
                 {
                     if (pPlayer->GetQuestRewardStatus(QUEST_DISPELLING_ILLUSIONS) && !pPlayer->HasItemCount(ITEM_ARCANE_DISRUPTOR, 1))
-                        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_INN_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+                        pPlayer->ADD_GOSSIP_ITEM_ID(GOSSIP_ICON_CHAT, GOSSIP_ITEM_INN_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
                 }
-                pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_INN_1, pCreature->GetGUID());
+                pPlayer->SEND_GOSSIP_MENU(TEXT_ID_INN_1, pCreature->GetGUID());
                 break;
             case NPC_CHROMIE_ENTRANCE:
                 if (m_pInstance->GetData(TYPE_GRAIN_EVENT) == DONE && m_pInstance->GetData(TYPE_ARTHAS_INTRO_EVENT) == NOT_STARTED && pPlayer->GetQuestRewardStatus(QUEST_A_ROYAL_ESCORT))
-                    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ENTRANCE_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-                pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_ENTRANCE_1, pCreature->GetGUID());
+                    pPlayer->ADD_GOSSIP_ITEM_ID(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ENTRANCE_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+                pPlayer->SEND_GOSSIP_MENU(TEXT_ID_ENTRANCE_1, pCreature->GetGUID());
                 break;
         }
     }
-       return true;
+    return true;
 }
 
 bool GossipSelect_npc_chromie(Player* pPlayer, Creature* pCreature, uint32 sender, uint32 uiAction)
@@ -90,23 +89,25 @@ bool GossipSelect_npc_chromie(Player* pPlayer, Creature* pCreature, uint32 sende
             switch (uiAction)
             {
                 case GOSSIP_ACTION_INFO_DEF+1:
-                    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_INN_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
-                    pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_INN_2, pCreature->GetGUID());
+                    pPlayer->ADD_GOSSIP_ITEM_ID(GOSSIP_ICON_CHAT, GOSSIP_ITEM_INN_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+                    pPlayer->SEND_GOSSIP_MENU(TEXT_ID_INN_2, pCreature->GetGUID());
                     break;
                 case GOSSIP_ACTION_INFO_DEF+2:
-                    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_INN_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
-                    pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_INN_3, pCreature->GetGUID());
+                    pPlayer->ADD_GOSSIP_ITEM_ID(GOSSIP_ICON_CHAT, GOSSIP_ITEM_INN_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
+                    pPlayer->SEND_GOSSIP_MENU(TEXT_ID_INN_3, pCreature->GetGUID());
                     break;
                 case GOSSIP_ACTION_INFO_DEF+3:
-                    pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_INN_4, pCreature->GetGUID());
+                    pPlayer->SEND_GOSSIP_MENU(TEXT_ID_INN_4, pCreature->GetGUID());
                     if (!pPlayer->HasItemCount(ITEM_ARCANE_DISRUPTOR, 1))
                     {
                         if (Item* pItem = pPlayer->StoreNewItemInInventorySlot(ITEM_ARCANE_DISRUPTOR, 1))
                         {
                             pPlayer->SendNewItem(pItem, 1, true, false);
-                            if (instance_culling_of_stratholme* m_pInstance = (instance_culling_of_stratholme*)pCreature->GetInstanceData())
-                                if (m_pInstance->GetData(TYPE_GRAIN_EVENT) == NOT_STARTED)
-                                    m_pInstance->SetData(TYPE_GRAIN_EVENT, SPECIAL);
+                            if (instance_culling_of_stratholme* pInstance = (instance_culling_of_stratholme*)pCreature->GetInstanceData())
+                            {
+                                if (pInstance->GetData(TYPE_GRAIN_EVENT) == NOT_STARTED)
+                                    pInstance->SetData(TYPE_GRAIN_EVENT, SPECIAL);
+                            }
                         }
                     }
                     break;
@@ -116,23 +117,25 @@ bool GossipSelect_npc_chromie(Player* pPlayer, Creature* pCreature, uint32 sende
             switch (uiAction)
             {
                 case GOSSIP_ACTION_INFO_DEF+1:
-                    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ENTRANCE_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
-                    pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_ENTRANCE_2, pCreature->GetGUID());
+                    pPlayer->ADD_GOSSIP_ITEM_ID(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ENTRANCE_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+                    pPlayer->SEND_GOSSIP_MENU(TEXT_ID_ENTRANCE_2, pCreature->GetGUID());
                     break;
                 case GOSSIP_ACTION_INFO_DEF+2:
-                    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ENTRANCE_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
-                    pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_ENTRANCE_3, pCreature->GetGUID());
+                    pPlayer->ADD_GOSSIP_ITEM_ID(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ENTRANCE_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
+                    pPlayer->SEND_GOSSIP_MENU(TEXT_ID_ENTRANCE_3, pCreature->GetGUID());
                     break;
                 case GOSSIP_ACTION_INFO_DEF+3:
-                    pPlayer->SEND_GOSSIP_MENU(GOSSIP_MENU_ENTRANCE_4, pCreature->GetGUID());
-                    if (instance_culling_of_stratholme* m_pInstance = (instance_culling_of_stratholme*)pCreature->GetInstanceData())
-                        if (m_pInstance->GetData(TYPE_ARTHAS_INTRO_EVENT) == NOT_STARTED)
-                            m_pInstance->DoSpawnArthasIfNeeded();
+                    pPlayer->SEND_GOSSIP_MENU(TEXT_ID_ENTRANCE_4, pCreature->GetGUID());
+                    if (instance_culling_of_stratholme* pInstance = (instance_culling_of_stratholme*)pCreature->GetInstanceData())
+                    {
+                        if (pInstance->GetData(TYPE_ARTHAS_INTRO_EVENT) == NOT_STARTED)
+                            pInstance->DoSpawnArthasIfNeeded();
+                    }
                     break;
             }
             break;
     }
-       return true;
+    return true;
 }
 
 bool QuestAccept_npc_chromie(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
@@ -140,14 +143,18 @@ bool QuestAccept_npc_chromie(Player* pPlayer, Creature* pCreature, const Quest* 
     switch (pQuest->GetQuestId())
     {
         case QUEST_DISPELLING_ILLUSIONS:
-            if (instance_culling_of_stratholme* m_pInstance = (instance_culling_of_stratholme*)pCreature->GetInstanceData())
-                if (m_pInstance->GetData(TYPE_GRAIN_EVENT) == NOT_STARTED)
-                    m_pInstance->SetData(TYPE_GRAIN_EVENT, SPECIAL);
+            if (instance_culling_of_stratholme* pInstance = (instance_culling_of_stratholme*)pCreature->GetInstanceData())
+            {
+                if (pInstance->GetData(TYPE_GRAIN_EVENT) == NOT_STARTED)
+                    pInstance->SetData(TYPE_GRAIN_EVENT, SPECIAL);
+            }
             break;
         case QUEST_A_ROYAL_ESCORT:
-            if (instance_culling_of_stratholme* m_pInstance = (instance_culling_of_stratholme*)pCreature->GetInstanceData())
-                if (m_pInstance->GetData(TYPE_ARTHAS_INTRO_EVENT) == NOT_STARTED)
-                    m_pInstance->DoSpawnArthasIfNeeded();
+            if (instance_culling_of_stratholme* pInstance = (instance_culling_of_stratholme*)pCreature->GetInstanceData())
+            {
+                if (pInstance->GetData(TYPE_ARTHAS_INTRO_EVENT) == NOT_STARTED)
+                    pInstance->DoSpawnArthasIfNeeded();
+            }
             break;
     }
     return true;
@@ -212,17 +219,17 @@ bool EffectAuraDummy_spell_aura_dummy_npc_crates_dummy(const Aura* pAura, bool b
 
 void AddSC_culling_of_stratholme()
 {
-    Script* newscript;
+    Script* pNewScript;
 
-    newscript = new Script;
-    newscript->Name = "npc_chromie";
-    newscript->pGossipHello = &GossipHello_npc_chromie;
-    newscript->pGossipSelect = &GossipSelect_npc_chromie;
-    newscript->pQuestAccept = &QuestAccept_npc_chromie;
-    newscript->RegisterSelf();
+    pNewScript = new Script;
+    pNewScript->Name = "npc_chromie";
+    pNewScript->pGossipHello = &GossipHello_npc_chromie;
+    pNewScript->pGossipSelect = &GossipSelect_npc_chromie;
+    pNewScript->pQuestAccept = &QuestAccept_npc_chromie;
+    pNewScript->RegisterSelf();
 
-    newscript = new Script;
-    newscript->Name = "spell_dummy_npc_crates_bunny";
-    newscript->pEffectAuraDummy = &EffectAuraDummy_spell_aura_dummy_npc_crates_dummy;
-    newscript->RegisterSelf();
+    pNewScript = new Script;
+    pNewScript->Name = "spell_dummy_npc_crates_bunny";
+    pNewScript->pEffectAuraDummy = &EffectAuraDummy_spell_aura_dummy_npc_crates_dummy;
+    pNewScript->RegisterSelf();
 }
