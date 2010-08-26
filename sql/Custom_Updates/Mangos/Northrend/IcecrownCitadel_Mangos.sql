@@ -12,8 +12,9 @@ UPDATE creature_template SET ScriptName = 'mob_cult_adherent' WHERE entry = 3794
 UPDATE creature_template SET ScriptName = 'mob_cult_fanatic' WHERE entry = 37890;
 
 -- Deathbringer Saurfang
-UPDATE creature_template SET ScriptName = 'boss_saurfang' WHERE entry = 37813;
+UPDATE creature_template SET `unit_flags` = 256, ScriptName = 'boss_saurfang' WHERE entry = 37813;
 UPDATE creature_template SET ScriptName = 'mob_blood_beast' WHERE entry = 38508;
+update creature set position_x = -490 where id = 37813;
 
 -- Festergut
 UPDATE creature_template SET ScriptName = 'boss_festergut' WHERE entry = 36626;
@@ -101,6 +102,7 @@ update creature_template set scriptName = 'mob_icc_ice_sphere' where entry = 366
 update creature_template set scriptName = 'npc_terenas_menethil' where entry = 36823;
 update creature_template set scriptName = 'mob_spirit_warden' where entry = 36824;
 update creature_template set scriptName = 'mob_defile_target' where entry = 38757;
+UPDATE creature_template set scriptName = 'mob_frostmourneDummy' WHERE `entry` = 38584;
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('71614', '1', '38995');
 
 -- Dummy frostmourne platform until the real on is found

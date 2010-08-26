@@ -405,7 +405,7 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 				//frost bomb x4
 				if(m_uiBombTimer < uiDiff)
 				{
-					if(m_uiBombCount > 4)
+					if(m_uiBombCount > 3)
 					{
 						m_uiBombCount = 0;
 						m_uiPhase = PHASE_ONE;

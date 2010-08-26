@@ -358,6 +358,7 @@ struct MANGOS_DLL_DECL mob_coldflameAI : public ScriptedAI
 		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+		Difficulty = pCreature->GetMap()->GetDifficulty();
 		pCreature->SetDisplayId(11686);     // make invisible
 		pCreature->setFaction(14);
 		SetCombatMovement(false);
@@ -365,16 +366,20 @@ struct MANGOS_DLL_DECL mob_coldflameAI : public ScriptedAI
     }
 
     ScriptedInstance *m_pInstance;
+	uint32 Difficulty;
 
-    void Reset()
+	void Reset()
 	{
-		DoCast(m_creature, SPELL_COLDFLAME_TRIG);
+		//DoCast(m_creature, SPELL_COLDFLAME_TRIG);
+		if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+			DoCast(m_creature, SPELL_COLDFLAME_10);
+		if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
+			DoCast(m_creature, SPELL_COLDFLAME_25);
+		if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+			DoCast(m_creature, SPELL_COLDFLAME_10HC);
+		if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+			DoCast(m_creature, SPELL_COLDFLAME_25HC);
 	}
-
-    void AttackStart(Unit *who)
-    {
-        return;
-    }
 
     void UpdateAI(const uint32 uiDiff)
     {

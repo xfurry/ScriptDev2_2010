@@ -529,7 +529,7 @@ INSERT INTO `script_texts` VALUES
 ('-1609556','I will freeze you from within until all that remains is an icy husk!', '', '', '', '', '', '', '', '','17369','1','0','0','casting remorseless winter'),
 ('-1609557','Watch as the world around you collapses!', '', '', '', '', '', '', '', '','17370','1','0','0','arena shatters'),
 ('-1609558','Val\'kyr, your master calls!', '', '', '', '', '', '', '', '','17373','1','0','0','summon valkyr'),
-('-1609559','Frostmourne hungers...', '', '', '', '', '', '', '', '','17373','1','0','0','casting harvest soul'),
+('-1609559','Frostmourne hungers...', '', '', '', '', '', '', '', '','17366','1','0','0','casting harvest soul'),
 -- Inside Frostmourne :     
 ('-1609560','You have come to bring Arthas to justice? To see the Lich King destroyed?', '', '', '', '', '', '', '', '','17394','1','0','0','in FM 01'),
 ('-1609561','First, you must escape Frostmourne\'s hold, or be damned as I am; trapped within this cursed blade for all eternity.', '', '', '', '', '', '', '', '','17395','1','0','0','in FM 02'),

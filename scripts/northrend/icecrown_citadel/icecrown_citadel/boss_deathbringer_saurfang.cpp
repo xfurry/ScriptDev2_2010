@@ -116,7 +116,7 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
         pCreature->setPowerType(POWER_RAGE); 
         pCreature->SetMaxPower(POWER_RAGE,1000);
         pCreature->SetPower(POWER_RAGE,0); 
-        SetEquipmentSlots(false, EQUIP_ID, -1, -1);
+        //SetEquipmentSlots(false, EQUIP_ID, -1, -1);
         Reset();
     }
 
@@ -133,6 +133,8 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 	uint32 m_uiAuraDamage;
 	uint8 m_uiHealPercent;
 
+	std::list<uint64> m_lTargetsGUIDList;
+
     void Reset()
     {
         m_uiBloodBeast_Timer    = 40000;
@@ -148,6 +150,8 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 		else
 			m_uiHealPercent = 0.05;
 
+		m_lTargetsGUIDList.clear();
+		m_creature->setFaction(14);
         m_creature->SetPower(POWER_RAGE,0); 
     }
 
@@ -216,33 +220,30 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 	// workaround for mark of the fallen champ
 	void CheckFallenPlayers()
 	{
-		Map *map = m_creature->GetMap();
-		if (map->IsDungeon())
+		if (!m_lTargetsGUIDList.empty())
 		{
-			Map::PlayerList const &PlayerList = map->GetPlayers();
-
-			if (PlayerList.isEmpty())
-				return;
-
-			for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+			for(std::list<uint64>::iterator itr = m_lTargetsGUIDList.begin(); itr != m_lTargetsGUIDList.end(); ++itr)
 			{
-				if(i->getSource()->HasAura(SPELL_MARK_FALLEN_CHAMP, EFFECT_INDEX_0) && i->getSource()->isAlive())
+				if (Player* pTarget = m_creature->GetMap()->GetPlayer(*itr))
 				{
-					if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-						m_uiAuraDamage = urand(4275, 4725);
-					if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-						m_uiAuraDamage = urand(6175, 6825);
-					if(i->getSource()->GetHealth() > m_uiAuraDamage)
-						i->getSource()->DealDamage(i->getSource(), m_uiAuraDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-					else 
+					if (pTarget->isAlive())
 					{
-						i->getSource()->DealDamage(i->getSource(), m_uiAuraDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-						// heal the boss for % of hp
-						m_creature->DealHeal(m_creature, m_uiHealPercent*m_creature->GetMaxHealth(), NULL);
+						if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+							m_uiAuraDamage = urand(4275, 4725);
+						else if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
+							m_uiAuraDamage = urand(6175, 6825);
+						if(pTarget->GetHealth() > m_uiAuraDamage)
+							pTarget->DealDamage(pTarget, m_uiAuraDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+						else 
+						{
+							pTarget->DealDamage(pTarget, m_uiAuraDamage, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+							// heal the boss for % of hp
+							m_creature->DealHeal(m_creature, m_uiHealPercent*m_creature->GetMaxHealth(), NULL);
+						}
 					}
 				}
 			}
-		} 
+		}
 	}
 
     void UpdateAI(const uint32 uiDiff)
@@ -260,15 +261,21 @@ struct MANGOS_DLL_DECL boss_saurfangAI : public ScriptedAI
 		}
 		else m_uiAuraCheckTimer -= uiDiff;
 
-        if (m_creature->GetPower(m_creature->getPowerType()) == m_creature->GetMaxPower(m_creature->getPowerType()))
-        {
-            DoScriptText(SAY_FALLENCHAMPION, m_creature);
+		if (m_creature->GetPower(m_creature->getPowerType()) == m_creature->GetMaxPower(m_creature->getPowerType()))
+		{
 			m_bHasAura = true;
-            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                DoCast(target, SPELL_MARK_FALLEN_CHAMP);
-            m_creature->SetPower(m_creature->getPowerType(),0);
-            m_creature->RemoveAurasDueToSpell(SPELL_BLOOD_POWER);
-        }
+			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
+			{
+				if(!pTarget->HasAura(SPELL_MARK_FALLEN_CHAMP))
+				{
+					DoScriptText(SAY_FALLENCHAMPION, m_creature);
+					DoCast(pTarget, SPELL_MARK_FALLEN_CHAMP);
+					m_lTargetsGUIDList.push_back(pTarget->GetGUID());
+					m_creature->SetPower(m_creature->getPowerType(),0);
+					m_creature->RemoveAurasDueToSpell(SPELL_BLOOD_POWER);
+				}
+			}
+		}
 
         if (m_uiBloodBeast_Timer < uiDiff)
         {
