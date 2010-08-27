@@ -211,7 +211,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
         {
             case NPC_MARROWGAR:     m_uiMarrowgarGUID       = pCreature->GetGUID(); break;
             case NPC_DEATHWHISPER:  m_uiDeathwhisperGUID    = pCreature->GetGUID(); break;
-            case NPC_SAURFANG:      m_uiSaurfangGUID        = pCreature->GetGUID(); break;
+            case NPC_DEATHBRINGER_SAURFANG:      m_uiSaurfangGUID        = pCreature->GetGUID(); break;
             case NPC_FESTERGUT:     m_uiFestergutGUID       = pCreature->GetGUID(); break;
             case NPC_ROTFACE:       m_uiRotfaceGUID         = pCreature->GetGUID(); break;
             case NPC_PUTRICIDE:     m_uiPutricideGUID       = pCreature->GetGUID(); break;
@@ -787,7 +787,7 @@ struct MANGOS_DLL_DECL instance_icecrown_citadel : public ScriptedInstance
                 return m_uiMarrowgarGUID;
             case NPC_DEATHWHISPER:
                 return m_uiDeathwhisperGUID;
-            case NPC_SAURFANG:
+            case NPC_DEATHBRINGER_SAURFANG:
                 return m_uiSaurfangGUID;
             case NPC_FESTERGUT:
                 return m_uiFestergutGUID;

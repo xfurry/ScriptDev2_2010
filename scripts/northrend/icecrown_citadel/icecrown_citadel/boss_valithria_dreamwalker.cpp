@@ -105,6 +105,7 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 	uint32 m_uiPortalTimer;
 	uint8 m_uiMaxPortals;
 	uint32 m_uiSummonTimer;
+	uint32 m_uiSummonCount;
 	uint32 m_uiColumnOfFrostTimer;
 	uint32 m_uiCloudsSummonTimer;
 	uint8 m_uiCloudStage;
@@ -127,6 +128,7 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 		m_uiCloudsSummonTimer	= 40000;
 		m_uiCloudStage			= 0;
 		m_uiColumnOfFrostTimer	= 30000;
+		m_uiSummonCount			= 0;
 		m_uiSummonTimer			= 10000;
 		m_uiDespawnTimer		= 5000;
 		m_uiLocId				= 1;
@@ -332,7 +334,8 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 			if(m_uiSummonTimer < uiDiff)
 			{
 				SummonAdds();
-				m_uiSummonTimer = m_bIsBerserk ? 500 : 5000;
+				m_uiSummonCount += 1;
+				m_uiSummonTimer = m_bIsBerserk ? 500 : 5000 - m_uiSummonCount * 33.33;
 			}
 			else m_uiSummonTimer -= uiDiff;
 

@@ -31,7 +31,7 @@ enum
 	// lower spire
     NPC_MARROWGAR               = 36612,
     NPC_DEATHWHISPER            = 36855,
-    NPC_SAURFANG                = 37813,
+    NPC_DEATHBRINGER_SAURFANG   = 37813,
 	// plagueworks
     NPC_FESTERGUT               = 36626,
     NPC_ROTFACE                 = 36627,

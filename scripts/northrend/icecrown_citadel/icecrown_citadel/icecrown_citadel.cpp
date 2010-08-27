@@ -83,7 +83,7 @@ bool GoHello_icecrown_citadel_teleporter( Player *pPlayer, GameObject *pGO )
 	if(pInstance->GetData(TYPE_SINDRAGOSA) == DONE)
 		pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Sindragosa's Lair", GOSSIP_SENDER_MAIN, SINDRAGOSA);
 
-	if(pInstance->GetData(TYPE_SINDRAGOSA) == DONE && pInstance->GetData(TYPE_BLOOD_QUEEN) == DONE && pInstance->GetData(TYPE_PUTRICIDE) == DONE)
+	if(pInstance->GetData(TYPE_SINDRAGOSA) == DONE && pInstance->GetData(TYPE_BLOOD_QUEEN) == DONE && pInstance->GetData(TYPE_PUTRICIDE) == DONE && pInstance->GetData(TYPE_LICH_KING) != IN_PROGRESS)
 		pPlayer->ADD_GOSSIP_ITEM(0, "Teleport to the Frozen Throne", GOSSIP_SENDER_MAIN, FROZEN_THRONE);
 
     pPlayer->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, pGO->GetGUID());
