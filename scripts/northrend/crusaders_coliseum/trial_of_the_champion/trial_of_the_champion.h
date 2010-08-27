@@ -95,4 +95,38 @@ enum
     ACHIEV_TOC_HORDE            = 3778,
 };
 
+enum eVehicles
+{
+    //Grand Champions Alliance Vehicles
+    VEHICLE_MARSHAL_JACOB_ALERIUS_MOUNT             = 35637,
+    VEHICLE_AMBROSE_BOLTSPARK_MOUNT                 = 35633,
+    VEHICLE_COLOSOS_MOUNT                           = 35768,
+    VEHICLE_EVENSONG_MOUNT                          = 34658,
+    VEHICLE_LANA_STOUTHAMMER_MOUNT                  = 35636,
+    //Faction Champions (ALLIANCE)
+    VEHICLE_DARNASSIA_NIGHTSABER                    = 33298,
+    VEHICLE_EXODAR_ELEKK                            = 33416,
+    VEHICLE_STORMWIND_STEED                         = 33297,
+    VEHICLE_GNOMEREGAN_MECHANOSTRIDER               = 33301,
+    VEHICLE_IRONFORGE_RAM                           = 33408,
+    //Grand Champions Horde Vehicles
+    VEHICLE_MOKRA_SKILLCRUSHER_MOUNT                = 35638,
+    VEHICLE_ERESSEA_DAWNSINGER_MOUNT                = 35635,
+    VEHICLE_RUNOK_WILDMANE_MOUNT                    = 35640,
+    VEHICLE_ZUL_TORE_MOUNT                          = 35641,
+    VEHICLE_DEATHSTALKER_VESCERI_MOUNT              = 35634,
+    //Faction Champions (HORDE)
+    VEHICLE_FORSAKE_WARHORSE                        = 33414,
+    VEHICLE_THUNDER_BLUFF_KODO                      = 33300,
+    VEHICLE_ORGRIMMAR_WOLF                          = 33409,
+    VEHICLE_SILVERMOON_HAWKSTRIDER                  = 33418,
+    VEHICLE_DARKSPEAR_RAPTOR                        = 33299,
+
+    VEHICLE_ARGENT_WARHORSE                         = 35644,
+    VEHICLE_ARGENT_BATTLEWORG                       = 36558,
+
+    VEHICLE_BLACK_KNIGHT                            = 35491
+};
+
+
 #endif
