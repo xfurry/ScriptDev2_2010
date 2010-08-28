@@ -258,6 +258,8 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
             DoScriptText(SAY_BONESTORM, m_creature);
 			m_creature->InterruptNonMeleeSpells(true);
 			DoCast(m_creature, SPELL_BONE_STORM_AURA);
+			SetCombatMovement(false);
+			m_creature->GetMotionMaster()->MoveConfused();
             m_uiBoneStorm_Timer = 90000;
 			m_uiStormEndTimer	= 23000;
 			m_uiColdFlame_Timer = 5000;
@@ -266,7 +268,12 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
         else m_uiBoneStorm_Timer -= uiDiff;
 
 		if (m_uiStormEndTimer < uiDiff && m_creature->HasAura(SPELL_BONE_STORM_AURA, EFFECT_INDEX_0))
+		{
 			m_creature->RemoveAurasDueToSpell(SPELL_BONE_STORM_AURA);
+			SetCombatMovement(true);
+			m_creature->GetMotionMaster()->Clear();
+			m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+		}
 		else m_uiStormEndTimer -= uiDiff;
 
 		// start the line of flame
