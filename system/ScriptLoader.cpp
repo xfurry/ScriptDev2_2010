@@ -333,6 +333,7 @@ extern void AddSC_instance_icecrown_citadel();              //icecrown citadel r
 extern void AddSC_icecrown_citadel();
 extern void AddSC_boss_marrowgar();
 extern void AddSC_boss_deathwhisper();
+extern void AddSC_gunship_battle();
 extern void AddSC_boss_saurfang();
 extern void AddSC_boss_festergut();
 extern void AddSC_boss_rotface();
@@ -358,13 +359,14 @@ extern void AddSC_boss_razuvious();
 extern void AddSC_boss_sapphiron();
 extern void AddSC_boss_thaddius();
 extern void AddSC_instance_naxxramas();
-extern void AddSC_boss_malygos();							// eye_of_eternity
+extern void AddSC_boss_malygos();							//eye_of_eternity
 extern void AddSC_instance_eye_of_eternity();
 extern void AddSC_boss_anomalus();                          //nexus
 extern void AddSC_boss_keristrasza();
 extern void AddSC_boss_ormorok();
 extern void AddSC_boss_telestra();
 extern void AddSC_instance_nexus();
+extern void AddSC_instance_oculus();						//oculus
 extern void AddSC_boss_sartharion();                        //obsidian_sanctum
 extern void AddSC_instance_obsidian_sanctum();					
 extern void AddSC_boss_baltharus();							//ruby_sanctum
@@ -844,6 +846,7 @@ void AddScripts()
     AddSC_icecrown_citadel();
     AddSC_boss_marrowgar();
     AddSC_boss_deathwhisper();
+	AddSC_gunship_battle();
     AddSC_boss_saurfang();
     AddSC_boss_festergut();
     AddSC_boss_rotface();
@@ -869,13 +872,14 @@ void AddScripts()
     AddSC_boss_sapphiron();
 	AddSC_boss_thaddius();
     AddSC_instance_naxxramas();
-	AddSC_boss_malygos();									// eye_of_eternity
+	AddSC_boss_malygos();									//eye_of_eternity
 	AddSC_instance_eye_of_eternity();
     AddSC_boss_anomalus();                                  //nexus
     AddSC_boss_keristrasza();
     AddSC_boss_ormorok();
     AddSC_boss_telestra();
     AddSC_instance_nexus();
+	AddSC_instance_oculus();								//oculus
     AddSC_boss_sartharion();                                //obsidian_sanctum
     AddSC_instance_obsidian_sanctum();
 	AddSC_boss_baltharus();									//ruby_sanctum
