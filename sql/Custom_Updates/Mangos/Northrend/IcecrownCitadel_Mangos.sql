@@ -11,6 +11,14 @@ UPDATE creature_template SET ScriptName = 'mob_vengeful_shade' WHERE entry = 382
 UPDATE creature_template SET ScriptName = 'mob_cult_adherent' WHERE entry = 37949;
 UPDATE creature_template SET ScriptName = 'mob_cult_fanatic' WHERE entry = 37890;
 
+-- Gunship Battle
+update creature_template set scriptName = 'boss_gunship_commander' where entry in (36948, 36939);
+update creature_template set scriptName = 'mob_sergeant' where entry in (36960, 36961);
+update creature_template set scriptName = 'mob_rm_soldiers' where entry in (36982, 36978);
+update creature_template set scriptName = 'mob_rifleman' where entry in (36968, 36969);
+update creature_template set scriptName = 'mob_battle_mage' where entry in (37117, 37116);
+update creature_template set scriptName = 'mob_marine' where entry in (36957, 36950);
+
 -- Deathbringer Saurfang
 UPDATE creature_template SET `unit_flags` = 256, ScriptName = 'boss_saurfang' WHERE entry = 37813;
 UPDATE creature_template SET ScriptName = 'mob_blood_beast' WHERE entry = 38508;
