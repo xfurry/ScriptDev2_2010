@@ -284,8 +284,8 @@ bool GossipHello_gunship_commander(Player* pPlayer, Creature* pCreature)
     ScriptedInstance *m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
     if(!m_pInstance) return true;
 
-	//if(m_pInstance->GetData(TYPE_GUNSHIP_BATTLE) != DONE && m_pInstance->GetData(TYPE_GUNSHIP_BATTLE) != IN_PROGRESS)
-    //    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+	if(m_pInstance->GetData(TYPE_GUNSHIP_BATTLE) != DONE && m_pInstance->GetData(TYPE_GUNSHIP_BATTLE) != IN_PROGRESS)
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
     pPlayer->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, pCreature->GetGUID());
     return true;
@@ -509,12 +509,12 @@ void AddSC_gunship_battle()
 {
     Script* pNewScript;
 
-    pNewScript = new Script;
-    pNewScript->Name = "boss_gunship_commander";
-    pNewScript->GetAI = &GetAI_boss_gunship_commander;
-	pNewScript->pGossipHello = &GossipHello_gunship_commander;
-    pNewScript->pGossipSelect = &GossipSelect_gunship_commander;
-    pNewScript->RegisterSelf();
+    //pNewScript = new Script;
+    //pNewScript->Name = "boss_gunship_commander";
+    //pNewScript->GetAI = &GetAI_boss_gunship_commander;
+	//pNewScript->pGossipHello = &GossipHello_gunship_commander;
+    //pNewScript->pGossipSelect = &GossipSelect_gunship_commander;
+    //pNewScript->RegisterSelf();
 
 	pNewScript = new Script;
     pNewScript->Name = "mob_sergeant";
