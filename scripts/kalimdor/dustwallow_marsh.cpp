@@ -817,11 +817,11 @@ bool GossipSelect_npc_cassa_crimsonwing(Player* pPlayer, Creature* pCreature, ui
 }
 
 /*######
-## boss_lady_jaina
+## npc_lady_jaina
 ######*/
-struct MANGOS_DLL_DECL boss_lady_jaina_proudmooreAI : public ScriptedAI
+struct MANGOS_DLL_DECL npc_lady_jaina_proudmooreAI : public ScriptedAI
 {
-    boss_lady_jaina_proudmooreAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
+    npc_lady_jaina_proudmooreAI(Creature* pCreature) : ScriptedAI(pCreature) {Reset();}
 
     uint32 m_uiBlizzardTimer;
     uint32 m_uiFireBlastTimer;
@@ -892,9 +892,9 @@ struct MANGOS_DLL_DECL boss_lady_jaina_proudmooreAI : public ScriptedAI
     }
 };
 
-CreatureAI* GetAI_boss_lady_jaina_proudmoore(Creature* pCreature)
+CreatureAI* GetAI_npc_lady_jaina_proudmoore(Creature* pCreature)
 {
-    return new boss_lady_jaina_proudmooreAI(pCreature);
+    return new npc_lady_jaina_proudmooreAI(pCreature);
 }
 
 void AddSC_dustwallow_marsh()
@@ -918,8 +918,8 @@ void AddSC_dustwallow_marsh()
     newscript->RegisterSelf();
 
     newscript = new Script;
-    newscript->Name = "boss_lady_jaina_proudmoore";
-	newscript->GetAI = &GetAI_boss_lady_jaina_proudmoore;
+    newscript->Name = "npc_lady_jaina_proudmoore";
+	newscript->GetAI = &GetAI_npc_lady_jaina_proudmoore;
     newscript->pGossipHello = &GossipHello_npc_lady_jaina_proudmoore;
     newscript->pGossipSelect = &GossipSelect_npc_lady_jaina_proudmoore;
     newscript->RegisterSelf();
