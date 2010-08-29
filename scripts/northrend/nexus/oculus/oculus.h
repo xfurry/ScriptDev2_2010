@@ -7,7 +7,7 @@
 
 enum
 {
-	MAX_ENCOUNTERS			= 4,
+	MAX_ENCOUNTER			= 4,
 
 	TYPE_DRAKOS				= 1,
 	TYPE_VAROS				= 2,
@@ -19,6 +19,10 @@ enum
     NPC_UROM				= 27655,
     NPC_EREGOS				= 27656,
 
+	NPC_ETERNOS				= 27659,	// bronze
+	NPC_VERDISA				= 27657,	// emerald
+	NPC_BELGARISTRASZ		= 27658,	// ruby
+
     GO_DRAGON_CAGE_DOOR     = 193995,
 	GO_DRAGON_CAGE			= 189986,
 
@@ -28,6 +32,8 @@ enum
 	// Loot
 	GO_CACHE_EREGOS			= 191349,
 	GO_CACHE_EREGOS_H		= 193603,
+
+	ACHIEV_MAKE_IT_COUNT	= 1868,
 };
 
 #endif

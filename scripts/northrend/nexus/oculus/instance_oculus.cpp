@@ -17,8 +17,6 @@
 #include "precompiled.h"
 #include "oculus.h"
 
-#define MAX_ENCOUNTER 4
-
 /* The Occulus encounters:
 0 - Drakos the Interrogator
 1 - Varos Cloudstrider
@@ -30,30 +28,111 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
     instance_oculus(Map* pMap) : ScriptedInstance(pMap) {Initialize();};
 
     uint32 m_auiEncounter[MAX_ENCOUNTER];
+	std::string strInstData;
+
+	uint64 m_uiVarosGUID;
+	uint64 m_uiEternosGUID;
+	uint64 m_uiVerdisaGUID;
+	uint64 m_uiBelgaristraszGUID;
+
+	uint64 m_uiCageDoorGUID;
+	uint64 m_uiEregosCacheGUID;
+
+	bool m_bMakeCount;
+	uint32 m_uiMakeCountTimer;
 
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+
+		m_uiVarosGUID			= 0;
+		m_uiEternosGUID			= 0;
+		m_uiVerdisaGUID			= 0;
+		m_uiBelgaristraszGUID	= 0;
+
+		m_uiCageDoorGUID		= 0;
+		m_uiEregosCacheGUID		= 0;
+
+		m_bMakeCount			= false;
+		m_uiMakeCountTimer		= 0;
     }
 
-    void SetData(uint32 uiType, uint32 uiData)
+	void OnCreatureCreate(Creature* pCreature)
     {
-        switch(uiType)
+        switch(pCreature->GetEntry())
         {
-            case TYPE_DRAKOS:
-                m_auiEncounter[0] = uiData;
-                break;
-			case TYPE_VAROS:
-				m_auiEncounter[1] = uiData;
-				break;
-			case TYPE_UROM:
-				m_auiEncounter[2] = uiData;
-				break;
-			case TYPE_EREGOS:
-				m_auiEncounter[3] = uiData;
-				break;
+		case NPC_VAROS:
+			m_uiVarosGUID = pCreature->GetGUID();
+			break;
+		case NPC_ETERNOS:
+			m_uiEternosGUID = pCreature->GetGUID();
+			break;
+		case NPC_VERDISA:
+			m_uiVerdisaGUID = pCreature->GetGUID();
+			break;
+		case NPC_BELGARISTRASZ:
+			m_uiBelgaristraszGUID = pCreature->GetGUID();
+			break;
         }
     }
+
+	void OnObjectCreate(GameObject* pGo)
+    {
+        switch(pGo->GetEntry())
+        {
+		case GO_DRAGON_CAGE_DOOR:
+			m_uiCageDoorGUID = pGo->GetGUID();
+			break;
+		case GO_CACHE_EREGOS:
+			if(instance->IsRegularDifficulty())
+				m_uiEregosCacheGUID = pGo->GetGUID();
+			break;
+		case GO_CACHE_EREGOS_H:
+			if(!instance->IsRegularDifficulty())
+				m_uiEregosCacheGUID = pGo->GetGUID();
+			break;
+        }
+    }
+
+	void SetData(uint32 uiType, uint32 uiData)
+	{
+		switch(uiType)
+		{
+		case TYPE_DRAKOS:
+			m_auiEncounter[0] = uiData;
+			if(uiData == DONE)
+				m_bMakeCount = true;
+			break;
+		case TYPE_VAROS:
+			m_auiEncounter[1] = uiData;
+			break;
+		case TYPE_UROM:
+			m_auiEncounter[2] = uiData;
+			break;
+		case TYPE_EREGOS:
+			m_auiEncounter[3] = uiData;
+			if(uiData == DONE)
+			{
+				DoRespawnGameObject(m_uiEregosCacheGUID);
+				if(m_uiMakeCountTimer < 20*MINUTE)
+					DoCompleteAchievement(ACHIEV_MAKE_IT_COUNT);
+			}
+			break;
+		}
+
+		if (uiData == DONE)
+        {
+            OUT_SAVE_INST_DATA;
+
+            std::ostringstream saveStream;
+            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3];
+
+            strInstData = saveStream.str();
+
+            SaveToDB();
+            OUT_SAVE_INST_DATA_COMPLETE;
+        }
+	}
 
     uint32 GetData(uint32 uiType)
     {
@@ -69,6 +148,56 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
 			return m_auiEncounter[3];
 		}
         return 0;
+    }
+
+	uint64 GetData64(uint32 uiType)
+    {
+		switch(uiType)
+		{
+		case NPC_VAROS:
+			return m_uiVarosGUID;
+		case NPC_ETERNOS:
+			return m_uiEternosGUID;
+		case NPC_VERDISA:
+			return m_uiVerdisaGUID;
+		case NPC_BELGARISTRASZ:
+			return m_uiBelgaristraszGUID;
+		}
+
+        return 0;
+    }
+
+	void Update(uint32 uiDiff)
+	{
+		if(m_bMakeCount)
+			m_uiMakeCountTimer += uiDiff;
+	}
+
+	const char* Save()
+    {
+        return strInstData.c_str();
+    }
+
+    void Load(const char* chrIn)
+    {
+        if (!chrIn)
+        {
+            OUT_LOAD_INST_DATA_FAIL;
+            return;
+        }
+
+        OUT_LOAD_INST_DATA(chrIn);
+
+        std::istringstream loadStream(chrIn);
+        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3];
+
+        for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
+        {
+            if (m_auiEncounter[i] == IN_PROGRESS)
+                m_auiEncounter[i] = NOT_STARTED;
+        }
+
+        OUT_LOAD_INST_DATA_COMPLETE;
     }
 };
 

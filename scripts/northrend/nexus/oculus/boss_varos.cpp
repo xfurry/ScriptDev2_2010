@@ -28,7 +28,9 @@ enum Spells
     SPELL_CALL_AZURE_RING_CAPTAIN_3               = 51007, //Effect    Send Event (18454)
     SPELL_CALL_AZURE_RING_CAPTAIN_4               = 51008, //Effect    Send Event (18455)
     SPELL_CALL_AMPLIFY_MAGIC                      = 51054,
-    SPELL_CALL_AMPLIFY_MAGIC_2                    = 59371
+    SPELL_CALL_AMPLIFY_MAGIC_2                    = 59371,
+
+	NPC_CENTRIFUGE_CORE								= 28183,
 };
 //not in db
 enum Yells
