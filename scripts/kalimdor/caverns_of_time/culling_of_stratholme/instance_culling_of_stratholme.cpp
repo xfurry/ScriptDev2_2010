@@ -47,7 +47,7 @@ static sSpawnLocation m_aArthasSpawnLocs[] =                // need tuning
 static sSpawnLocation m_aChromieSpawnLocs[] =               // need tuning, escpecially EndPositions!
 {
     {1814.46f, 1283.97f, 142.30f, 4.32f},                   // near bridge
-    {2311.0f, 1502.4f, 127.9f, 3.96f},                      // End 
+    {2311.0f, 1502.4f, 127.9f, 0.0f},                       // End
     {1811.52f, 1285.92f, 142.37f, 4.47f},                   // Hourglass, near bridge
     {2186.42f, 1323.77f, 129.91f, 0.0f},                    // Hourglass, End
 };
@@ -81,21 +81,10 @@ instance_culling_of_stratholme::instance_culling_of_stratholme(Map* pMap) : Scri
     m_uiMooreGUID(0),
     m_uiBattsonGUID(0),
         
-	m_uiOReillyGUID(0),
-	m_uiUtherGUID(0),
-	m_uiJainaGUID(0),
-	m_uiDogGUID(0),
-	m_uiMarthaGUID(0),
-	m_uiPerelliGUID(0),
-
-	m_uiZombieCount(0),
-	m_uiZombieTimer(0),
+    m_uiOReillyGUID(0),
 
     m_uiDoorBookcaseGUID(0),
-    m_uiDarkRunedChestGUID(0),
-	m_uiMalGate1GUID(0),
-	m_uiMalGate2GUID(0),
-	m_uiExitGUID(0)
+    m_uiDarkRunedChestGUID(0)
 {
     Initialize();
 }
@@ -131,27 +120,7 @@ void instance_culling_of_stratholme::OnCreatureCreate(Creature* pCreature)
         case NPC_BARTLEBY_BATTSON:              m_uiBattsonGUID = pCreature->GetGUID();         break;
         case NPC_PATRICIA_O_REILLY:             m_uiOReillyGUID = pCreature->GetGUID();         break;
         case NPC_LORDAERON_CRIER:               m_uiLordaeronCrierGUID = pCreature->GetGUID();  break;
-		case NPC_INFINITE_CORRUPTER:            m_uiCorrupterGUID = pCreature->GetGUID();       break;
-		case NPC_PERELLI:
-			pCreature->SetActiveObjectState(true);
-			m_uiPerelliGUID = pCreature->GetGUID();
-			break;
-		case NPC_MARTHA:
-			pCreature->CastSpell(pCreature, 58925, false);
-			pCreature->SetActiveObjectState(true);
-			m_uiMarthaGUID = pCreature->GetGUID();
-			break;
-		case NPC_DOG:
-			pCreature->SetActiveObjectState(true);
-			m_uiDogGUID = pCreature->GetGUID();
-			break;
-		case NPC_JAINA:
-			pCreature->SetActiveObjectState(true);
-			m_uiJainaGUID = pCreature->GetGUID();
-			break;
-		case NPC_UTHER:
-			m_uiUtherGUID = pCreature->GetGUID();
-			break;
+        case NPC_INFINITE_CORRUPTER:            m_uiCorrupterGUID = pCreature->GetGUID();       break;
 
         case NPC_CRATES_BUNNY:                  m_lCratesBunnyList.push_back(pCreature);        break;
         case NPC_LORDAERON_FOOTMAN:             m_lFootmanList.push_back(pCreature);            break;
@@ -170,46 +139,18 @@ void instance_culling_of_stratholme::OnCreatureCreate(Creature* pCreature)
 
 void instance_culling_of_stratholme::OnObjectCreate(GameObject* pGo)
 {
-	switch(pGo->GetEntry())
-	{
-	case GO_DOOR_BOOKCASE:
-		m_uiDoorBookcaseGUID = pGo->GetGUID();
-		if (m_auiEncounter[TYPE_EPOCH_EVENT] == DONE)
-			pGo->SetGoState(GO_STATE_ACTIVE);
-		break;
-	case GO_DARK_RUNED_CHEST:
-		if(instance->IsRegularDifficulty())
-			m_uiDarkRunedChestGUID = pGo->GetGUID();
-		break;
-	case GO_DARK_RUNED_CHEST_H:
-		if(!instance->IsRegularDifficulty())
-			m_uiDarkRunedChestGUID = pGo->GetGUID();
-		break;
-	case GO_MALGANIS_GATE1:
-		m_uiMalGate1GUID = pGo->GetGUID();
-		break;
-	case GO_MALGANIS_GATE2:
-		m_uiMalGate2GUID = pGo->GetGUID();
-		break;
-	case GO_EXIT:
-		m_uiExitGUID = pGo->GetGUID();
-		break;
-	}
-}
-
-void instance_culling_of_stratholme::ChromiWhispers()
-{
-
-	Map::PlayerList const &PlayerList = instance->GetPlayers();
-
-	if (PlayerList.isEmpty())
-		return;
-
-	for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-	{
-		if(Creature* pChromi = instance->GetCreature(m_uiChromieInnGUID))
-			pChromi->MonsterWhisper("Good work with crates! Come to me in front of Stratholme for your next assighment!", i->getSource()->GetGUID(), false);
-	}
+    switch(pGo->GetEntry())
+    {
+        case GO_DOOR_BOOKCASE:
+            m_uiDoorBookcaseGUID = pGo->GetGUID();
+            if (m_auiEncounter[TYPE_EPOCH_EVENT] == DONE)
+                pGo->SetGoState(GO_STATE_ACTIVE);
+            break;
+        case GO_DARK_RUNED_CHEST:
+        case GO_DARK_RUNED_CHEST_H:
+            m_uiDarkRunedChestGUID = pGo->GetGUID();
+            break;
+    }
 }
 
 Player* instance_culling_of_stratholme::GetPlayerInMap()
@@ -275,7 +216,6 @@ void instance_culling_of_stratholme::SetData(uint32 uiType, uint32 uiData)
                 if (m_uiGrainCrateCount == 5)
                 {
                     UpdateQuestCredit();
-					ChromiWhispers();
                     m_uiRemoveCrateStateTimer = 20000;
                     SetData(TYPE_GRAIN_EVENT, DONE);
                 }
@@ -340,25 +280,8 @@ void instance_culling_of_stratholme::SetData(uint32 uiType, uint32 uiData)
                             pCorrupter->ForcedDespawn();
                     break;
             }
-			break;
-		case TYPE_PHASE:
-			m_auiEncounter[TYPE_PHASE] = uiData;
-			break;
-		case TYPE_ENCOUNTER:
-			m_auiEncounter[TYPE_ENCOUNTER] = uiData;
-			break;
-		case TYPE_WING:
-			m_auiEncounter[TYPE_WING] = uiData;
-			break;
-		case TYPE_ZOMBIEFEST:
-			m_auiEncounter[TYPE_ZOMBIEFEST] = uiData;
-			if(uiData == IN_PROGRESS)
-				m_uiZombieTimer = 0;
-			break;
-		case TYPE_ZOMBIE_COUNT:
-			m_uiZombieCount = m_uiZombieCount + uiData;
-			break;
-	}
+            break;
+    }
 
     if (uiData == DONE || (uiType == TYPE_INFINITE_CORRUPTER && uiData == FAIL))
     {
@@ -391,13 +314,13 @@ void instance_culling_of_stratholme::Load(const char* chrIn)
         >> m_auiEncounter[4] >> m_auiEncounter[5] >> m_auiEncounter[6] >> m_auiEncounter[7] >> m_auiEncounter[8];
 
     for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
-	{
+    {
         if (i != TYPE_INFINITE_CORRUPTER_TIME)
-		{
+        {
             if (m_auiEncounter[i] == IN_PROGRESS)
                 m_auiEncounter[i] = NOT_STARTED;
-		}
-	}
+        }
+    }
 
     // If already started counting down time, the event is "in progress"
     if (m_auiEncounter[TYPE_INFINITE_CORRUPTER_TIME])
@@ -445,13 +368,9 @@ uint32 instance_culling_of_stratholme::GetData(uint32 uiType)
         case TYPE_ARTHAS_ESCORT_EVENT:     return m_auiEncounter[5];
         case TYPE_MALGANIS_EVENT:          return m_auiEncounter[6];
         case TYPE_INFINITE_CORRUPTER_TIME: return m_auiEncounter[7];
-		case TYPE_INFINITE_CORRUPTER:      return m_auiEncounter[8];
-		case TYPE_PHASE:				   return m_auiEncounter[9];
-		case TYPE_ENCOUNTER:			   return m_auiEncounter[10];
-		case TYPE_WING:					   return m_auiEncounter[11];
-		case TYPE_ZOMBIEFEST:			   return m_auiEncounter[12];
+        case TYPE_INFINITE_CORRUPTER:      return m_auiEncounter[8];
+        default: return 0;
     }
-    return 0;
 }
 
 uint64 instance_culling_of_stratholme::GetData64(uint32 uiData)
@@ -478,21 +397,11 @@ uint64 instance_culling_of_stratholme::GetData64(uint32 uiData)
         case NPC_SERGEANT_MORIGAN:         return m_uiMoriganGUID;
         case NPC_JENA_ANDERSON:            return m_uiAndersonGUID;
         case NPC_MALCOM_MOORE:             return m_uiMooreGUID;
-		case NPC_BARTLEBY_BATTSON:         return m_uiBattsonGUID;
-		case NPC_PATRICIA_O_REILLY:        return m_uiOReillyGUID;
-		case NPC_DOG:					   return m_uiDogGUID;
-		case NPC_MARTHA:				   return m_uiMarthaGUID;
-		case NPC_PERELLI:				   return m_uiPerelliGUID;
-		case NPC_JAINA:					   return m_uiJainaGUID;
-		case NPC_UTHER:					   return m_uiUtherGUID;
-		case GO_DOOR_BOOKCASE:             return m_uiDoorBookcaseGUID;
-		case GO_MALGANIS_GATE1:			   return m_uiMalGate1GUID;
-		case GO_MALGANIS_GATE2:			   return m_uiMalGate2GUID;
-		case GO_DARK_RUNED_CHEST:		   return m_uiDarkRunedChestGUID;
-		case GO_DARK_RUNED_CHEST_H:		   return m_uiDarkRunedChestGUID;
-        case GO_EXIT:					   return m_uiExitGUID;
+        case NPC_BARTLEBY_BATTSON:         return m_uiBattsonGUID;
+        case NPC_PATRICIA_O_REILLY:        return m_uiOReillyGUID;
+        case GO_DOOR_BOOKCASE:             return m_uiDoorBookcaseGUID;
+        default: return 0;
     }
-    return 0;
 }
 
 uint8 instance_culling_of_stratholme::GetInstancePosition()
@@ -559,10 +468,10 @@ void instance_culling_of_stratholme::DoSpawnArthasIfNeeded()
 
     uint8 uiPosition = GetInstancePosition();
     if (uiPosition && uiPosition <= MAX_ARTHAS_SPAWN_POS)
-	{
+    {
         if (Player* pPlayer = GetPlayerInMap())
             pPlayer->SummonCreature(NPC_ARTHAS, m_aArthasSpawnLocs[uiPosition-1].m_fX, m_aArthasSpawnLocs[uiPosition-1].m_fY, m_aArthasSpawnLocs[uiPosition-1].m_fZ, m_aArthasSpawnLocs[uiPosition-1].m_fO, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
-	}
+    }
 }
 
 // Atm here only new Chromies are spawned - despawning depends on Mangos featuring such a thing
@@ -609,7 +518,7 @@ void instance_culling_of_stratholme::Update(uint32 uiDiff)
 
     // Small Timer, to remove Grain-Crate WorldState and Spawn Second Chromie
     if (m_uiRemoveCrateStateTimer)
-	{
+    {
         if (m_uiRemoveCrateStateTimer <= uiDiff)
         {
             DoUpdateWorldState(WORLD_STATE_CRATES, 0);
@@ -618,11 +527,11 @@ void instance_culling_of_stratholme::Update(uint32 uiDiff)
         }
         else
             m_uiRemoveCrateStateTimer -= uiDiff;
-	}
+    }
 
     // Respawn Arthas after some time
     if (m_uiArthasRespawnTimer)
-	{
+    {
         if (m_uiArthasRespawnTimer <= uiDiff)
         {
             DoSpawnArthasIfNeeded();
@@ -630,26 +539,7 @@ void instance_culling_of_stratholme::Update(uint32 uiDiff)
         }
         else
             m_uiArthasRespawnTimer -= uiDiff;
-	}
-
-	// Check for Zombiefest
-	if(m_auiEncounter[10] == IN_PROGRESS)
-	{
-		m_uiZombieTimer += uiDiff;
-
-		if (m_uiZombieTimer > 60000)
-		{
-			m_uiZombieCount = 0;
-			m_uiZombieTimer = 1500000;
-			m_auiEncounter[12] = FAIL;
-		}
-		else if(m_uiZombieCount >= 100)
-		{
-			DoCompleteAchievement(ACHIEV_ZOMBIEFEST);
-			m_uiZombieCount = 0;
-			m_auiEncounter[12] = DONE;
-		}
-	}
+    }
 }
 
 InstanceData* GetInstanceData_instance_culling_of_stratholme(Map* pMap)
