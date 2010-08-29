@@ -41,12 +41,15 @@ enum
     SAY_DIE                     = -1542007,
 
     SPELL_CORRUPTION            = 30938,
+	NPC_CHANNELER				= 17653,
 
     SPELL_FIRE_NOVA             = 33132,
     H_SPELL_FIRE_NOVA           = 37371,
 
     SPELL_SHADOW_BOLT_VOLLEY    = 28599,
     H_SPELL_SHADOW_BOLT_VOLLEY  = 40070,
+
+	SPELL_CHANNELING			= 30935,                         //initial spell channeling boss/each other not known
 
     SPELL_BURNING_NOVA          = 30940,
     SPELL_VORTEX                = 37370
@@ -71,18 +74,56 @@ struct MANGOS_DLL_DECL boss_kelidan_the_breakerAI : public ScriptedAI
     uint32 Corruption_Timer;
     bool Firenova;
 
+	uint32 m_uiChannelersDead;
+
     void Reset()
     {
         ShadowVolley_Timer = 1000;
         BurningNova_Timer = 15000;
         Corruption_Timer = 5000;
         Firenova = false;
+		m_uiChannelersDead = 0;
+		DoCast(m_creature, SPELL_CHANNELING);
+		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void Aggro(Unit *who)
     {
         DoScriptText(SAY_WAKE, m_creature);
+
+		m_creature->CastStop();
+		m_creature->GetMotionMaster()->MoveChase(who);
+		if(m_pInstance)
+			m_pInstance->SetData(TYPE_KELIDAN_EVENT, IN_PROGRESS);
     }
+
+	void AttackStart(Unit* pWho)
+	{
+		if (m_uiChannelersDead < 5) 
+			return;
+
+		if (m_creature->Attack(pWho, true)) 
+		{
+			m_creature->AddThreat(pWho);
+			m_creature->SetInCombatWith(pWho);
+			pWho->SetInCombatWith(m_creature);
+			DoStartMovement(pWho);
+		}
+	}
+
+	void JustReachedHome()
+	{
+		std::list<Creature*> lChannelers;
+		GetCreatureListWithEntryInGrid(lChannelers, m_creature, NPC_CHANNELER, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lChannelers.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lChannelers.begin(); iter != lChannelers.end(); ++iter)
+            {
+                if ((*iter) && !(*iter)->isAlive())
+                    (*iter)->Respawn();
+            }
+        }
+	}
 
     void KilledUnit(Unit* victim)
     {
@@ -102,6 +143,15 @@ struct MANGOS_DLL_DECL boss_kelidan_the_breakerAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+		if(m_pInstance->GetData(TYPE_KELIDAN_EVENT) == SPECIAL)
+		{
+			if(m_uiChannelersDead == 5)
+			{
+				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+				m_creature->SetInCombatWithZone();
+			}
+		}
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -165,8 +215,6 @@ enum
     H_SPELL_SHADOW_BOLT     = 15472,
 
     SPELL_MARK_OF_SHADOW    = 30937,
-
-    SPELL_CHANNELING        = 0                             //initial spell channeling boss/each other not known
 };                                                          //when engaged all channelers must stop, trigger yell (SAY_ADD_AGGRO_*), and engage.
 
 struct MANGOS_DLL_DECL mob_shadowmoon_channelerAI : public ScriptedAI
@@ -190,9 +238,36 @@ struct MANGOS_DLL_DECL mob_shadowmoon_channelerAI : public ScriptedAI
         MarkOfShadow_Timer = urand(5000, 7000);
     }
 
+	void JustDied(Unit* pKiller)
+	{
+		if(m_pInstance->GetData(TYPE_KELIDAN_EVENT) != SPECIAL)
+			m_pInstance->SetData(TYPE_KELIDAN_EVENT, SPECIAL);
+
+		if(Creature* pKelidan = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_KELIDAN_THE_MAKER)))
+			((boss_kelidan_the_breakerAI*)pKelidan->AI())->m_uiChannelersDead += 1;
+	}
+
     void Aggro(Unit* who)
     {
-        //trigger boss to yell
+		m_creature->CastStop();
+		m_creature->GetMotionMaster()->MoveChase(who);
+		switch(urand(0, 3))
+		{
+		case 0: DoScriptText(SAY_ADD_AGGRO_1, m_creature); break;
+		case 1: DoScriptText(SAY_ADD_AGGRO_2, m_creature); break;
+		case 2: DoScriptText(SAY_ADD_AGGRO_3, m_creature); break;
+		}
+
+		std::list<Creature*> lChannelers;
+		GetCreatureListWithEntryInGrid(lChannelers, m_creature, NPC_CHANNELER, DEFAULT_VISIBILITY_INSTANCE);
+        if (!lChannelers.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lChannelers.begin(); iter != lChannelers.end(); ++iter)
+            {
+                if ((*iter) && (*iter)->isAlive())
+                    (*iter)->AI()->AttackStart(who);
+            }
+        }
     }
 
     void UpdateAI(const uint32 diff)

@@ -143,6 +143,7 @@ struct MANGOS_DLL_DECL instance_blood_furnace : public ScriptedInstance
             case DATA_PRISON_CELL_BROGGOK2: return m_uiPrisonCell6GUID;
             case DATA_PRISON_CELL_BROGGOK3: return m_uiPrisonCell7GUID;
             case DATA_PRISON_CELL_BROGGOK4: return m_uiPrisonCell8GUID;
+			case DATA_KELIDAN_THE_MAKER:	return m_uiKelidanGUID;
         }
 
         return 0;

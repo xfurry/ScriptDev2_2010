@@ -90,6 +90,11 @@ struct MANGOS_DLL_DECL boss_broggokAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+		if(m_pInstance->GetData(TYPE_BROGGOK_EVENT) == SPECIAL)
+		{
+			// waves 30 secs
+		}
+
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
