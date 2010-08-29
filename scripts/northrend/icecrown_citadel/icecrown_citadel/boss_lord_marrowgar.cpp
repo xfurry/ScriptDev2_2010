@@ -39,7 +39,7 @@ enum
 
     SPELL_BONE_SLICE_10     = 69055,
     SPELL_BONE_SLICE_25     = 70814,
-    SPELL_COLDFLAME_10      = 69146,
+    SPELL_COLDFLAME_10      = 67071,	//69146,	Replaced with legion flame until fixed. Dmg ~ 5k / sec
     SPELL_COLDFLAME_25      = 70823,
     SPELL_COLDFLAME_10HC    = 70824,
     SPELL_COLDFLAME_25HC    = 70825,
