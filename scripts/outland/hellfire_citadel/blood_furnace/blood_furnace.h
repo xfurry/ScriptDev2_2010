@@ -13,6 +13,7 @@ enum
     GO_DOOR_BROGGOK_FRONT           = 181822,
     GO_DOOR_BROGGOK_REAR            = 181819,
     GO_DOOR_KELIDAN_EXIT            = 181823,
+	GO_PRISON_CELL_LEVER			= 181982,
 
     DATA_THE_MAKER                  = 1,
     DATA_BROGGOK                    = 2,

@@ -34,6 +34,8 @@ enum
     SPELL_POISON_BOLT       = 30917,
     H_SPELL_POISON_BOLT     = 38459,
 
+	NPC_NASCENT_ORC			= 17398,
+
     SPELL_POISON            = 30914
 };
 
@@ -53,26 +55,71 @@ struct MANGOS_DLL_DECL boss_broggokAI : public ScriptedAI
     uint32 PoisonSpawn_Timer;
     uint32 PoisonBolt_Timer;
 
+	uint32 m_uiOrcPrisonerTimer;
+	uint32 m_uiOrcPrisonerStage;
+
     void Reset()
     {
         AcidSpray_Timer = 10000;
         PoisonSpawn_Timer = 5000;
         PoisonBolt_Timer = 7000;
+		m_uiOrcPrisonerTimer	= 1000;
+		m_uiOrcPrisonerStage	= 0;
+		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void Aggro(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_BROGGOK_EVENT,IN_PROGRESS);
     }
 
     void JustReachedHome()
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_BROGGOK_EVENT,FAIL);
+
+		if(GameObject* pLever = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_PRISON_CELL_LEVER)))
+			pLever->Respawn();//RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+		if(GameObject* pDoor = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(DATA_PRISON_CELL_BROGGOK1)))
+			pDoor->SetGoState(GO_STATE_READY);
+		if(GameObject* pDoor = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(DATA_PRISON_CELL_BROGGOK2)))
+			pDoor->SetGoState(GO_STATE_READY);
+		if(GameObject* pDoor = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(DATA_PRISON_CELL_BROGGOK3)))
+			pDoor->SetGoState(GO_STATE_READY);
+		if(GameObject* pDoor = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(DATA_PRISON_CELL_BROGGOK4)))
+			pDoor->SetGoState(GO_STATE_READY);
+		if(GameObject* pDoor = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_DOOR_BROGGOK_REAR)))
+			pDoor->SetGoState(GO_STATE_READY);
+
+		std::list<Creature*> lOrcs;
+		GetCreatureListWithEntryInGrid(lOrcs, m_creature, NPC_NASCENT_ORC, DEFAULT_VISIBILITY_INSTANCE);
+		if (!lOrcs.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lOrcs.begin(); iter != lOrcs.end(); ++iter)
+            {
+                if ((*iter) && !(*iter)->isAlive())
+				{
+                    (*iter)->Respawn();
+					(*iter)->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+					(*iter)->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PASSIVE);
+				}
+            }
+        }
     }
+
+	void AttackStart(Unit* pWho)
+	{
+		if (m_uiOrcPrisonerStage < 5) 
+			return;
+
+		if (m_creature->Attack(pWho, true)) 
+		{
+			m_creature->AddThreat(pWho);
+			m_creature->SetInCombatWith(pWho);
+			pWho->SetInCombatWith(m_creature);
+			DoStartMovement(pWho);
+		}
+	}
 
     void JustSummoned(Creature *summoned)
     {
@@ -88,11 +135,65 @@ struct MANGOS_DLL_DECL boss_broggokAI : public ScriptedAI
             m_pInstance->SetData(TYPE_BROGGOK_EVENT,DONE);
     }
 
+	void OpenPrison(uint64 uiCellDoorGUID)
+	{
+		if(GameObject* pDoor = m_creature->GetMap()->GetGameObject(uiCellDoorGUID))
+		{
+			pDoor->SetGoState(GO_STATE_ACTIVE);
+
+			std::list<Creature*> lOrcs;
+			GetCreatureListWithEntryInGrid(lOrcs, pDoor, NPC_NASCENT_ORC, 15.0f);
+			if (!lOrcs.empty())
+			{
+				for(std::list<Creature*>::iterator iter = lOrcs.begin(); iter != lOrcs.end(); ++iter)
+				{
+					if ((*iter) && (*iter)->isAlive())
+					{
+						(*iter)->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+						(*iter)->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PASSIVE);
+						(*iter)->SetInCombatWithZone();
+					}
+				}
+			}
+		}
+	}
+
     void UpdateAI(const uint32 diff)
     {
-		if(m_pInstance->GetData(TYPE_BROGGOK_EVENT) == SPECIAL)
+		if(m_pInstance->GetData(TYPE_BROGGOK_EVENT) == IN_PROGRESS && m_uiOrcPrisonerStage < 5)
 		{
-			// waves 30 secs
+			if(m_uiOrcPrisonerTimer < diff)
+			{
+				switch(m_uiOrcPrisonerStage)
+				{
+				case 0:
+					OpenPrison(m_pInstance->GetData64(DATA_PRISON_CELL_BROGGOK2));
+					++m_uiOrcPrisonerStage;
+					break;
+				case 1:
+					OpenPrison(m_pInstance->GetData64(DATA_PRISON_CELL_BROGGOK4));
+					++m_uiOrcPrisonerStage;
+					break;
+				case 2:
+					OpenPrison(m_pInstance->GetData64(DATA_PRISON_CELL_BROGGOK1));
+					++m_uiOrcPrisonerStage;
+					break;
+				case 3:
+					OpenPrison(m_pInstance->GetData64(DATA_PRISON_CELL_BROGGOK3));
+					++m_uiOrcPrisonerStage;
+					break;
+				case 4:
+					if(GameObject* pDoor = m_creature->GetMap()->GetGameObject(m_pInstance->GetData64(GO_DOOR_BROGGOK_REAR)))
+						pDoor->SetGoState(GO_STATE_ACTIVE);
+					m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+					m_creature->GetMotionMaster()->MovePoint(0, 456.633f, 62.077f, 9.615f);
+					m_creature->SetInCombatWithZone();
+					++m_uiOrcPrisonerStage;
+					break;
+				}
+				m_uiOrcPrisonerTimer = 30000;
+			}
+			else m_uiOrcPrisonerTimer -= diff;
 		}
 
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -129,6 +230,23 @@ struct MANGOS_DLL_DECL mob_broggok_poisoncloudAI : public ScriptedAI
     void AttackStart(Unit *who) { }
 };
 
+bool GOHello_go_prison_cell_lever(Player* pPlayer, GameObject* pGo)
+{
+    ScriptedInstance* m_pInstance = (ScriptedInstance*)pGo->GetInstanceData();
+
+    if (!m_pInstance)
+        return false;
+
+    if (m_pInstance->GetData(TYPE_BROGGOK_EVENT) != DONE)
+    {
+		m_pInstance->SetData(TYPE_BROGGOK_EVENT, IN_PROGRESS);
+        pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+    }
+
+    return false;
+}
+
+
 CreatureAI* GetAI_boss_broggok(Creature* pCreature)
 {
     return new boss_broggokAI(pCreature);
@@ -150,5 +268,10 @@ void AddSC_boss_broggok()
     newscript = new Script;
     newscript->Name = "mob_broggok_poisoncloud";
     newscript->GetAI = &GetAI_mob_broggok_poisoncloud;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "go_prison_cell_lever";
+    newscript->pGOHello = &GOHello_go_prison_cell_lever;
     newscript->RegisterSelf();
 }

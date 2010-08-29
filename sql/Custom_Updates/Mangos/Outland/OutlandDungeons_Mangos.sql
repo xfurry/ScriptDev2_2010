@@ -12,18 +12,16 @@ Update `gameobject` set `spawntimesecs` = -604800 where `id` in (185168, 185169)
 DELETE FROM `creature` WHERE `id`=17537;
 INSERT INTO `creature` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`modelid`,`equipment_id`,`position_x`,`position_y`,`position_z`,`orientation`,`spawntimesecs`,`spawndist`,`currentwaypoint`,`curhealth`,`curmana`,`DeathState`,`MovementType`) VALUES
 (9799519, 17537, 543, 2, 1, 0, 997, -1427.91, 1766.39, 81.8241, 5.49795, 25, 5, 0, 19000, 0, 0, 1);
-#update `creature_template` set `ScriptName` = 'boss_vazruden_herald', `inhabitType` = 4 where `entry` = 17536;
-#update `creature_template` set `ScriptName` = 'boss_vazruden' where `entry` = 17537;
-#update `creature_template` set `lootid` = 18435 where `entry` = 18435;
-#Delete from `creature_loot_template` where `entry` = 17307 and `item` = 23901;
-#Delete from `creature_loot_template` where `entry` = 18435 and (`item` = 23901 or `item` = 33833);
-#INSERT INTO `creature_loot_template` VALUES (17307, 23901, -100, 0, 1, 1, 0, 0, 0), 
-#(18435, 23901, -100, 0, 1, 1, 0, 0, 0),
-#(18435, 33833, -100, 0, 1, 1, 0, 0, 0);
 
 -- Blood Furnace
-#update `creature` set `position_y` = 50.55695 where `id` = 17380;
-UPDATE `gameobject_template` SET `faction` = 114 WHERE `entry` in (181766, 181811, 181812, 181822, 181819, 181823);
+UPDATE `creature_template` SET `unit_flags` = 514 WHERE `entry` = 17398;
+UPDATE `gameobject_template` SET `faction` = 114 WHERE `entry` in (181766, 181811, 181812, 181822, 181819, 181823, 182539, 182540);
 -- cell doors
 UPDATE `gameobject_template` SET `faction` = 114 WHERE `entry` in (181813, 181814, 181815, 181816, 181817, 181818, 181820, 181821);
-update `gameobject_template` set flags = 6553632 where entry = 181982
+update `gameobject_template` set flags = 6553632, scriptName = 'go_prison_cell_lever' where entry = 181982;
+
+DELETE FROM `gameobject` WHERE `id`=182540;
+INSERT INTO `gameobject` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`position_x`,`position_y`,`position_z`,`orientation`,`rotation0`,`rotation1`,`rotation2`,`rotation3`,`spawntimesecs`,`animprogress`,`state`) VALUES
+(800567, 182540, 540, 2, 1, 215.772, 266.396, -13.223, 3.18488, 0, 0, 0.999766, -0.0216416, 25, 0, 1);
+
+update gameobject set position_z = -11.223 where id in (182539, 182540);

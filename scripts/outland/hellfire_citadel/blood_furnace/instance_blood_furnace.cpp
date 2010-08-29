@@ -52,6 +52,7 @@ struct MANGOS_DLL_DECL instance_blood_furnace : public ScriptedInstance
     uint64 m_uiPrisonCell6GUID;
     uint64 m_uiPrisonCell7GUID;
     uint64 m_uiPrisonCell8GUID;
+	uint64 m_uiCellLeverGUID;
 
     void Initialize()
     {
@@ -76,6 +77,7 @@ struct MANGOS_DLL_DECL instance_blood_furnace : public ScriptedInstance
         m_uiPrisonCell6GUID = 0;
         m_uiPrisonCell7GUID = 0;
         m_uiPrisonCell8GUID = 0;
+		m_uiCellLeverGUID	= 0;
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -97,27 +99,32 @@ struct MANGOS_DLL_DECL instance_blood_furnace : public ScriptedInstance
                 break;
             case GO_DOOR_MAKER_REAR:                        //the maker rear door
                 m_uiDoorMakerRearGUID = pGo->GetGUID();
-                if (m_auiEncounter[0] == DONE && pGo->GetGoState() == GO_STATE_READY)
-                    DoUseDoorOrButton(m_uiDoorMakerRearGUID);
+                if (m_auiEncounter[0] == DONE)
+					pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_DOOR_BROGGOK_FRONT:                     //broggok front door
                 m_uiDoorBroggokFrontGUID = pGo->GetGUID();
                 break;
             case GO_DOOR_BROGGOK_REAR:                      //broggok rear door
                 m_uiDoorBrokkokRearGUID = pGo->GetGUID();
-                if (m_auiEncounter[1] == DONE && pGo->GetGoState() == GO_STATE_READY)
-                    DoUseDoorOrButton(m_uiDoorBrokkokRearGUID);
+                if (m_auiEncounter[1] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_DOOR_KELIDAN_EXIT:                      //kelidan exit door
                 m_uiDoorKelidanExitGUID = pGo->GetGUID();
-                if (m_auiEncounter[2] == DONE && pGo->GetGoState() == GO_STATE_READY)
-                    DoUseDoorOrButton(m_uiDoorKelidanExitGUID);
+                if (m_auiEncounter[2] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
             case GO_DOOR_FINAL_EXIT:                        //final exit door
                 m_uiDoorFinalExitGUID = pGo->GetGUID();
-                if (m_auiEncounter[2] == DONE && pGo->GetGoState() == GO_STATE_READY)
-                    DoUseDoorOrButton(m_uiDoorFinalExitGUID);
+                if (m_auiEncounter[2] == DONE)
+                    pGo->SetGoState(GO_STATE_ACTIVE);
                 break;
+			case GO_PRISON_CELL_LEVER:
+				m_uiCellLeverGUID = pGo->GetGUID();
+				if(m_auiEncounter[1] == DONE)
+					pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+				break;
             case 181813: m_uiPrisonCell1GUID = pGo->GetGUID(); break;//the maker cell front right
             case 181814: m_uiPrisonCell2GUID = pGo->GetGUID(); break;//the maker cell back right
             case 181816: m_uiPrisonCell3GUID = pGo->GetGUID(); break;//the maker cell front left
@@ -144,6 +151,8 @@ struct MANGOS_DLL_DECL instance_blood_furnace : public ScriptedInstance
             case DATA_PRISON_CELL_BROGGOK3: return m_uiPrisonCell7GUID;
             case DATA_PRISON_CELL_BROGGOK4: return m_uiPrisonCell8GUID;
 			case DATA_KELIDAN_THE_MAKER:	return m_uiKelidanGUID;
+			case GO_DOOR_BROGGOK_REAR:		return m_uiDoorBrokkokRearGUID;
+			case GO_PRISON_CELL_LEVER:		return m_uiCellLeverGUID;
         }
 
         return 0;
@@ -154,27 +163,13 @@ struct MANGOS_DLL_DECL instance_blood_furnace : public ScriptedInstance
         switch(uiType)
         {
             case TYPE_THE_MAKER_EVENT:
-                if (uiData == IN_PROGRESS)
-                    DoUseDoorOrButton(m_uiDoorMakerFrontGUID);
-                if (uiData == FAIL)
-                    DoUseDoorOrButton(m_uiDoorMakerFrontGUID);
+                DoUseDoorOrButton(m_uiDoorMakerFrontGUID);
                 if (uiData == DONE)
-                {
-                    DoUseDoorOrButton(m_uiDoorMakerFrontGUID);
                     DoUseDoorOrButton(m_uiDoorMakerRearGUID);
-                }
                 m_auiEncounter[0] = uiData;
                 break;
             case TYPE_BROGGOK_EVENT:
-                if (uiData == IN_PROGRESS)
-                    DoUseDoorOrButton(m_uiDoorBroggokFrontGUID);
-                if (uiData == FAIL)
-                    DoUseDoorOrButton(m_uiDoorBroggokFrontGUID);
-                if (uiData == DONE)
-                {
-                    DoUseDoorOrButton(m_uiDoorBroggokFrontGUID);
-                    DoUseDoorOrButton(m_uiDoorBrokkokRearGUID);
-                }
+                DoUseDoorOrButton(m_uiDoorBroggokFrontGUID);
                 m_auiEncounter[1] = uiData;
                 break;
             case TYPE_KELIDAN_EVENT:
