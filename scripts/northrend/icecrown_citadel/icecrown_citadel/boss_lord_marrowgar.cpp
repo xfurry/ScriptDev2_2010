@@ -39,13 +39,13 @@ enum
 
     SPELL_BONE_SLICE_10     = 69055,
     SPELL_BONE_SLICE_25     = 70814,
-    SPELL_COLDFLAME_10      = 67071,	//69146,	Replaced with legion flame until fixed. Dmg ~ 5k / sec
+    SPELL_COLDFLAME_10      = 69146,	
     SPELL_COLDFLAME_25      = 70823,
     SPELL_COLDFLAME_10HC    = 70824,
     SPELL_COLDFLAME_25HC    = 70825,
 	SPELL_COLDFLAME_SUMMON	= 69138,
     SPELL_COLDFLAME         = 69147,
-	SPELL_COLDFLAME_TRIG	= 69147,	//69145,
+	SPELL_COLDFLAME_TRIG	= 66201,	//69145, Replaced with legion flame until fixed. Dmg ~ 5k / sec
     NPC_COLDFLAME           = 36672,
     SPELL_BONE_SPIKE        = 69057,    // just 1 spell??
     NPC_BONESPIKE           = 38711,
@@ -286,7 +286,7 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
 				m_fTargetY = pTarget->GetPositionY();
 				m_fCurrentX = m_creature->GetPositionX();
 				m_fCurrentY = m_creature->GetPositionY();
-				SummonColdFlame(5.0f);
+				SummonColdFlame(3.0f);
 				m_uiColdFlames			= 0;
 				m_uiColdFlameTickTimer	= 1000;
 				m_bIsColdFlame			= true;
@@ -377,15 +377,7 @@ struct MANGOS_DLL_DECL mob_coldflameAI : public ScriptedAI
 
 	void Reset()
 	{
-		//DoCast(m_creature, SPELL_COLDFLAME_TRIG);
-		if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-			DoCast(m_creature, SPELL_COLDFLAME_10);
-		if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-			DoCast(m_creature, SPELL_COLDFLAME_25);
-		if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-			DoCast(m_creature, SPELL_COLDFLAME_10HC);
-		if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-			DoCast(m_creature, SPELL_COLDFLAME_25HC);
+		DoCast(m_creature, SPELL_COLDFLAME_TRIG);
 	}
 
     void UpdateAI(const uint32 uiDiff)
