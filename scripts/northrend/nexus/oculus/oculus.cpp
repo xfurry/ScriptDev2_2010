@@ -41,10 +41,6 @@ enum Drakes
     ITEM_EMERALD_ESSENCE                          = 37815,
     ITEM_AMBER_ESSENCE                            = 37859,
     ITEM_RUBY_ESSENCE                             = 37860,
-
-    //NPC_VERDISA                                   = 27657,
-    //NPC_BELGARISTRASZ                             = 27658,
-    //NPC_ETERNOS                                   = 27659
 };
 
 /*

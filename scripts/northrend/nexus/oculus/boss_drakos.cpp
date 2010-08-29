@@ -39,13 +39,13 @@ enum
 	SPELL_MAGIC_PULL_EFFECT                       = 50770,
 	SPELL_THUNDERING_STOMP                        = 50774,
 	SPELL_THUNDERING_STOMP_H                      = 59370,
-	SPELL_UNSTABLE_SPHERE_PASSIVE                 = 50756,
-	SPELL_UNSTABLE_SPHERE_PULSE                   = 50757,
+
 	SPELL_UNSTABLE_SPHERE_TRIGG                   = 50758,
+	SPELL_UNSTABLE_SPHERE_VISUAL				  = 50756,
 	NPC_UNSTABLE_SPHERE                           = 28166,
 };
 
-struct boss_drakosAI : public ScriptedAI
+struct MANGOS_DLL_DECL boss_drakosAI : public ScriptedAI
 {
 	boss_drakosAI(Creature* pCreature) : ScriptedAI(pCreature)
 	{
@@ -57,15 +57,17 @@ struct boss_drakosAI : public ScriptedAI
 	ScriptedInstance* m_pInstance;
     bool m_bIsRegularMode;
 
-	uint32 uiMagicPullTimer;
-	uint32 uiStompTimer;
-	uint32 uiBombSummonTimer;
+	uint32 m_uiMagicPullTimer;
+	uint32 m_uiMagicPullExpireTimer;
+	uint32 m_uiStompTimer;
+	uint32 m_uiBombSummonTimer;
 
 	void Reset()
 	{
-		uiMagicPullTimer = 15000;
-		uiStompTimer = 17000;
-		uiBombSummonTimer = 2000;
+		m_uiMagicPullTimer	= 15000;
+		m_uiMagicPullExpireTimer = 30000;
+		m_uiStompTimer		= 17000;
+		m_uiBombSummonTimer = 2000;
 	}
 
 	void JustReachedHome()
@@ -93,11 +95,29 @@ struct boss_drakosAI : public ScriptedAI
 			m_pInstance->SetData(TYPE_DRAKOS, DONE);
 
 		// open cages
+		if(Creature* pEternos = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ETERNOS)))
+		{
+			pEternos->GetMotionMaster()->MovePoint(0, 944.384f, 1058.418f, 359.967f);
+			if(GameObject* pDoor = GetClosestGameObjectWithEntry(pEternos, GO_DRAGON_CAGE_DOOR, 5.0f))
+				pDoor->SetGoState(GO_STATE_ACTIVE);
+		}
+		if(Creature* pVerdisa = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VERDISA)))
+		{
+			pVerdisa->GetMotionMaster()->MovePoint(0, 949.928f, 1034.753f, 359.967f);
+			if(GameObject* pDoor = GetClosestGameObjectWithEntry(pVerdisa, GO_DRAGON_CAGE_DOOR, 5.0f))
+				pDoor->SetGoState(GO_STATE_ACTIVE);
+		}
+		if(Creature* pBelgaristrasz = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_BELGARISTRASZ)))
+		{
+			pBelgaristrasz->GetMotionMaster()->MovePoint(0, 944.868f, 1044.982f, 359.967f);
+			if(GameObject* pDoor = GetClosestGameObjectWithEntry(pBelgaristrasz, GO_DRAGON_CAGE_DOOR, 5.0f))
+				pDoor->SetGoState(GO_STATE_ACTIVE);
+		}
 	}
 
 	void KilledUnit(Unit* pVictim)
 	{
-		switch(urand(0, 3))
+		switch(urand(0, 2))
 		{
 		case 0: DoScriptText(SAY_SLAY1, m_creature); break;
 		case 1: DoScriptText(SAY_SLAY2, m_creature); break;
@@ -105,69 +125,96 @@ struct boss_drakosAI : public ScriptedAI
 		}
 	}
 
+	void TeleportPlayers()
+    {
+        Map* pMap = m_creature->GetMap();
+        if(pMap)
+        {
+            Map::PlayerList const &lPlayers = pMap->GetPlayers();
+            if (!lPlayers.isEmpty())
+            {
+                for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
+                {
+					if (Player* pPlayer = itr->getSource())
+					{
+						if(m_creature->IsWithinDist2d(pPlayer->GetPositionX(), pPlayer->GetPositionY(), 20))
+							pPlayer->TeleportTo(m_creature->GetMapId(), m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), pPlayer->GetOrientation());
+					}
+                }
+            }
+        }
+    }
+
 	void UpdateAI(const uint32 uiDiff)
 	{
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-		if (uiBombSummonTimer <= uiDiff)
+		if (m_uiBombSummonTimer <= uiDiff)
 		{
-			Position pPosition;
-			//m_creature->GetPosition(&pPosition);
-
-			//if (bPostPull)
+			for (uint8 uiI = 0; uiI < 2; uiI++)
 			{
-				for (uint8 uiI = 0; uiI >= 3; uiI++)
+				if(Creature* pBomb = m_creature->SummonCreature(NPC_UNSTABLE_SPHERE, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 19000))
 				{
-					//m_creature->GetRandomNearPosition(pPosition, float(urand(0,10)));
-					//m_creature->SummonCreature(NPC_UNSTABLE_SPHERE, pPosition);
+					float angle = (float) rand()*360/RAND_MAX + 1;
+					float homeX = m_creature->GetPositionX() + urand(20, 30)*cos(angle*(M_PI/180));
+					float homeY = m_creature->GetPositionY() + urand(20, 30)*sin(angle*(M_PI/180));
+					pBomb->GetMotionMaster()->MovePoint(0, homeX, homeY, m_creature->GetPositionZ());
 				}
 			}
-			//else
+			m_uiBombSummonTimer = 2000;
+		} else m_uiBombSummonTimer -= uiDiff;
+
+		if (m_uiMagicPullTimer <= uiDiff)
+		{
+			DoCast(m_creature, SPELL_MAGIC_PULL);
+			m_uiMagicPullExpireTimer = 2000;
+			m_uiMagicPullTimer = 15000;
+		} else m_uiMagicPullTimer -= uiDiff;
+
+		if(m_uiMagicPullExpireTimer < uiDiff)
+		{
+			TeleportPlayers();
+			m_uiMagicPullExpireTimer = 30000;
+		}
+		else m_uiMagicPullExpireTimer -= uiDiff;
+
+		if (m_uiStompTimer <= uiDiff)
+		{
+			switch(urand(0, 2))
 			{
-				//m_creature->GetRandomNearPosition(pPosition, float(urand(0,10)));
-				//m_creature->SummonCreature(NPC_UNSTABLE_SPHERE, pPosition);
+			case 0: DoScriptText(SAY_STOMP1, m_creature); break;
+			case 1: DoScriptText(SAY_STOMP2, m_creature); break;
+			case 2: DoScriptText(SAY_STOMP3, m_creature); break;
 			}
-
-			uiBombSummonTimer = 2000;
-		} else uiBombSummonTimer -= uiDiff;
-
-		if (uiMagicPullTimer <= uiDiff)
-		{
-			//DoCast(SPELL_MAGIC_PULL);
-
-			uiMagicPullTimer = 15000;
-		} else uiMagicPullTimer -= uiDiff;
-
-		if (uiStompTimer <= uiDiff)
-		{
-			//DoScriptText(RAND(SAY_STOMP_1,SAY_STOMP_2,SAY_STOMP_3), me);
-			//DoCast(SPELL_THUNDERING_STOMP);
-			uiStompTimer = 17000;
-		} else uiStompTimer -= uiDiff;
+			DoCast(m_creature, m_bIsRegularMode ? SPELL_THUNDERING_STOMP : SPELL_THUNDERING_STOMP_H);
+			m_uiStompTimer = 17000;
+		} else m_uiStompTimer -= uiDiff;
 
 		DoMeleeAttackIfReady();
 	}
 };
 
-struct npc_unstable_sphereAI : public ScriptedAI
+struct MANGOS_DLL_DECL npc_unstable_sphereAI : public ScriptedAI
 {
 	npc_unstable_sphereAI(Creature* pCreature) : ScriptedAI(pCreature) 
 	{
 		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+		pCreature->setFaction(14);
 		SetCombatMovement(false);
 		Reset();
 	}
 
 	ScriptedInstance* m_pInstance;
 
-	uint32 uiPulseTimer;
-	uint32 uiDeathTimer;
+	uint32 m_uiPulseTimer;
 
 	void Reset()
 	{
-		DoCast(m_creature, SPELL_UNSTABLE_SPHERE_TRIGG);
+		DoCast(m_creature, SPELL_UNSTABLE_SPHERE_VISUAL);
+		m_uiPulseTimer = 16000;
 		m_creature->GetMotionMaster()->MoveConfused();
 	}
 
@@ -180,6 +227,13 @@ struct npc_unstable_sphereAI : public ScriptedAI
 	{
 		if (m_pInstance && m_pInstance->GetData(TYPE_DRAKOS) != IN_PROGRESS) 
             m_creature->ForcedDespawn();
+
+		if(m_uiPulseTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_UNSTABLE_SPHERE_TRIGG);
+			m_uiPulseTimer = 20000;
+		}
+		else m_uiPulseTimer -= uiDiff;
 	}
 };
 

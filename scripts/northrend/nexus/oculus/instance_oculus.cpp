@@ -66,12 +66,30 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
 			break;
 		case NPC_ETERNOS:
 			m_uiEternosGUID = pCreature->GetGUID();
+			if(m_auiEncounter[0] == DONE)
+			{
+				pCreature->GetMotionMaster()->MovePoint(0, 944.384f, 1058.418f, 359.967f);
+				if(GameObject* pDoor = GetClosestGameObjectWithEntry(pCreature, GO_DRAGON_CAGE_DOOR, 5.0f))
+					pDoor->SetGoState(GO_STATE_ACTIVE);
+			}
 			break;
 		case NPC_VERDISA:
 			m_uiVerdisaGUID = pCreature->GetGUID();
+			if(m_auiEncounter[0] == DONE)
+			{
+				pCreature->GetMotionMaster()->MovePoint(0, 949.928f, 1034.753f, 359.967f);
+				if(GameObject* pDoor = GetClosestGameObjectWithEntry(pCreature, GO_DRAGON_CAGE_DOOR, 5.0f))
+					pDoor->SetGoState(GO_STATE_ACTIVE);
+			}
 			break;
 		case NPC_BELGARISTRASZ:
 			m_uiBelgaristraszGUID = pCreature->GetGUID();
+			if(m_auiEncounter[0] == DONE)
+			{
+				pCreature->GetMotionMaster()->MovePoint(0, 944.868f, 1044.982f, 359.967f);
+				if(GameObject* pDoor = GetClosestGameObjectWithEntry(pCreature, GO_DRAGON_CAGE_DOOR, 5.0f))
+					pDoor->SetGoState(GO_STATE_ACTIVE);
+			}
 			break;
         }
     }
@@ -114,7 +132,7 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
 			if(uiData == DONE)
 			{
 				DoRespawnGameObject(m_uiEregosCacheGUID);
-				if(m_uiMakeCountTimer < 20*MINUTE)
+				if(m_uiMakeCountTimer < 20*MINUTE && !instance->IsRegularDifficulty())
 					DoCompleteAchievement(ACHIEV_MAKE_IT_COUNT);
 			}
 			break;
