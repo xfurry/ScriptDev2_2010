@@ -6,7 +6,7 @@ UPDATE `creature_template` SET `ScriptName`='mob_dark_rider_of_acherus',ainame="
 UPDATE `creature_template` SET `ScriptName`='mob_scarlet_miner',ainame="" WHERE `entry`='28822';
 
 -- The Endless hunger
-UPDATE gameobject_template SET data2 = 120000 WHERE entry IN (191577,191580,191581,191582,191583,191584,191585,191586,191587,191588,191589,191590);
+#UPDATE gameobject_template SET data2 = 120000 WHERE entry IN (191577,191580,191581,191582,191583,191584,191585,191586,191587,191588,191589,191590);
 
 -- How To Win Friends And Influence Enemies
 UPDATE `creature_template` SET `ScriptName`='npc_crusade_persuaded',ainame="" WHERE `entry` IN (28939,28940,28610);
