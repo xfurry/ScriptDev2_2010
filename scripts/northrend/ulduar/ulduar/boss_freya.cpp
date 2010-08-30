@@ -321,6 +321,7 @@ struct MANGOS_DLL_DECL boss_elder_brightleafAI : public ScriptedAI
         m_uiUnstabelEnergyTimer     = 30000;
         m_uiSunbeamStacks           = 1;
         m_bHasSunbeam               = false;
+		m_creature->SetRespawnDelay(7*DAY);
     }
 
     void Aggro(Unit* pWho)
@@ -418,6 +419,7 @@ struct MANGOS_DLL_DECL boss_elder_ironbranchAI : public ScriptedAI
         m_uiImpaleTimer         = 10000 + urand (1000, 5000);
         m_uiIronrootsTimer      = 20000 + urand (1000, 7000);
         m_uiThornSwarmTimer     = 30000;
+		m_creature->SetRespawnDelay(7*DAY);
     }
 
     void Aggro(Unit* pWho)
@@ -498,6 +500,7 @@ struct MANGOS_DLL_DECL boss_elder_stonebarkAI : public ScriptedAI
         m_uiFistsOfStoneTimer   = 20000;
         m_uiGroundTremorTimer   = 15000;
         m_uiPetrifiedBarkTimer  = 25000;
+		m_creature->SetRespawnDelay(7*DAY);
     }
 
     void Aggro(Unit* pWho)

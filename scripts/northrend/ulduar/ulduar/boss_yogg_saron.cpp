@@ -978,7 +978,7 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
         {
             if (Creature* pYogg = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGGSARON)))
 			{
-				((boss_yogg_saronAI*)pYogg->AI())->m_bIsShatter = true;
+				//((boss_yogg_saronAI*)pYogg->AI())->m_bIsShatter = true;
 				// spell bugged
 				//pYogg->CastSpell(pYogg, SPELL_SHATTERED_ILLUSION, false);
 			}
@@ -2401,6 +2401,7 @@ struct MANGOS_DLL_DECL mob_death_orbAI : public ScriptedAI
     {
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetDisplayId(11686);     // make invisible
         SetCombatMovement(false);
         pCreature->setFaction(14);
         Reset();
@@ -2532,42 +2533,31 @@ struct MANGOS_DLL_DECL mob_ominous_cloudAI : public ScriptedAI
         return;
     }
 
+	void MoveInLineOfSight(Unit* pWho) 
+	{
+		if (pWho->isAlive() && pWho->GetTypeId() == TYPEID_PLAYER && pWho->IsWithinDistInMap(m_creature, 5.0f) && !m_bSummonGuardian)
+		{
+			DoCast(m_creature, SPELL_SUMMON_GUARDIAN2);
+			m_uiRangeCheckTimer = 11000;
+			m_bSummonGuardian = true;
+		}
+	}
+
     void JustSummoned(Creature* pSummon)
     {
         pSummon->SetInCombatWithZone();
     }
 
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (m_uiRangeCheckTimer < uiDiff)
-        {
-            Map *map = m_creature->GetMap();
-            if (map->IsDungeon())
-            {
-                Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                if (PlayerList.isEmpty())
-                    return;
-
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) <= 5)
-                        m_bSummonGuardian = true;
-
-                }
-            } 
-            // cast summon guard
-            if(m_bSummonGuardian)
-            {
-                DoCast(m_creature, SPELL_SUMMON_GUARDIAN2);
-                m_uiRangeCheckTimer = 11000;
-                m_bSummonGuardian = false;
-            }
-            else
-                m_uiRangeCheckTimer = 1000;
-        }
-        else m_uiRangeCheckTimer -= uiDiff;
-    }
+	void UpdateAI(const uint32 uiDiff)
+	{
+		// cast summon guard
+		if(m_bSummonGuardian)
+		{
+			if (m_uiRangeCheckTimer < uiDiff)
+				m_bSummonGuardian = false;
+			else m_uiRangeCheckTimer -= uiDiff;
+		}
+	}
 };
 
 CreatureAI* GetAI_boss_yogg_saron(Creature* pCreature)
