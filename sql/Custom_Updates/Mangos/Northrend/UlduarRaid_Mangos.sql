@@ -35,6 +35,9 @@ UPDATE creature_template SET mechanic_immune_mask=652951551, scriptname='mob_xth
 UPDATE creature_template SET ScriptName = "mob_voidzone" WHERE entry = 34001;
 UPDATE creature_template SET minhealth = 176400, maxhealth = 176400, minlevel = 80, maxlevel = 80, faction_a = 14, faction_h = 14, ScriptName = "mob_lifespark" WHERE entry = 34004;
 Update creature set spawnMask = 0 where id in (34004);
+/*
+will be fixed later
+
 -- hard loot for the heart
 update creature_template set lootid = 33329 where entry = 33329;
 update creature_template set lootid = 33995 where entry = 33995;
@@ -73,7 +76,7 @@ INSERT INTO `creature_loot_template` VALUES
 (33995, 45444, 0, 1, 1, 1, 0, 0, 0),
 (33995, 45446, 0, 1, 1, 1, 0, 0, 0),
 (33995, 45442, 0, 1, 1, 1, 0, 0, 0);
-
+*/
 -- Iron council
 UPDATE creature_template SET mechanic_immune_mask=617299711, scriptname='boss_brundir' WHERE entry=32857;
 UPDATE creature_template SET mechanic_immune_mask=617299803, scriptname='boss_molgeim' WHERE entry=32927;
@@ -82,6 +85,9 @@ UPDATE creature_template SET ScriptName = "mob_rune_of_power" WHERE entry = 3370
 UPDATE creature_template SET ScriptName = "mob_rune_of_summoning" WHERE entry = 33051;
 UPDATE creature_template SET ScriptName = "mob_ulduar_lightning_elemental" WHERE entry = 32958;
 UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` in (32857, 33694);
+/*
+will be fixed later
+
 -- update loot id:
 -- brundir
 update creature_template set lootid = 32857 where entry = 32857;
@@ -130,7 +136,7 @@ INSERT INTO `creature_loot_template` VALUES
 (33694, 45089, 5, 0, -45089, 1, 0, 0, 0),
 -- emblem 100% drop
 (33694, 47241, 100, 0, 1, 1, 0, 0, 0);
-
+*/
 -- Kologarn
 DELETE FROM creature WHERE id IN (32933, 32934);
 INSERT INTO creature (id, map, spawnMask, phaseMask, modelid, equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, currentwaypoint, curhealth, curmana, DeathState, MovementType) VALUES (32933, 603, 3, 65535, 0, 0, 1799.68, -24.3599, 452.227, 3.14747, 604800, 0, 0, 543855, 0, 0, 0);
@@ -398,6 +404,9 @@ UPDATE creature_template SET MinHealth = 23009250, MaxHealth = 23009250, ScriptN
 UPDATE `creature_template` SET `mechanic_immune_mask` = 619397115 WHERE `entry` in (33271, 33449);
 UPDATE creature_template SET ScriptName = "mob_saronite_animus" WHERE entry = 33524;
 UPDATE creature_template SET ScriptName = "mob_saronite_vapor", movementType = 1  WHERE entry = 33488;
+/*
+will be fixed later
+
 -- hard loot for the animus
 update creature_template set lootid = 33524 where entry = 33524;
 update creature_template set lootid = 34152 where entry = 34152;
@@ -430,7 +439,7 @@ INSERT INTO `creature_loot_template` VALUES
 (34152, 45518, 0, 1, 1, 1, 0, 0, 0),
 (34152, 45519, 0, 1, 1, 1, 0, 0, 0),
 (34152, 45520, 0, 1, 1, 1, 0, 0, 0);
-
+*/
 -- Yogg
 UPDATE creature_template SET ScriptName = "boss_yogg_saron" WHERE entry = 33288;
 update creature_template set `RegenHealth`= 0, `flags_extra` = 1,`type_flags` = 108, ScriptName = "boss_sara" where entry = 33134;

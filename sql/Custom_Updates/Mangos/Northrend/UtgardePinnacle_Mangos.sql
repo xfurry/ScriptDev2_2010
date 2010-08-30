@@ -5,7 +5,6 @@ UPDATE `gameobject_template` SET `faction` = 114, `data0` = '0' where `entry` in
 update `creature` set `spawnMask` = 0 where `id` = 26668; -- Undead Svala should not be spawned
 update `creature` set `spawnMask` = 3 where `id` = 29281; -- Only human Svala should be spawned
 update `creature_template` set `ScriptName` = 'boss_svala' where `entry` = 29281;
-#update `creature_template` set `ScriptName` = 'boss_svala_sorrowgrave' where `entry` = 26668;
 update `creature_template` set `ScriptName` = 'mob_ritual_channeler' where `entry` = 27281;
 update `creature_template` set `ScriptName` = 'boss_skadi' where `entry` = 26693;
 update `creature_template` set `ScriptName` = 'mob_massive_jormungar' where `entry` = 26685;

@@ -1,8 +1,5 @@
 /* ONYXIA */
--- Onyxia wheps original: minhp= 63000; maxhp= 63000; dmg_mult= 1.4 -> this is for 10 player
-update `creature_template` set `minhealth` = 126000, `maxhealth` = 126000, `dmg_multiplier` = 2.8 where `entry` = 11262;
--- Onyxia wheps original: minhp= 189000; maxhp= 189000; dmg_mult= 1.4 -> this is for 25 player
-update `creature_template` set `minhealth` = 378000, `maxhealth` = 378000, `dmg_multiplier` = 2.8 where `entry` = 10308;
+
 -- SPELL_BREATH_EAST_TO_WEST
 DELETE FROM spell_target_position WHERE id IN (18576, 18578, 18579, 18580, 18581, 18582, 18583);
 INSERT INTO spell_target_position VALUES (18576, 249, -37.743851, -243.667923, -88.217651, 1.416);

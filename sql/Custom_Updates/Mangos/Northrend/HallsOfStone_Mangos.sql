@@ -1,5 +1,5 @@
 /* HALLS OF STONE */
-UPDATE `instance_template` SET `script`='instance_halls_of_stone' WHERE `map`=599;
+UPDATE `instance_template` SET `scriptName`='instance_halls_of_stone' WHERE `map`=599;
 UPDATE `creature_template` SET `ScriptName`='boss_krystallus' WHERE `entry`='27977';
 UPDATE `creature_template` SET `ScriptName`='mob_iron_sludge' WHERE `entry`=28165;
 UPDATE `creature_template` SET `ScriptName`='mob_tribuna_controller', `faction_A`=16, `faction_H`=16 WHERE `entry`='28234';

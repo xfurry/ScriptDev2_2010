@@ -4,7 +4,7 @@ update creature_template set scriptName = 'boss_malygos' where entry = 28859;
 update creature_template set scriptName = 'mob_power_spark' where entry = 30084;
 update creature_template set scriptName = 'mob_scion_of_eternity' where entry = 30249;
 UPDATE `creature_template` SET `modelid_2` = 16925, `modelid_4` = 16925 WHERE `entry` = 22517;
-update creature set spawnMask = 0 where id = 28859;
+#update creature set spawnMask = 3 where id = 28859;
 
 -- Loot
 UPDATE gameobject_template SET faction = 0, flags = 0 WHERE entry in (194158, 194159, 193905, 193967);

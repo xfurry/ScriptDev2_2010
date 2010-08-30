@@ -2,13 +2,13 @@
 UPDATE `creature_template` SET `ScriptName` = '' WHERE `entry` = 30688;
 UPDATE `creature_template` SET `ScriptName` = '' WHERE `entry` = 30858;
 UPDATE `creature_template` SET `ScriptName` = 'mob_twilight_fissure' WHERE `entry` = 30641;
-UPDATE `creature_template` SET  modelid_A = 11686, `ScriptName` = 'mob_flame_tsunami' WHERE `entry` = 30616;
-#UPDATE `creature_template` SET `ScriptName` = 'mob_safe_area' WHERE `entry` = 30494; -- unknown
-#UPDATE `creature_template` SET `ScriptName` = 'mob_lava_blaze' WHERE `entry` = 30643; -- not used
+UPDATE `creature_template` SET  modelid_1 = 11686, `ScriptName` = 'mob_flame_tsunami' WHERE `entry` = 30616;
 UPDATE `creature_template` SET `ScriptName` = 'mob_onyx_flight_captain' WHERE `entry` = 30682;
 UPDATE `creature_template` SET `scriptName` = 'mob_onyx_sanctum_guardian' WHERE `entry` = 30453;
 UPDATE `creature_template` SET `ScriptName` = 'npc_flame_tornado' WHERE `entry` = 30648;
 UPDATE `creature_template` SET `ScriptName` = 'mob_twilight_eggs' WHERE `entry` in (31204);
+/*
+will be fixed later
 -- fix loot:
 -- 10 man:
 DELETE FROM `creature_loot_template` WHERE (`entry`=28860);
@@ -137,3 +137,4 @@ INSERT INTO `gameobject` (`guid`,`id`,`map`,`spawnMask`,`phaseMask`,`position_x`
 (800065, 193988, 615, 3, 1, 3137.26, 501.08, 87.9118, 0.846795, 0, 0, 0.41086, 0.911698, -30, 0, 1),
 (800032, 193988, 615, 3, 1, 3362.01, 553.726, 95.7068, 4.56818, 0, 0, 0.756211, -0.654328, -30, 0, 1),
 (800170, 193988, 615, 3, 1, 3219.67, 656.795, 87.2898, 5.92596, 0, 0, 0.177664, -0.984091, -30, 0, 1);
+*/

@@ -16,8 +16,8 @@ INSERT INTO spell_script_target VALUES
 (28096, 1, 15929),
 (28111, 1, 15930);
 
-DELETE FROM areatrigger_scripts WHERE entry = 4113;
-INSERT INTO areatrigger_scripts VALUES
+DELETE FROM scripted_areatrigger WHERE entry = 4113;
+INSERT INTO scripted_areatrigger VALUES
 (4113, 'at_naxxramas');
 
 DELETE FROM script_texts WHERE entry BETWEEN -1533149 AND -1533147;
