@@ -307,7 +307,7 @@ struct MANGOS_DLL_DECL boss_alarAI : public ScriptedAI
 
 			if(m_uiMeltArmorTimer < uiDiff)
 			{
-				if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
 					DoCast(pTarget, SPELL_MELT_ARMOR);
 				m_uiMeltArmorTimer = 60000;
 			}
