@@ -35,16 +35,13 @@ EndScriptData */
 
 enum WaterEventState
 {
-    WATERSTATE_NONE     = 0,
-    WATERSTATE_FRENZY   = 1,
-    WATERSTATE_SCALDING = 2
-};
-#define SPELL_SCALDINGWATER 37284
-#define MOB_COILFANG_FRENZY 21508
-#define TRASHMOB_COILFANG_PRIESTESS 21220  //6*2
-#define TRASHMOB_COILFANG_SHATTERER 21301  //6*3
+	SPELL_SCALDINGWATER		= 37284,
+	MOB_COILFANG_FRENZY		= 21508,
 
-#define MIN_KILLS 30
+    WATERSTATE_NONE			= 0,
+    WATERSTATE_FRENZY		= 1,
+    WATERSTATE_SCALDING		= 2
+};
 
 bool GOHello_go_main_bridge_console(Player* pPlayer, GameObject* pGo)
 {
@@ -79,6 +76,7 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
     uint64 m_uiLadyVashj;
     uint64 m_uiKarathress;
     uint64 m_uiKarathressEvent_Starter;
+	uint64 m_uiLurkerGUID;
     uint64 m_uiBridgeConsole;
     uint64 m_uiLurkerConsole;
     uint64 m_uiHydrossConsole;
@@ -109,6 +107,7 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
         m_uiLadyVashj			= 0;
         m_uiKarathress			= 0;
         m_uiKarathressEvent_Starter = 0;
+		m_uiLurkerGUID			= 0;
 
         m_uiBridgeConsole		= 0;
         m_uiLurkerConsole		= 0;
@@ -120,10 +119,9 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
 		m_uiBridge2GUID			= 0;
 		m_uiBridge3GUID			= 0;
 
-        WaterCheckTimer			= 500;
+        WaterCheckTimer			= 1000;
         FrenzySpawnTimer		= 2000;
         Water					= WATERSTATE_FRENZY;
-        TrashCount				= 0;
         DoSpawnFrenzy			= false;
     }
 
@@ -141,28 +139,29 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
         //Water checks
         if (WaterCheckTimer <= diff)
         {
-            if(TrashCount >= MIN_KILLS)
-                Water = WATERSTATE_SCALDING;
-            else
-                Water = WATERSTATE_FRENZY;
+            //if(TrashCount >= MIN_KILLS)
+            //   Water = WATERSTATE_SCALDING;
+            //else
+            //    Water = WATERSTATE_FRENZY;
 
             Map::PlayerList const &PlayerList = instance->GetPlayers();
             if (PlayerList.isEmpty())
                 return;
+
             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
             {
                 if (Player* pPlayer = i->getSource())
                 {
-                    if (pPlayer->isAlive() && /*i->getSource()->GetPositionZ() <= -21.434931f*/pPlayer->IsInWater())
+                    if (pPlayer->isAlive() && pPlayer->IsInWater())
                     {
                         if(Water == WATERSTATE_SCALDING)
                         {
-
                             if(!pPlayer->HasAura(SPELL_SCALDINGWATER))
                             {
                                 pPlayer->CastSpell(pPlayer, SPELL_SCALDINGWATER,true);
                             }
-                        } else if(Water == WATERSTATE_FRENZY)
+                        } 
+						else if(Water == WATERSTATE_FRENZY)
                         {
                             //spawn frenzy
                             if(DoSpawnFrenzy)
@@ -179,15 +178,17 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
                     if(!pPlayer->IsInWater())
                         pPlayer->RemoveAurasDueToSpell(SPELL_SCALDINGWATER);
                 }
-
             }
-            WaterCheckTimer = 500;//remove stress from core
-        } else WaterCheckTimer -= diff;
+            WaterCheckTimer = 1000;
+        } 
+		else WaterCheckTimer -= diff;
+
         if (FrenzySpawnTimer <= diff)
         {
             DoSpawnFrenzy = true;
             FrenzySpawnTimer = 2000;
-        } else FrenzySpawnTimer -= diff;
+        } 
+		else FrenzySpawnTimer -= diff;
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -199,6 +200,8 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
         case 21966: m_uiSharkkis   = pCreature->GetGUID(); break;
         case 21965: m_uiTidalvess  = pCreature->GetGUID(); break;
         case 21964: m_uiCaribdis   = pCreature->GetGUID(); break;
+		case NPC_LURKER_BELOW:
+			m_uiLurkerGUID		   = pCreature->GetGUID(); break;
         }
     }
 
@@ -208,21 +211,17 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
         {
 		case GO_BRIDGE_1:
 			m_uiBridge1GUID = pGo->GetGUID();
-			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
 			pGo->SetGoState(GO_STATE_READY);
 			break;
 		case GO_BRIDGE_2:
 			m_uiBridge2GUID = pGo->GetGUID();
-			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
 			pGo->SetGoState(GO_STATE_READY);
 			break;
 		case GO_BRIDGE_3:
 			m_uiBridge3GUID = pGo->GetGUID();
-			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
 			pGo->SetGoState(GO_STATE_READY);
         case BRIDGE_CONSOLE:   
 			m_uiBridgeConsole = pGo->GetGUID(); 
-			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
 			ActivateBridge();
 			break;
         case CONSOLE_LURKER:   
@@ -310,6 +309,8 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
             return m_uiKarathress;
         case DATA_KARATHRESS_STARTER:
             return m_uiKarathressEvent_Starter;
+		case NPC_LURKER_BELOW:
+			return m_uiLurkerGUID;
         }
         return 0;
     }
@@ -318,13 +319,6 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
     {
         switch(uiType)
         {
-        case DATA_TRASH:
-            {
-                if(uiData == 1 && TrashCount < MIN_KILLS)
-                    ++TrashCount;//+1 died
-                SaveToDB();
-            }
-            break;
 		case TYPE_HYDROSS_EVENT:
 			m_auiEncounter[0] = uiData;
 			if (uiData == DONE)
@@ -400,7 +394,7 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
 
 			std::ostringstream saveStream;
 			saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " "
-            << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5] << " " << TrashCount;
+            << m_auiEncounter[3] << " " << m_auiEncounter[4] << " " << m_auiEncounter[5];
 
 			strInstData = saveStream.str();
 
@@ -415,34 +409,24 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
         {
         case TYPE_HYDROSS_EVENT:
             return m_auiEncounter[0];
-
         case TYPE_LEOTHERAS_EVENT:
             return m_auiEncounter[1];
-
         case TYPE_THELURKER_EVENT:
             return m_auiEncounter[2];
-
         case TYPE_KARATHRESS_EVENT:
             return m_auiEncounter[3];
-
         case TYPE_MOROGRIM_EVENT:
             return m_auiEncounter[4];
-
         case TYPE_LADYVASHJ_EVENT:
             return m_auiEncounter[5];
-
         case TYPE_SHIELDGENERATOR1:
             return m_auiShieldGenerator[0];
-
         case TYPE_SHIELDGENERATOR2:
             return m_auiShieldGenerator[1];
-
         case TYPE_SHIELDGENERATOR3:
             return m_auiShieldGenerator[2];
-
         case TYPE_SHIELDGENERATOR4:
             return m_auiShieldGenerator[3];
-
         case TYPE_VASHJ_PHASE3_CHECK:
             for(uint8 i = 0; i < MAX_GENERATOR; ++i)
             {
@@ -467,7 +451,7 @@ struct MANGOS_DLL_DECL instance_serpentshrine_cavern : public ScriptedInstance
 
         std::istringstream stream(in);
         stream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3]
-        >> m_auiEncounter[4] >> m_auiEncounter[5] >> TrashCount;
+        >> m_auiEncounter[4] >> m_auiEncounter[5];
 
         for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
 		{

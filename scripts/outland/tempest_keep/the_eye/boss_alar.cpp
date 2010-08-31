@@ -316,7 +316,7 @@ struct MANGOS_DLL_DECL boss_alarAI : public ScriptedAI
 
 		if(m_uiRangeCheckTimer < uiDiff)
 		{
-            if (!m_creature->IsWithinDistInMap(m_creature->getVictim(), 5))
+            if (!m_creature->IsWithinDistInMap(m_creature->getVictim(), ATTACK_DISTANCE))
 				DoCast(m_creature, SPELL_FLAME_BUFFET);
 			m_uiRangeCheckTimer = 2000;
 		}

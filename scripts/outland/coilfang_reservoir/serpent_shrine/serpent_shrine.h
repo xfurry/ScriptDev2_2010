@@ -23,6 +23,8 @@ enum
     DATA_LADYVASHJ                  = 15,
     TYPE_VASHJ_PHASE3_CHECK         = 16,
 
+	NPC_LURKER_BELOW				= 21217,
+
     TYPE_SHIELDGENERATOR1           = 20,
     TYPE_SHIELDGENERATOR2           = 21,
     TYPE_SHIELDGENERATOR3           = 22,
