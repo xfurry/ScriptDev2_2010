@@ -21,18 +21,19 @@ enum
 {
 	// yells
 	SAY_AGGRO                                    = -1578000,
-	SAY_SLAY1                                    = -1578001,
-	SAY_SLAY2                                    = -1578002,
-	SAY_SLAY3                                    = -1578003,
-	SAY_DEATH                                    = -1578004,
-	SAY_VAROS_INTRO                              = -1578029,
-	SAY_PULL1                                    = -1578005,
-	SAY_PULL2                                    = -1578006,
-	SAY_PULL3                                    = -1578007,
-	SAY_PULL4                                    = -1578008,
-	SAY_STOMP1                                   = -1578009,
-	SAY_STOMP2                                   = -1578010,
-	SAY_STOMP3                                   = -1578011,
+	SAY_PULL1                                    = -1578001,
+	SAY_PULL2                                    = -1578002,
+	SAY_PULL3                                    = -1578003,
+	SAY_PULL4                                    = -1578004,
+	SAY_STOMP1                                   = -1578005,
+	SAY_STOMP2                                   = -1578006,
+	SAY_STOMP3                                   = -1578007,
+	SAY_SLAY1                                    = -1578008,
+	SAY_SLAY2                                    = -1578009,
+	SAY_SLAY3                                    = -1578010,
+	SAY_DEATH                                    = -1578011,
+	SAY_VAROS_INTRO                              = -1578012,
+	
 
 	// spells
 	SPELL_MAGIC_PULL                              = 51336,
@@ -41,6 +42,7 @@ enum
 	SPELL_THUNDERING_STOMP_H                      = 59370,
 
 	SPELL_UNSTABLE_SPHERE_TRIGG                   = 50758,
+	SPELL_UNSTABLE_SPHERE_DMG					  = 50759,
 	SPELL_UNSTABLE_SPHERE_VISUAL				  = 50756,
 	NPC_UNSTABLE_SPHERE                           = 28166,
 };
@@ -167,6 +169,13 @@ struct MANGOS_DLL_DECL boss_drakosAI : public ScriptedAI
 
 		if (m_uiMagicPullTimer <= uiDiff)
 		{
+			switch(urand(0, 3))
+			{
+			case 0: DoScriptText(SAY_PULL1, m_creature); break;
+			case 1: DoScriptText(SAY_PULL2, m_creature); break;
+			case 2: DoScriptText(SAY_PULL3, m_creature); break;
+			case 3: DoScriptText(SAY_PULL4, m_creature); break;
+			}
 			DoCast(m_creature, SPELL_MAGIC_PULL);
 			m_uiMagicPullExpireTimer = 2000;
 			m_uiMagicPullTimer = 15000;
@@ -230,7 +239,8 @@ struct MANGOS_DLL_DECL npc_unstable_sphereAI : public ScriptedAI
 
 		if(m_uiPulseTimer < uiDiff)
 		{
-			DoCast(m_creature, SPELL_UNSTABLE_SPHERE_TRIGG);
+			//DoCast(m_creature, SPELL_UNSTABLE_SPHERE_TRIGG);
+			DoCast(m_creature, SPELL_UNSTABLE_SPHERE_DMG);
 			m_uiPulseTimer = 20000;
 		}
 		else m_uiPulseTimer -= uiDiff;

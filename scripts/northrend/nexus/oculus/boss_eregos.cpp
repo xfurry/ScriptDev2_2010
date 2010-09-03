@@ -20,6 +20,16 @@
 enum
 {
 	// yells
+	SAY_SPAWN									= -1578028,
+	SAY_AGGRO									= -1578029,
+	SAY_ARCANE_SHIELD							= -1578030,
+	SAY_FIRE_SHIELD								= -1578031,
+	SAY_NATURE_SHIELD							= -1578032,
+	SAY_FRENZY									= -1578033,
+	SAY_SLAY1									= -1578034,
+	SAY_SLAY2									= -1578035,
+	SAY_SLAY3									= -1578036,
+	SAY_DEATH									= -1578037,
 
 	// spells
     SPELL_ARCANE_BARRAGE                          = 50804,
@@ -30,6 +40,11 @@ enum
     SPELL_PLANAR_ANOMALIES                        = 57959,
 	SPELL_PLANAR_ANOMALIES_SUMMON				  = 57963,
     SPELL_PLANAR_SHIFT                            = 51162,
+
+	NPC_PLANAR_ANOMALY							  = 30879,
+	SPELL_PLANAR_BLAST							  = 57976,
+
+	NPC_GREATER_LEY_WHELP						  = 28276,
 };
 
 
@@ -58,6 +73,9 @@ struct MANGOS_DLL_DECL boss_eregosAI : public ScriptedAI
 		m_uiEnrageTimer			= 25000;
 		m_uiAnomaliesTimer		= 40000;
 		m_uiShiftEndTimer		= 60000;
+
+		m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
+        m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
 	}
 
 	void JustReachedHome()
@@ -68,14 +86,26 @@ struct MANGOS_DLL_DECL boss_eregosAI : public ScriptedAI
 
 	void Aggro(Unit* pWho)
 	{
+		DoScriptText(SAY_AGGRO, m_creature);
 		if (m_pInstance)
 			m_pInstance->SetData(TYPE_EREGOS, IN_PROGRESS);
 	}
 
 	void JustDied(Unit* pKiller)
 	{
+		DoScriptText(SAY_DEATH, m_creature);
 		if (m_pInstance)
 			m_pInstance->SetData(TYPE_EREGOS, DONE);
+	}
+
+	void KilledUnit(Unit* pVictim)
+	{
+		switch(urand(0, 2))
+		{
+		case 0: DoScriptText(SAY_SLAY1, m_creature); break;
+		case 1: DoScriptText(SAY_SLAY2, m_creature); break;
+		case 2: DoScriptText(SAY_SLAY3, m_creature); break;
+		}
 	}
 
 	void UpdateAI(const uint32 uiDiff)
@@ -101,6 +131,7 @@ struct MANGOS_DLL_DECL boss_eregosAI : public ScriptedAI
 		if(m_uiEnrageTimer < uiDiff)
 		{
 			m_creature->InterruptNonMeleeSpells(true);
+			DoScriptText(SAY_FRENZY, m_creature);
 			DoCast(m_creature, SPELL_ENRAGED_ASSAULT);
 			m_uiEnrageTimer = urand(20000, 30000);
 		}
@@ -108,6 +139,9 @@ struct MANGOS_DLL_DECL boss_eregosAI : public ScriptedAI
 
 		if(!m_bIsRegularMode)
 		{
+			/* todo: 
+			at 60 and 20% he enters planar shift and summons anomalies
+			also summons whelps
 			if(m_uiAnomaliesTimer < uiDiff)
 			{
 				m_creature->InterruptNonMeleeSpells(true);
@@ -123,6 +157,7 @@ struct MANGOS_DLL_DECL boss_eregosAI : public ScriptedAI
 				m_uiShiftEndTimer = 40000;
 			}
 			else m_uiShiftEndTimer -= uiDiff;
+			*/
 		}
 
 		DoMeleeAttackIfReady();

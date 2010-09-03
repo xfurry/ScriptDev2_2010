@@ -20,13 +20,13 @@
 enum Spells
 {
 	// yells
-	SAY_AGGRO                                     = -1578022,
-    SAY_SLAY1                                     = -1578023,
-    SAY_SLAY2                                     = -1578024,
-    SAY_DEATH                                     = -1578025,
-    SAY_STRIKE1                                   = -1578026,
-    SAY_STRIKE2                                   = -1578027,
-    SAY_STRIKE3                                   = -1578028,
+	SAY_AGGRO                                     = -1578013,
+    SAY_SLAY1                                     = -1578038,
+    SAY_SLAY2                                     = -1578039,
+    SAY_DEATH                                     = -1578017,
+    SAY_STRIKE1                                   = -1578014,
+    SAY_STRIKE2                                   = -1578015,
+    SAY_STRIKE3                                   = -1578016,
 	
 	// spells
     SPELL_ENERGIZE_CORES                        = 50785,
@@ -39,6 +39,10 @@ enum Spells
 	SPELL_CENTRIFUGE_CORE_PASSIVE				= 50798,
 	NPC_CENTRIFUGE_CORE							= 28183,
 	NPC_CENTRIFUGE_CONSTRUCT					= 27641,
+
+
+	// channeling
+	// 54219, 
 };
 
 struct MANGOS_DLL_DECL boss_varosAI : public ScriptedAI
@@ -62,7 +66,8 @@ struct MANGOS_DLL_DECL boss_varosAI : public ScriptedAI
 		m_uiAmplifyMagicTimer	= 10000;
 		m_uiCallCaptainTimer	= 15000;
 		m_uiEnergizeCoreTimer	= 20000;
-		DoCast(m_creature, SPELL_CENTRIFUGE_SHIELD);
+		//if(m_pInstance->GetData(TYPE_DRAKOS) != DONE)
+		//	DoCast(m_creature, SPELL_CENTRIFUGE_SHIELD);
 	}
 
 	void JustReachedHome()
@@ -131,6 +136,12 @@ struct MANGOS_DLL_DECL boss_varosAI : public ScriptedAI
 
 		if(m_uiCallCaptainTimer < uiDiff)
 		{
+			switch(urand(0, 2))
+			{
+			case 0: DoScriptText(SAY_STRIKE1, m_creature); break;
+			case 1: DoScriptText(SAY_STRIKE2, m_creature); break;
+			case 2: DoScriptText(SAY_STRIKE3, m_creature); break;
+			}
 			// todo: needs advanced script
 			DoCast(m_creature, SPELL_CALL_AZURE_RING_CAPTAIN);
 			m_uiCallCaptainTimer = 13000;
@@ -164,15 +175,6 @@ struct MANGOS_DLL_DECL npc_centrifuge_sphereAI : public ScriptedAI
 	void Reset()
 	{
 		DoCast(m_creature, SPELL_CENTRIFUGE_CORE_PASSIVE);
-	}
-
-	void AttackStart(Unit* pWho)
-	{
-		return;
-	}
-
-	void UpdateAI(const uint32 uiDiff)
-	{
 	}
 };
 

@@ -1,0 +1,47 @@
+ /* VIOLET HOLD */
+delete from script_texts where entry between -1578040 and -1578000;
+INSERT IGNORE INTO `script_texts` (`entry`,`content_default`,`sound`,`type`,`language`,`comment`) VALUES
+-- Drakos
+   (-1578000, 'The prisoners shall not go free. The word of Malygos is law!', 13594, 1, 0, 'SAY_AGGRO'),
+   (-1578001, 'It is too late to run!', 13598, 1, 0, 'say_pull1'),
+   (-1578002, 'Gather \'round...', 13599, 1, 0, 'say_pull2'),
+   (-1578003, 'None shall escape!', 13600, 1, 0, 'say_pull3'),
+   (-1578004, 'I condemn you to death!', 13601, 1, 0, 'say_pull4'),
+   (-1578005, 'Tremble, worms!', 13595, 1, 0, 'say_stomp1'),
+   (-1578006, 'I will crush you!', 13596, 1, 0, 'say_stomp2'),
+   (-1578007, 'Can you fly?', 13597, 1, 0, 'say_stomp3'),
+   (-1578008, 'A fitting punishment!', 13602, 1, 0, 'say_kill1'),
+   (-1578009, 'Sentence: executed!', 13603, 1, 0, 'say_kill2'),
+   (-1578010, 'Another casualty of war!', 13604, 1, 0, 'say_kill3'),
+   (-1578011, 'The war... goes on.', 13605, 1, 0, 'say_death'),
+   -- Varos
+   (-1578012, 'Intruders, your victory will be short-lived. I am Commander Varos Cloudstrider. My drakes control the skies and protect this conduit. I will see to it personally that the Oculus does not fall into your hands!', 13648, 1, 0, 'say_taunt'),
+   (-1578013, 'There will be no mercy!', 13649, 1, 0, 'say_aggro'),
+   (-1578014, 'Blast them! Destroy them!', 13650, 1, 0, 'say_air1'),
+   (-1578015, 'Take no prisoners! Attack!', 13651, 1, 0, 'say_air2'),
+   (-1578016, 'Strike now! Obliterate them!', 13652, 1, 0, 'say_air3'),
+   (-1578038, 'You were warned!', 13653, 1, 0, 'say_kill1'),
+   (-1578039, 'The Oculus is ours!', 13654, 1, 0, 'say_kill2'),
+   (-1578017, 'They are... too strong! Underestimated their... fortitude.', 13655, 1, 0, 'say_death'),
+   -- Urom
+   (-1578018, 'What do we have here... those would defy the Spell-Weaver? Those without foresight or understanding. How could I make you see? Malygos is saving the world from itself! Bah! You are hardly worth my time!', 13635, 1, 0, 'say_summon1'),
+   (-1578019, 'Clearly my pets failed. Perhaps another demonstration is in order.', 13636, 1, 0, 'say_summon2'),
+   (-1578020, 'Still you fight. Still you cling to misguided principles. If you survive, you\'ll find me in the center ring.', 13637, 1, 0, 'say_summon3'),
+   (-1578021, 'Poor blind fools!', 13638, 1, 0, 'say_aggro'),
+   (-1578022, 'A taste... just a small taste... of the Spell-Weaver\'s power!', 13639, 1, 0, 'say_explosion1'),
+   (-1578023, 'So much unstable energy... but worth the risk to destroy you!', 13640, 1, 0, 'say_explosion2'),
+   (-1578024, 'If only you understood!', 13641, 1, 0, 'say_kill1'),
+   (-1578025, 'Now do you see? Do you?!', 13642, 1, 0, 'say_kill2'),
+   (-1578026, 'Unfortunate, but necessary.', 13643, 1, 0, 'say_kill3'),
+   (-1578027, 'Everything I\'ve done... has been for Azeroth...', 13644, 1, 0, 'say_death'),
+   -- Eregos
+   (-1578028, 'Simpletons! You cannot comprehend the forces you have set in motion. The ley line conduit will not be disrupted! Your defeat shall be absolute!', 13622, 1, 0, 'say_spawn'),
+   (-1578029, 'You brash interlopers are out of your element! I will ground you!', 13623, 1, 0, 'say_aggro'),
+   (-1578030, 'We command the arcane! It shall not be used against us.', 13626, 1, 0, 'say_shield_arcane'),
+   (-1578031, 'It is trivial to extinguish your fire!', 13627, 1, 0, 'say_shield_fire'),
+   (-1578032, 'No magic of nature will help you now!', 13625, 1, 0, 'say_shield_nature'),
+   (-1578033, 'Such insolence... such arrogance... must be PUNISHED!', 13624, 1, 0, 'say_frenzy'),
+   (-1578034, 'It\'s a long way down...', 13628, 1, 0, 'say_kill1'),
+   (-1578035, 'Back to the earth with you!', 13629, 1, 0, 'say_kill2'),
+   (-1578036, 'Enjoy the fall!', 13630, 1, 0, 'say_kill3'),
+   (-1578037, 'Savor this small victory, foolish little creatures. You and your dragon allies have won this battle. But we will win... the Nexus War.', 13631, 1, 0, 'say_death');
