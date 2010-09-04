@@ -207,79 +207,21 @@ struct MANGOS_DLL_DECL mob_npc_flashFreezeAI : public ScriptedAI
 {
     mob_npc_flashFreezeAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
         pCreature->SetDisplayId(25865);     // invisible
 		pCreature->GetMotionMaster()->MoveIdle();
         SetCombatMovement(false);
         Reset();
     }
 
-    ScriptedInstance* m_pInstance;
-    std::list<Creature*> lVictims;
-
     void Reset()
     {
-        lVictims.clear();
-        SetVictim();
         DoCast(m_creature, SPELL_FLASH_FREEZE_NPC_STUN);
     }
 
-    void Aggro(Unit *who) 
-    {
-        if (Creature* pHodir = GetClosestCreatureWithEntry(m_creature, NPC_HODIR, 100.0f))
-        {
-            pHodir->AI()->AttackStart(who);
-            pHodir->AddThreat(who, 0.0f);
-        }
-    }
-
-    void SetVictim()
-    {
-        // druids
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 33325, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 32901, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 32941, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 33333, 2.0f);
-        // shamys
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 33328, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 32900, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 33332, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 32950, 2.0f);
-        // mages
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 32893, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 33327, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 33331, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 32946, 2.0f);
-        // priests
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 32897, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 33326, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 32948, 2.0f);
-        GetCreatureListWithEntryInGrid(lVictims, m_creature, 33330, 2.0f);
-        if (!lVictims.empty())
-        {
-            for(std::list<Creature*>::iterator iter = lVictims.begin(); iter != lVictims.end(); ++iter)
-            {
-                if ((*iter) && (*iter)->isAlive() && !(*iter)->HasAura(SPELL_FLASH_FREEZE_NPC_STUN, EFFECT_INDEX_0))
-                    (*iter)->CastSpell((*iter), SPELL_FLASH_FREEZE_NPC_STUN, false);
-            }
-        }
-    }
-
-    void JustDied(Unit* Killer)
-    {
-        if (!lVictims.empty())
-        {
-            for(std::list<Creature*>::iterator iter = lVictims.begin(); iter != lVictims.end(); ++iter)
-            {
-                if ((*iter) && (*iter)->isAlive() && (*iter)->HasAura(SPELL_FLASH_FREEZE_NPC_STUN, EFFECT_INDEX_0))
-                {
-                    (*iter)->RemoveAurasDueToSpell(SPELL_FLASH_FREEZE_NPC_STUN);
-                    if (Creature* pHodir = GetClosestCreatureWithEntry(m_creature, NPC_HODIR, 100.0f))
-                        (*iter)->AddThreat(pHodir, 100.0f);
-                }
-            }
-        }
-    }
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
 
     void UpdateAI(const uint32 diff) 
     { }
@@ -479,10 +421,6 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
             if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
                 return;
 
-            // reset if fighting only the npcs
-            if(m_creature->getVictim()->GetTypeId() != TYPEID_PLAYER)
-                EnterEvadeMode();
-
             // hard mode check
             m_uiSpeedKillTimer += uiDiff;
 
@@ -602,6 +540,7 @@ struct MANGOS_DLL_DECL npc_hodir_druidAI : public ScriptedAI
     {
         spellTimer = 5000;
         FriendlyList.clear();
+		m_creature->SummonCreature(NPC_FLASH_FREEZE_NPC, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
     }
 
     void JustDied(Unit* pKiller)
@@ -618,6 +557,9 @@ struct MANGOS_DLL_DECL npc_hodir_druidAI : public ScriptedAI
 
     void AttackStart(Unit* pWho)
     {
+		if(GetClosestCreatureWithEntry(m_creature, NPC_FLASH_FREEZE_NPC, 2.0f))
+			return;
+
         if (!pWho) 
             return;
 
@@ -706,6 +648,7 @@ struct MANGOS_DLL_DECL npc_hodir_shamanAI : public ScriptedAI
     {
         spellTimer = 5000;
         FriendlyList.clear();
+		m_creature->SummonCreature(NPC_FLASH_FREEZE_NPC, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
     }
 
     void JustDied(Unit* pKiller)
@@ -722,6 +665,9 @@ struct MANGOS_DLL_DECL npc_hodir_shamanAI : public ScriptedAI
 
     void AttackStart(Unit* pWho)
     {
+		if(GetClosestCreatureWithEntry(m_creature, NPC_FLASH_FREEZE_NPC, 2.0f))
+			return;
+
         if (!pWho) 
             return;
 
@@ -808,6 +754,7 @@ struct MANGOS_DLL_DECL npc_hodir_mageAI : public ScriptedAI
     {
         spellTimer = 5000;
         FriendlyList.clear();
+		m_creature->SummonCreature(NPC_FLASH_FREEZE_NPC, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
     }
 
     void JustDied(Unit* pKiller)
@@ -824,6 +771,9 @@ struct MANGOS_DLL_DECL npc_hodir_mageAI : public ScriptedAI
 
     void AttackStart(Unit* pWho)
     {
+		if(GetClosestCreatureWithEntry(m_creature, NPC_FLASH_FREEZE_NPC, 2.0f))
+			return;
+
         if (!pWho) 
             return;
 
@@ -919,6 +869,7 @@ struct MANGOS_DLL_DECL npc_hodir_priestAI : public ScriptedAI
     {
         spellTimer = 5000;
         FriendlyList.clear();
+		m_creature->SummonCreature(NPC_FLASH_FREEZE_NPC, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
     }
 
     void JustDied(Unit* pKiller)
@@ -935,6 +886,9 @@ struct MANGOS_DLL_DECL npc_hodir_priestAI : public ScriptedAI
 
     void AttackStart(Unit* pWho)
     {
+		if(GetClosestCreatureWithEntry(m_creature, NPC_FLASH_FREEZE_NPC, 2.0f))
+			return;
+
         if (!pWho) 
             return;
 

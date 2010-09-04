@@ -173,7 +173,7 @@ struct MANGOS_DLL_DECL mob_sanctum_sentryAI : public ScriptedAI
             {
                 if (pTemp->isAlive())
                 {
-                    m_creature->GetMotionMaster()->MoveFollow(pTemp,5.0f,0.0f);
+                    m_creature->GetMotionMaster()->MoveFollow(pTemp,2.0f,0.0f);
                     //m_creature->GetMap()->CreatureRelocation(m_creature, pTemp->GetPositionX(), pTemp->GetPositionY(), pTemp->GetPositionZ(), 0.0f);
                 }
             }

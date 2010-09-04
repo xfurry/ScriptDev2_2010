@@ -275,7 +275,6 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
 
     void Reset()
     {
-		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
 		m_uiChain_Lightning_Timer = 0;
 		m_uiOverload_Timer      = 35000;
 		m_uiEnrage_Timer        = 900000;
@@ -327,8 +326,7 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
 
 	void JustDied(Unit* pKiller)
     {
-        m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-        // if all of them are dead
+		m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
         if (m_pInstance)
         {
             // remove supercharge from players -> spell bug
@@ -344,7 +342,7 @@ struct MANGOS_DLL_DECL boss_brundirAI : public ScriptedAI
                         {
                             m_pInstance->SetData(TYPE_ASSEMBLY, DONE);
                             // only the current one has loot, because loot modes are implemented in sql
-                            m_creature->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+                            pTemp->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
 
                             // I'm on your side
                             OnYourSide();
@@ -607,7 +605,6 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
 
     void Reset()
     {
-		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
 		m_uiShield_Timer    = 20000;
 		m_uiRune_Power_Timer = 10000;
 		m_uiEnrage_Timer    = 900000;
@@ -658,7 +655,6 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
 
 	void JustDied(Unit* pKiller)
     {
-		//death yell
 		m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
         if (m_pInstance)
 		{
@@ -675,7 +671,7 @@ struct MANGOS_DLL_DECL boss_molgeimAI : public ScriptedAI
 						{
 							m_pInstance->SetData(TYPE_ASSEMBLY, DONE);
                             // only the current one has loot, because loot modes are implemented in sql
-							m_creature->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+							pTemp->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
 
                             // I'm on your side
                             OnYourSide();
@@ -911,7 +907,6 @@ struct MANGOS_DLL_DECL boss_steelbreakerAI : public ScriptedAI
 
     void Reset()
     {
-		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
 		m_uiFusion_Punch_Timer = 20000;
 		m_uiEnrage_Timer    = 900000;
 		m_uiCheckTimer      = 1000;

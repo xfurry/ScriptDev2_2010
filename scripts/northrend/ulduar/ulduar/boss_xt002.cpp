@@ -110,7 +110,6 @@ struct MANGOS_DLL_DECL mob_voidzoneAI : public ScriptedAI
 {
     mob_voidzoneAI(Creature* pCreature) : ScriptedAI(pCreature) 
     {
-        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         pCreature->setFaction(14);
@@ -118,37 +117,12 @@ struct MANGOS_DLL_DECL mob_voidzoneAI : public ScriptedAI
         Reset();
     }
 
-    uint32 Spell_Timer;
-    bool m_bIsRegularMode;
-
     void Reset()
     {
-        Spell_Timer = 4000;
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
-
-        if (Spell_Timer < diff)
-        {
-            Map *map = m_creature->GetMap();
-            if (map->IsDungeon())
-            {
-                Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                if (PlayerList.isEmpty())
-                    return;
-
-                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                {
-                    if (i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()->GetPositionX(), i->getSource()->GetPositionY()) < 2)
-                        i->getSource()->DealDamage(i->getSource(), m_bIsRegularMode ? 5000 : 7500, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_SHADOW, NULL, false);
-                }
-            } 
-            Spell_Timer = 4000;
-        }else Spell_Timer -= diff;  
     }
 };
 
@@ -169,8 +143,6 @@ struct MANGOS_DLL_DECL mob_lifesparkAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
     }
 };
 
@@ -293,8 +265,6 @@ struct MANGOS_DLL_DECL mob_xtheartAI : public ScriptedAI
 
     void JustDied(Unit* pKiller)
     {
-        // used for hard mode loot
-        m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
         if(m_pInstance)
             m_pInstance->SetData(TYPE_XT002_HARD, IN_PROGRESS);
     }
@@ -367,7 +337,6 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
 
     uint64 pLightBombTarGUID;
     uint64 pGravityBombTarGUID;
-    uint64 m_uiXtHeartGUID;
 
     bool m_bIsHardMode;
     bool m_bHasMoreHealth;
@@ -377,8 +346,6 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
 
     void Reset()
     {
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
-
         // spell timers
         m_uiLight_Bomb_Timer    = 5000;     // 7 seconds the first 14 secs all after(7 secs in 25man)
         m_uiGravity_Bomb_Timer  = 30000;    // 11 seconds first 18 secs all after(11 secs in 25man)
@@ -409,7 +376,6 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
 
         pLightBombTarGUID       = 0;
         pGravityBombTarGUID     = 0;
-        m_uiXtHeartGUID         = 0;
 
         uiEncounterTimer        = 0;
         m_bIsEngineer           = true;
@@ -421,12 +387,7 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
         {
             m_pInstance->SetData(TYPE_XT002, DONE);
             if(m_bIsHardMode)
-            {
                 m_pInstance->SetData(TYPE_XT002_HARD, DONE);
-                // make the heart give the loot for hard mode
-                if(Creature* pHeart = m_pInstance->instance->GetCreature(m_uiXtHeartGUID))
-                    pHeart->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
-            }
         }
 
         DoScriptText(SAY_DEATH, m_creature);
@@ -494,7 +455,6 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
             m_pInstance->SetData(TYPE_XT002_HARD, NOT_STARTED);
         }
 
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->SetStandState(UNIT_STAND_STATE_STAND);
@@ -669,7 +629,6 @@ struct MANGOS_DLL_DECL boss_xt002AI : public ScriptedAI
 
             if(Creature *Heart = m_creature->SummonCreature(NPC_HEART, 0.0f, 0.0f, 0.0f, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 900000))
             {
-                m_uiXtHeartGUID = Heart->GetGUID();
                 if(!m_bIsRegularMode)
                     Heart->SetMaxHealth(7199999);
             }

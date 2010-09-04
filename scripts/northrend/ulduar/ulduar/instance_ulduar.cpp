@@ -24,6 +24,19 @@ EndScriptData */
 #include "precompiled.h"
 #include "ulduar.h"
 
+struct sSpawnLocation
+{
+    float m_fX, m_fY, m_fZ, m_fO;
+};
+
+static sSpawnLocation m_aKeepersSpawnLocs[] =              
+{
+    {2036.892f, 25.621f, 411.358f, 3.83f},                                             // freya
+    {1939.215f, 42.677f, 411.355f, 5.31f},												// mimiron
+    {1939.195f, -90.662f, 411.357f, 1.06f},                                            // hodir
+    {2036.674f, -73.814f, 411.355f, 2.51f},                                            // thorim
+};
+
 struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
 {
     instance_ulduar(Map* pMap) : ScriptedInstance(pMap) 
@@ -71,10 +84,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiRuneGiantGUID;
 	uint64 m_uiJormungarGUID;
     uint64 m_uiLeviathanMkGUID;
-    uint64 m_uiHodirImageGUID;
-    uint64 m_uiFreyaImageGUID;
-    uint64 m_uiThorimImageGUID;
-    uint64 m_uiMimironImageGUID;
     uint64 m_uiSaraGUID;
     uint64 m_uiYoggBrainGUID;
 
@@ -179,10 +188,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiRuneGiantGUID       = 0;
 		m_uiJormungarGUID		= 0;
         m_uiLeviathanMkGUID     = 0;
-        m_uiHodirImageGUID      = 0;
-        m_uiFreyaImageGUID      = 0;
-        m_uiThorimImageGUID     = 0;
-        m_uiMimironImageGUID    = 0;
         m_uiSaraGUID            = 0;
         m_uiYoggBrainGUID       = 0;
 
@@ -290,43 +295,51 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         case NPC_KOLOGARN:
             m_uiKologarnGUID = pCreature->GetGUID();
             break;
-        case NPC_RIGHT_ARM:
-            m_uiRightArmGUID = pCreature->GetGUID();
-            break;
-        case NPC_LEFT_ARM:
-            m_uiLeftArmGUID = pCreature->GetGUID();
-            break;
-        case NPC_AURIAYA:
-            m_uiAuriayaGUID = pCreature->GetGUID();
-            break;
-        case NPC_FERAL_DEFENDER:
-            m_uiFeralDefenderGUID = pCreature->GetGUID();
-            break;
-        case NPC_MIMIRON:
-            m_uiMimironGUID = pCreature->GetGUID();
-            break;
-        case NPC_LEVIATHAN_MK:
-            m_uiLeviathanMkGUID = pCreature->GetGUID();
-            break;
-        case NPC_HODIR:
-            m_uiHodirGUID = pCreature->GetGUID();
-            break;
-        case NPC_THORIM:
-            m_uiThorimGUID = pCreature->GetGUID();
-            break;
-        case NPC_RUNIC_COLOSSUS:
-            m_uiRunicColossusGUID = pCreature->GetGUID();
-            break;
-        case NPC_RUNE_GIANT:
-            m_uiRuneGiantGUID = pCreature->GetGUID();
-            break;
+		case NPC_RIGHT_ARM:
+			m_uiRightArmGUID = pCreature->GetGUID();
+			break;
+		case NPC_LEFT_ARM:
+			m_uiLeftArmGUID = pCreature->GetGUID();
+			break;
+		case NPC_AURIAYA:
+			m_uiAuriayaGUID = pCreature->GetGUID();
+			break;
+		case NPC_FERAL_DEFENDER:
+			m_uiFeralDefenderGUID = pCreature->GetGUID();
+			break;
+		case NPC_MIMIRON:
+			m_uiMimironGUID = pCreature->GetGUID();
+			if(m_auiEncounter[7] == DONE)
+				DoSpawnMimiron();
+			break;
+		case NPC_LEVIATHAN_MK:
+			m_uiLeviathanMkGUID = pCreature->GetGUID();
+			break;
+		case NPC_HODIR:
+			m_uiHodirGUID = pCreature->GetGUID();
+			if(m_auiEncounter[8] == DONE)
+				DoSpawnHodir();
+			break;
+		case NPC_THORIM:
+			m_uiThorimGUID = pCreature->GetGUID();
+			if(m_auiEncounter[9] == DONE)
+				DoSpawnThorim();
+			break;
+		case NPC_RUNIC_COLOSSUS:
+			m_uiRunicColossusGUID = pCreature->GetGUID();
+			break;
+		case NPC_RUNE_GIANT:
+			m_uiRuneGiantGUID = pCreature->GetGUID();
+			break;
 		case NPC_JORMUNGAR_BEHEMOTH:
 			m_uiJormungarGUID = pCreature->GetGUID();
 			break;
-        case NPC_FREYA:
-            m_uiFreyaGUID = pCreature->GetGUID();
-            break;
-        case NPC_BRIGHTLEAF:
+		case NPC_FREYA:
+			m_uiFreyaGUID = pCreature->GetGUID();
+			if(m_auiEncounter[10] == DONE)
+				DoSpawnFreya();
+			break;
+		case NPC_BRIGHTLEAF:
             m_uiElderBrightleafGUID = pCreature->GetGUID();
             break;
         case NPC_IRONBRACH:
@@ -352,31 +365,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             break;
         case NPC_ALGALON:
             m_uiAlgalonGUID = pCreature->GetGUID();
-            break;
-            // used to handle the keepers images
-        case HODIR_IMAGE:
-            m_uiHodirImageGUID = pCreature->GetGUID();
-            pCreature->SetVisibility(VISIBILITY_OFF);
-            if(m_auiEncounter[8] == DONE)
-                pCreature->SetVisibility(VISIBILITY_ON);
-            break;
-        case FREYA_IMAGE:
-            m_uiFreyaImageGUID = pCreature->GetGUID();
-            pCreature->SetVisibility(VISIBILITY_OFF);
-            if(m_auiEncounter[10] == DONE)
-                pCreature->SetVisibility(VISIBILITY_ON);
-            break;
-        case THORIM_IMAGE:
-            m_uiThorimImageGUID = pCreature->GetGUID();
-            pCreature->SetVisibility(VISIBILITY_OFF);
-            if(m_auiEncounter[9] == DONE)
-                pCreature->SetVisibility(VISIBILITY_ON);
-            break;
-        case MIMIRON_IMAGE:
-            m_uiMimironImageGUID = pCreature->GetGUID();
-            pCreature->SetVisibility(VISIBILITY_OFF);
-            if(m_auiEncounter[7] == DONE)
-                pCreature->SetVisibility(VISIBILITY_ON);
             break;
         }
     }
@@ -674,32 +662,18 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         }
     }
 
-    void OpenDoor(uint64 guid)
-    {
-        if(!guid) return;
-        GameObject* pGo = instance->GetGameObject(guid);
-        if(pGo) pGo->SetGoState(GO_STATE_ACTIVE);
-    }
-
-    void CloseDoor(uint64 guid)
-    {
-        if(!guid) return;
-        GameObject* pGo = instance->GetGameObject(guid);
-        if(pGo) pGo->SetGoState(GO_STATE_READY);
-    }
-
     // used in order to unlock the door to Vezax and make vezax attackable (exploit check)
     void OpenMadnessDoor()
     {
         if(m_auiEncounter[7] == DONE && m_auiEncounter[8] == DONE && m_auiEncounter[9] == DONE && m_auiEncounter[10] == DONE)
-            OpenDoor(m_uiAncientGateGUID);
+			DoUseDoorOrButton(m_uiAncientGateGUID);
     }
 
     // used to open the door to XT (custom script because Leviathan is disabled)
     void OpenXtDoor()
     {
         if(m_auiEncounter[1] == DONE && m_auiEncounter[2] == DONE)
-            OpenDoor(m_uiXT002GateGUID);
+            DoUseDoorOrButton(m_uiXT002GateGUID);
     }
 
     void SetData(uint32 uiType, uint32 uiData)
@@ -773,9 +747,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             {
                 if(m_auiHardBoss[3] != DONE)
                     DoRespawnGameObject(m_uiMimironLootGUID, 30*MINUTE);
-                // used to make the friendly keeper visible
-                if(Creature* pImage = instance->GetCreature(m_uiMimironImageGUID))
-                    pImage->SetVisibility(VISIBILITY_ON);
+                DoSpawnMimiron();
                 OpenMadnessDoor();
                 CheckKeepers();
             }
@@ -788,9 +760,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 DoUseDoorOrButton(m_uiHodirWallGUID);
                 DoUseDoorOrButton(m_uiHodirExitDoorGUID);
                 DoRespawnGameObject(m_uiHodirLootGUID, 30*MINUTE);
-                // used to make the friendly keeper visible
-                if(Creature* pImage = instance->GetCreature(m_uiHodirImageGUID))
-                    pImage->SetVisibility(VISIBILITY_ON);
+                DoSpawnHodir();
                 OpenMadnessDoor();
                 CheckKeepers();
             }    
@@ -804,9 +774,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             {
                 if(m_auiHardBoss[5] != DONE)
                     DoRespawnGameObject(m_uiThorimLootGUID, 30*MINUTE);
-                // used to make the friendly keeper visible
-                if(Creature* pImage = instance->GetCreature(m_uiThorimImageGUID))
-                    pImage->SetVisibility(VISIBILITY_ON);
+                DoSpawnThorim();
                 OpenMadnessDoor();
                 CheckKeepers();
             }
@@ -824,9 +792,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                     DoRespawnGameObject(m_uiFreyaLoot2GUID, 30*MINUTE);
                 else if(m_auiHardBoss[6] == 3)
                     DoRespawnGameObject(m_uiFreyaLoot3GUID, 30*MINUTE);
-                // used to make the friendly keeper visible
-                if(Creature* pImage = instance->GetCreature(m_uiFreyaImageGUID))
-                    pImage->SetVisibility(VISIBILITY_ON);
+                DoSpawnFreya();
                 OpenMadnessDoor();
                 CheckKeepers();
             }
@@ -915,17 +881,11 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             // mini boss
         case TYPE_RUNIC_COLOSSUS:
             m_auiMiniBoss[0] = uiData;
-            if (uiData == DONE)
-                OpenDoor(m_uiHallwayDoorGUID);
-            else
-                CloseDoor(m_uiHallwayDoorGUID);
+            DoUseDoorOrButton(m_uiHallwayDoorGUID);
             break;
         case TYPE_RUNE_GIANT:
             m_auiMiniBoss[1] = uiData;
-            if (uiData == DONE)
-                OpenDoor(m_uiThorimEnterDoorGUID);
-            else
-                CloseDoor(m_uiThorimEnterDoorGUID);
+            DoUseDoorOrButton(m_uiThorimEnterDoorGUID);
             break;
         case TYPE_LEVIATHAN_MK:
             m_auiMiniBoss[2] = uiData;
@@ -1212,6 +1172,62 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         if(m_auiEncounter[7] == DONE && m_auiEncounter[8] == DONE && m_auiEncounter[9] == DONE && m_auiEncounter[10] == DONE)
             DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEV_KEEPERS : ACHIEV_KEEPERS_H);
     }
+
+	Player* GetPlayerInMap()
+	{
+		Map::PlayerList const& players = instance->GetPlayers();
+
+		if (!players.isEmpty())
+		{
+			for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+			{
+				if (Player* plr = itr->getSource())
+					return plr;
+			}
+		}
+		return NULL;
+	}
+
+	// Spawn the friendly keepers in the central chamber
+	void DoSpawnMimiron()
+	{
+		Player* pPlayer = GetPlayerInMap();
+		if (!pPlayer)
+			return;
+		// mimiron
+		if(m_auiEncounter[7] == DONE)
+			pPlayer->SummonCreature(NPC_MIMIRON_IMAGE, m_aKeepersSpawnLocs[1].m_fX, m_aKeepersSpawnLocs[1].m_fY, m_aKeepersSpawnLocs[1].m_fZ, m_aKeepersSpawnLocs[1].m_fO, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
+	}
+
+	void DoSpawnHodir()
+	{
+		Player* pPlayer = GetPlayerInMap();
+		if (!pPlayer)
+			return;
+		// hodir
+		if(m_auiEncounter[8] == DONE)
+			pPlayer->SummonCreature(NPC_HODIR_IMAGE, m_aKeepersSpawnLocs[2].m_fX, m_aKeepersSpawnLocs[2].m_fY, m_aKeepersSpawnLocs[2].m_fZ, m_aKeepersSpawnLocs[2].m_fO, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
+	}
+
+	void DoSpawnThorim()
+	{
+		Player* pPlayer = GetPlayerInMap();
+		if (!pPlayer)
+			return;
+		// thorim
+		if(m_auiEncounter[9] == DONE)
+			pPlayer->SummonCreature(NPC_THORIM_IMAGE, m_aKeepersSpawnLocs[3].m_fX, m_aKeepersSpawnLocs[3].m_fY, m_aKeepersSpawnLocs[3].m_fZ, m_aKeepersSpawnLocs[3].m_fO, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
+	}
+
+	void DoSpawnFreya()
+	{
+		Player* pPlayer = GetPlayerInMap();
+		if (!pPlayer)
+			return;
+		// freya
+		if(m_auiEncounter[10] == DONE)
+			pPlayer->SummonCreature(NPC_FREYA_IMAGE, m_aKeepersSpawnLocs[0].m_fX, m_aKeepersSpawnLocs[0].m_fY, m_aKeepersSpawnLocs[0].m_fZ, m_aKeepersSpawnLocs[0].m_fO, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 10000);
+	}
 };
 
 InstanceData* GetInstanceData_instance_ulduar(Map* pMap)

@@ -208,7 +208,6 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
     uint32 m_uiQuantumStrike_Timer;
     uint32 m_uiCollapsingStar_Timer;
     uint32 m_uiLivingConstellationTimer;
-    uint32 m_uiRaidCheckTimer;
     uint32 m_uiDarkMaterTimer;
     uint32 m_uiDespawnTimer;
     uint32 m_uiLastTimer;
@@ -241,7 +240,6 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
         m_uiDarkMaterTimer          = 90000;
         m_uiPhasePunch_Timer        = 8000;
         m_uiCosmicSmash_Timer       = urand(30000, 60000);
-        m_uiRaidCheckTimer          = 1000;
 
         m_uiCombatPhase         = 0;     // it's 0 for idle, 1 for intro and 2 for combat
         m_bIsPhase2             = false; // flag used below 30% hp
@@ -461,34 +459,6 @@ struct MANGOS_DLL_DECL boss_algalonAI : public ScriptedAI
                         DoCast(pTarget,SPELL_PHASE_PUNCH);
                     m_uiPhasePunch_Timer = 15000;
                 }else m_uiPhasePunch_Timer -= uiDiff;
-
-                if(m_uiRaidCheckTimer < uiDiff)
-                {
-                    Map *map = m_creature->GetMap();
-                    if (map->IsDungeon())
-                    {
-                        Map::PlayerList const &PlayerList = map->GetPlayers();
-
-                        if (PlayerList.isEmpty())
-                            return;
-
-                        for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                        {
-                            if (i->getSource()->isAlive() && i->getSource()->HasAura(SPELL_PHASE_PUNCH, EFFECT_INDEX_0))
-                            {
-                                Aura *phasePunch = i->getSource()->GetAura(SPELL_PHASE_PUNCH, EFFECT_INDEX_0);
-                                if(phasePunch->GetStackAmount() > 4)
-                                {
-                                    i->getSource()->RemoveAurasDueToSpell(SPELL_PHASE_PUNCH);
-                                    i->getSource()->CastSpell(i->getSource(), SPELL_PHASE_PUNCH_SHIFT, false);
-                                }
-                            }
-                            if (!i->getSource()->isAlive())
-                                m_bFeedOnTears = false;
-                        }
-                    }
-                    m_uiRaidCheckTimer = 1000;
-                }else m_uiRaidCheckTimer -= uiDiff;
 
                 // berserk
                 if(m_uiBerserk_Timer < uiDiff)
@@ -803,7 +773,6 @@ struct MANGOS_DLL_DECL mob_cosmic_smash_targetAI : public ScriptedAI
         }else m_uiSpellTimer -= uiDiff;
     }	
 };
-
 
 bool GOHello_go_celestial_acces(Player* pPlayer, GameObject* pGo)
 {

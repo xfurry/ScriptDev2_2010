@@ -774,7 +774,6 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
 
     void StartEncounter()
     {
-		//m_creature->GetMotionMaster()->MovePoint(0,  2133.588f, -293.972f,  438.2475f);
         m_uiPhase	= PHASE_INTRO;
 		m_bIsIntro	= true;
     }
@@ -1234,9 +1233,6 @@ struct MANGOS_DLL_DECL boss_runic_colossusAI : public ScriptedAI
 		m_uiSmashTargetGUID	= 0;
         m_bIsSmash  = false;
         m_bMustSmash = true;
-
-        if(m_pInstance) 
-            m_pInstance->SetData(TYPE_RUNIC_COLOSSUS, NOT_STARTED);
     }
 
     void JustDied(Unit *killer)
@@ -1244,6 +1240,12 @@ struct MANGOS_DLL_DECL boss_runic_colossusAI : public ScriptedAI
         if(m_pInstance) 
             m_pInstance->SetData(TYPE_RUNIC_COLOSSUS, DONE);
     }
+
+	void JustRespawned()
+	{
+		if(m_pInstance) 
+            m_pInstance->SetData(TYPE_RUNIC_COLOSSUS, NOT_STARTED);
+	}
 
     void MoveInLineOfSight(Unit* pWho)
     {
@@ -1329,10 +1331,13 @@ struct MANGOS_DLL_DECL boss_ancient_rune_giantAI : public ScriptedAI
         m_uiSummonTimer = 10000;
         m_bIsSummoning = false;
         m_bSummonStop = false;
-
-        if(m_pInstance) 
-            m_pInstance->SetData(TYPE_RUNE_GIANT, NOT_STARTED);
     }
+
+	void JustRespawned()
+	{
+		if(m_pInstance) 
+            m_pInstance->SetData(TYPE_RUNE_GIANT, NOT_STARTED);
+	}
 
     void JustDied(Unit *killer)
     {

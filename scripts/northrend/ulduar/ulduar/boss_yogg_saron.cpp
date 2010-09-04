@@ -408,19 +408,6 @@ static VisionLocXY SkullIcecrownLoc[]=
     {1908.828003f, -88.593613f, 239.98986f},
 };
 
-// location of the minds eye:
-// X: 1981.422974 Y: -22.442831 Z: 236.104813
-
-// transfer from brain
-//  X: 1951.097412 Y: -25.420420 Z: 326.162598 Orientation: 0.131792
-// brain room portal loc: 
-// sara -> type_flags = 108; original
-/*class MANGOS_DLL_DECL SanityAura : public Aura
-{
-public:
-	SanityAura(const SpellEntry *spell, SpellEffectIndex eff, int32 *bp, SpellAuraHolder *holder, Unit *target, Unit *caster) : Aura(spell, eff, bp, holder, target, caster, NULL)
-    {}
-};*/
 struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
 {
     boss_yogg_saronAI(Creature* pCreature) : ScriptedAI(pCreature)
@@ -492,7 +479,6 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
     {
         m_creature->SetInCombatWithZone();
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        //StartSanity();
 
         if(m_pInstance)
         {
@@ -525,6 +511,8 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
 
             if(Creature* pSara = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_SARA)))
                 DoScriptText(SAY_AGGRO, pSara);
+
+			m_creature->SummonCreature(NPC_YOGG_BRAIN, 1981.422f, -22.442f, 255.011f, 0, TEMPSUMMON_CORPSE_DESPAWN, 1000);
         }
     }
 
@@ -540,14 +528,6 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
                     pSara->Respawn();
                 else
                     pSara->AI()->EnterEvadeMode();
-            }
-
-            if (Creature* pYoggBrain = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGG_BRAIN)))
-            {
-                if(!pYoggBrain->isAlive())
-                    pYoggBrain->Respawn();
-                else
-                    pYoggBrain->AI()->EnterEvadeMode();
             }
         }
     }
@@ -599,19 +579,12 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
             if(pSara->isAlive())
                 pSara->DealDamage(pSara, pSara->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         }
-
-        if (Creature* pYoggBrain = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGG_BRAIN)))
-        {
-            if(pYoggBrain->isAlive())
-                pYoggBrain->DealDamage(pYoggBrain, pYoggBrain->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }
     }
 
     void StartSecondPhase()
     {
         m_creature->SetVisibility(VISIBILITY_ON);
         DoCast(m_creature, SPELL_SHADOWY_BARRIER_YOGG);
-        //StartSanity();
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
         GetCreatureListWithEntryInGrid(lClouds, m_creature, NPC_OMINOUS_CLOUD, DEFAULT_VISIBILITY_INSTANCE);
@@ -640,70 +613,6 @@ struct MANGOS_DLL_DECL boss_yogg_saronAI : public ScriptedAI
 
         if (Creature* pYoggBrain = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_YOGG_BRAIN)))
             pYoggBrain->DealDamage(pYoggBrain, pYoggBrain->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-    }
-
-    void StartSanity()
-    {
-        Map *map = m_creature->GetMap();
-        if (map->IsDungeon())
-        {
-            Map::PlayerList const &PlayerList = map->GetPlayers();
-
-            if (PlayerList.isEmpty())
-                return;
-
-            SpellEntry* spell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_SANITY);
-            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-            {
-                if (i->getSource()->isAlive())
-                {
-                   /* if(i->getSource()->HasAura(SPELL_SANITY, EFFECT_INDEX_0))
-                        i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0)->SetStackAmount(100);
-                    else
-                    {
-                        if(i->getSource()->AddAura(new SanityAura(spell, EFFECT_INDEX_0, NULL, i->getSource(), m_creature)))
-                            i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0)->SetStackAmount(100);
-                    }*/
-                }
-            }
-        }
-    }
-
-    void DoCastSanity()
-    {
-        uint8 m_uiStacks;
-        Map *map = m_creature->GetMap();
-        if (map->IsDungeon())
-        {
-            Map::PlayerList const &PlayerList = map->GetPlayers();
-
-            if (PlayerList.isEmpty())
-                return;
-
-            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-            {
-                if (i->getSource()->isAlive())
-                {
-                    // reduce sanity
-                    if(i->getSource()->HasAura(SPELL_SANITY, EFFECT_INDEX_0))
-                    {
-                        if(Aura *aura = i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0))
-                        {
-                            m_uiStacks = aura->GetStackAmount();
-                            if(m_uiStacks == 100)
-                                DoCast(i->getSource(), SPELL_INSANE);
-                            /*if(m_uiStacks > 1)
-                            i->getSource()->GetAura(SPELL_SANITY, EFFECT_INDEX_0)->SetStackAmount(stack - 1);
-                            else
-                            {
-                            i->getSource()->RemoveAurasDueToSpell(SPELL_SANITY);
-                            DoCast(i->getSource(), SPELL_INSANE);
-                            }*/
-                        }
-                    }
-                }
-            }
-        }
     }
 
     Creature* SelectRandomGuardian(float fRange)
@@ -953,6 +862,7 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
 
         if(m_pInstance) 
             m_pInstance->SetData(TYPE_YOGG_BRAIN, NOT_STARTED);
+		m_creature->SetRespawnDelay(DAY);
 
         // close doors on reset
         if(GameObject* pVisionDoor = GetClosestGameObjectWithEntry(m_creature, GO_BRAIN_DOOR1, 100.0f))
@@ -1033,6 +943,12 @@ struct MANGOS_DLL_DECL boss_brain_of_yogg_saronAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
+		if (m_pInstance->GetData(TYPE_YOGGSARON) != IN_PROGRESS) 
+		{
+            m_creature->ForcedDespawn();
+			return;
+		}
+
         switch(m_pInstance->GetData(TYPE_VISION_PHASE))
         {
         case PHASE_VISION_STORMWIND:

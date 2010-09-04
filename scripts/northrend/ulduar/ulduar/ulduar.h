@@ -98,10 +98,10 @@ enum
     NPC_SARA                    = 33134,
     NPC_YOGG_BRAIN              = 33890, 
     // keepers images used to start the encounter
-    THORIM_IMAGE                = 33413,
-    MIMIRON_IMAGE               = 33412,
-    HODIR_IMAGE                 = 33411,
-    FREYA_IMAGE                 = 33410,
+    NPC_THORIM_IMAGE            = 33413,
+    NPC_MIMIRON_IMAGE           = 33412,
+    NPC_HODIR_IMAGE             = 33411,
+    NPC_FREYA_IMAGE             = 33410,
     // Keepers used at yogg saron encounter
     KEEPER_FREYA                = 33241,
     KEEPER_HODIR                = 33213,

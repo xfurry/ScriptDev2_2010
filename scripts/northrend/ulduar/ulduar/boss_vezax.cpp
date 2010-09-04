@@ -82,17 +82,11 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
     uint32 m_uiSimphonTimer;
     uint32 m_uiEndSimphonTimer;
     uint32 m_uiSummonAnimusTimer;
-    uint64 m_uiAnimusGUID;
-    uint64 m_uiMarkTargetGUID;
-    uint32 m_uiMarkCheckTimer;
-    uint32 m_uiMarkEndTimer;
 
     std::list<Creature*> lVapors;
 
     bool m_bIsHardMode;
     bool m_bActiveHardMode;
-    bool m_bHasMark;
-    bool m_bHasSimphon;
     bool m_bIsAnimusAlive;
 
     void Reset()
@@ -102,8 +96,6 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         m_uiSaroniteVaporTimer  = 30000;
         m_bIsHardMode           = false;
         m_bActiveHardMode       = false;
-        m_bHasMark              = false;
-        m_bHasSimphon           = false;
         m_bIsAnimusAlive        = false;
 
         m_uiSurgeTimer          = 60000;
@@ -111,8 +103,6 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         m_uiCrashTimer          = 10000;
         m_uiSimphonTimer        = 1000;
         m_uiEndSimphonTimer     = 10000;
-        m_uiAnimusGUID          = 0;
-        m_uiMarkTargetGUID      = 0;
 
         lVapors.clear();
 
@@ -147,8 +137,6 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
             {
                 m_pInstance->SetData(TYPE_VEZAX_HARD, DONE);
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_MORNING_SARONITE : ACHIEV_MORNING_SARONITE_H);
-                if(Creature* pAnimus = m_pInstance->instance->GetCreature(m_uiAnimusGUID))
-                    pAnimus->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
             }
         }
 
@@ -194,11 +182,7 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         DoScriptText(EMOTE_ANIMUS, m_creature);
         DoScriptText(SAY_HARD, m_creature);
         
-        if(Creature* pAnimus = m_creature->SummonCreature(NPC_SARONITE_ANIMUS, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 900000))
-        {
-            pAnimus->SetInCombatWithZone();
-            m_uiAnimusGUID = pAnimus->GetGUID();
-        }
+        m_creature->SummonCreature(NPC_SARONITE_ANIMUS, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 900000);
 
         if (!lVapors.empty())
         {
@@ -213,34 +197,11 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         m_bIsAnimusAlive = true;
     }
 
-    void CheckForMark(uint64 m_uiTargetGUID)
-    {
-        if(m_uiTargetGUID == 0)
-            return;
-
-        m_bHasSimphon = false;
-        Map *map = m_creature->GetMap();
-        Unit* pTarget = m_creature->GetMap()->GetUnit(m_uiTargetGUID);
-        if (map->IsDungeon())
-        {
-            Map::PlayerList const &PlayerList = map->GetPlayers();
-
-            if (PlayerList.isEmpty())
-                return;
-
-            for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-            {
-                if(pTarget && pTarget->isAlive() && !m_bHasSimphon && m_uiTargetGUID != i->getSource()->GetGUID())
-                {
-                    if (i->getSource()->isAlive() && pTarget->GetDistance2d(i->getSource()) < 10.0f)
-                    {
-                        DoCast(pTarget, SPELL_MARK_SIMPHON);
-                        m_bHasSimphon = true;
-                    }
-                }
-            }
-        } 
-    }
+	void JustSummoned(Creature* pSummon)
+	{
+		if(pSummon->GetEntry() == NPC_SARONITE_ANIMUS)
+			pSummon->SetInCombatWithZone();
+	}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -290,29 +251,10 @@ struct MANGOS_DLL_DECL boss_vezaxAI : public ScriptedAI
         if(m_uiMarkTimer < uiDiff)
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
-            {
-                m_uiMarkTargetGUID = pTarget->GetGUID();
                 DoCast(pTarget, SPELL_MARK_OF_FACELESS);
-            }
-            m_bHasMark = true;
-            m_uiMarkCheckTimer = 1000;
-            m_uiMarkEndTimer = 10000;
             m_uiMarkTimer = urand(25000, 30000);
         }
         else m_uiMarkTimer -= uiDiff;
-
-        // mark check ending
-        if(m_uiMarkEndTimer < uiDiff && m_bHasMark)
-            m_bHasMark = false;
-        else m_uiMarkEndTimer -= uiDiff;
-
-        // simphon life every sec
-        if(m_uiMarkCheckTimer < uiDiff && m_bHasMark)
-        {
-            CheckForMark(m_uiMarkTargetGUID);
-            m_uiMarkCheckTimer = 1000;
-        }
-        else m_uiMarkCheckTimer -= uiDiff;
 
         // shadow crash
         if(m_uiCrashTimer < uiDiff)
@@ -368,8 +310,6 @@ struct MANGOS_DLL_DECL mob_saronite_animusAI : public ScriptedAI
                 }
             }
         }
-        // used for hard mode loot
-        m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
     }
 
     void UpdateAI(const uint32 uiDiff)
