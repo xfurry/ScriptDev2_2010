@@ -94,7 +94,11 @@ struct MANGOS_DLL_DECL boss_drakosAI : public ScriptedAI
 			DoScriptText(SAY_VAROS_INTRO, pVaros);
 
 		if (m_pInstance)
+		{
 			m_pInstance->SetData(TYPE_DRAKOS, DONE);
+			m_pInstance->DoUpdateWorldState(UI_STATE_CONSTRUCT_SHOW, 1);
+			m_pInstance->DoUpdateWorldState(UI_STATE_CONSTRUCT_COUNT, 10);
+		}
 
 		// open cages
 		if(Creature* pEternos = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ETERNOS)))

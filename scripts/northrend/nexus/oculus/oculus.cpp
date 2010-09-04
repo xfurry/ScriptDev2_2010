@@ -70,7 +70,7 @@ bool GossipSelect_oculus_dragons(Player* pPlayer, Creature* pCreature, uint32 ui
 		switch(uiAction)
 		{
 		case GOSSIP_ACTION_INFO_DEF + 1:
-			if (!pPlayer->HasItemCount(ITEM_EMERALD_ESSENCE, 1))
+			if (!pPlayer->HasItemCount(ITEM_EMERALD_ESSENCE, 1) && !pPlayer->HasItemCount(ITEM_AMBER_ESSENCE, 1) && !pPlayer->HasItemCount(ITEM_RUBY_ESSENCE, 1))
 			{
 				pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_VERDISA1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
 				pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_VERDISA2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
@@ -100,7 +100,7 @@ bool GossipSelect_oculus_dragons(Player* pPlayer, Creature* pCreature, uint32 ui
 		switch(uiAction)
 		{
 		case GOSSIP_ACTION_INFO_DEF + 1:
-			if (!pPlayer->HasItemCount(ITEM_AMBER_ESSENCE, 1))
+			if (!pPlayer->HasItemCount(ITEM_EMERALD_ESSENCE, 1) && !pPlayer->HasItemCount(ITEM_AMBER_ESSENCE, 1) && !pPlayer->HasItemCount(ITEM_RUBY_ESSENCE, 1))
 			{
 				pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_BELGARISTRASZ1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
 				pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_BELGARISTRASZ2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
@@ -130,7 +130,7 @@ bool GossipSelect_oculus_dragons(Player* pPlayer, Creature* pCreature, uint32 ui
 		switch(uiAction)
 		{
 		case GOSSIP_ACTION_INFO_DEF + 1:
-			if (!pPlayer->HasItemCount(ITEM_RUBY_ESSENCE, 1))
+			if (!pPlayer->HasItemCount(ITEM_EMERALD_ESSENCE, 1) && !pPlayer->HasItemCount(ITEM_AMBER_ESSENCE, 1) && !pPlayer->HasItemCount(ITEM_RUBY_ESSENCE, 1))
 			{
 				pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ETERNOS1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
 				pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ETERNOS2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);

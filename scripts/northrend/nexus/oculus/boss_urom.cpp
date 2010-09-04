@@ -37,19 +37,21 @@ enum
 	SAY_SLAY2					= -1578025,
 	SAY_SLAY3					= -1578026,
 	SAY_DEATH					= -1578027,
+	SAY_SPAWN_EREGOS			= -1578028,
 
 	// spells
-	SPELL_ARCANE_SHIELD                           = 53813, //Dummy --> Channeled, shields the caster from damage.
+	SPELL_ARCANE_SHIELD                           = 53813, 
 	SPELL_EMPOWERED_ARCANE_EXPLOSION              = 51110,
-	SPELL_EMPOWERED_ARCANE_EXPLOSION_2            = 59377,
-	SPELL_FROSTBOMB                               = 51103, //Urom throws a bomb, hitting its target with the highest aggro which inflict directly 650 frost damage and drops a frost zone on the ground. This zone deals 650 frost damage per second and reduce the movement speed by 35%. Lasts 1 minute.
-	SPELL_SUMMON_MENAGERIE                        = 50476, //Summons an assortment of creatures and teleports the caster to safety.
+	SPELL_EMPOWERED_ARCANE_EXPLOSION_H            = 59377,
+	SPELL_FROSTBOMB                               = 51103, 
+	SPELL_SUMMON_MENAGERIE_1                      = 50476, 
 	SPELL_SUMMON_MENAGERIE_2                      = 50495,
 	SPELL_SUMMON_MENAGERIE_3                      = 50496,
-	SPELL_TELEPORT                                = 51112, //Teleports to the center of Oculus
-	SPELL_TIME_BOMB                               = 51121, //Deals arcane damage to a random player, and after 6 seconds, deals zone damage to nearby equal to the health missing of the target afflicted by the debuff.
-	SPELL_TIME_BOMB_2                             = 59376,
+	SPELL_TELEPORT                                = 51112, 
+	SPELL_TIME_BOMB                               = 51121, 
+	SPELL_TIME_BOMB_H                             = 59376,
 
+	// npcs
 	NPC_PHANTASMAL_CLOUDSCRAPER                   = 27645,
 	NPC_PHANTASMAL_MAMMOTH                        = 27642,
 	NPC_PHANTASMAL_WOLF                           = 27644,
@@ -60,9 +62,41 @@ enum
 
 	NPC_PHANTASMAL_MURLOC                         = 27649,
 	NPC_PHANTASMAL_NAGAL                          = 27648,
-	NPC_PHANTASMAL_OGRE                           = 27647
+	NPC_PHANTASMAL_OGRE                           = 27647,
+
+	// phases
+	PHASE_IDLE				= 0,
+	PHASE_PLATFORM1			= 1,
+	PHASE_PLATFORM2			= 2,
+	PHASE_CENTER			= 3,
 };
 
+//Positional defines 
+struct LocationsXY
+{
+    float x, y, z;
+    uint32 id;
+};
+
+static LocationsXY SummonLoc[]=
+{
+    {1177.469f, 937.721f, 527.405f},
+    {968.659f,  1042.53f, 527.320f},
+    {1164.02f,  1170.84f, 527.320f},
+};
+
+struct TrashPacks
+{
+    uint32 firstId, secondId, thirdId;
+    uint32 id;
+};
+
+static TrashPacks PackId[]=
+{
+    {NPC_PHANTASMAL_CLOUDSCRAPER, NPC_PHANTASMAL_MAMMOTH, NPC_PHANTASMAL_WOLF},
+    {NPC_PHANTASMAL_AIR, NPC_PHANTASMAL_FIRE, NPC_PHANTASMAL_WATER},
+    {NPC_PHANTASMAL_MURLOC, NPC_PHANTASMAL_NAGAL, NPC_PHANTASMAL_OGRE},
+};
 
 struct MANGOS_DLL_DECL boss_uromAI : public ScriptedAI
 {
@@ -76,243 +110,235 @@ struct MANGOS_DLL_DECL boss_uromAI : public ScriptedAI
 	ScriptedInstance* m_pInstance;
 	bool m_bIsRegularMode;
 
-	float x,y;
+	uint32 m_uiPhase;
+	bool m_bHasAggro;
 
-	bool bCanCast;
-	bool bCanGoBack;
-
-	uint8 uiGroup[3];
-
-	uint32 uiTeleportTimer;
-	uint32 uiArcaneExplosionTimer;
-	uint32 uiCastArcaneExplosionTimer;
-	uint32 uiFrostBombTimer;
-	uint32 uiTimeBombTimer;
+	uint32 m_uiTeleportTimer;
+	uint32 m_uiExplosionTimer;
+	uint32 m_uiExplosionStage;
+	uint32 m_uiFrostBombTimer;
+	uint32 m_uiTimeBombTimer;
+	bool m_bHasCasted;
+	std::vector<uint32> TrashPacksEntries;
 
 	void Reset()
 	{
-		//if (pInstance && pInstance->GetData(DATA_VAROS_EVENT) != DONE)
-		//	DoCast(SPELL_ARCANE_SHIELD);
+		DoCast(m_creature, SPELL_ARCANE_SHIELD);
+		TrashPacksEntries.clear();
+		SetPacks();
 
-		//if (pInstance)
-		//	pInstance->SetData(DATA_UROM_EVENT, NOT_STARTED);
-
-		/*if (pInstance && pInstance->GetData(DATA_UROM_PLATAFORM) == 0)
-		{
-			uiGroup[0] = 0;
-			uiGroup[1] = 0;
-			uiGroup[2] = 0;
-		}*/
-
-		x,y = 0.0f;
-		bCanCast = false;
-		bCanGoBack = false;
-
-		//me->GetMotionMaster()->MoveIdle();
-
-		uiTeleportTimer = urand(30000,35000);
-		uiArcaneExplosionTimer = 9000;
-		uiCastArcaneExplosionTimer = 2000;
-		uiFrostBombTimer = urand(5000,8000);
-		uiTimeBombTimer = urand(20000,25000);
+		m_uiPhase			= PHASE_IDLE;
+		m_bHasCasted		= false;
+		m_bHasAggro			= false;
+		m_uiTeleportTimer	= urand(30000,35000);
+		m_uiExplosionTimer	= 60000;
+		m_uiExplosionStage	= 0;
+		m_uiFrostBombTimer	= urand(5000,8000);
+		m_uiTimeBombTimer	= urand(20000,25000);
 	}
 
-	void EnterCombat(Unit* pWho)
+	void SetPacks()
 	{
-		/*if (pInstance)
-			pInstance->SetData(DATA_UROM_EVENT, IN_PROGRESS);
+        TrashPacksEntries.reserve(3);
+		TrashPacksEntries.push_back(0);
+		TrashPacksEntries.push_back(1);
+		TrashPacksEntries.push_back(2);
 
-		SetGroups();
-		SummonGroups();
-		CastTeleport();
+		if(!TrashPacksEntries.empty())
+			std::random_shuffle(TrashPacksEntries.begin(), TrashPacksEntries.end());
+	}
 
-		if (pInstance && pInstance->GetData(DATA_UROM_PLATAFORM) != 3)
-			pInstance->SetData(DATA_UROM_PLATAFORM,pInstance->GetData(DATA_UROM_PLATAFORM)+1);*/
+	void JustReachedHome()
+	{
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_UROM, NOT_STARTED);
+	}
+
+	void Aggro(Unit* pWho)
+	{
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_UROM, IN_PROGRESS);
 	}
 
 	void AttackStart(Unit* pWho)
 	{
-		/*if (!pWho)
+		if(m_pInstance->GetData(TYPE_VAROS) != DONE)
 			return;
 
-		if (me->GetPositionZ() > 518.63f)
-			DoStartNoMovement(pWho);
+		if(m_uiPhase != PHASE_CENTER && !m_bHasAggro)
+			return;
 
-		if (me->GetPositionZ() < 518.63f)
-		{
-			if (me->Attack(pWho, true))
-			{
-				DoScriptText(SayAggro[3],me);
-
-				me->SetInCombatWith(pWho);
-				pWho->SetInCombatWith(me);
-
-				me->GetMotionMaster()->MoveChase(pWho, 0,0);
-			}
-		}*/
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+			DoScriptText(SAY_AGGRO, m_creature);
+			m_bHasAggro = true;
+        }
 	}
 
-	void SetGroups()
+	void KilledUnit(Unit* pVictim)
 	{
-		/*if (!pInstance || pInstance->GetData(DATA_UROM_PLATAFORM) != 0)
-			return;
-
-		while (uiGroup[0] == uiGroup[1] || uiGroup[0] == uiGroup[2] || uiGroup[1] == uiGroup[2])
+		switch(urand(0, 2))
 		{
-			uiGroup[0] = urand(0,2);
-			uiGroup[1] = urand(0,2);
-			uiGroup[2] = urand(0,2);
-		}*/
-	}
-
-	void SetPosition(uint8 uiI)
-	{
-		/*switch(uiI)
-		{
-		case 0:
-			x = me->GetPositionX() + 4;
-			y = me->GetPositionY() - 4;
-			break;
-		case 1:
-			x = me->GetPositionX() + 4;
-			y = me->GetPositionY() + 4;
-			break;
-		case 2:
-			x = me->GetPositionX() - 4;
-			y = me->GetPositionY() + 4;
-			break;
-		case 3:
-			x = me->GetPositionX() - 4;
-			y = me->GetPositionY() - 4;
-			break;
-		default:
-			break;
-		}*/
-	}
-
-	void SummonGroups()
-	{
-		/*if (!pInstance || pInstance->GetData(DATA_UROM_PLATAFORM) > 2)
-			return;
-
-		for (uint8 uiI = 0; uiI < 4 ; uiI++)
-		{
-			SetPosition(uiI);
-			me->SummonCreature(Group[uiGroup[pInstance->GetData(DATA_UROM_PLATAFORM)]].uiEntry[uiI],x,y,me->GetPositionZ(),me->GetOrientation());
-		}*/
-	}
-
-	void CastTeleport()
-	{
-		/*if (!pInstance || pInstance->GetData(DATA_UROM_PLATAFORM) > 2)
-			return;
-
-		DoScriptText(SayAggro[pInstance->GetData(DATA_UROM_PLATAFORM)],me);
-		DoCast(TeleportSpells[pInstance->GetData(DATA_UROM_PLATAFORM)]);
-		*/
-	}
-
-	void UpdateAI(const uint32 uiDiff)
-	{
-		/*Return since we have no target
-		if (!UpdateVictim())
-			return;
-
-		if (!pInstance || pInstance->GetData(DATA_UROM_PLATAFORM) < 2)
-			return;
-
-		if (uiTeleportTimer <= uiDiff)
-		{
-			me->InterruptNonMeleeSpells(false);
-			DoScriptText(SAY_TELEPORT,me);
-			me->GetMotionMaster()->MoveIdle();
-			DoCast(SPELL_TELEPORT);
-			uiTeleportTimer = urand(30000,35000);
-
-		} else uiTeleportTimer -= uiDiff;
-
-		if (bCanCast && !me->FindCurrentSpellBySpellId(SPELL_EMPOWERED_ARCANE_EXPLOSION))
-		{
-			if (uiCastArcaneExplosionTimer <= uiDiff)
-			{
-				bCanCast = false;
-				bCanGoBack = true;
-				DoCastAOE(SPELL_EMPOWERED_ARCANE_EXPLOSION);
-				uiCastArcaneExplosionTimer = 2000;
-			}else uiCastArcaneExplosionTimer -= uiDiff;
+		case 0: DoScriptText(SAY_SLAY1, m_creature); break;
+		case 1: DoScriptText(SAY_SLAY2, m_creature); break;
+		case 2: DoScriptText(SAY_SLAY3, m_creature); break;
 		}
-
-		if (bCanGoBack)
-		{
-			if (uiArcaneExplosionTimer <= uiDiff)
-			{
-				Position pPos;
-				me->getVictim()->GetPosition(&pPos);
-
-				me->NearTeleportTo(pPos.GetPositionX(),pPos.GetPositionY(),pPos.GetPositionZ(),pPos.GetOrientation());
-				me->GetMotionMaster()->MoveChase(me->getVictim(),0,0);
-				me->SetUnitMovementFlags(MOVEMENTFLAG_WALKING);
-
-				bCanCast = false;
-				bCanGoBack = false;
-				uiArcaneExplosionTimer = 9000;
-			} else uiArcaneExplosionTimer -= uiDiff;
-		}
-
-		if (!me->IsNonMeleeSpellCasted(false, true, true))
-		{
-			if (uiFrostBombTimer <= uiDiff)
-			{
-				DoCastVictim(SPELL_FROSTBOMB);
-				uiFrostBombTimer = urand(5000,8000);
-			} else uiFrostBombTimer -= uiDiff;
-
-			if (uiTimeBombTimer <= uiDiff)
-			{
-				if (Unit* pUnit = SelectTarget(SELECT_TARGET_RANDOM))
-					DoCast(pUnit,SPELL_TIME_BOMB);
-
-				uiTimeBombTimer = urand(20000,25000);
-			} else uiTimeBombTimer -= uiDiff;
-		}*/
-
-		DoMeleeAttackIfReady();
 	}
 
 	void JustDied(Unit* killer)
 	{
-		//if (pInstance)
-		//	pInstance->SetData(DATA_UROM_EVENT, DONE);
+		DoScriptText(SAY_DEATH, m_creature);
+		if(Creature* pEregos = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_EREGOS)))
+		{
+			pEregos->SetVisibility(VISIBILITY_ON);
+			DoScriptText(SAY_SPAWN_EREGOS, pEregos);
+		}
+
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_UROM, DONE);
 	}
 
 	void JustSummoned(Creature* pSummon)
 	{
-		//pSummon->SetInCombatWithZone();
+		pSummon->SetInCombatWithZone();
+	}
+
+	void SummonTrashPack(uint32 uiPackId, uint32 uiLocId)
+	{
+		float angle = (float) rand()*360/RAND_MAX + 1;
+		float homeX = SummonLoc[uiLocId].x + 10*cos(angle*(M_PI/180));
+		float homeY = SummonLoc[uiLocId].y + 10*sin(angle*(M_PI/180));
+		m_creature->SummonCreature(PackId[uiPackId].firstId, homeX, homeY, SummonLoc[uiLocId].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
+
+		angle = (float) rand()*360/RAND_MAX + 1;
+		homeX = SummonLoc[uiLocId].x + 10*cos(angle*(M_PI/180));
+		homeY = SummonLoc[uiLocId].y + 10*sin(angle*(M_PI/180));
+		m_creature->SummonCreature(PackId[uiPackId].secondId, homeX, homeY, SummonLoc[uiLocId].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
+
+		angle = (float) rand()*360/RAND_MAX + 1;
+		homeX = SummonLoc[uiLocId].x + 10*cos(angle*(M_PI/180));
+		homeY = SummonLoc[uiLocId].y + 10*sin(angle*(M_PI/180));
+		m_creature->SummonCreature(PackId[uiPackId].thirdId, homeX, homeY, SummonLoc[uiLocId].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
+	}
+
+	void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+	{
+		switch(m_uiPhase)
+		{
+		case PHASE_IDLE:
+			if(!m_bHasCasted)
+			{
+				m_bHasCasted = true;
+				m_creature->CastStop();
+				DoScriptText(SAY_SUMMON1, m_creature);
+				DoCast(m_creature, SPELL_SUMMON_MENAGERIE_1);
+			}
+			break;
+		case PHASE_PLATFORM1:
+			if(!m_bHasCasted)
+			{
+				m_bHasCasted = true;
+				m_creature->CastStop();
+				DoScriptText(SAY_SUMMON2, m_creature);
+				DoCast(m_creature, SPELL_SUMMON_MENAGERIE_2);
+			}
+			break;
+		case PHASE_PLATFORM2:
+			if(!m_bHasCasted)
+			{
+				m_bHasCasted = true;
+				m_creature->CastStop();
+				DoScriptText(SAY_SUMMON3, m_creature);
+				DoCast(m_creature, SPELL_SUMMON_MENAGERIE_3);
+			}
+			break;
+		}
+
+		if(m_uiPhase != PHASE_CENTER)
+			uiDamage = 0;
+		else if(!m_bHasAggro)
+			m_bHasAggro = true;
 	}
 
 	void SpellHit(Unit* pCaster, const SpellEntry* pSpell)
 	{
-		/*switch(pSpell->Id)
+		switch(pSpell->Id)
 		{
-		case SPELL_SUMMON_MENAGERIE:
-			me->SetHomePosition(968.66f,1042.53f,527.32f,0.077f);
-			LeaveCombat();
+		case SPELL_SUMMON_MENAGERIE_1:
+			m_bHasCasted = false;
+			SummonTrashPack(TrashPacksEntries[0], 0);
+			DoCast(m_creature, SPELL_ARCANE_SHIELD);
+			m_uiPhase = PHASE_PLATFORM1;
 			break;
 		case SPELL_SUMMON_MENAGERIE_2:
-			me->SetHomePosition(1164.02f,1170.85f,527.321f,3.66f);
-			LeaveCombat();
+			m_bHasCasted = false;
+			SummonTrashPack(TrashPacksEntries[1], 1);
+			DoCast(m_creature, SPELL_ARCANE_SHIELD);
+			m_uiPhase = PHASE_PLATFORM2;
 			break;
 		case SPELL_SUMMON_MENAGERIE_3:
-			me->SetHomePosition(1118.31f,1080.377f,508.361f,4.25f);
-			LeaveCombat();
+			m_bHasCasted = false;
+			SummonTrashPack(TrashPacksEntries[2], 2);
+			DoCast(m_creature, SPELL_ARCANE_SHIELD);
+			m_uiPhase = PHASE_CENTER;
 			break;
-		case SPELL_TELEPORT:
-			me->AddUnitMovementFlag(MOVEMENTFLAG_CAN_FLY); // with out it the npc will fall down while is casting
-			bCanCast = true;
-			break;
-		default:
-			break;
-		}*/
+		}
+	}
+
+	void UpdateAI(const uint32 uiDiff)
+	{
+		if(m_bHasAggro && m_uiPhase == PHASE_CENTER)
+		{
+			if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+				return;
+
+			if (m_uiTeleportTimer <= uiDiff)
+			{
+				switch(urand(0, 1))
+				{
+				case 0: DoScriptText(SAY_EXPLOSION1, m_creature); break;
+				case 1: DoScriptText(SAY_EXPLOSION2, m_creature); break;
+				}
+				m_creature->InterruptNonMeleeSpells(false);
+				DoCast(m_creature, SPELL_TELEPORT);
+				m_creature->GetMotionMaster()->MoveIdle();
+				m_creature->SetSplineFlags(SPLINEFLAG_FLYING);
+				m_uiTeleportTimer = urand(30000,35000);
+				m_uiExplosionTimer = 1500;
+			} 
+			else m_uiTeleportTimer -= uiDiff;
+
+			if(m_uiExplosionTimer < uiDiff)
+			{
+				DoCast(m_creature, m_bIsRegularMode ? SPELL_EMPOWERED_ARCANE_EXPLOSION : SPELL_EMPOWERED_ARCANE_EXPLOSION_H);
+				m_creature->RemoveSplineFlag(SPLINEFLAG_FLYING);
+				m_creature->GetMotionMaster()->Clear();
+				m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+				m_uiExplosionTimer = 60000;
+			}
+			else m_uiExplosionTimer -= uiDiff;
+
+			if (m_uiFrostBombTimer < uiDiff)
+			{
+				DoCast(m_creature->getVictim(), SPELL_FROSTBOMB);
+				m_uiFrostBombTimer = urand(5000,8000);
+			} 
+			else m_uiFrostBombTimer -= uiDiff;
+
+			if (m_uiTimeBombTimer <= uiDiff)
+			{
+				if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+					DoCast(pTarget, m_bIsRegularMode ? SPELL_TIME_BOMB : SPELL_TIME_BOMB_H);
+				m_uiTimeBombTimer = urand(20000,25000);
+			} 
+			else m_uiTimeBombTimer -= uiDiff;
+
+			DoMeleeAttackIfReady();
+		}
 	}
 };
 

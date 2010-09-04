@@ -28,9 +28,13 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
     instance_oculus(Map* pMap) : ScriptedInstance(pMap) {Initialize();};
 
     uint32 m_auiEncounter[MAX_ENCOUNTER];
+	uint32 m_uiCentrifugeDead;
 	std::string strInstData;
+	bool m_bNeedSave;
 
 	uint64 m_uiVarosGUID;
+	uint64 m_uiUromGUID;
+	uint64 m_uiEregosGUID;
 	uint64 m_uiEternosGUID;
 	uint64 m_uiVerdisaGUID;
 	uint64 m_uiBelgaristraszGUID;
@@ -44,8 +48,12 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+		m_uiCentrifugeDead		= 0;
+		m_bNeedSave				= false;
 
 		m_uiVarosGUID			= 0;
+		m_uiUromGUID			= 0;
+		m_uiEregosGUID			= 0;
 		m_uiEternosGUID			= 0;
 		m_uiVerdisaGUID			= 0;
 		m_uiBelgaristraszGUID	= 0;
@@ -57,12 +65,31 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
 		m_uiMakeCountTimer		= 0;
     }
 
+	void OnPlayerEnter(Player *m_player)
+    {
+        if(m_auiEncounter[0] == DONE && m_auiEncounter[1] != DONE)
+        {
+            m_player->SendUpdateWorldState(UI_STATE_CONSTRUCT_SHOW,1);
+            m_player->SendUpdateWorldState(UI_STATE_CONSTRUCT_COUNT, 10 - m_uiCentrifugeDead);
+        }
+    }
+
 	void OnCreatureCreate(Creature* pCreature)
     {
         switch(pCreature->GetEntry())
         {
 		case NPC_VAROS:
 			m_uiVarosGUID = pCreature->GetGUID();
+			break;
+		case NPC_UROM:
+			m_uiUromGUID = pCreature->GetGUID();
+			if(m_auiEncounter[1] != DONE)
+				pCreature->SetVisibility(VISIBILITY_OFF);
+			break;
+		case NPC_EREGOS:
+			m_uiEregosGUID = pCreature->GetGUID();
+			if(m_auiEncounter[2] != DONE)
+				pCreature->SetVisibility(VISIBILITY_OFF);
 			break;
 		case NPC_ETERNOS:
 			m_uiEternosGUID = pCreature->GetGUID();
@@ -136,19 +163,25 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
 					DoCompleteAchievement(ACHIEV_MAKE_IT_COUNT);
 			}
 			break;
+		case TYPE_CENTRIFUGE_DEAD:
+			m_uiCentrifugeDead += uiData;
+			DoUpdateWorldState(UI_STATE_CONSTRUCT_COUNT, 10 - m_uiCentrifugeDead);
+			m_bNeedSave = true;
+			break;
 		}
 
-		if (uiData == DONE)
+		if (uiData == DONE || m_bNeedSave)
         {
             OUT_SAVE_INST_DATA;
 
             std::ostringstream saveStream;
-            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3];
+            saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3] << " " << m_uiCentrifugeDead;
 
             strInstData = saveStream.str();
 
             SaveToDB();
             OUT_SAVE_INST_DATA_COMPLETE;
+			m_bNeedSave = false;
         }
 	}
 
@@ -164,6 +197,8 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
 			return m_auiEncounter[2];
 		case TYPE_EREGOS:
 			return m_auiEncounter[3];
+		case TYPE_CENTRIFUGE_DEAD:
+			return m_uiCentrifugeDead;
 		}
         return 0;
     }
@@ -174,6 +209,10 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
 		{
 		case NPC_VAROS:
 			return m_uiVarosGUID;
+		case NPC_UROM:
+			return m_uiUromGUID;
+		case NPC_EREGOS:
+			return m_uiEregosGUID;
 		case NPC_ETERNOS:
 			return m_uiEternosGUID;
 		case NPC_VERDISA:
@@ -207,7 +246,7 @@ struct MANGOS_DLL_DECL instance_oculus : public ScriptedInstance
         OUT_LOAD_INST_DATA(chrIn);
 
         std::istringstream loadStream(chrIn);
-        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3];
+        loadStream >> m_auiEncounter[0] >> m_auiEncounter[1] >> m_auiEncounter[2] >> m_auiEncounter[3] >> m_uiCentrifugeDead;
 
         for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
         {

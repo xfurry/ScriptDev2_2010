@@ -39,10 +39,7 @@ enum Spells
 	SPELL_CENTRIFUGE_CORE_PASSIVE				= 50798,
 	NPC_CENTRIFUGE_CORE							= 28183,
 	NPC_CENTRIFUGE_CONSTRUCT					= 27641,
-
-
-	// channeling
-	// 54219, 
+	NPC_AZURE_RING_GUARDIAN						= 27638, 
 };
 
 struct MANGOS_DLL_DECL boss_varosAI : public ScriptedAI
@@ -66,8 +63,8 @@ struct MANGOS_DLL_DECL boss_varosAI : public ScriptedAI
 		m_uiAmplifyMagicTimer	= 10000;
 		m_uiCallCaptainTimer	= 15000;
 		m_uiEnergizeCoreTimer	= 20000;
-		//if(m_pInstance->GetData(TYPE_DRAKOS) != DONE)
-		//	DoCast(m_creature, SPELL_CENTRIFUGE_SHIELD);
+		if(m_pInstance->GetData(TYPE_CENTRIFUGE_DEAD) < 10)
+			DoCast(m_creature, SPELL_CENTRIFUGE_SHIELD);
 	}
 
 	void JustReachedHome()
@@ -92,7 +89,7 @@ struct MANGOS_DLL_DECL boss_varosAI : public ScriptedAI
 
 	void AttackStart(Unit* pWho)
     {
-		if(m_creature->HasAura(SPELL_CENTRIFUGE_SHIELD, EFFECT_INDEX_0))
+		if(m_creature->HasAura(SPELL_CENTRIFUGE_SHIELD, EFFECT_INDEX_0) && m_pInstance->GetData(TYPE_CENTRIFUGE_DEAD) < 10)
 			return;
 
         if (m_creature->Attack(pWho, true)) 
@@ -108,8 +105,14 @@ struct MANGOS_DLL_DECL boss_varosAI : public ScriptedAI
 	{
 		DoScriptText(SAY_DEATH, m_creature);
 
+		if(Creature* pUrom = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_UROM)))
+			pUrom->SetVisibility(VISIBILITY_ON);
+
 		if (m_pInstance)
+		{
 			m_pInstance->SetData(TYPE_VAROS, DONE);
+			m_pInstance->DoUpdateWorldState(UI_STATE_CONSTRUCT_SHOW, 0);
+		}
 	}
 
 	void KilledUnit(Unit* pVictim)
@@ -121,8 +124,30 @@ struct MANGOS_DLL_DECL boss_varosAI : public ScriptedAI
 		}
 	}
 
+	Creature* SelectRandomCreature(uint32 uiEntry, float fRange)
+    {
+        std::list<Creature* > lCreatureList;
+            GetCreatureListWithEntryInGrid(lCreatureList, m_creature, uiEntry, fRange);
+
+        if (lCreatureList.empty()){
+            m_uiCallCaptainTimer = 25000;
+            return NULL;
+        }
+
+        std::list<Creature* >::iterator iter = lCreatureList.begin();
+        advance(iter, urand(0, lCreatureList.size()-1));
+
+        return *iter;
+    }
+
 	void UpdateAI(const uint32 uiDiff)
 	{
+		if(m_pInstance->GetData(TYPE_CENTRIFUGE_DEAD) == 10 && m_creature->HasAura(SPELL_CENTRIFUGE_SHIELD, EFFECT_INDEX_0))
+		{
+			m_creature->CastStop();
+			m_creature->RemoveAurasDueToSpell(SPELL_CENTRIFUGE_SHIELD);
+		}
+
 		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
@@ -142,7 +167,8 @@ struct MANGOS_DLL_DECL boss_varosAI : public ScriptedAI
 			case 1: DoScriptText(SAY_STRIKE2, m_creature); break;
 			case 2: DoScriptText(SAY_STRIKE3, m_creature); break;
 			}
-			// todo: needs advanced script
+			if(Creature* pCaptain = SelectRandomCreature(NPC_AZURE_RING_GUARDIAN, 150.0f))
+                pCaptain->AI()->AttackStart(m_creature->getVictim());
 			DoCast(m_creature, SPELL_CALL_AZURE_RING_CAPTAIN);
 			m_uiCallCaptainTimer = 13000;
 		}
@@ -151,7 +177,11 @@ struct MANGOS_DLL_DECL boss_varosAI : public ScriptedAI
 		if(m_uiEnergizeCoreTimer < uiDiff)
 		{
 			m_creature->InterruptNonMeleeSpells(true);
-			DoCast(m_creature, m_bIsRegularMode ? SPELL_ENERGIZE_CORES : SPELL_ENERGIZE_CORES_H);
+			if(Creature* pCore = SelectRandomCreature(NPC_CENTRIFUGE_CORE, 50.0f))
+			{
+				DoCast(pCore, m_bIsRegularMode ? SPELL_ENERGIZE_CORES : SPELL_ENERGIZE_CORES_H);
+				m_creature->SetUInt64Value(UNIT_FIELD_TARGET, pCore->GetGUID());
+			}
 			m_uiEnergizeCoreTimer = 20000;
 		}
 		else m_uiEnergizeCoreTimer -= uiDiff;
@@ -178,6 +208,26 @@ struct MANGOS_DLL_DECL npc_centrifuge_sphereAI : public ScriptedAI
 	}
 };
 
+struct MANGOS_DLL_DECL npc_centrifuge_constructAI : public ScriptedAI
+{
+	npc_centrifuge_constructAI(Creature* pCreature) : ScriptedAI(pCreature) 
+	{
+		m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
+		Reset();
+	}
+
+	ScriptedInstance* m_pInstance;
+
+	void Reset()
+	{}
+
+	void JustDied(Unit* pKiller)
+	{
+		if (m_pInstance)
+			m_pInstance->SetData(TYPE_CENTRIFUGE_DEAD, 1);
+	}
+};
+
 CreatureAI* GetAI_boss_varos(Creature* pCreature)
 {
 	return new boss_varosAI (pCreature);
@@ -186,6 +236,11 @@ CreatureAI* GetAI_boss_varos(Creature* pCreature)
 CreatureAI* GetAI_npc_centrifuge_sphere(Creature* pCreature)
 {
 	return new npc_centrifuge_sphereAI (pCreature);
+}
+
+CreatureAI* GetAI_npc_centrifuge_construct(Creature* pCreature)
+{
+	return new npc_centrifuge_constructAI (pCreature);
 }
 
 void AddSC_boss_varos()
@@ -200,5 +255,10 @@ void AddSC_boss_varos()
 	newscript = new Script;
 	newscript->Name = "npc_centrifuge_sphere";
 	newscript->GetAI = &GetAI_npc_centrifuge_sphere;
+	newscript->RegisterSelf();
+
+	newscript = new Script;
+	newscript->Name = "npc_centrifuge_construct";
+	newscript->GetAI = &GetAI_npc_centrifuge_construct;
 	newscript->RegisterSelf();
 }
