@@ -16,355 +16,434 @@
  
 /* ScriptData
 SDName: boss_muru_entropius
-SD%Complete: 99
+SD%Complete:
 SDComment:
-SDAuthor: ScrappyDoo (c) Andeeria
+SDAuthor:
 EndScriptData */
 
 #include "precompiled.h"
 #include "sunwell_plateau.h"
  
-enum spells // Boss spells
+enum
 {
-    ENRAGE                      = 26662,
-    SPELL_NEGATIVE              = 46285,
-    SPELL_NEGATIVEENERGY        = 46008,
-    SPELL_NEGATIVEENERGY_CHAIN  = 46289,
+	SPELL_NEGATIVE_ENERGY       = 46009,
+	SPELL_DARKNESS				= 45996,
+	SPELL_SUMMON_BERSERKER		= 46037,
+	SPELL_SUMMON_FURY_MAGE		= 46038,
+	SPELL_SUMMON_VOID_SENTINEL	= 45988,
 
-    AURA_SINGULARITY            = 46228,
-    AURA_SUNWELL_RADIANCE       = 45769,
+	// transition
+	SPELL_OPEN_ALL_PORTALS		= 46177,
+	SPELL_ENTROPIUS_SUMMON		= 46217,
+	SPELL_ENTROPIUS_SPAWN		= 46223,
 
-    DARKNESS                    = 45996, // dokladnie sprawdzic
-    ENTROPIUS_EFFECT            = 46223, // lipny ale zawsze cos
+	// entropius spells
+	SPELL_NEGATIVE_ENERGY_ENT	= 46284,
+	SPELL_NEGATIVE_ENERGY_DMG	= 46285,
+	SPELL_SUMMON_BLACK_HOLE		= 46282,
+	SPELL_SUMMON_DARKNESS		= 46269,
+
+    SPELL_ENRAGE                = 26662,
+
+	// black hole
+    SPELL_BLACK_HOLE_PASSIVE    = 46228,
+	SPELL_VOID_ZONE_PERIODIC	= 46262,
+	SPELL_VOID_ZONE_PREEFFECT	= 46265,
 
     //Dark Fiend
-    DARK_FIEND_AURA             = 45934, // latajaca czaszka :D
-    DARK_FIEND_DEBUFF           = 45944,
-    SPELL_DISPELL               = 32375,
-    SPELL_PURGE                 = 8012,
+    SPELL_DARK_FIEND_VISUAL     = 45934,
+    SPELL_DARK_FIEND_DMG        = 45944,
 
-    SPELL_ARCANEFORM            = 48019, // Chaotic Rift visual
+	// void sentinel
+	SPELL_SHADOW_PULSE			= 46086,
+    SPELL_VOID_BLAST            = 46161,
 
-    VOID_AURA                   = 46087,
-    VOID_BLAST                  = 46161,
+	// portals
+	SPELL_OPEN_PORTAL_VISUAL	= 45977,
+	NPC_PORTAL_TARGET			= 25770,
+
+	NPC_ENTROPIUS				= 25840,
+    NPC_SHADOW_FURY_MAGE        = 25799, 
+    NPC_SHADOW_BERSERKER        = 25798, 
+    NPC_VOID_SENTINEL           = 25772,
+	NPC_VOID_SPAWN              = 25824,
+	NPC_DARK_FIEND              = 25744, 
+    NPC_SINGULARITY             = 25855, 
+	NPC_DARKNESS				= 25879,
 };
-
-enum summons
-{
-    ID_SWB                      = 25799, // ok
-    ID_SWM                      = 25798, // ok niema bufa
-    ID_DARK_FIEND               = 25744, // ok
-    ID_VOID_SENTINEL            = 25772, // ok
-    ID_SINGULARITY              = 25855, // visual effect i nie bic mele zmeiniac target?
-    ID_SPAWN                    = 25824, // ok
-};
-
-//Boss sounds
-#define SOUND_CHANGE_PHASE 12560
  
+//Positional defines 
+struct LocationsXY
+{
+    float x, y, z;
+    uint32 id;
+};
+
 // Sumoned trash coordinates
-float Trash[6][2] =
+static LocationsXY TrashLoc[]=
 {
-        {1853.300f,588.653f},
-        {1781.502f,659.254f},
-        {1853.300f,588.653f},
-        {1853.300f,588.653f},     
-        {1781.502f,659.254f},
-        {1781.502f,659.254f},
+	{1753.964f, 695.484f, 71.19f},	// inside
+	{1865.045f, 585.158f, 71.29f},	// outside
 };
 
-float ShadowPortalSpawn[5][3] =
+/*######
+## boll_entropius
+######*/
+struct MANGOS_DLL_DECL boss_entropiusAI : public ScriptedAI
 {
-        {1797.644f,613.744f,0.56290f},
-        {1822.956f,646.437f,4.40262f},
-        {1794.275f,626.539f,6.23522f},
-        {1809.726f,646.494f,5.01348f},     
-        {1798.854f,638.952f,5.62435f}
+    boss_entropiusAI(Creature* pCreature) : ScriptedAI(pCreature) 
+    {
+	    m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+	    Reset(); 
+    }
+
+    ScriptedInstance* m_pInstance; 
+
+	uint32 m_uiNegativeEnergyTimer;
+	uint32 m_uiBlackHoleTimer;
+	uint32 m_uiDarknessTimer;
+	uint32 m_uiBerserkTimer;
+
+	void Reset()
+	{
+		m_creature->SetRespawnDelay(DAY);
+		DoCast(m_creature, SPELL_NEGATIVE_ENERGY_ENT);	// not working
+
+		m_uiNegativeEnergyTimer = 1000;
+		m_uiBlackHoleTimer		= 15000;
+		m_uiDarknessTimer		= 20000;
+		m_uiBerserkTimer		= 300000;
+	}
+
+	void JustReachedHome()
+	{
+		if (m_pInstance)
+            m_pInstance->SetData(TYPE_MURU, NOT_STARTED);
+
+		if(Creature* pMuru = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_MURU)))
+			pMuru->Respawn();
+		m_creature->ForcedDespawn();
+	}
+
+	void JustDied(Unit* pKiller)
+    {
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_MURU, DONE);
+    }
+
+	void UpdateAI(const uint32 uiDiff)
+	{ 
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if(m_uiBerserkTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_ENRAGE);
+			m_uiBerserkTimer = 60000;
+		}
+		else m_uiBerserkTimer -= uiDiff;
+
+		if(m_uiNegativeEnergyTimer < uiDiff)
+		{
+			if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+				DoCast(pTarget, SPELL_NEGATIVE_ENERGY_DMG);
+			m_uiNegativeEnergyTimer = 1000;
+		}
+		else m_uiNegativeEnergyTimer -= uiDiff;
+
+		if(m_uiBlackHoleTimer < uiDiff)
+		{
+			if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
+				DoCast(pTarget, SPELL_SUMMON_BLACK_HOLE);
+			m_uiBlackHoleTimer = 30000;
+		}
+		else m_uiBlackHoleTimer -= uiDiff;
+
+		if(m_uiDarknessTimer < uiDiff)
+		{
+			if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 1))
+				DoCast(pTarget, SPELL_SUMMON_DARKNESS);
+			m_uiDarknessTimer = 20000;
+		}
+		else m_uiDarknessTimer -= uiDiff;
+
+		DoMeleeAttackIfReady();
+	}
 };
- 
+
 /*######
 ## boll_muru
 ######*/
 struct MANGOS_DLL_DECL boss_muruAI : public ScriptedAI
 {
-    boss_muruAI(Creature *c) : ScriptedAI(c) 
+    boss_muruAI(Creature* pCreature) : ScriptedAI(pCreature) 
     {
-	    m_pInstance = ((ScriptedInstance*)c->GetInstanceData());
+	    m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+		SetCombatMovement(false);
 	    Reset(); 
     }
 
     ScriptedInstance* m_pInstance; 
-    bool Phase1;
 
-    float m_fDarkPosX;
-    float m_fDarkPosY;
-
-    uint32 TargetsCount;
-    uint32 TargetsCountTimer;
-    uint32 SingularityTimer;
-    uint32 NegativeEnergyTimer;
-    uint32 SummonTrashTimer;
-    uint32 SummonVoidTimer;
-    uint32 DarknessTimer;
-    uint32 EnrageTimer;
-    uint32 DarkFiendTimer;
-
-    bool Darkness;
+    uint32 m_uiSummonTrashTimer;
+	bool m_bIsTrashSummoning;
+	uint32 m_uiSummonTimer;
+	uint32 m_uiTrashCount;
+    uint32 m_uiSummonVoidTimer;
+    uint32 m_uiDarknessTimer;
+	uint32 m_uiDarkFiendTimer;
+    uint32 m_uiEnrageTimer;
+	uint64 m_uiPortalGUID;
+	uint32 m_uiPortalDelayTimer;
+	uint32 m_uiEndPhaseTimer;
+	uint32 m_uiEndPhaseStage;
+	bool m_bIsEndPhase;
     
     void Reset()
     {
-        m_fDarkPosX = 0;
-        m_fDarkPosY = 0;
-
-        m_creature->SetDisplayId(23404);
-
-        NegativeEnergyTimer = 1000;
-        SummonTrashTimer = 10000;
-        SummonVoidTimer = 30000;
-        DarknessTimer = 45000;
-        EnrageTimer = 600000;
-        Phase1 = true;
-        Darkness = false;
-
-        m_creature->SetVisibility(VISIBILITY_ON);
-   
-        if(m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
-            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-
-        if(!m_creature->HasAura(AURA_SUNWELL_RADIANCE, EFFECT_INDEX_0))
-            m_creature->CastSpell(m_creature, AURA_SUNWELL_RADIANCE, true);
-
-        if (m_pInstance)
-            m_pInstance->SetData(TYPE_MURU, NOT_STARTED);
+        m_uiSummonTrashTimer	= 10000;
+		m_bIsTrashSummoning		= false;
+		m_uiSummonTimer			= 0;
+		m_uiTrashCount			= 0;
+        m_uiSummonVoidTimer		= 30000;
+        m_uiDarknessTimer		= 45000;
+		m_uiDarkFiendTimer		= 50000;
+        m_uiEnrageTimer			= 600000;
+		m_uiPortalGUID			= 0;
+		m_uiPortalDelayTimer	= 60000;
+		m_uiEndPhaseTimer		= 1000;
+		m_uiEndPhaseStage		= 0;
+		m_bIsEndPhase			= false;
     }
     
-    void Aggro(Unit *who) 
+    void Aggro(Unit* pWho) 
     {
-        m_creature->StopMoving();
-        m_creature->GetMotionMaster()->Clear();
-        m_creature->GetMotionMaster()->MoveIdle();
-
         if (m_pInstance)
             m_pInstance->SetData(TYPE_MURU, IN_PROGRESS);
+		DoCast(m_creature, SPELL_NEGATIVE_ENERGY);
     }  
-
-    void KilledUnit(Unit *Victim) {}
 
     void JustDied(Unit* pKiller)
     {
         if (m_pInstance)
             m_pInstance->SetData(TYPE_MURU, DONE);
     }
-    
-    void UpdateAI(const uint32 diff)
-    {       
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-                return;
-        
-        if(EnrageTimer < diff)
-        {
-            m_creature->CastSpell(m_creature, ENRAGE, true);
-            EnrageTimer = 60000;
-        }else EnrageTimer -= diff;
-        
-        if(Phase1)
-        {
-            m_creature->StopMoving();
-            m_creature->GetMotionMaster()->Clear();
-            m_creature->GetMotionMaster()->MoveIdle();
 
-            if((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) <= 42)
+	void JustReachedHome()
+	{
+		if (m_pInstance)
+            m_pInstance->SetData(TYPE_MURU, NOT_STARTED);
+	}
+
+	void JustSummoned(Creature* pSummon)
+	{
+		pSummon->SetInCombatWithZone();
+		if(pSummon->GetEntry() == NPC_ENTROPIUS)
+		{
+			pSummon->CastSpell(pSummon, SPELL_ENTROPIUS_SPAWN, false);
+			((boss_entropiusAI*)pSummon->AI())->m_uiBerserkTimer = m_uiEnrageTimer;
+		}
+	}
+
+	void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+	{
+		if(uiDamage > m_creature->GetHealth() || m_creature->GetHealthPercent() < 1.0f)
+		{
+			uiDamage = 0;
+			DoCast(m_creature, SPELL_OPEN_ALL_PORTALS);
+			OpenAllPortals();
+			m_bIsEndPhase = true;
+			m_uiEndPhaseTimer = 5000;
+		}
+	}
+
+	void OpenAllPortals()
+	{
+		std::list<Creature*> lPortals;
+		GetCreatureListWithEntryInGrid(lPortals, m_creature, NPC_PORTAL_TARGET, 40.0f);
+        if (!lPortals.empty())
+        {
+            for(std::list<Creature*>::iterator iter = lPortals.begin(); iter != lPortals.end(); ++iter)
             {
-                m_creature->SetDisplayId(23428);
-                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                DoPlaySoundToSet(m_creature, SOUND_CHANGE_PHASE);
-                DoCast(m_creature, ENTROPIUS_EFFECT, true);
-
-                TargetsCount = 1;
-                TargetsCountTimer = 10000;
-                SingularityTimer = 50000;
-                Phase1 = false;
+                if ((*iter) && (*iter)->isAlive())
+                    (*iter)->CastSpell((*iter), SPELL_OPEN_PORTAL_VISUAL, false);
             }
-            if(NegativeEnergyTimer < diff)
-            {
-                for(uint8 i=0; i<2; ++i)
-                {
-                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        m_creature->CastSpell(target, SPELL_NEGATIVE, false);
-                }
-                NegativeEnergyTimer = 1000;
-            }else NegativeEnergyTimer -= diff;
-
-            //Spawns Shadow portals and then one Void Sentinel
-            if(SummonVoidTimer < diff)
-            {
-                //Shadow Portals not implemented yet :X
-                uint8 x = rand()%5;
-                Creature* VoidSentinel = m_creature->SummonCreature(ID_VOID_SENTINEL, ShadowPortalSpawn[x][0], ShadowPortalSpawn[x][1], m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
-                if(VoidSentinel) 
-                    VoidSentinel->AI()->AttackStart(m_creature->getVictim());
-                
-                SummonVoidTimer = 30000;
-            }else SummonVoidTimer -= diff;
-            
-            //Summon 6 humanoids every 1min (1mage & 2berserkers)
-            if(SummonTrashTimer < diff)
-            {
-                    for(uint8 i = 0; i < 6; i++)
-                    {
-                        uint32 ID;
-
-                        if((i == 1) | (i == 2))
-                            ID = ID_SWB;
-                        else
-                            ID = ID_SWM;
-
-                        Creature* sTrash = m_creature->SummonCreature(ID, Trash[i][0], Trash[i][1], m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
-                        
-                        if(Unit* sTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                            if(sTrash)
-                                sTrash->AI()->AttackStart(sTarget);
-                    }
-                    SummonTrashTimer = 60000;
-            }else SummonTrashTimer -= diff;
         }
-        else // else Entropius phase
-        {
-            // +1 target every 10 seconds
-            if(TargetsCountTimer < diff)
-            {
-                ++TargetsCount;
-                TargetsCountTimer = 10000;
-            }else TargetsCountTimer -= diff;
+	}
 
-            //Utrudnienie -> chain negative energy nie dziala wiec sa 3 beamy full dmg
-            if(NegativeEnergyTimer < diff)
-            {
-                for(uint8 i=0; i<TargetsCount; ++i)
-                {
-                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        m_creature->CastSpell(target, SPELL_NEGATIVE, false);
-                }
+	Creature* SelectRandomPortal()
+    {
+        std::list<Creature* > lPortalList;
+		GetCreatureListWithEntryInGrid(lPortalList, m_creature, NPC_PORTAL_TARGET, 40.0f);
 
-                NegativeEnergyTimer = 1000;
-            }else NegativeEnergyTimer -= diff;
-
-            //Summon Singularity
-            if(SingularityTimer < diff)
-            {
-                if(Unit* sTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                {
-                    Creature* Singularity = m_creature->SummonCreature(ID_SINGULARITY, sTarget->GetPositionX(), sTarget->GetPositionY(), sTarget->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 20000);
-                    if(Singularity)
-                        Singularity->AI()->AttackStart(sTarget);
-
-                }
-                SingularityTimer = 50000;
-            }else SingularityTimer -= diff; 
-
-            DoMeleeAttackIfReady();
+        if (lPortalList.empty()){
+            m_uiSummonVoidTimer = 30000;
+            return NULL;
         }
 
-        //Cast Darkness
-        if(DarknessTimer < diff)
-        {
-            m_fDarkPosX = m_creature->GetPositionX();
-            m_fDarkPosY = m_creature->GetPositionY();
-            // Creature* Darkness = m_creature->SummonCreature(25879, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
-            m_creature->CastSpell(m_creature, DARKNESS, true);
+        std::list<Creature* >::iterator iter = lPortalList.begin();
+        advance(iter, urand(0, lPortalList.size()-1));
 
-            Darkness = true;
-            DarkFiendTimer = 3000;
-            DarknessTimer = 45000;
-        }else DarknessTimer -= diff;
-
-        if(DarkFiendTimer < diff && Darkness)
-        {
-            // Phase2 1 dark fiend : Phase1 8 dark fiend
-            uint8 i=1;
-            if(Phase1)
-                i=8;
-            for(uint8 j=0; j<i; ++j)
-            {
-                //Using Instance Data to stop exploding after first explode
-                if(m_pInstance)
-                    m_pInstance->SetData(TYPE_MURU, NOT_STARTED);
-
-                Creature* sTrash = m_creature->SummonCreature(ID_DARK_FIEND, m_fDarkPosX, m_fDarkPosY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-                if(Unit* sTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                    if(sTrash)
-                        sTrash->AI()->AttackStart(sTarget);
-            }
-            Darkness = false;
-            DarkFiendTimer = 45000;
-        }else DarkFiendTimer -= diff;
+        return *iter;
     }
+    
+    void UpdateAI(const uint32 uiDiff)
+    {       
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
+
+		if(m_uiEndPhaseTimer < uiDiff && m_bIsEndPhase)
+		{
+			switch(m_uiEndPhaseStage)
+			{
+			case 0:
+				DoCast(m_creature, SPELL_ENTROPIUS_SUMMON);
+				++m_uiEndPhaseStage;
+				m_uiEndPhaseTimer = 2500;
+				break;
+			case 1:
+				m_creature->SetVisibility(VISIBILITY_OFF);
+				m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+				++m_uiEndPhaseStage;
+				m_uiEndPhaseTimer = 10000;
+				break;
+			}
+		}
+		else m_uiEndPhaseTimer -= uiDiff;
+        
+		if(m_uiEnrageTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_ENRAGE);
+			m_uiEnrageTimer = 60000;
+		}
+		else m_uiEnrageTimer -= uiDiff;
+
+		if(m_bIsEndPhase)
+			return;
+
+		if(m_uiDarknessTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_DARKNESS);
+			m_uiDarkFiendTimer = 5000;
+			m_uiDarknessTimer = 45000;
+		}
+		else m_uiDarknessTimer -= uiDiff;
+
+		if(m_uiDarkFiendTimer < uiDiff)
+		{
+			for(int i = 0; i < 8; i++)
+            {
+                float angle = (float) rand()*360/RAND_MAX + 1;
+                float homeX = m_creature->GetPositionX() + 10*cos(angle*(M_PI/180));
+                float homeY = m_creature->GetPositionY() + 10*sin(angle*(M_PI/180));
+				if(Creature* pTemp = m_creature->SummonCreature(NPC_DARK_FIEND, homeX, homeY, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 11000))
+					pTemp->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID());
+            }
+			m_uiDarkFiendTimer = 60000;
+		}
+		else m_uiDarkFiendTimer -= uiDiff;
+
+		if(m_uiSummonVoidTimer < uiDiff)
+		{
+			if(Creature* pPortal = SelectRandomPortal())
+			{
+				m_uiPortalGUID = pPortal->GetGUID();
+				pPortal->CastSpell(pPortal, SPELL_OPEN_PORTAL_VISUAL, false);
+			}
+			m_uiPortalDelayTimer = 5000;
+			m_uiSummonVoidTimer = 30000;
+		}
+		else m_uiSummonVoidTimer -= uiDiff;
+
+		if(m_uiPortalDelayTimer < uiDiff)
+		{
+			if(Creature* pPortal = m_creature->GetMap()->GetCreature(m_uiPortalGUID))
+				m_creature->SummonCreature(NPC_VOID_SENTINEL, pPortal->GetPositionX(), pPortal->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
+			m_uiPortalDelayTimer = 60000;
+		}
+		else m_uiPortalDelayTimer -= uiDiff;
+
+		if(m_bIsTrashSummoning)
+		{
+			if(m_uiTrashCount < 3)
+			{
+				if(m_uiSummonTimer < uiDiff)
+				{
+					for(uint8 i = 0; i < 2; i++)
+						m_creature->SummonCreature(m_uiTrashCount == 1 ? NPC_SHADOW_FURY_MAGE : NPC_SHADOW_BERSERKER, TrashLoc[i].x, TrashLoc[i].y, TrashLoc[i].z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
+					m_uiSummonTimer = 1000;
+					++m_uiTrashCount;
+				}
+				else m_uiSummonTimer -= uiDiff;
+			}
+			else
+			{
+				m_uiTrashCount = 0;
+				m_uiSummonTrashTimer = 45000;
+				m_bIsTrashSummoning = false;
+			}
+		}
+		else
+		{
+			if(m_uiSummonTrashTimer < uiDiff)
+				m_bIsTrashSummoning = true;
+			else m_uiSummonTrashTimer -= uiDiff;
+		}
+	}
 };
  
 /*######
 ## mob_dark_fiend
 ######*/
-struct MANGOS_DLL_DECL dark_fiendAI : public ScriptedAI
+struct MANGOS_DLL_DECL mob_dark_fiendAI : public ScriptedAI
 {
-    dark_fiendAI(Creature *c) : ScriptedAI(c) 
+    mob_dark_fiendAI(Creature* pCreature) : ScriptedAI(pCreature) 
     {
-	    pInstance = ((ScriptedInstance*)c->GetInstanceData());
+		SetCombatMovement(false);
 	    Reset(); 
-    }
+    } 
 
-    ScriptedInstance* pInstance; 
-
-    bool Reached;
+	uint32 m_uiSpellTimer;
 
     void Reset() 
     {
-        m_creature->SetDisplayId(25206);
-        if(!m_creature->HasAura(DARK_FIEND_AURA,EFFECT_INDEX_0))
-            m_creature->CastSpell(m_creature, DARK_FIEND_AURA, true);
-        Reached = false;
-    }
-    
-    void Aggro(Unit *who) {}
-    void JustDied(Unit* Killer) {}
-    void KilledUnit(Unit *Victim) {}
-        
-    void SpellHit(Unit *caster, const SpellEntry *spell)
-    {
-        if (Reached == false)
-        {
-            if (spell->Id == SPELL_DISPELL)
-                Reached  = true;
-            if (spell->Id == SPELL_PURGE)
-                Reached  = true;
-        }
+		m_uiSpellTimer = 10000;
+        DoCast(m_creature, SPELL_DARK_FIEND_VISUAL);
     }
 
-    void UpdateAI(const uint32 diff)
+	void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+	{
+		uiDamage = 0;
+	}
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
+
+	void SpellHit(Unit* pCaster, const SpellEntry* pSpell)
+	{
+		// dispell
+		switch(pSpell->Id)
+		{
+		case 32375:
+		case 72734:
+		case 32592:
+		case 39897:
+		case 988:
+		case 8012:
+			m_creature->ForcedDespawn();
+		}
+	}
+
+    void UpdateAI(const uint32 uiDiff)
     {
-        //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-                return;
-        
-        if( m_creature->isAttackReady() && !m_creature->IsNonMeleeSpellCasted(false))
-        {
-            //If we are within range melee the target
-            /*
-            if (!get data Explosion == Done)
-            */
-            if(!Reached)
-                if(m_creature->IsWithinDistInMap(m_creature->getVictim(), ATTACK_DISTANCE))
-                {
-                    m_creature->SetVisibility(VISIBILITY_OFF);
-                    if(pInstance && pInstance->GetData(TYPE_MURU) == NOT_STARTED)
-                    {
-                        m_creature->CastSpell(m_creature->getVictim(), DARK_FIEND_DEBUFF, true);
-                        m_creature->AttackerStateUpdate(m_creature->getVictim());
-                        pInstance->SetData(TYPE_MURU, DONE);
-                        Reached = true;
-                    }
-                    // set data explosion done
-                }
-        }
+        if(m_uiSpellTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_DARK_FIEND_DMG);
+			m_uiSpellTimer = 10000;
+		}
+		else m_uiSpellTimer -= uiDiff;
     }
 };
 
@@ -373,51 +452,41 @@ struct MANGOS_DLL_DECL dark_fiendAI : public ScriptedAI
 ######*/
 struct MANGOS_DLL_DECL mob_voidsentinelAI : public ScriptedAI
 {
-    mob_voidsentinelAI(Creature *c) : ScriptedAI(c) { Reset(); }
+    mob_voidsentinelAI(Creature* pCreature) : ScriptedAI(pCreature) 
+	{ 
+		Reset(); 
+	}
  
-    uint32 AuraTimer;
-    uint32 BlastTimer;
+    uint32 m_uiVoidBlastTimer;
 
     void Reset() 
     {   
-        AuraTimer   = 3000;
-        BlastTimer  = 15000;
+		DoCast(m_creature, SPELL_SHADOW_PULSE);
+        m_uiVoidBlastTimer = 15000;
     }
     
-    void Aggro(Unit *who){}
-    
-    void JustDied(Unit* Killer) 
+    void JustDied(Unit* pKiller) 
     {
-        for(uint8 i=0; i<8; ++i)
+        for(uint8 i = 0; i < 8; ++i)
         {
-            Creature* sTrash = m_creature->SummonCreature(ID_SPAWN, m_creature->GetPositionX()+rand()%2, m_creature->GetPositionY()+rand()%2, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
-            if(Unit* sTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                if(sTrash)
-                    sTrash->AI()->AttackStart(sTarget);
+            if(Creature* pTrash = m_creature->SummonCreature(NPC_VOID_SPAWN, m_creature->GetPositionX()+rand()%2, m_creature->GetPositionY()+rand()%2, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
+				pTrash->SetInCombatWithZone();
         }
     }
-    void KilledUnit(Unit *Victim) {}
       
-    void UpdateAI(const uint32 diff)
+    void UpdateAI(const uint32 uiDiff)
     {
-        //Return since we have no target
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
                 return;
-        
-        if(AuraTimer < diff)
-        {
-            DoCast(m_creature, VOID_AURA);
-            AuraTimer = 3000;
-        }else AuraTimer -=diff;
 
-        if(BlastTimer < diff)
+        if(m_uiVoidBlastTimer < uiDiff)
         {
-            DoCast(m_creature->getVictim(), VOID_BLAST, true);
-            BlastTimer = 20000;
-        }else BlastTimer -= diff;
+            DoCast(m_creature->getVictim(), SPELL_VOID_BLAST);
+            m_uiVoidBlastTimer = urand(1000, 20000);
+        }
+		else m_uiVoidBlastTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
-
     }
 };
 
@@ -426,53 +495,121 @@ struct MANGOS_DLL_DECL mob_voidsentinelAI : public ScriptedAI
 ######*/
 struct MANGOS_DLL_DECL mob_singularityAI : public ScriptedAI
 {
-    mob_singularityAI(Creature *c) : ScriptedAI(c) { Reset(); }
+    mob_singularityAI(Creature* pCreature) : ScriptedAI(pCreature) 
+	{ 
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->setFaction(14);
+		Reset(); 
+	}
  
-    uint32 ChangeTargetTimer;
+    uint32 m_uiChangeTargetTimer;
 
     void Reset()                    
     {
-        m_creature->SetDisplayId(25206);
-        m_creature->CastSpell(m_creature, AURA_SINGULARITY, true);  //Sigularity aura
-        m_creature->CastSpell(m_creature, SPELL_ARCANEFORM, true);
-        ChangeTargetTimer = 5000;
+		DoCast(m_creature, SPELL_BLACK_HOLE_PASSIVE);
+        m_uiChangeTargetTimer = 5000;
     }
-    void Aggro(Unit *who)           {} 
-    void JustDied(Unit* Killer)     {}
-    void KilledUnit(Unit *Victim)   {}
       
-    void UpdateAI(const uint32 diff)
+    void UpdateAI(const uint32 uiDiff)
     {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-                return;
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
 
-        if(ChangeTargetTimer < diff)
-        {
-            if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                m_creature->Attack(target, true);
-            ChangeTargetTimer = 5000;
-        }else ChangeTargetTimer -= diff;
+		if(m_uiChangeTargetTimer < uiDiff)
+		{
+			if(Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+			{
+				m_creature->AddThreat(pTarget, 1000.0f);
+				m_creature->GetMotionMaster()->MoveChase(pTarget);
+				m_creature->Attack(pTarget, true);
+			}
+			m_uiChangeTargetTimer = 5000;
+		}
+		else m_uiChangeTargetTimer -= uiDiff;
     }
 };
 
-CreatureAI* GetAI_boss_muru(Creature *_Creature)
+/*######
+## mob_darkness
+######*/
+struct MANGOS_DLL_DECL mob_darknessAI : public ScriptedAI
 {
-    return new boss_muruAI(_Creature);
-}
+    mob_darknessAI(Creature* pCreature) : ScriptedAI(pCreature) 
+	{ 
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		SetCombatMovement(false);
+		Reset(); 
+	}
  
-CreatureAI* GetAI_dark_fiend(Creature *_Creature)
+    uint32 m_uiSummonTimer;
+	uint32 m_uiVisualTimer;
+	uint32 m_uiDieTimer;
+
+    void Reset()                    
+    {
+		DoCast(m_creature, SPELL_VOID_ZONE_PREEFFECT);
+		m_uiVisualTimer = 3000;
+        m_uiSummonTimer = 5000;
+		m_uiDieTimer = 16000;
+    }
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
+      
+    void UpdateAI(const uint32 uiDiff)
+    {
+		if(m_uiVisualTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_VOID_ZONE_PERIODIC);
+			m_uiVisualTimer = 30000;
+		}
+		else m_uiVisualTimer -= uiDiff;
+
+		if(m_uiSummonTimer < uiDiff)
+		{
+			m_creature->SummonCreature(NPC_DARK_FIEND, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 11000);
+			m_uiSummonTimer = 60000;
+		}
+		else m_uiSummonTimer -= uiDiff;
+
+		if(m_uiDieTimer < uiDiff)
+			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+		else m_uiDieTimer -= uiDiff;
+    }
+};
+
+CreatureAI* GetAI_boss_muru(Creature *pCreature)
 {
-    return new dark_fiendAI(_Creature);
-}
- 
-CreatureAI* GetAI_mob_voidsentinel(Creature *_Creature)
-{
-    return new mob_voidsentinelAI(_Creature);
+    return new boss_muruAI(pCreature);
 }
 
-CreatureAI* GetAI_mob_singularity(Creature *_Creature)
+CreatureAI* GetAI_boss_entropius(Creature *pCreature)
 {
-    return new mob_singularityAI(_Creature);
+    return new boss_entropiusAI(pCreature);
+}
+ 
+CreatureAI* GetAI_mob_dark_fiend(Creature *pCreature)
+{
+    return new mob_dark_fiendAI(pCreature);
+}
+ 
+CreatureAI* GetAI_mob_voidsentinel(Creature *pCreature)
+{
+    return new mob_voidsentinelAI(pCreature);
+}
+
+CreatureAI* GetAI_mob_singularity(Creature *pCreature)
+{
+    return new mob_singularityAI(pCreature);
+}
+
+CreatureAI* GetAI_mob_darkness(Creature *pCreature)
+{
+    return new mob_darknessAI(pCreature);
 }
 
 void AddSC_boss_muru_entropius()
@@ -484,9 +621,14 @@ void AddSC_boss_muru_entropius()
     newscript->GetAI = &GetAI_boss_muru;
     newscript->RegisterSelf();
 
+	newscript = new Script;
+    newscript->Name="boss_entropius";
+    newscript->GetAI = &GetAI_boss_entropius;
+    newscript->RegisterSelf();
+
     newscript = new Script;
-    newscript->Name="dark_fiend";
-    newscript->GetAI = &GetAI_dark_fiend;
+    newscript->Name="mob_dark_fiend";
+    newscript->GetAI = &GetAI_mob_dark_fiend;
     newscript->RegisterSelf();
 
     newscript = new Script;
@@ -496,6 +638,11 @@ void AddSC_boss_muru_entropius()
 
     newscript = new Script;
     newscript->Name="mob_singularity";
+    newscript->GetAI = &GetAI_mob_singularity;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name="mob_darkness";
     newscript->GetAI = &GetAI_mob_singularity;
     newscript->RegisterSelf();
 }

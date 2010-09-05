@@ -43,10 +43,7 @@ enum Sounds
     YELL_KALECGOS       = -1580043,
 
     NPC_KALECGOS        = 25319,
-};
 
-enum Spells
-{
     //Aura
     SPELL_SUNWELLRADIANCE_AURA  = 45769,
     SPELL_NOXIOUSFUMES_AURA     = 47002,
@@ -221,8 +218,8 @@ struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
     {
         DoScriptText(YELL_DEATH, m_creature);
 
-        if(Creature* pKalecgos = m_creature->SummonCreature(NPC_KALECGNOS, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ() + 10, m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 10000))
-            DoScriptText(YELL_KALECGOS, pKalecgos);
+       //if(Creature* pKalecgos = m_creature->SummonCreature(NPC_KALECGNOS, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ() + 10, m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 10000))
+       //     DoScriptText(YELL_KALECGOS, pKalecgos);
 
         if(pInstance)
             pInstance->SetData(TYPE_FELMYST, DONE);

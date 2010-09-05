@@ -100,6 +100,7 @@ enum Speeches
 
 enum spells
 {
+	SPELL_ENTROPIUS_BODY		= 46819,
     //Kilajden Spells
     AURA_SUNWELL_RADIANCE       = 45769, // NOT WORKING
     SPELL_REBIRTH               = 44200, // Emerge from the Sunwell Epick :D
@@ -339,7 +340,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
 
         if(pInstance)
         {
-            pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
+            //pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
             pInstance->SetData(TYPE_KILJAEDEN, NOT_STARTED);
         }
     }
@@ -429,7 +430,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
         }
 
         //Rebirth After Phase1
-        if(pInstance && pInstance->GetData(TYPE_DECIVER) == SPECIAL)
+        //if(pInstance && pInstance->GetData(TYPE_DECIVER) == SPECIAL)
         {
             m_creature->setFaction(14);
             m_creature->CastSpell(m_creature, SPELL_REBIRTH, true);
@@ -437,7 +438,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
             m_creature->SetVisibility(VISIBILITY_ON);
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             pInstance->SetData(TYPE_KILJAEDEN, IN_PROGRESS);
-            pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
+            //pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
         }
 
         if(!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -820,8 +821,8 @@ struct MANGOS_DLL_DECL mob_deceiverAI : public ScriptedAI
         m_fxx = 0;
         m_fyy = 0;
 
-        if(pInstance)
-            pInstance->SetData(TYPE_DECIVER, NOT_STARTED);
+        //if(pInstance)
+        //    pInstance->SetData(TYPE_DECIVER, NOT_STARTED);
 
         if(Creature* pAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
             DoCast(pAnveena, SPELL_ENERGY_DRAIN);
@@ -843,14 +844,14 @@ struct MANGOS_DLL_DECL mob_deceiverAI : public ScriptedAI
 
     void JustDied(Unit* Killer) 
     {
-        if(pInstance && pInstance->GetData(TYPE_DECIVER) == NOT_STARTED)
-            pInstance->SetData(TYPE_DECIVER, IN_PROGRESS);
-        else 
-            if(pInstance && pInstance->GetData(TYPE_DECIVER) == IN_PROGRESS)
-                pInstance->SetData(TYPE_DECIVER, DONE);
-            else
-                if(pInstance && pInstance->GetData(TYPE_DECIVER) == DONE)
-                    pInstance->SetData(TYPE_DECIVER, SPECIAL);
+        //if(pInstance && pInstance->GetData(TYPE_DECIVER) == NOT_STARTED)
+        //    pInstance->SetData(TYPE_DECIVER, IN_PROGRESS);
+        //else 
+        //    if(pInstance && pInstance->GetData(TYPE_DECIVER) == IN_PROGRESS)
+        //        pInstance->SetData(TYPE_DECIVER, DONE);
+        //    else
+        //        if(pInstance && pInstance->GetData(TYPE_DECIVER) == DONE)
+        //            pInstance->SetData(TYPE_DECIVER, SPECIAL);
     }
 
     void KilledUnit(Unit *Victim) {}
@@ -1130,7 +1131,7 @@ struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
 
         if(pInstance)
         {
-            pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
+            //pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
 
             if(pInstance->GetData(TYPE_KILJAEDEN) != DONE)
             {
@@ -1384,7 +1385,7 @@ void AddSC_boss_kiljaden()
 {
     Script *newscript;
 
-    newscript = new Script;
+    /*newscript = new Script;
     newscript->Name="mob_kiljaeden_controller";
     newscript->GetAI = &GetAI_mob_kiljaeden_controller;
     newscript->RegisterSelf();
@@ -1397,7 +1398,7 @@ void AddSC_boss_kiljaden()
     newscript = new Script;
     newscript->Name="mob_shadowspike";
     newscript->GetAI = &GetAI_mob_shadowspike;
-    newscript->RegisterSelf();
+    newscript->RegisterSelf();*/
 
     newscript = new Script;
     newscript->Name="mob_killimp";
