@@ -18,24 +18,7 @@
 SDName: boss_kiljaden
 SD%Complete: 90%
 SDComment: 
-SDAuthor: ScrappyDoo
-SDTestTeam: Legion Of War (c) Andeeria
 EndScriptData */
- 
-/*
-Phase1 100%
-Phase2 100%
-Phase3 100%
-Phase4 100%
-Phase5 100%
-
-DragonOrbs Event            = in progress
-Kalecgos Event              = Implemented
-Kalecgos And Anvena Event   = Implemented
-Outro Event                 = Implemented
-Shield Orb Event            = Implemented
-Shadow Spikes               = Implemented
-*/
 
 #include "precompiled.h"
 #include "sunwell_plateau.h"
@@ -211,12 +194,6 @@ float DeceiverPos[3][2] =
 };
 
 #define GAMEOBJECT_ORB_OF_THE_BLUE_DRAGONFLIGHT 188415
-
-#define GOSSIP_ITEM_1 "cast on me Shield of the Blue Dragon Flight ! Quikly !"
-#define GOSSIP_ITEM_2 "cast on me Dragon Breath: Revitalize !"
-#define GOSSIP_ITEM_3 "cast on me Dragon Breath: Haste !"
-#define GOSSIP_ITEM_4 "cast on me Blink !"
-#define GOSSIP_ITEM_5 "Fight with our Enemy !"
 
 /* --- Kiljaden --- */
 struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
@@ -1194,8 +1171,6 @@ struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
             m_bIsOutroEnd = false;
             m_uiProphetsTimer = 20000;
             m_bIsOnce = false;
-            // make out of combat
-            //m_creature->setFaction(35);
             m_creature->AttackStop();
             m_creature->DeleteThreatList();
         }
@@ -1304,48 +1279,6 @@ struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
     }
 };
 
-//Dragon Gossip Menu
-//This function is called when the player opens the gossip menubool
-bool GossipHello_dragon(Player* pPlayer, Creature* pCreature)
-{
-    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
-    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
-    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_4, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+4);
-    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_5, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+5);
-    pPlayer->PlayerTalkClass->SendGossipMenu(907, pCreature->GetGUID());
-    return true;
-}
-
-bool GossipSelect_dragon(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
-{
-    if (uiSender == GOSSIP_SENDER_MAIN)
-    {
-        switch (uiAction)
-        {
-            case GOSSIP_ACTION_INFO_DEF+1:
-                pCreature->CastSpell(pPlayer, SPELL_SHIELD_OF_BLUE, false);
-                pPlayer->CLOSE_GOSSIP_MENU();
-                return true;
-            case GOSSIP_ACTION_INFO_DEF+2:
-                pPlayer->CastSpell(pPlayer, SPELL_REVITALIZE, true);
-                pPlayer->CLOSE_GOSSIP_MENU();
-                return true;
-            case GOSSIP_ACTION_INFO_DEF+3:
-                pPlayer->CastSpell(pPlayer, SPELL_HASTE, true);
-                pPlayer->CLOSE_GOSSIP_MENU();
-                return true;
-            case GOSSIP_ACTION_INFO_DEF+4:
-                pPlayer->TeleportTo(pPlayer->GetMapId(), pPlayer->GetPositionX()+10, pPlayer->GetPositionY()+10, pPlayer->GetPositionZ(), pPlayer->GetOrientation());
-                pPlayer->CLOSE_GOSSIP_MENU();
-                return true;
-            case GOSSIP_ACTION_INFO_DEF+5:
-                pPlayer->CLOSE_GOSSIP_MENU();
-        }
-    }
-    return true;
-}
-
 CreatureAI* GetAI_mob_killimp(Creature *_Creature)
 {
     return new mob_killimpAI(_Creature);
@@ -1418,11 +1351,5 @@ void AddSC_boss_kiljaden()
     newscript = new Script;
     newscript->Name="mob_deceiver";
     newscript->GetAI = &GetAI_mob_deceiver;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "blue_dragon";
-    newscript->pGossipHello = &GossipHello_dragon;
-    newscript->pGossipSelect = &GossipSelect_dragon;
     newscript->RegisterSelf();
 }

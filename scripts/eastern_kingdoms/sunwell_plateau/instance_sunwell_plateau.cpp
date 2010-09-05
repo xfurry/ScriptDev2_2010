@@ -109,7 +109,10 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
             case 24891: m_uiKalecgos_HumanGUID      = pCreature->GetGUID(); break;
             case 24892: m_uiSathrovarrGUID          = pCreature->GetGUID(); break;
             case 24882: m_uiBrutallusGUID           = pCreature->GetGUID(); break;
-            case 25038: m_uiFelmystGUID             = pCreature->GetGUID(); break;
+            case 25038: m_uiFelmystGUID             = pCreature->GetGUID();
+				if(m_auiEncounter[1] != DONE)
+					pCreature->SetVisibility(VISIBILITY_OFF);
+				break;
             case 25166: m_uiAlythessGUID            = pCreature->GetGUID(); break;
             case 25165: m_uiSacrolashGUID           = pCreature->GetGUID(); break;
             case 25741: m_uiMuruGUID                = pCreature->GetGUID(); break;
@@ -135,6 +138,8 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
                 break;
             case 188119:
                 m_uiIceBarrierGUID = pGo->GetGUID();
+				if(m_auiEncounter[1] != DONE)
+					pGo->SetGoState(GO_STATE_READY);
                 break;
             case 188075:
                 m_uiDoorFireBarrierGUID = pGo->GetGUID();
@@ -199,6 +204,7 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
             case DATA_ANVEENA:              return m_uiAnveenaGUID;
             case DATA_KALECGOS:             return m_uiKalecgosGUID;
             case DATA_GO_FORCEFIELD:        return m_uiForceFieldGUID;
+			case DATA_GO_ICE_BARRIER:		return m_uiIceBarrierGUID;
         }
         return 0;
     }
@@ -217,8 +223,6 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
                 break;
             case TYPE_BRUTALLUS:
 				m_auiEncounter[1] = uiData;
-                if (uiData == SPECIAL)
-                    DoUseDoorOrButton(m_uiIceBarrierGUID,MINUTE);
                 break;
             case TYPE_FELMYST:
                 m_auiEncounter[2] = uiData;
