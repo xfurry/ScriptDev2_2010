@@ -87,7 +87,7 @@ enum jormungars
     SPELL_SWEEP_25HC            = 67646,
 
     SPELL_SLIME_POOL_TRIG       = 66882,
-    SPELL_SLIME_POOL_VISUAL     = 63084,
+    SPELL_SLIME_POOL_VISUAL     = 45212,	//63084,
 
     SPELL_PARALYTIC_TOXIN       = 66823,
     SPELL_ENRAGE                = 68335,
