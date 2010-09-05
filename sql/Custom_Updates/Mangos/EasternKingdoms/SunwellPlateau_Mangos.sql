@@ -31,16 +31,24 @@ UPDATE creature_template SET  `ScriptName` = 'mob_darkness' WHERE `entry` = 2587
 UPDATE `creature_template` SET `flags_extra` = 0 WHERE `entry` = 25770;
 
 -- Kiljaeden 
-#UPDATE `creature_template` SET `ScriptName` = 'boss_kiljaeden' WHERE `entry` IN (25315); 
-#UPDATE `creature_template` SET `ScriptName` = 'mob_deceiver' WHERE `entry` IN (25588); 
-#UPDATE `creature_template` SET `ScriptName` = 'mob_orb' WHERE `entry` IN (25502); 
-#UPDATE `creature_template` SET `ScriptName` = 'mob_armagedon' WHERE `entry` IN (25735); 
-#UPDATE `creature_template` SET `ScriptName` = 'mob_killimp' WHERE `entry` IN (25598);  
--- Shadow Spike
-#UPDATE `creature_template` SET `faction_A` = '14', `faction_H` = '14', `ScriptName` = 'mob_shadowspike' WHERE `entry` IN (30598); 
+UPDATE `creature_template` SET `ScriptName` = 'boss_kiljaeden', `unit_flags` = 4 WHERE `entry` = 25315; 
+UPDATE `creature_template` SET `ScriptName` = 'mob_deceiver' WHERE `entry` = 25588; 
+UPDATE `creature_template` SET `ScriptName` = 'mob_shield_orb' WHERE `entry` = 25502; 
+UPDATE `creature_template` SET `ScriptName` = 'mob_felfire_portal' WHERE `entry` = 25603; 
+UPDATE `creature_template` SET `ScriptName` = 'mob_armagedon_target' WHERE `entry` = 25735; 
+UPDATE `creature_template` SET `ScriptName` = 'mob_felfire_fiend' WHERE `entry` = 25598;
+UPDATE `creature_template` SET `ScriptName` = 'mob_kiljaeden_controller' WHERE `entry` = 25608; 
+UPDATE `creature_template` SET `unit_flags` = 33554438 WHERE `entry` = 25603; 
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('45856', '1', '25653');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('45848', '1', '25653');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('45862', '1', '25653');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('45860', '1', '25653');
+update creature set position_z = 50.0 where id = 26046;
+UPDATE `gameobject_template` SET `type` = 10 WHERE `entry` = 188415;
+Update `gameobject_template` set `flags` = 6553648, `ScriptName` = 'go_orb_of_the_blue_flight' where `entry` = 188415;
 -- Controller
-#delete from creature where id = 25608;
-#insert into creature values (800110,25608,580,1,1,0,0,1698.61,628.414,27.5395,3.99799,604800,0,0,9347800,1693500,0,0);
+delete from creature where id = 25608;
+insert into creature values (800110,25608,580,1,1,0,0,1698.61,628.414,27.5395,3.99799,604800,0,0,9347800,1693500,0,0);
 
 -- Missing or missmatched Doors, from UDB
 #delete from `gameobject` where `id` in (187990, 187764, 187765, 187766, 188118);

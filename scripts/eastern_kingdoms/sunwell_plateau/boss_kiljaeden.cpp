@@ -63,113 +63,120 @@ enum Speeches
     SAY_KALECGOS_ORB3                       = -1580085,
     SAY_KALECGOS_ORB4                       = -1580086,
 
-    // Encounter speech and sounds
-    EMOTE_KJ_DARKNESS   = 0,
-
     /*** Outro Sounds***/
-    SAY_VELEN_01            = -1580087,
-    SAY_VELEN_02            = -1580088,
-    SAY_VELEN_03            = -1580089,
-    SAY_VELEN_04            = -1580090,
-    SAY_VELEN_05            = -1580091,
-    SAY_VELEN_06            = -1580092,
-    SAY_VELEN_07            = -1580093,
-    SAY_VELEN_08            = -1580094,
-    SAY_VELEN_09            = -1580095,
-    SAY_LIADRIN_01          = -1580096,
-    SAY_LIADRIN_02          = -1580097,
-    SAY_LIADRIN_03          = -1580098,
-};
+	SAY_OUTRO_01_VELEN		= -1580087,
+	SAY_OUTRO_02_VELEN		= -1580088,
+	SAY_OUTRO_03_VELEN		= -1580089,
+	SAY_OUTRO_04_VELEN		= -1580090,
+	SAY_OUTRO_05_LIADRIN	= -1580091,
+	SAY_OUTRO_06_VELEN		= -1580092,
+	SAY_OUTRO_07_LIADRIN	= -1580093,
+	SAY_OUTRO_08_VELEN		= -1580094,
+	SAY_OUTRO_09_VELEN		= -1580095,
+	SAY_OUTRO_10_LIADRIN	= -1580096,
+	SAY_OUTRO_11_VELEN		= -1580097,
+	SAY_OUTRO_12_VELEN		= -1580098,
 
-enum spells
-{
-	SPELL_ENTROPIUS_BODY		= 46819,
+	// spells
+	
     //Kilajden Spells
-    AURA_SUNWELL_RADIANCE       = 45769, // NOT WORKING
+	// generic
     SPELL_REBIRTH               = 44200, // Emerge from the Sunwell Epick :D
+	SPELL_DESTROY_DRAKES        = 46707,
 
-    SPELL_SOULFLY               = 45442, // 100%
-    SPELL_DARKNESS_OF_SOULS     = 46605, // 100% Visual Effect
-    SPELL_DARKNESS_EXPLOSION    = 45657, // 100% Damage
-    SPELL_DESTROY_DRAKES        = 46707, // ?
-    SPELL_FIREBLOOM             = 45641, // NOT WORKING
-    SPELL_FIREBLOOM_EFF         = 45642, // 100% Damage
-    SPELL_FLAMEDARTS            = 45737, // 100%
-    SPELL_LEGION_LIGHTING       = 45664, // 100%
+	// phase 2
+    SPELL_SOULFLY               = 45442,
+	SPELL_LEGION_LIGHTING       = 45664,
+	SPELL_FIREBLOOM             = 45641,
 
-    SPELL_SHADOWSPIKE           = 46680, // NOT WORKING -> WorkArround 99%
-    SPELL_SHADOWSPIKE_EXP       = 45885, // 100% damage -> target self cast long range
-    SPELL_SHADOWSPIKE_DEV       = 60851, // aoe 6k dmg
-    SPELL_SHADOWSPIKE_VIS       = 33125, // visual effect
+	// phase 3
+	SPELL_SINISTER_REFLECTION   = 45892,
+	SPELL_SHADOW_SPIKE			= 46680,
+	SPELL_SHADOW_SPIKE_MISSLE	= 46589,
+	SPELL_FLAMEDART				= 45740,
+	SPELL_DARKNESS_EXPLOSION    = 45657, 
+	SPELL_DARKNESS_OF_SOULS     = 46605,
 
-    SPELL_ARMAGEDDON_EXPLOSION  = 45909, // 100% Damage
-    SPELL_ARMAGEDDON_EFFECT     = 24207, // 100% Visual
+	// phase 4
+	SPELL_ARMAGEDDON_TRIGG		= 45921,
+	SPELL_ARMAGEDDON_VISUAL		= 45909,
+	SPELL_ARMAGEDDON_DMG		= 45915,
 
-    SPELL_SINISTER_REFLECTION   = 45892, // NOT WORKING -> WorkArround 99%
-    SPELL_SACRIFICE_OF_ANVEENA  = 46474, // 100%
-
-    SPELL_KNOCKBACK             = 0,     // ?
+	// phase 5
+	// Same spells with lower timers
 
     //Hand of the Deceiver Spells
-    SPELL_FELLFIRE_PORTAL       = 46875, // NOT WORKING -> WorkArround 99%
-    SPELL_SHADOWBOLT_VOLLEY     = 45770, // 100%
-    SPELL_SHADOWINFUSION        = 45772, // 100%
-    SPELL_IMPFUSION             = 45779, // 100%
-    SPELL_SHADOW_CHANNELING     = 46757, // Channeling animation out of combat
-    SPELL_ENERGY_DRAIN          = 60309, // visual on anveena
+    SPELL_FELLFIRE_PORTAL       = 46875,
+    SPELL_SHADOWBOLT_VOLLEY     = 45770,
+    SPELL_SHADOW_INFUSION       = 45772,
+    SPELL_SHADOW_CHANNELING     = 46757,
+	SPELL_SUMMON_FELFIRE_FIEND	= 46464,
+
+	// Felfire fiend
+	SPELL_FELFIRE_FISSION		= 45779,
 
     // Anveena
-    SPELL_ANVEENAS_PRISON       = 46367,
-    SPELL_ANVEENA_EXPLODE       = 46410,
+    SPELL_ANVEENA_PRISON		= 46367,
+    SPELL_ANVEENA_DRAIN			= 46410,
+	SPELL_SACRIFICE_OF_ANVEENA  = 46474,
+	SPELL_ENTROPIUS_BODY		= 46819,
 
     //Orb Spells
-    SPELL_ORB_BOLT_DEV          = 45680, // NOT WORKING
-    SPELL_ORB_BOLT              = 53086, // 100%
+    SPELL_SHADOW_ORB_BOLT_TRIGG = 45679, 
 
     //Reflections Spells
-    SPELL_PRIEST                = 47077, // 100%
-    SPELL_PALADIN               = 37369, // 100%
-    SPELL_PALADIN2              = 37369, // 100%
-    SPELL_WARLOCK               = 46190, // 100%
-    SPELL_WARLOCK2              = 47076, // 100%
-    SPELL_MAGE                  = 47074, // 100%
-    SPELL_ROGUE                 = 45897, // 100%
-    SPELL_WARRIOR               = 17207, // 100%
-    SPELL_DRUID                 = 47072, // 100%
-    SPELL_SHAMAN                = 47071, // 100%
-    SPELL_HUNTER                = 48098, // 100%
+    SPELL_PRIEST                = 47077,
+    SPELL_PALADIN               = 37369,
+    SPELL_PALADIN2              = 37369,
+    SPELL_WARLOCK               = 46190,
+    SPELL_WARLOCK2              = 47076,
+    SPELL_MAGE                  = 47074,
+    SPELL_ROGUE                 = 45897,
+    SPELL_WARRIOR               = 17207,
+    SPELL_DRUID                 = 47072,
+    SPELL_SHAMAN                = 47071,
+    SPELL_HUNTER                = 48098,
 
-    //Orbs of DragonFligth
-    SPELL_REVITALIZE            = 45027, // 100%
-    SPELL_SHIELD_OF_BLUE        = 45848, // 100%
-    AURA_BLUESHIELD             = 44867, // :D
-    SPELL_HASTE                 = 45856, // NOT WORKING
+	// npcs
+	// mics
+    NPC_ANVEENA			= 26046, // Embodiment of the Sunwell
+    NPC_KALECGOS		= 25319, // Helps the raid throughout the fight
+	NPC_BLUE_DRAGON		= 25653, // controlled by players
+    NPC_VELEN			= 26246, // outro
+    NPC_LIADRIN			= 26247, // outro
+	NPC_CORE_ENTROPIUS  = 26262, // Used in the ending cinematic?
 
-    //Other Spells (used by players, etc)
-    SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT  = 45839, // Possess the blue dragon from the orb to help the raid.
-};
+	// encounter
+    NPC_DECIVER			= 25588,
+	NPC_FELFIRE_PORTAL	= 25603,
+    NPC_SHIELD_ORB		= 25502,
+    NPC_SINISTER		= 25708, // Sinister Reflection
+    NPC_ARMAGEDON		= 25735,
+    NPC_FELFIRE_FIEND	= 25598,
+    NPC_DRAGON			= 25653,
+    NPC_SHADOWSPIKE		= 30598,
 
-enum creature_ids
-{
-    ID_ANVEENA      = 26046, // Embodiment of the Sunwell
-    ID_KALECGOS     = 25319, // Helps the raid throughout the fight
-    ID_VELEN        = 26246, // Outro
-    ID_LIADRIN      = 26247, // outro
+	// objects
+	ORB_BLUE_DRAGONFLIGHT				= 188415,
+	SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT  = 45839, // Possess the blue dragon from the orb to help the raid.
 
-    IF_KILJAEDEN_CONTROLLER = 25608,
-	ID_KILJADEN		= 25315,
-    ID_DECIVER      = 25588,
-    ID_SHIELDORB    = 25502,
-    ID_SINISTER     = 25708, // Sinister Reflection
-    ID_ARMAGEDON    = 25735,
-    ID_IMP          = 25598,
-    ID_PORTAL       = 25603, //Imp Portal
-    ID_DRAGON       = 25653,
-    ID_SHADOWSPIKE  = 30598,
-
-    ID_THE_CORE_OF_ENTROPIUS  = 26262, // Used in the ending cinematic?
+	// phases
+	PHASE_IDLE			= 0,
+	PHASE_ONE			= 1,
+	PHASE_TWO			= 2,
+	PHASE_THREE			= 3,
+	PHASE_FOUR			= 4,
+	PHASE_FIFE			= 5,
+	PHASE_OUTRO			= 6,
 };
  
+//Positional defines 
+struct LocationsXY
+{
+    float x, y, z;
+    uint32 id;
+};
+
 float OrbSpawn [4][2] =
 {
     {1853.300f,588.653f},
@@ -178,39 +185,21 @@ float OrbSpawn [4][2] =
     {1853.300f,588.653f},
 };
 
-float DragonSpawnCoord[4][2] =
+/*######
+## boss_kiljaeden
+######*/
+struct MANGOS_DLL_DECL boss_kiljaedenAI : public Scripted_NoMovementAI
 {
-    (1668.711f, 643.723f),
-    (1745.68f, 621.823f),
-    (1704.14f, 583.591f),
-    (1653.12f, 635.41f),
-};
-
-float DeceiverPos[3][2] =
-{
-    (1707.285f, 612.927f),
-    (1684.278f, 614.128f),
-    (1682.442f, 638.069f),
-};
-
-#define GAMEOBJECT_ORB_OF_THE_BLUE_DRAGONFLIGHT 188415
-
-/* --- Kiljaden --- */
-struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
-{
-    boss_kiljadenAI(Creature *c) : Scripted_NoMovementAI(c)
+    boss_kiljaedenAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
-        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
         Reset();
     }
  
-    ScriptedInstance* pInstance;
+    ScriptedInstance* m_pInstance;
     
     uint64 m_uiKalecgosGUID;
     uint64 m_uiAnveenaGUID;
-
-    //BlueShield WorkArround
-    uint32 m_uiCancelShieldTimer;
 
     uint64 m_uiDragonGUID[4];
 
@@ -263,9 +252,6 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
  
     void Reset()
     {
-        //BlueShield WorkArround
-        m_uiCancelShieldTimer = 300000;
-
         //creatures
         m_uiKalecgosGUID = 0;
         m_uiAnveenaGUID = 0;
@@ -306,19 +292,15 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
         if(!m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
-        if(!m_creature->HasAura(AURA_SUNWELL_RADIANCE, EFFECT_INDEX_0))
-            m_creature->CastSpell(m_creature, AURA_SUNWELL_RADIANCE, true);
-
         if(m_creature->HasAura(SPELL_SACRIFICE_OF_ANVEENA, EFFECT_INDEX_0))
             m_creature->RemoveAurasDueToSpell(SPELL_SACRIFICE_OF_ANVEENA,0);
 
         for(uint8 i=0; i<4; ++i)
             m_uiDragonGUID[i] = 0;
 
-        if(pInstance)
+        if(m_pInstance)
         {
-            //pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
-            pInstance->SetData(TYPE_KILJAEDEN, NOT_STARTED);
+            m_pInstance->SetData(TYPE_KILJAEDEN, NOT_STARTED);
         }
     }
     
@@ -326,13 +308,13 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
     {
         m_creature->SetInCombatWithZone();
         
-        if(Creature* pAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
+        if(Creature* pAnveena = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_ANVEENA)))
             pAnveena->SetVisibility(VISIBILITY_OFF);
     }
 
     void JustReachedHome()
     {
-        if(Creature* pKalecgnos = pInstance->instance->GetCreature(m_uiKalecgosGUID))
+        if(Creature* pKalecgnos = m_pInstance->instance->GetCreature(m_uiKalecgosGUID))
             pKalecgnos->ForcedDespawn();
     }
 
@@ -363,7 +345,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
 
         for(i=i; i<k; ++i)
         {
-            Creature* Sinister = m_creature->SummonCreature(ID_SINISTER, victim->GetPositionX()+rand()%3, victim->GetPositionY()+rand()%3, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
+            /*Creature* Sinister = m_creature->SummonCreature(ID_SINISTER, victim->GetPositionX()+rand()%3, victim->GetPositionY()+rand()%3, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
             if(Sinister)
             {
                 Sinister->setFaction(14);
@@ -371,20 +353,14 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
                 Sinister->AI()->AttackStart(Sinister->getVictim());
                 m_uiSinisterGUID[i][0] = Sinister->GetGUID();
                 m_uiSinisterGUID[i][1] = spell;
-            }
+            }*/
         }
     }
 
     void JustDied(Unit* Killer) 
     {
-        if(pInstance)
-            pInstance->SetData(TYPE_KILJAEDEN, DONE);
-    }
-
-    void DamageDeal(Unit* pDoneTo, uint32& uiDamage) 
-    {
-        if(pDoneTo->HasAura(AURA_BLUESHIELD,EFFECT_INDEX_0))
-            uiDamage = uiDamage * 0.05;
+        if(m_pInstance)
+            m_pInstance->SetData(TYPE_KILJAEDEN, DONE);
     }
 
     void UpdateAI(const uint32 diff)
@@ -407,37 +383,24 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
         }
 
         //Rebirth After Phase1
-        //if(pInstance && pInstance->GetData(TYPE_DECIVER) == SPECIAL)
+		if(m_pInstance && m_pInstance->GetData(TYPE_KILJAEDEN) == SPECIAL)
         {
             m_creature->setFaction(14);
             m_creature->CastSpell(m_creature, SPELL_REBIRTH, true);
             DoScriptText(SAY_KJ_EMERGE, m_creature);
             m_creature->SetVisibility(VISIBILITY_ON);
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            pInstance->SetData(TYPE_KILJAEDEN, IN_PROGRESS);
+            m_pInstance->SetData(TYPE_KILJAEDEN, IN_PROGRESS);
             //pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
         }
 
         if(!m_creature->SelectHostileTarget() || !m_creature->getVictim())
                return;
 
-        //FireBloom Damage WorkArround
-        if (m_uiFireBloomCheck < diff)
-        {
-            if(m_uiFireBloomCount < 10)
-                for(uint8 i=0; i<5; ++i)
-                {
-                    if(Unit* FireTarget = m_creature->GetMap()->GetUnit(m_uiFireBloomTarget[i]))
-                        FireTarget->CastSpell(FireTarget, SPELL_FIREBLOOM_EFF, true);
-                }
-            ++m_uiFireBloomCount;
-            m_uiFireBloomCheck = 2000;
-        }else m_uiFireBloomCheck -= diff;
-
         // After Each Phase Dragons Are Spawned
         if((m_uiOrbTimer < diff) && !m_bBoolOrb)
         {
-            if(Creature* pKalec = pInstance->instance->GetCreature(m_uiKalecgosGUID))
+            if(Creature* pKalec = m_pInstance->instance->GetCreature(m_uiKalecgosGUID))
             {
                 switch (rand()%4)
                 {
@@ -452,47 +415,17 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
                 m_uiMaxDragons = 4;
             for(uint8 i=0; i<m_uiMaxDragons; ++i)
             {
-                Creature* Dragon = m_creature->SummonCreature(ID_DRAGON, m_creature->GetPositionX()+urand(20,35), m_creature->GetPositionY()+urand(20,35), m_creature->GetPositionZ()+1, 0, TEMPSUMMON_CORPSE_DESPAWN, 20000);
-                m_uiDragonGUID[i] = Dragon->GetGUID();
+                //Creature* Dragon = m_creature->SummonCreature(ID_DRAGON, m_creature->GetPositionX()+urand(20,35), m_creature->GetPositionY()+urand(20,35), m_creature->GetPositionZ()+1, 0, TEMPSUMMON_CORPSE_DESPAWN, 20000);
+                //m_uiDragonGUID[i] = Dragon->GetGUID();
             }
             m_bBoolOrb = true;
         }else m_uiOrbTimer -= diff;
 
-        for(uint8 i=0; i<4; ++i)
-        {
-            if(Unit* Dragon = m_creature->GetMap()->GetUnit(m_uiDragonGUID[i]))
-                if(Dragon && Dragon->HasAura(SPELL_SHIELD_OF_BLUE))
-                {
-                    m_uiCancelShieldTimer = 5000;
-                    std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
-                    for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
-                    {
-                        Unit *TargetedPlayer = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());  
-                        if (TargetedPlayer && TargetedPlayer->GetTypeId() == TYPEID_PLAYER && TargetedPlayer->IsWithinDistInMap(Dragon, 10) && !TargetedPlayer->HasAura(AURA_BLUESHIELD))
-                            TargetedPlayer->CastSpell(TargetedPlayer,AURA_BLUESHIELD,true);
-                    }
-                }
-        }
-
-        if(m_uiCancelShieldTimer < diff)
-        {
-            std::list<HostileReference *> t_list = m_creature->getThreatManager().getThreatList();
-            for(std::list<HostileReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
-            {
-                Unit *ShieldedPlayer1 = m_creature->GetMap()->GetUnit((*itr)->getUnitGuid());
-                if (ShieldedPlayer1 && ShieldedPlayer1->GetTypeId() == TYPEID_PLAYER && ShieldedPlayer1->HasAura(AURA_BLUESHIELD))
-                {
-                    ShieldedPlayer1->RemoveAurasDueToSpell(AURA_BLUESHIELD);
-                } 
-            }
-            m_uiCancelShieldTimer = 300000;
-        }else m_uiCancelShieldTimer -= diff;
-
         //Kalecgos and Anvena Event
         if((m_uiKalecgosAnvenaTimer < diff) && m_bIsAnvena)
         {
-            if(Creature* pAnveena = pInstance->instance->GetCreature(m_uiAnveenaGUID))
-                if(Creature* pKalec = pInstance->instance->GetCreature(m_uiKalecgosGUID))
+            if(Creature* pAnveena = m_pInstance->instance->GetCreature(m_uiAnveenaGUID))
+                if(Creature* pKalec = m_pInstance->instance->GetCreature(m_uiKalecgosGUID))
                 {
                     switch(m_uiKalecgosAnvenaCount)
                     {
@@ -534,9 +467,9 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
         //Kalecgos Event
         if((m_uiKalecgosTimer < diff) && !m_bIsKalecgosSpawned)
         {
-            if(!GetClosestCreatureWithEntry(m_creature, ID_KALECGOS, 80.0f))
+            //if(!GetClosestCreatureWithEntry(m_creature, ID_KALECGOS, 80.0f))
             {
-                if(Creature* cKalecgos = m_creature->SummonCreature(ID_KALECGOS, m_creature->GetPositionX()-25, m_creature->GetPositionY()-25, m_creature->GetPositionZ() + 5, 0.686f, TEMPSUMMON_TIMED_DESPAWN, 600000))
+                /*if(Creature* cKalecgos = m_creature->SummonCreature(ID_KALECGOS, m_creature->GetPositionX()-25, m_creature->GetPositionY()-25, m_creature->GetPositionZ() + 5, 0.686f, TEMPSUMMON_TIMED_DESPAWN, 600000))
                 {
                     DoScriptText(SAY_KALECGOS_INTRO, cKalecgos);
                     m_uiKalecgosGUID = cKalecgos->GetGUID();
@@ -544,7 +477,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
                     cKalecgos->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     //Kalecgos need to start shhooting arcane bolt into Kiljaeden
                     //Dragon->AI()->AttackStart(m_creature);
-                }
+                }*/
             }
             m_bIsKalecgosSpawned = true;
         }m_uiKalecgosTimer -= diff;
@@ -559,9 +492,9 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
                 l=3;
             for(uint8 k=0; k<l; ++k)
             {
-                Creature* ShieldOrb = m_creature->SummonCreature(ID_SHIELDORB, m_creature->GetPositionX()+urand(1,15), m_creature->GetPositionY()+urand(1,15), m_creature->GetPositionZ()+10, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
-                if(ShieldOrb)
-                    ShieldOrb->AI()->AttackStart(m_creature->getVictim()); 
+                //Creature* ShieldOrb = m_creature->SummonCreature(ID_SHIELDORB, m_creature->GetPositionX()+urand(1,15), m_creature->GetPositionY()+urand(1,15), m_creature->GetPositionZ()+10, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
+                //if(ShieldOrb)
+                //    ShieldOrb->AI()->AttackStart(m_creature->getVictim()); 
             }
             
             m_uiShieldOrbTimer = 50000; 
@@ -602,8 +535,8 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
             
             for(uint8 i=0; i<h; ++i)
             {
-                if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                    Creature* Armagedon = m_creature->SummonCreature(ID_ARMAGEDON, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
+                //if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+                //    Creature* Armagedon = m_creature->SummonCreature(ID_ARMAGEDON, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
             }
             m_uiAramageddonTimer = 14000;
         }else m_uiAramageddonTimer -= diff;
@@ -612,10 +545,10 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
         {
             if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
             {
-                if(Creature* cShadowSpike = m_creature->SummonCreature(ID_SHADOWSPIKE, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 6000))
+                //if(Creature* cShadowSpike = m_creature->SummonCreature(ID_SHADOWSPIKE, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 6000))
                 {
-                    cShadowSpike->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                    cShadowSpike->setFaction(14);
+                    //cShadowSpike->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    //cShadowSpike->setFaction(14);
                 }
 
                 //target->CastSpell(target, SPELL_SHADOWSPIKE_EXP, false);
@@ -711,7 +644,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
             m_bIsAnvena = true;
             m_uiKalecgosAnvenaCount = 0;
 
-            if(Creature* cAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
+            if(Creature* cAnveena = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_ANVEENA)))
             //if(Creature* cAnveena = m_creature->SummonCreature(ID_ANVEENA, m_creature->GetPositionX()+urand(20,30), m_creature->GetPositionY()+urand(20,30), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 120000))
             {
                 m_uiAnveenaGUID = cAnveena->GetGUID();
@@ -728,7 +661,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
         {
             if(m_uiShadowSpikeTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_SHADOWSPIKE);
+                //DoCast(m_creature->getVictim(), SPELL_SHADOWSPIKE);
 
                 m_bShadowSpikeEnds         = true;
                 m_uiShadowSpikeEndsTimer    = 500;
@@ -738,7 +671,7 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
 
             if(m_uiFlameDartTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_FLAMEDARTS);
+                DoCast(m_creature->getVictim(), SPELL_FLAMEDART);
                 m_uiFlameDartTimer = 33000;
             }else m_uiFlameDartTimer -= diff;
         }
@@ -772,317 +705,278 @@ struct MANGOS_DLL_DECL boss_kiljadenAI : public Scripted_NoMovementAI
     }
 };
 
+/*######
+## mob_deciever
+######*/
 struct MANGOS_DLL_DECL mob_deceiverAI : public ScriptedAI
 {
-    mob_deceiverAI(Creature *c) : ScriptedAI(c)
+    mob_deceiverAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+        m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
         Reset();
     }
  
-    ScriptedInstance* pInstance;
+    ScriptedInstance* m_pInstance;
 
-    uint32 m_uiBoltTimer;
+	bool m_bHasInfusion;
+    uint32 m_uiShadowBoltTimer;
     uint32 m_uiPortalTimer;
-    uint32 m_uiImpTimer;
-    uint8 m_uiImpCount;
-    float m_fxx;
-    float m_fyy;
+	bool m_bHasPortal;
+	uint64 m_uiPortalGUID;
  
     void Reset()
     {
-        m_uiPortalTimer = 25000;
-        m_uiBoltTimer = 10000;
-        m_uiImpTimer = 60000;
-        m_uiImpCount = 0;
-        m_fxx = 0;
-        m_fyy = 0;
-
-        //if(pInstance)
-        //    pInstance->SetData(TYPE_DECIVER, NOT_STARTED);
-
-        if(Creature* pAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
-            DoCast(pAnveena, SPELL_ENERGY_DRAIN);
+		DoCast(m_creature, SPELL_SHADOW_CHANNELING);
+		m_bHasInfusion		= false;
+        m_uiPortalTimer		= 25000;
+        m_uiShadowBoltTimer = 10000;
+		m_bHasPortal		= false;
+		m_uiPortalGUID		= 0;
     }
     
-    void Aggro(Unit *who) 
+    void Aggro(Unit* pWho) 
     {
-		if (pInstance)
-            pInstance->SetData(TYPE_KILJAEDEN, IN_PROGRESS);
-
-        if(!m_creature->getVictim())
-			m_creature->AI()->AttackStart(who);
-
-        if(Creature* pAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
-            pAnveena->RemoveAurasDueToSpell(SPELL_ANVEENAS_PRISON);
+		if (m_pInstance)
+            m_pInstance->SetData(TYPE_KILJAEDEN, IN_PROGRESS);
 
         m_creature->CastStop();
-    }
+
+		std::list<Creature*> lDecievers;
+		GetCreatureListWithEntryInGrid(lDecievers, m_creature, NPC_DECIVER, DEFAULT_VISIBILITY_INSTANCE);
+		if (!lDecievers.empty())
+		{
+			for(std::list<Creature*>::iterator iter = lDecievers.begin(); iter != lDecievers.end(); ++iter)
+			{
+				if ((*iter) && (*iter)->isAlive())
+					(*iter)->AI()->AttackStart(pWho);
+			}
+		}
+	}
 
     void JustDied(Unit* Killer) 
     {
-        //if(pInstance && pInstance->GetData(TYPE_DECIVER) == NOT_STARTED)
-        //    pInstance->SetData(TYPE_DECIVER, IN_PROGRESS);
-        //else 
-        //    if(pInstance && pInstance->GetData(TYPE_DECIVER) == IN_PROGRESS)
-        //        pInstance->SetData(TYPE_DECIVER, DONE);
-        //    else
-        //        if(pInstance && pInstance->GetData(TYPE_DECIVER) == DONE)
-        //            pInstance->SetData(TYPE_DECIVER, SPECIAL);
+        // Start phase 2
+		if(Creature* pPortal = m_creature->GetMap()->GetCreature(m_uiPortalGUID))
+			pPortal->ForcedDespawn();
     }
 
-    void KilledUnit(Unit *Victim) {}
+	void JustReachedHome()
+	{
+		if(m_pInstance)
+		{
+			if(m_pInstance->GetData(TYPE_KILJAEDEN) != NOT_STARTED)
+				m_pInstance->SetData(TYPE_KILJAEDEN, NOT_STARTED);
+		}
+	}
+
+	void JustSummoned(Creature* pSummon)
+	{
+		if(pSummon->GetEntry() == NPC_FELFIRE_PORTAL)
+			m_uiPortalGUID = pSummon->GetGUID();
+	}
      
-    void UpdateAI(const uint32 diff)
-    {
-        //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-            return;
+	void UpdateAI(const uint32 uiDiff)
+	{
+		//Return since we have no target
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
 
-        if(m_uiBoltTimer < diff)
-        {
-            DoCast(m_creature->getVictim(), SPELL_SHADOWBOLT_VOLLEY);
-            m_uiBoltTimer = 10000;
-        }else m_uiBoltTimer -= diff;
+		if(m_creature->GetHealthPercent() < 20.0f && !m_bHasInfusion)
+		{
+			m_creature->InterruptNonMeleeSpells(true);
+			DoCast(m_creature, SPELL_SHADOW_INFUSION);
+			m_bHasInfusion = true;
+		}
 
-        if((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) <= 20)
-            if(!m_creature->HasAura(SPELL_SHADOWINFUSION,EFFECT_INDEX_0))
-                m_creature->CastSpell(m_creature, SPELL_SHADOWINFUSION, true);
+		if(m_uiShadowBoltTimer < uiDiff)
+		{
+			m_creature->InterruptNonMeleeSpells(true);
+			DoCast(m_creature, SPELL_SHADOWBOLT_VOLLEY);
+			m_uiShadowBoltTimer = urand(6000, 10000);
+		}
+		else m_uiShadowBoltTimer -= uiDiff;
 
-        if(m_uiPortalTimer < diff)
-        {
-            m_fxx = m_creature->GetPositionX();
-            m_fyy = m_creature->GetPositionY();
+		if(m_uiPortalTimer < uiDiff && !m_bHasPortal)
+		{
+			//DoCast(m_creature, SPELL_FELLFIRE_PORTAL);
+			m_creature->SummonCreature(NPC_FELFIRE_PORTAL, 0, 0, 0, 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
+			m_uiPortalTimer = 30000;
+			m_bHasPortal = true;
+		}
+		else m_uiPortalTimer -= uiDiff;
 
-            Creature* Portal = m_creature->SummonCreature(ID_PORTAL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 20500);
-            m_uiPortalTimer = 30000;
-            m_uiImpTimer = 500;
-            m_uiImpCount = 0;
-        }else m_uiPortalTimer -= diff;
-
-        if(m_uiImpTimer < diff)
-        {
-            if(m_uiImpCount < 4)
-            {
-                Creature* Imp = m_creature->SummonCreature(ID_IMP, m_fxx, m_fyy, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
-                if(Imp)
-                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        Imp->AI()->AttackStart(target);  
-            }
-            m_uiImpTimer = 5000;
-            ++m_uiImpCount;
-        }else m_uiImpTimer -= diff;
-
-        DoMeleeAttackIfReady();
-    }
+		DoMeleeAttackIfReady();
+	}
 };
 
-//Shield Orb AI
-struct MANGOS_DLL_DECL mob_orbAI : public Scripted_NoMovementAI
+/*######
+## mob_shield_orb
+######*/
+struct MANGOS_DLL_DECL mob_shield_orbAI : public Scripted_NoMovementAI
 {
-    mob_orbAI(Creature *c) : Scripted_NoMovementAI(c)
+    mob_shield_orbAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
+		m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
         Reset();
     }
- 
-    uint32 m_uiSpellTimer;
+
+	ScriptedInstance* m_pInstance;
  
     void Reset()
     {
-        m_uiSpellTimer = 1000;
-        m_creature->setFaction(14);
-        m_creature->SetVisibility(VISIBILITY_ON);
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		DoCast(m_creature, SPELL_SHADOW_ORB_BOLT_TRIGG);
+		m_creature->SetRespawnDelay(DAY);
     }
 
-    void DamageDeal(Unit* pDoneTo, uint32& uiDamage) 
-    {
-        if(pDoneTo->HasAura(AURA_BLUESHIELD,EFFECT_INDEX_0))
-            uiDamage = uiDamage * 0.05;
-
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-                return;
-
-        if(m_uiSpellTimer < diff)
-        {
-            for(uint8 i=0; i<3; ++i)
-            {
-                if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                    m_creature->CastSpell(target, SPELL_ORB_BOLT, true);
-            }
-            m_uiSpellTimer = 1000;
-        }else m_uiSpellTimer -= diff;
-    }
+    void UpdateAI(const uint32 uiDiff)
+    { 
+		if(m_pInstance->GetData(TYPE_KILJAEDEN) != IN_PROGRESS)
+			m_creature->ForcedDespawn();
+	}
 };
 
-//Armageddon AI
-struct MANGOS_DLL_DECL mob_armagedonAI : public Scripted_NoMovementAI
+/*######
+## mob_felfire_portal
+######*/
+struct MANGOS_DLL_DECL mob_felfire_portalAI : public Scripted_NoMovementAI
 {
-    mob_armagedonAI(Creature *c) : Scripted_NoMovementAI(c)
+    mob_felfire_portalAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
+		m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+		pCreature->setFaction(14);
         Reset();
     }
- 
-    uint32 m_uiExplosionTimer;
-    uint32 m_uiEffectTimer;
-    bool m_bIsExplosion;
+
+	ScriptedInstance* m_pInstance;
  
     void Reset()
     {
-        m_creature->SetDisplayId(25206);
-
-        m_uiExplosionTimer = 8000;
-        m_uiEffectTimer = 100;
-        m_bIsExplosion = false;
-
-        m_creature->setFaction(14);
-        m_creature->SetVisibility(VISIBILITY_ON);
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		DoCast(m_creature, SPELL_SUMMON_FELFIRE_FIEND);
+		m_creature->SetRespawnDelay(DAY);
     }
 
-    void DamageDeal(Unit* pDoneTo, uint32& uiDamage) 
-    {
-        if(pDoneTo->HasAura(AURA_BLUESHIELD,EFFECT_INDEX_0))
-            uiDamage = uiDamage * 0.05;
-    }
+	void JustSummoned(Creature* pSummon)
+	{
+		pSummon->SetInCombatWithZone();
+	}
 
-    void UpdateAI(const uint32 diff)
-    {
-        if(m_bIsExplosion)
-            return;
-
-        if((m_uiExplosionTimer < diff) && !m_bIsExplosion)
-        {
-            m_creature->CastSpell(m_creature, SPELL_ARMAGEDDON_EXPLOSION, true);
-            m_bIsExplosion = true;
-        }else m_uiExplosionTimer -= diff;
-
-        if(m_uiEffectTimer < diff && !m_bIsExplosion)
-        {
-            m_creature->CastSpell(m_creature,SPELL_ARMAGEDDON_EFFECT,false);
-            m_uiEffectTimer = 1000;
-        }else m_uiEffectTimer -= diff;
-    }
+    void UpdateAI(const uint32 uiDiff)
+    { 
+		if(m_pInstance->GetData(TYPE_KILJAEDEN) != IN_PROGRESS)
+			m_creature->ForcedDespawn();
+	}
 };
 
-// ShadowSpike AI
-struct MANGOS_DLL_DECL mob_shadowspikeAI : public Scripted_NoMovementAI
+/*######
+## mob_armageddon_target
+######*/
+struct MANGOS_DLL_DECL mob_armagedon_targetAI : public Scripted_NoMovementAI
 {
-    mob_shadowspikeAI(Creature *c) : Scripted_NoMovementAI(c)
+    mob_armagedon_targetAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature)
     {
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		pCreature->SetDisplayId(11686);     // make invisible
+		SetCombatMovement(false);
+		pCreature->setFaction(14);
         Reset();
     }
  
-    uint32 m_uiExplosionTimer;
-    bool m_bIsExplosion;
-    uint32 m_uiEffectTimer;
+	uint32 m_uiVisualTimer;
+	uint32 m_uiDamageTimer;
  
     void Reset()
     {
-        m_creature->SetDisplayId(25206);
-
-        m_uiExplosionTimer = 5000;
-        m_bIsExplosion = false;
-        m_uiEffectTimer = 500;
-
-        m_creature->setFaction(14);
-        m_creature->SetVisibility(VISIBILITY_ON);
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_uiVisualTimer	= 3000;
+		m_uiDamageTimer	= 4000;
     }
 
-    void DamageDeal(Unit* pDoneTo, uint32& uiDamage) 
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
+
+    void UpdateAI(const uint32 uiDiff)
     {
-        if(pDoneTo->HasAura(AURA_BLUESHIELD,EFFECT_INDEX_0))
-            uiDamage = uiDamage * 0.05;
+        if(m_uiVisualTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_ARMAGEDDON_VISUAL);
+			m_uiVisualTimer = 10000;
+		}
+		else m_uiVisualTimer -= uiDiff;
 
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if(m_bIsExplosion)
-            return;
-
-        if((m_uiExplosionTimer < diff) && !m_bIsExplosion)
-        {
-            m_creature->CastSpell(m_creature, SPELL_SHADOWSPIKE_DEV, true);
-            m_bIsExplosion = true;
-        }else m_uiExplosionTimer -= diff;
-
-        if(m_uiEffectTimer < diff && !m_bIsExplosion)
-        {
-            m_creature->CastSpell(m_creature,SPELL_SHADOWSPIKE_VIS,false);
-            m_uiEffectTimer = 1000;
-        }else m_uiEffectTimer -= diff;
+		if(m_uiDamageTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_ARMAGEDDON_DMG);
+			m_uiDamageTimer = 10000;
+		}
+		else m_uiDamageTimer -= uiDiff;
     }
 };
 
-// Imp AI
-struct MANGOS_DLL_DECL mob_killimpAI : public ScriptedAI
+/*######
+## mob_felfire_fiend
+######*/
+struct MANGOS_DLL_DECL mob_felfire_fiendAI : public ScriptedAI
 {
-    mob_killimpAI(Creature *c) : ScriptedAI(c) 
+    mob_felfire_fiendAI(Creature* pCreature) : ScriptedAI(pCreature) 
     {
 	    Reset(); 
     }
 
-    bool m_bIsReached;
-    uint32 m_uiVisibilityTimer ;
+    bool m_bMustDie;
+	uint32 m_uiDieTimer;
 
     void Reset() 
     {
-        m_bIsReached = false;
+        m_bMustDie = false;
     }
 
-    void JustDied(Unit* Killer) 
+	void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+	{
+		if(uiDamage > m_creature->GetHealth())
+		{
+			uiDamage = 0;
+			if(!m_bMustDie)
+			{
+				DoCast(m_creature, SPELL_FELFIRE_FISSION);
+				m_uiDieTimer = 500;
+				m_bMustDie = true;
+			}
+		}
+	}
+
+    void UpdateAI(const uint32 uiDiff)
     {
-        if(!m_bIsReached)
-        {
-            m_creature->CastSpell(m_creature->getVictim(), SPELL_IMPFUSION, true);
-            m_bIsReached = true;
-        }
-    }
+		if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
+			return;
 
-    void UpdateAI(const uint32 diff)
-    {
-        //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-                return;
+		if(m_uiDieTimer < uiDiff && m_bMustDie)
+			m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+		else m_uiDieTimer -= uiDiff;
 
-        if( m_creature->isAttackReady() && !m_creature->IsNonMeleeSpellCasted(false))
-        {
-            if(m_bIsReached)
-                if(m_uiVisibilityTimer < diff)
-                {
-                    m_creature->SetVisibility(VISIBILITY_OFF);
-                    m_uiVisibilityTimer = 60000;
-                }else m_uiVisibilityTimer -= diff;
+		if (m_creature->IsWithinDistInMap(m_creature->getVictim(), ATTACK_DISTANCE) && !m_bMustDie)
+		{
+			DoCast(m_creature, SPELL_FELFIRE_FISSION);
+			m_uiDieTimer = 500;
+			m_bMustDie = true;
+		}
 
-            //If we are within range melee the target
-            if(!m_bIsReached)
-                if(m_creature->IsWithinDistInMap(m_creature->getVictim(), 3.0f))
-                {
-                    m_creature->CastSpell(m_creature->getVictim(), SPELL_IMPFUSION, true);
-                    m_uiVisibilityTimer = 2000;
-                    m_bIsReached = true;
-                }
-        }
+		DoMeleeAttackIfReady();
     }
 };          
 
-// Kiljaeden Controller Event AI
+/*######
+## mob_kiljaeden_controller
+######*/
 struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
 {
-    mob_kiljaeden_controllerAI(Creature *c) : Scripted_NoMovementAI(c) 
+    mob_kiljaeden_controllerAI(Creature* pCreature) : Scripted_NoMovementAI(pCreature) 
     {
-	    pInstance = ((ScriptedInstance*)c->GetInstanceData());
-        SetCombatMovement(false);
+	    m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
 	    Reset(); 
     }
-    ScriptedInstance* pInstance; 
+    ScriptedInstance* m_pInstance; 
 
     uint32 m_uiProphetsTimer;
     uint32 m_uiProphetsCount;
@@ -1097,6 +991,7 @@ struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
 
     void Reset() 
     { 
+		DoCast(m_creature, SPELL_ANVEENA_DRAIN);
         m_bIsProhetSpawned = true;
         m_bIsOutroEnd = true;
         m_creature->setFaction(14);
@@ -1106,26 +1001,17 @@ struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
         m_uiVelenGUID       = 0;
         m_uiLiadrinGUID    = 0;
 
-        if(pInstance)
+        if(m_pInstance)
         {
-            //pInstance->SetData(TYPE_DECIVER, NOT_STARTED); 
-
-            if(pInstance->GetData(TYPE_KILJAEDEN) != DONE)
+            if(m_pInstance->GetData(TYPE_KILJAEDEN) != DONE)
             {
-                if(Creature* pAnveena = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_ANVEENA)))
-                {
-                    pAnveena->CastSpell(pAnveena, SPELL_ANVEENAS_PRISON, false);
-                    pAnveena->SetVisibility(VISIBILITY_ON);
-                    pAnveena->GetMap()->CreatureRelocation(pAnveena, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation());
-                }
+                if(Creature* pAnveena = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_ANVEENA)))
+                    pAnveena->CastSpell(pAnveena, SPELL_ANVEENA_PRISON, false);
 
-                if(Creature* pKiljaeden = m_creature->GetMap()->GetCreature(pInstance->GetData64(DATA_KILJAEDEN)))
-                {
+                if(Creature* pKiljaeden = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_KILJAEDEN)))
                     pKiljaeden->AI()->EnterEvadeMode();
-                    pKiljaeden->SetHealth(pKiljaeden->GetMaxHealth());
-                }
 
-                GetCreatureListWithEntryInGrid(lDecievers, m_creature, ID_DECIVER, DEFAULT_VISIBILITY_INSTANCE);
+                GetCreatureListWithEntryInGrid(lDecievers, m_creature, NPC_DECIVER, DEFAULT_VISIBILITY_INSTANCE);
                 if (!lDecievers.empty())
                 {
                     for(std::list<Creature*>::iterator iter = lDecievers.begin(); iter != lDecievers.end(); ++iter)
@@ -1138,33 +1024,9 @@ struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
         }
     }
 
-    void Aggro(Unit *who)
-    { 
-        m_creature->SetInCombatWithZone();
-
-        /*for(uint8 i=0; i<3; ++i)
-        {
-            Creature* Deveiver = m_creature->SummonCreature(ID_DECIVER, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 10000);
-                if(Deveiver)
-                    if(Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-                        Deveiver->AI()->AttackStart(target);
-        }*/
-    }
-
     void UpdateAI(const uint32 diff)
     {
-        /*if(pInstance && pInstance->GetData(TYPE_KILJAEDEN) == NOT_STARTED)
-        {
-            Creature* pDeciever = GetClosestCreatureWithEntry(m_creature, ID_DECIVER, 80.0f);
-
-            if(!pDeciever || !pDeciever->isAlive())
-            {
-                if(Creature* pKiljaeden = ((Creature*)Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_KILJAEDEN))))
-                    pKiljaeden->setFaction(14);
-            }
-        }*/
-
-        if(pInstance && pInstance->GetData(TYPE_KILJAEDEN) == DONE && m_bIsOnce)
+        if(m_pInstance && m_pInstance->GetData(TYPE_KILJAEDEN) == DONE && m_bIsOnce)
         {
             m_bIsProhetSpawned = false;
             m_uiProphetsCount = 0;
@@ -1177,29 +1039,29 @@ struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
 
         if(!m_bIsProhetSpawned)
         {   
-            if(!GetClosestCreatureWithEntry(m_creature, ID_VELEN, 80.0f))
+            //if(!GetClosestCreatureWithEntry(m_creature, ID_VELEN, 80.0f))
             {
-                Creature* Velen = m_creature->SummonCreature(ID_VELEN, m_creature->GetPositionX()+20, m_creature->GetPositionY()+20, m_creature->GetPositionZ(), 3.874f, TEMPSUMMON_TIMED_DESPAWN, 360000);
-                Velen->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                Velen->setFaction(35);
-                m_uiVelenGUID = Velen->GetGUID();
+                //Creature* Velen = m_creature->SummonCreature(ID_VELEN, m_creature->GetPositionX()+20, m_creature->GetPositionY()+20, m_creature->GetPositionZ(), 3.874f, TEMPSUMMON_TIMED_DESPAWN, 360000);
+                //Velen->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                //Velen->setFaction(35);
+                //m_uiVelenGUID = Velen->GetGUID();
             }
-            else
+            //else
             {
-                 if(Creature* Velen = GetClosestCreatureWithEntry(m_creature, ID_VELEN, 80.0f))
-                     m_uiVelenGUID = Velen->GetGUID();
+                 //if(Creature* Velen = GetClosestCreatureWithEntry(m_creature, ID_VELEN, 80.0f))
+                 //    m_uiVelenGUID = Velen->GetGUID();
             }
-            if(!GetClosestCreatureWithEntry(m_creature, ID_LIADRIN, 80.0f))
+            //if(!GetClosestCreatureWithEntry(m_creature, ID_LIADRIN, 80.0f))
             {
-                Creature* Liadrin = m_creature->SummonCreature(ID_LIADRIN, m_creature->GetPositionX()+20, m_creature->GetPositionY()+17, m_creature->GetPositionZ(), 3.874f, TEMPSUMMON_TIMED_DESPAWN, 360000);
-                Liadrin->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                Liadrin->setFaction(35);
-                m_uiLiadrinGUID = Liadrin->GetGUID();
+                //Creature* Liadrin = m_creature->SummonCreature(ID_LIADRIN, m_creature->GetPositionX()+20, m_creature->GetPositionY()+17, m_creature->GetPositionZ(), 3.874f, TEMPSUMMON_TIMED_DESPAWN, 360000);
+                //Liadrin->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                //Liadrin->setFaction(35);
+                //m_uiLiadrinGUID = Liadrin->GetGUID();
             }
-            else
+            //else
             {
-                if(Creature* Liadrin = GetClosestCreatureWithEntry(m_creature, ID_LIADRIN, 80.0f))
-                    m_uiLiadrinGUID = Liadrin->GetGUID();
+                //if(Creature* Liadrin = GetClosestCreatureWithEntry(m_creature, ID_LIADRIN, 80.0f))
+                //    m_uiLiadrinGUID = Liadrin->GetGUID();
             }
             m_bIsProhetSpawned = true;
         }
@@ -1209,147 +1071,163 @@ struct MANGOS_DLL_DECL mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
             switch(m_uiProphetsCount)
             {
                 case 0:
-                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
-                        DoScriptText(SAY_VELEN_01, pVelen); 
+                    if(Creature* pVelen = m_pInstance->instance->GetCreature(m_uiVelenGUID))
+						DoScriptText(SAY_OUTRO_01_VELEN, pVelen); 
                     m_uiProphetsTimer = 25000; 
-                    break; //1
+                    break;
                 case 1:
-                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
-                        DoScriptText(SAY_VELEN_02, pVelen); 
+                    if(Creature* pVelen = m_pInstance->instance->GetCreature(m_uiVelenGUID))
+                        DoScriptText(SAY_OUTRO_02_VELEN, pVelen); 
                     m_uiProphetsTimer = 15000; 
-                    break; //2
+                    break;
                 case 2:
-                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
-                        DoScriptText(SAY_VELEN_03, pVelen); 
+                    if(Creature* pVelen = m_pInstance->instance->GetCreature(m_uiVelenGUID))
+                        DoScriptText(SAY_OUTRO_03_VELEN, pVelen); 
                     m_uiProphetsTimer = 10000; 
-                    break;  //2
+                    break;
                 case 3:
-                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
-                        DoScriptText(SAY_VELEN_04, pVelen); 
+                    if(Creature* pVelen = m_pInstance->instance->GetCreature(m_uiVelenGUID))
+                        DoScriptText(SAY_OUTRO_04_VELEN, pVelen); 
                     m_uiProphetsTimer = 26000; 
-                    break; //3
+                    break;
                 case 9:
-                    if(Creature* pLiadrin = pInstance->instance->GetCreature(m_uiLiadrinGUID))
-                        DoScriptText(SAY_LIADRIN_01, pLiadrin); 
+                    if(Creature* pLiadrin = m_pInstance->instance->GetCreature(m_uiLiadrinGUID))
+						DoScriptText(SAY_OUTRO_05_LIADRIN, pLiadrin); 
                     m_uiProphetsTimer = 20000; 
-                    break; //9
+                    break;
                 case 5:
-                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
-                        DoScriptText(SAY_VELEN_05, pVelen); 
+                    if(Creature* pVelen = m_pInstance->instance->GetCreature(m_uiVelenGUID))
+                        DoScriptText(SAY_OUTRO_06_VELEN, pVelen); 
                     m_uiProphetsTimer = 16000;
-                    break; //5
+                    break;
                 case 6:
-                    if(Creature* pLiadrin = pInstance->instance->GetCreature(m_uiLiadrinGUID))
-                        DoScriptText(SAY_LIADRIN_02,pLiadrin); 
+                    if(Creature* pLiadrin = m_pInstance->instance->GetCreature(m_uiLiadrinGUID))
+                        DoScriptText(SAY_OUTRO_07_LIADRIN,pLiadrin); 
                     m_uiProphetsTimer = 3000; 
-                    break; //6
+                    break;
                 case 7:
-                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
-                        DoScriptText(SAY_VELEN_06,pVelen); 
+                    if(Creature* pVelen = m_pInstance->instance->GetCreature(m_uiVelenGUID))
+                        DoScriptText(SAY_OUTRO_08_VELEN,pVelen); 
                     m_uiProphetsTimer = 17000; 
-                    break; //7
+                    break;
                 case 8:
-                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
-                        DoScriptText(SAY_VELEN_07, pVelen); 
+                    if(Creature* pVelen = m_pInstance->instance->GetCreature(m_uiVelenGUID))
+                        DoScriptText(SAY_OUTRO_09_VELEN, pVelen); 
                     m_uiProphetsTimer = 16000; 
-                    break; //8
+                    break;
                 case 4:
-                    if(Creature* pLiadrin = pInstance->instance->GetCreature(m_uiLiadrinGUID))
-                        DoScriptText(SAY_LIADRIN_03, pLiadrin); 
+                    if(Creature* pLiadrin = m_pInstance->instance->GetCreature(m_uiLiadrinGUID))
+                        DoScriptText(SAY_OUTRO_10_LIADRIN, pLiadrin); 
                     m_uiProphetsTimer = 11000; 
-                    break; //4
+                    break;
                 case 10:
-                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
-                        DoScriptText(SAY_VELEN_08, pVelen); 
+                    if(Creature* pVelen = m_pInstance->instance->GetCreature(m_uiVelenGUID))
+                        DoScriptText(SAY_OUTRO_11_VELEN, pVelen); 
                     m_uiProphetsTimer = 7000; 
-                    break; //10
+                    break;
                 case 11:
-                    if(Creature* pVelen = pInstance->instance->GetCreature(m_uiVelenGUID))
-                        DoScriptText(SAY_VELEN_09, pVelen); 
-                    break; //11
+                    if(Creature* pVelen = m_pInstance->instance->GetCreature(m_uiVelenGUID))
+                        DoScriptText(SAY_OUTRO_12_VELEN, pVelen); 
+                    break;
                 m_bIsOutroEnd = true; 
                 m_creature->setFaction(35);           
             }
             ++m_uiProphetsCount;
         }m_uiProphetsTimer -= diff;
-
-        //Return since we have no target
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-                return;
     }
 };
 
-CreatureAI* GetAI_mob_killimp(Creature *_Creature)
+bool GOHello_go_orb_of_the_blue_flight(Player* pPlayer, GameObject* pGo)
 {
-    return new mob_killimpAI(_Creature);
+    if (ScriptedInstance* pInstance = (ScriptedInstance*)pPlayer->GetInstanceData())
+    {
+		if(pInstance->GetData(TYPE_KILJAEDEN) == IN_PROGRESS)
+		{
+			if(Creature* pDragon = pPlayer->SummonCreature(NPC_BLUE_DRAGON, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 120000))
+				pPlayer->CastSpell(pDragon, SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT, false);
+			pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+		}
+    }
+
+    return true;
 }
 
-CreatureAI* GetAI_mob_shadowspike(Creature *_Creature)
+CreatureAI* GetAI_mob_felfire_fiend(Creature *pCreature)
 {
-    return new mob_shadowspikeAI(_Creature);
+    return new mob_felfire_fiendAI(pCreature);
 }
 
-CreatureAI* GetAI_mob_deceiver(Creature *_Creature)
+CreatureAI* GetAI_mob_deceiver(Creature *pCreature)
 {
-    return new mob_deceiverAI(_Creature);
+    return new mob_deceiverAI(pCreature);
 }
 
-CreatureAI* GetAI_mob_armagedon(Creature *_Creature)
+CreatureAI* GetAI_mob_armagedon_target(Creature *pCreature)
 {
-    return new mob_armagedonAI(_Creature);
+    return new mob_armagedon_targetAI(pCreature);
 }
 
-CreatureAI* GetAI_boss_kiljaden(Creature *_Creature)
+CreatureAI* GetAI_boss_kiljaeden(Creature *pCreature)
 {
-    return new boss_kiljadenAI(_Creature);
+    return new boss_kiljaedenAI(pCreature);
 }
 
-CreatureAI* GetAI_mob_orb(Creature *_Creature)
+CreatureAI* GetAI_mob_shield_orb(Creature *pCreature)
 {
-    return new mob_orbAI(_Creature);
+    return new mob_shield_orbAI(pCreature);
 }
 
-CreatureAI* GetAI_mob_kiljaeden_controller(Creature *_Creature)
+CreatureAI* GetAI_mob_felfire_portal(Creature *pCreature)
 {
-    return new mob_kiljaeden_controllerAI(_Creature);
+    return new mob_felfire_portalAI(pCreature);
+}
+
+CreatureAI* GetAI_mob_kiljaeden_controller(Creature *pCreature)
+{
+    return new mob_kiljaeden_controllerAI(pCreature);
 }
 
 void AddSC_boss_kiljaden()
 {
     Script *newscript;
 
-    /*newscript = new Script;
+    newscript = new Script;
     newscript->Name="mob_kiljaeden_controller";
     newscript->GetAI = &GetAI_mob_kiljaeden_controller;
     newscript->RegisterSelf();
 
     newscript = new Script;
     newscript->Name="boss_kiljaeden";
-    newscript->GetAI = &GetAI_boss_kiljaden;
+    newscript->GetAI = &GetAI_boss_kiljaeden;
     newscript->RegisterSelf();
 
     newscript = new Script;
-    newscript->Name="mob_shadowspike";
-    newscript->GetAI = &GetAI_mob_shadowspike;
-    newscript->RegisterSelf();*/
-
-    newscript = new Script;
-    newscript->Name="mob_killimp";
-    newscript->GetAI = &GetAI_mob_killimp;
+    newscript->Name="mob_felfire_fiend";
+    newscript->GetAI = &GetAI_mob_felfire_fiend;
     newscript->RegisterSelf();
 
     newscript = new Script;
-    newscript->Name="mob_orb";
-    newscript->GetAI = &GetAI_mob_orb;
+    newscript->Name="mob_shield_orb";
+    newscript->GetAI = &GetAI_mob_shield_orb;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name="mob_felfire_portal";
+    newscript->GetAI = &GetAI_mob_felfire_portal;
     newscript->RegisterSelf();
 
     newscript = new Script;
-    newscript->Name="mob_armagedon";
-    newscript->GetAI = &GetAI_mob_armagedon;
+    newscript->Name="mob_armagedon_target";
+    newscript->GetAI = &GetAI_mob_armagedon_target;
     newscript->RegisterSelf();
 
     newscript = new Script;
     newscript->Name="mob_deceiver";
     newscript->GetAI = &GetAI_mob_deceiver;
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "go_orb_of_the_blue_flight";
+	newscript->pGOHello = &GOHello_go_orb_of_the_blue_flight;
     newscript->RegisterSelf();
 }
