@@ -208,20 +208,17 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
         switch(uiType)
         {
             case TYPE_KALECGOS:
-                if (uiData == IN_PROGRESS)
-                    SpectralRealmList.clear();
-
-                DoUseDoorOrButton(m_uiForceFieldGUID);
+				m_auiEncounter[0] = uiData;
+				DoUseDoorOrButton(m_uiForceFieldGUID);
                 DoUseDoorOrButton(m_uiBossCollision1GUID);
                 DoUseDoorOrButton(m_uiBossCollision2GUID);
-
-                m_auiEncounter[0] = uiData;
+                if (uiData == IN_PROGRESS)
+                    SpectralRealmList.clear();
                 break;
             case TYPE_BRUTALLUS:
+				m_auiEncounter[1] = uiData;
                 if (uiData == SPECIAL)
                     DoUseDoorOrButton(m_uiIceBarrierGUID,MINUTE);
-
-                m_auiEncounter[1] = uiData;
                 break;
             case TYPE_FELMYST:
                 m_auiEncounter[2] = uiData;
@@ -275,30 +272,8 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
     {
         debug_log("SD2: Ejecting Player %s from Spectral Realm", pPlayer->GetName());
 
-        // Put player back in Kalecgos(Dragon)'s threat list
-        /*if (Creature* pKalecgos = instance->GetCreature(m_uiKalecgos_DragonGUID))
-        {
-            if (pKalecgos->isAlive())
-            {
-                debug_log("SD2: Adding %s in Kalecgos' threatlist", pPlayer->GetName());
-                pKalecgos->AddThreat(pPlayer);
-            }
-        }
-
-        // Remove player from Sathrovarr's threat list
-        if (Creature* pSath = instance->GetCreature(m_uiSathrovarrGUID))
-        {
-            if (pSath->isAlive())
-            {
-                if (HostileReference* pRef = pSath->getThreatManager().getOnlineContainer().getReferenceByTarget(pPlayer))
-                {
-                    pRef->removeReference();
-                    debug_log("SD2: Deleting %s from Sathrovarr's threatlist", pPlayer->GetName());
-                }
-            }
-        }*/
-
-        pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_NORMAL_REALM, true);
+		pPlayer->TeleportTo(pPlayer->GetMapId(), pPlayer->GetPositionX(), pPlayer->GetPositionY(), pPlayer->GetPositionZ()+135.0f, pPlayer->GetOrientation());
+        //pPlayer->CastSpell(pPlayer, SPELL_TELEPORT_NORMAL_REALM, true);	// spell not working right
         pPlayer->CastSpell(pPlayer, SPELL_SPECTRAL_EXHAUSTION, true);
     }
 
@@ -319,8 +294,6 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
                 EjectPlayer(plr);
             }
         }
-
-        //SpectralRealmList.clear();
     }
 
     void Update(uint32 uiDiff)
