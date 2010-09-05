@@ -127,6 +127,7 @@ enum
     GO_GIFT_OF_OBSERVER         = 194822,
     GO_GIFT_OF_OBSERVER_HH      = 194823,   // unk
     // Freya -> each chest is for a mode = more elders alive = more items in chest
+	// not used, summoned by spell
     // 10 man
     GO_FREYA_GIFT               = 194324,//10 normal
     GO_FREYA_GIFT_1             = 194325,//10 1 elder

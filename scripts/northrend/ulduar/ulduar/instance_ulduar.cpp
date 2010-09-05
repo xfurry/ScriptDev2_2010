@@ -138,10 +138,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
     uint64 m_uiHodirRareLootGUID;
     uint64 m_uiThorimLootGUID;
     uint64 m_uiThorimRareLootGUID;
-    uint64 m_uiFreyaLootGUID;
-    uint64 m_uiFreyaLoot1GUID;
-    uint64 m_uiFreyaLoot2GUID;
-    uint64 m_uiFreyaLoot3GUID;
     uint64 m_uiMimironLootGUID;
     uint64 m_uiMimironHardLootGUID;
     uint64 m_uiAlagonLootGUID;
@@ -197,10 +193,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         m_uiHodirRareLootGUID   = 0;
         m_uiThorimLootGUID      = 0;
         m_uiThorimRareLootGUID  = 0;
-        m_uiFreyaLootGUID       = 0;
-        m_uiFreyaLoot1GUID      = 0;
-        m_uiFreyaLoot2GUID      = 0; 
-        m_uiFreyaLoot3GUID      = 0;
         m_uiMimironLootGUID     = 0;
         m_uiMimironHardLootGUID = 0;
         m_uiAlagonLootGUID      = 0;
@@ -578,41 +570,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 m_uiHodirRareLootGUID = pGo->GetGUID();
             break;
 
-            // Freya
-        case GO_FREYA_GIFT:
-            if(Regular)
-                m_uiFreyaLootGUID = pGo->GetGUID();
-            break;
-        case GO_FREYA_GIFT_H:
-            if(!Regular)
-                m_uiFreyaLootGUID = pGo->GetGUID();
-            break;
-            // Freya rare
-        case GO_FREYA_GIFT_1:   
-            if(Regular)
-                m_uiFreyaLoot1GUID = pGo->GetGUID();
-            break;
-        case GO_FREYA_GIFT_H_1: 
-            if(!Regular)
-                m_uiFreyaLoot1GUID = pGo->GetGUID();
-            break;
-        case GO_FREYA_GIFT_2:
-            if(Regular)
-                m_uiFreyaLoot2GUID = pGo->GetGUID();
-            break;
-        case GO_FREYA_GIFT_H_2:
-            if(!Regular)
-                m_uiFreyaLoot2GUID = pGo->GetGUID();
-            break;
-        case GO_FREYA_GIFT_3:
-            if(Regular)
-                m_uiFreyaLoot3GUID = pGo->GetGUID();
-            break;
-        case GO_FREYA_GIFT_H_3:
-            if(!Regular)
-                m_uiFreyaLoot3GUID = pGo->GetGUID();
-            break;
-
             // Thorim
         case GO_CACHE_OF_STORMS:
             if(Regular)
@@ -783,15 +740,6 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             m_auiEncounter[10] = uiData;
             if (uiData == DONE)
             {
-                // do this in order to see how many elders were alive and spawn the correct chest
-                if(m_auiHardBoss[6] == 0)
-                    DoRespawnGameObject(m_uiFreyaLootGUID, 30*MINUTE);
-                else if(m_auiHardBoss[6] == 1)
-                    DoRespawnGameObject(m_uiFreyaLoot1GUID, 30*MINUTE);
-                else if(m_auiHardBoss[6] == 2)
-                    DoRespawnGameObject(m_uiFreyaLoot2GUID, 30*MINUTE);
-                else if(m_auiHardBoss[6] == 3)
-                    DoRespawnGameObject(m_uiFreyaLoot3GUID, 30*MINUTE);
                 DoSpawnFreya();
                 OpenMadnessDoor();
                 CheckKeepers();
@@ -823,7 +771,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
             m_auiHardBoss[0] = uiData;  // todo: add extra loot
             break;
         case TYPE_XT002_HARD:
-            m_auiHardBoss[1] = uiData;  // hard mode loot in sql
+            m_auiHardBoss[1] = uiData;  // todo: add extra loot
             break;
         case TYPE_HODIR_HARD:
             m_auiHardBoss[4] = uiData;
@@ -831,10 +779,10 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 DoRespawnGameObject(m_uiHodirRareLootGUID, 30*MINUTE);
             break;
         case TYPE_ASSEMBLY_HARD:
-            m_auiHardBoss[2] = uiData;  // hard mode loot in sql
+            m_auiHardBoss[2] = uiData;  // todo: add extra loot
             break;
         case TYPE_FREYA_HARD:
-            m_auiHardBoss[6] = uiData;  // hard mode loot in the script above
+            m_auiHardBoss[6] = uiData;  // hard mode loot in the script
             break;
         case TYPE_THORIM_HARD:
             m_auiHardBoss[5] = uiData;
@@ -847,7 +795,7 @@ struct MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
                 DoRespawnGameObject(m_uiMimironHardLootGUID, 30*MINUTE);
             break;
         case TYPE_VEZAX_HARD:
-            m_auiHardBoss[7] = uiData;  // hard mode loot in sql
+            m_auiHardBoss[7] = uiData;  // todo: add extra loot
             break;
         case TYPE_YOGGSARON_HARD:
             m_auiHardBoss[8] = uiData;  // todo: add extra loot

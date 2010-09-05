@@ -168,15 +168,16 @@ enum
     SPELL_PETRIFIED_BARK        = 62337,
     SPELL_PETRIFIED_BARK_H      = 62933,
 
-    // not used because summoned chest doesn't despawn after looted
-    SPELL_SUMMON_CHEST_1                = 62950,
-    SPELL_SUMMON_CHEST_2                = 62952,
-    SPELL_SUMMON_CHEST_3                = 62953,
-    SPELL_SUMMON_CHEST_4                = 62954,
-    SPELL_SUMMON_CHEST_5                = 62955,
-    SPELL_SUMMON_CHEST_6                = 62956,
-    SPELL_SUMMON_CHEST_7                = 62957,
-    SPELL_SUMMON_CHEST_8                = 62958,
+    // 10 man
+    SPELL_SUMMON_CHEST_0	            = 62950,
+    SPELL_SUMMON_CHEST_1                = 62952,
+    SPELL_SUMMON_CHEST_2                = 62953,
+    SPELL_SUMMON_CHEST_3                = 62954,
+	// 25 man
+    SPELL_SUMMON_CHEST_0_H              = 62955,
+    SPELL_SUMMON_CHEST_1_H              = 62956,
+    SPELL_SUMMON_CHEST_2_H              = 62957,
+    SPELL_SUMMON_CHEST_3_H              = 62958,
 
     SPELL_SUMMON_ALLIES_OF_NATURE       = 62678, //better do that in sd2
     SPELL_SUMMON_LASHERS                = 62688, // lashers - broken
@@ -727,31 +728,35 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
     {
         if(m_pInstance) 
         {
-            m_pInstance->SetData(TYPE_FREYA_HARD, 0);
-
             if(m_uiAchievProgress == 1)
             {
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_KNOCK_WOOD : ACHIEV_KNOCK_WOOD_H);
                 m_pInstance->SetData(TYPE_FREYA_HARD, 1);
+				DoCast(m_creature, m_bIsRegularMode ? SPELL_SUMMON_CHEST_1 : SPELL_SUMMON_CHEST_1_H);
             }
             else if (m_uiAchievProgress == 2)
             {
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_KNOCK_KNOCK_WOOD : ACHIEV_KNOCK_KNOCK_WOOD_H);
                 m_pInstance->SetData(TYPE_FREYA_HARD, 2);
+				DoCast(m_creature, m_bIsRegularMode ? SPELL_SUMMON_CHEST_2 : SPELL_SUMMON_CHEST_2_H);
             }
             else if (m_uiAchievProgress == 3)
             {
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_KNOCK_KNOCK_KNOCK_WOOD : ACHIEV_KNOCK_KNOCK_KNOCK_WOOD_H);
                 m_pInstance->SetData(TYPE_FREYA_HARD, 3);
+				DoCast(m_creature, m_bIsRegularMode ? SPELL_SUMMON_CHEST_3 : SPELL_SUMMON_CHEST_3_H);
             }
+			else
+			{
+				m_pInstance->SetData(TYPE_FREYA_HARD, 0);
+				DoCast(m_creature, m_bIsRegularMode ? SPELL_SUMMON_CHEST_0 : SPELL_SUMMON_CHEST_0_H);
+			}
 
             if (m_bNature)
                 m_pInstance->DoCompleteAchievement(m_bIsRegularMode ? ACHIEV_BACK_TO_NATURE : ACHIEV_BACK_TO_NATURE_H);
 
             m_pInstance->SetData(TYPE_FREYA, DONE);
         }
-
-        m_creature->ForcedDespawn();
     }
 
     // for debug only
@@ -767,7 +772,7 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
     {
-        if(m_creature->GetHealthPercent() < 1.0f)
+		if(m_creature->GetHealthPercent() < 1.0f || uiDamage > m_creature->GetHealth())
         {
             uiDamage = 0;
             m_bIsOutro = true;
@@ -1088,8 +1093,12 @@ struct MANGOS_DLL_DECL boss_freyaAI : public ScriptedAI
             case 5:
                 DoOutro();
                 ++m_uiStep;
-                m_uiOutroTimer = 10000;
+                m_uiOutroTimer = 1000;
                 break;
+			case 7:
+				++m_uiStep;
+				m_creature->ForcedDespawn();
+				break;
             }
         }
         else return;

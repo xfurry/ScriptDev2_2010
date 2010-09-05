@@ -357,7 +357,7 @@ struct MANGOS_DLL_DECL boss_hodirAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &uiDamage)
     {
-        if(m_creature->GetHealthPercent() < 1.0f)
+        if(m_creature->GetHealthPercent() < 1.0f || uiDamage > m_creature->GetHealth())
         {
             uiDamage = 0;
             m_bIsOutro = true;

@@ -765,7 +765,7 @@ struct MANGOS_DLL_DECL boss_thorimAI : public ScriptedAI
         }
 
         // outro
-        if(m_creature->GetHealthPercent() < 1.0f && m_uiPhase == PHASE_ARENA)
+        if((m_creature->GetHealthPercent() < 1.0f || uiDamage > m_creature->GetHealth()) && m_uiPhase == PHASE_ARENA)
         {
             uiDamage = 0;
 			m_uiPhase = PHASE_OUTRO;
