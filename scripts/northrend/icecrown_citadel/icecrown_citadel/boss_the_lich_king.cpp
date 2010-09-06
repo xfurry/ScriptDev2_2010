@@ -1067,7 +1067,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
             if (m_uiPainAndSufferingTimer < uiDiff) 
             {
                 DoCast(m_creature->getVictim(), SPELL_PAIN_AND_SUFFERING);
-                m_uiPainAndSufferingTimer = 3000;
+                m_uiPainAndSufferingTimer = 3500;
             } 
 			else m_uiPainAndSufferingTimer -= uiDiff;
 
@@ -1075,7 +1075,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
             {
 				m_creature->InterruptNonMeleeSpells(true);
                 DoCast(m_creature, SPELL_ICE_SPHERE_SUMMON);
-                m_uiSummonIceSphereTimer = 4000;
+                m_uiSummonIceSphereTimer = 1100;
             } 
 			else m_uiSummonIceSphereTimer -= uiDiff;
 
@@ -1114,7 +1114,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
             if (m_uiPainAndSufferingTimer < uiDiff) 
             {
                 DoCast(m_creature->getVictim(), SPELL_PAIN_AND_SUFFERING);
-                m_uiPainAndSufferingTimer = 3000;
+                m_uiPainAndSufferingTimer = 3500;
             } 
 			else m_uiPainAndSufferingTimer -= uiDiff;
 
@@ -1122,7 +1122,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
             {
 				m_creature->InterruptNonMeleeSpells(true);
                 DoCast(m_creature, SPELL_ICE_SPHERE_SUMMON);
-                m_uiSummonIceSphereTimer = 4000;
+                m_uiSummonIceSphereTimer = 1100;
             } 
 			else m_uiSummonIceSphereTimer -= uiDiff;
 
@@ -1626,11 +1626,13 @@ struct MANGOS_DLL_DECL mob_icc_ice_sphereAI : public ScriptedAI
 
 	uint32 m_uiIcePulseTimer;
 	uint32 m_uiIceBurstTimer;
+	bool m_bIsBurst;
 
     void Reset() 
 	{
 		m_uiIcePulseTimer	= 3000;
-		m_uiIceBurstTimer	= 5000;
+		m_uiIceBurstTimer	= 1000;
+		m_bIsBurst			= false;
 		DoCast(m_creature, SPELL_ICE_SPHERE_VISUAL);
 		m_creature->SetRespawnDelay(DAY);
 	}
@@ -1650,12 +1652,16 @@ struct MANGOS_DLL_DECL mob_icc_ice_sphereAI : public ScriptedAI
 		}
 		else m_uiIcePulseTimer -= uiDiff;
 
-		if(m_uiIceBurstTimer < uiDiff)
+		if(m_uiIceBurstTimer < uiDiff && !m_bIsBurst)
+			m_bIsBurst = true;
+		else m_uiIceBurstTimer -= uiDiff;
+
+		if (m_creature->IsWithinDistInMap(m_creature->getVictim(), ATTACK_DISTANCE) && m_bIsBurst)
 		{
 			DoCast(m_creature, SPELL_ICE_BURST);
-			m_uiIceBurstTimer = 7000;
+			m_uiIceBurstTimer = 1000;
+			m_bIsBurst = false;
 		}
-		else m_uiIceBurstTimer -= uiDiff;
 
 		DoMeleeAttackIfReady();
 	}
