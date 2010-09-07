@@ -65,30 +65,16 @@ struct MANGOS_DLL_DECL instance_trial_of_the_crusader : public ScriptedInstance
     uint64 m_uiJainaGUID;
     uint64 m_uiThrallGUID;
 
-    uint64 m_uiCrusader11Guid;
-    uint64 m_uiCrusader12Guid;
-    uint64 m_uiCrusader13Guid;
-    uint64 m_uiCrusader14Guid;
-    uint64 m_uiCrusader15Guid;
-    uint64 m_uiCrusader16Guid;
-    uint64 m_uiCrusader17Guid;
-    uint64 m_uiCrusader18Guid;
-    uint64 m_uiCrusader19Guid;
-    uint64 m_uiCrusader1aGuid;
-
-    uint64 m_uiCrusader21Guid;
-    uint64 m_uiCrusader22Guid;
-    uint64 m_uiCrusader23Guid;
-    uint64 m_uiCrusader24Guid;
-    uint64 m_uiCrusader25Guid;
-    uint64 m_uiCrusader26Guid;
-    uint64 m_uiCrusader27Guid;
-    uint64 m_uiCrusader28Guid;
-    uint64 m_uiCrusader29Guid;
-    uint64 m_uiCrusader2aGuid;
-
-    uint64 m_uiCrusader01Guid;
-    uint64 m_uiCrusader02Guid;
+    uint64 m_uiCrusader1GUID;
+	uint64 m_uiCrusader2GUID;
+	uint64 m_uiCrusader3GUID;
+	uint64 m_uiCrusader4GUID;
+	uint64 m_uiCrusader5GUID;
+	uint64 m_uiCrusader6GUID;
+	uint64 m_uiCrusader7GUID;
+	uint64 m_uiCrusader8GUID;
+	uint64 m_uiCrusader9GUID;
+	uint64 m_uiCrusader10GUID;
 
     uint64 m_uiCrusadersCacheGUID;
     uint64 m_uiFloorGUID;
@@ -140,30 +126,16 @@ struct MANGOS_DLL_DECL instance_trial_of_the_crusader : public ScriptedInstance
         m_uiJainaGUID       = 0;
         m_uiThrallGUID      = 0;
 
-        m_uiCrusader11Guid  = 0;
-        m_uiCrusader12Guid  = 0;
-        m_uiCrusader13Guid  = 0;
-        m_uiCrusader14Guid  = 0;
-        m_uiCrusader15Guid  = 0;
-        m_uiCrusader16Guid  = 0;
-        m_uiCrusader17Guid  = 0;
-        m_uiCrusader18Guid  = 0;
-        m_uiCrusader19Guid  = 0;
-        m_uiCrusader1aGuid  = 0;
-
-        m_uiCrusader21Guid  = 0;
-        m_uiCrusader22Guid  = 0;
-        m_uiCrusader23Guid  = 0;
-        m_uiCrusader24Guid  = 0;
-        m_uiCrusader25Guid  = 0;
-        m_uiCrusader26Guid  = 0;
-        m_uiCrusader27Guid  = 0;
-        m_uiCrusader28Guid  = 0;
-        m_uiCrusader29Guid  = 0;
-        m_uiCrusader2aGuid  = 0;
-
-        m_uiCrusader01Guid  = 0;
-        m_uiCrusader02Guid  = 0;
+        m_uiCrusader1GUID	= 0;
+		m_uiCrusader2GUID	= 0;
+		m_uiCrusader3GUID	= 0;
+		m_uiCrusader4GUID	= 0;
+		m_uiCrusader5GUID	= 0;
+		m_uiCrusader6GUID	= 0;
+		m_uiCrusader7GUID	= 0;
+		m_uiCrusader8GUID	= 0;
+		m_uiCrusader9GUID	= 0;
+		m_uiCrusader10GUID	= 0;
 
         m_uiCrusadersCacheGUID  = 0;
         m_uiFloorGUID       = 0;
@@ -242,32 +214,6 @@ struct MANGOS_DLL_DECL instance_trial_of_the_crusader : public ScriptedInstance
         case NPC_LICH_KING:   m_uiLichGUID          = pCreature->GetGUID(); break;
         case NPC_JAINA:       m_uiJainaGUID         = pCreature->GetGUID(); break;
         case NPC_THRALL:      m_uiThrallGUID        = pCreature->GetGUID(); break;
-
-            // crusaders
-        case NPC_CRUSADER_1_1: m_uiCrusader11Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_1_2: m_uiCrusader12Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_1_3: m_uiCrusader13Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_1_4: m_uiCrusader14Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_1_5: m_uiCrusader15Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_1_6: m_uiCrusader16Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_1_7: m_uiCrusader17Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_1_8: m_uiCrusader18Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_1_9: m_uiCrusader19Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_1_10: m_uiCrusader1aGuid = pCreature->GetGUID(); break;
-
-        case NPC_CRUSADER_2_1: m_uiCrusader21Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_2_2: m_uiCrusader22Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_2_3: m_uiCrusader23Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_2_4: m_uiCrusader24Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_2_5: m_uiCrusader25Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_2_6: m_uiCrusader26Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_2_7: m_uiCrusader27Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_2_8: m_uiCrusader28Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_2_9: m_uiCrusader29Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_2_10: m_uiCrusader2aGuid = pCreature->GetGUID(); break;
-
-        case NPC_CRUSADER_0_1: m_uiCrusader01Guid = pCreature->GetGUID(); break;
-        case NPC_CRUSADER_0_2: m_uiCrusader02Guid = pCreature->GetGUID(); break;
         }
     }
 
@@ -467,6 +413,43 @@ struct MANGOS_DLL_DECL instance_trial_of_the_crusader : public ScriptedInstance
         }
     }
 
+	void SetData64(uint32 uiData, uint64 uiGuid)
+    {
+        switch(uiData)
+		{
+		case DATA_CRUSADER_1:
+			m_uiCrusader1GUID = uiGuid;
+			break;
+		case DATA_CRUSADER_2:
+			m_uiCrusader2GUID = uiGuid;
+			break;
+		case DATA_CRUSADER_3:
+			m_uiCrusader3GUID = uiGuid;
+			break;
+		case DATA_CRUSADER_4:
+			m_uiCrusader4GUID = uiGuid;
+			break;
+		case DATA_CRUSADER_5:
+			m_uiCrusader5GUID = uiGuid;
+			break;
+		case DATA_CRUSADER_6:
+			m_uiCrusader6GUID = uiGuid;
+			break;
+		case DATA_CRUSADER_7:
+			m_uiCrusader7GUID = uiGuid;
+			break;
+		case DATA_CRUSADER_8:
+			m_uiCrusader8GUID = uiGuid;
+			break;
+		case DATA_CRUSADER_9:
+			m_uiCrusader9GUID = uiGuid;
+			break;
+		case DATA_CRUSADER_10:
+			m_uiCrusader10GUID = uiGuid;
+			break;
+		}
+	}
+
     uint32 GetData(uint32 uiType)
     {
         switch(uiType)
@@ -506,36 +489,22 @@ struct MANGOS_DLL_DECL instance_trial_of_the_crusader : public ScriptedInstance
          case DATA_JAINA:    return m_uiJainaGUID;
          case DATA_THRALL:   return m_uiThrallGUID;
 
-         case NPC_CRUSADER_1_1: return m_uiCrusader11Guid;
-         case NPC_CRUSADER_1_2: return m_uiCrusader12Guid;
-         case NPC_CRUSADER_1_3: return m_uiCrusader13Guid;
-         case NPC_CRUSADER_1_4: return m_uiCrusader14Guid;
-         case NPC_CRUSADER_1_5: return m_uiCrusader15Guid;
-         case NPC_CRUSADER_1_6: return m_uiCrusader16Guid;
-         case NPC_CRUSADER_1_7: return m_uiCrusader17Guid;
-         case NPC_CRUSADER_1_8: return m_uiCrusader18Guid;
-         case NPC_CRUSADER_1_9: return m_uiCrusader19Guid;
-         case NPC_CRUSADER_1_10: return m_uiCrusader1aGuid;
+		 case DATA_CRUSADER_1: return m_uiCrusader1GUID;
+		 case DATA_CRUSADER_2: return m_uiCrusader2GUID;
+		 case DATA_CRUSADER_3: return m_uiCrusader3GUID;
+		 case DATA_CRUSADER_4: return m_uiCrusader4GUID;
+		 case DATA_CRUSADER_5: return m_uiCrusader5GUID;
+		 case DATA_CRUSADER_6: return m_uiCrusader6GUID;
+		 case DATA_CRUSADER_7: return m_uiCrusader7GUID;
+		 case DATA_CRUSADER_8: return m_uiCrusader8GUID;
+		 case DATA_CRUSADER_9: return m_uiCrusader9GUID;
+		 case DATA_CRUSADER_10: return m_uiCrusader10GUID;
 
-         case NPC_CRUSADER_2_1: return m_uiCrusader21Guid;
-         case NPC_CRUSADER_2_2: return m_uiCrusader22Guid;
-         case NPC_CRUSADER_2_3: return m_uiCrusader23Guid;
-         case NPC_CRUSADER_2_4: return m_uiCrusader24Guid;
-         case NPC_CRUSADER_2_5: return m_uiCrusader25Guid;
-         case NPC_CRUSADER_2_6: return m_uiCrusader26Guid;
-         case NPC_CRUSADER_2_7: return m_uiCrusader27Guid;
-         case NPC_CRUSADER_2_8: return m_uiCrusader28Guid;
-         case NPC_CRUSADER_2_9: return m_uiCrusader29Guid;
-         case NPC_CRUSADER_2_10: return m_uiCrusader2aGuid;
-
-         case NPC_CRUSADER_0_1: return m_uiCrusader01Guid;
-         case NPC_CRUSADER_0_2: return m_uiCrusader02Guid;
-
-         case DATA_ANNOUNCER:   return m_uiBarrentGUID;
-         case DATA_FLOOR:       return m_uiFloorGUID;
-         case DATA_MAIN_GATE:   return m_uiMainGateDoorGUID;
-        }
-        return 0;
+		 case DATA_ANNOUNCER:   return m_uiBarrentGUID;
+		 case DATA_FLOOR:       return m_uiFloorGUID;
+		 case DATA_MAIN_GATE:   return m_uiMainGateDoorGUID;
+		}
+		return 0;
     }
 
     const char* Save()

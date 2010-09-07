@@ -537,22 +537,40 @@ struct MANGOS_DLL_DECL mob_frost_sphereAI : public ScriptedAI
     }
     ScriptedInstance *m_pInstance;
 
+	bool m_bIsDead;
+
     void Reset()
     {
+		m_bIsDead = false;
         m_creature->SetRespawnDelay(DAY);
-        m_creature->SetSpeedRate(MOVE_RUN, 0.1f);
-        m_creature->AddSplineFlag(SPLINEFLAG_WALKMODE);
-        m_creature->GetMotionMaster()->MoveRandom();
+		m_creature->AddSplineFlag(SPLINEFLAG_FLYING);
+		m_creature->GetMotionMaster()->MoveRandom();
     }
 
-    void DamageTaken(Unit *done_by, uint32 &uiDamage)
+    void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
     {
-        if(uiDamage > m_creature->GetHealth() && GetClosestCreatureWithEntry(m_creature, NPC_ANUBARAK, 150.0f))
+		if (m_bIsDead || pDoneBy->GetTypeId() != TYPEID_PLAYER)
         {
             uiDamage = 0;
+            return;
+        }
+
+        if(uiDamage > m_creature->GetHealth() && GetClosestCreatureWithEntry(m_creature, NPC_ANUBARAK, 150.0f))
+        {
+			m_bIsDead = true;
+
+            if (m_creature->IsNonMeleeSpellCasted(false))
+                m_creature->InterruptNonMeleeSpells(false);
+
+            m_creature->GetMotionMaster()->MovementExpired(false);
+
+            m_creature->GetMotionMaster()->Clear(false);
+            m_creature->StopMoving();
+            uiDamage = 0;
+            m_creature->SetHealth(1);
             DoCast(m_creature, SPELL_PERMAFROST);
-            m_creature->SetHealth(0);
-            m_creature->SetStandState(UNIT_STAND_STATE_DEAD);
+            m_creature->ForcedDespawn(60000);
+			m_creature->SetVisibility(VISIBILITY_OFF);
         }
     }
 

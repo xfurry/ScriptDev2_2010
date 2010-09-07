@@ -196,6 +196,8 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
 
     void SummonHorde()
     {
+		// todo: make it random
+		/*
         if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_1)))
             pTemp->Respawn();
         else
@@ -246,12 +248,12 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_0_2, SpawnLoc[14].x, SpawnLoc[14].y - 13, SpawnLoc[14].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        }
+        }*/
     }
 
     void SummonAly()
     {
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_1)))
+        /*if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_1)))
             pTemp->Respawn();
         else
             m_creature->SummonCreature(NPC_CRUSADER_1_1, SpawnLoc[3].x, SpawnLoc[3].y - 13, SpawnLoc[3].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
@@ -301,7 +303,7 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
                 pTemp->Respawn();
             else
                 m_creature->SummonCreature(NPC_CRUSADER_0_2, SpawnLoc[14].x, SpawnLoc[14].y - 13, SpawnLoc[14].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        }
+        }*/
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -799,30 +801,29 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
 
             // Crusaders -> alliance
         case 3: 
+		case 4:
             {
-                Creature* pTemp1 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_1));
-                Creature* pTemp2 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_2));
-                Creature* pTemp3 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_3));
-                Creature* pTemp4 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_4));
-                Creature* pTemp5 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_5));
-                Creature* pTemp6 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_6));
+				Creature* pTemp1 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CRUSADER_1));
+                Creature* pTemp2 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CRUSADER_2));
+                Creature* pTemp3 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CRUSADER_3));
+                Creature* pTemp4 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CRUSADER_4));
+                Creature* pTemp5 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CRUSADER_5));
+                Creature* pTemp6 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CRUSADER_6));
 
                 if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
                 {
-                    Creature* pTemp7 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_7));
-                    Creature* pTemp8 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_8));
-                    Creature* pTemp9 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_9));
-                    Creature* pTemp10 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_10));
-                    Creature* pTemp11 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_1));
-                    Creature* pTemp12 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_2));
-                    if (pTemp7 && pTemp8 && pTemp9 && pTemp10 && pTemp11 && pTemp12) 
+                    Creature* pTemp7 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CRUSADER_7));
+                    Creature* pTemp8 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CRUSADER_8));
+                    Creature* pTemp9 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CRUSADER_9));
+                    Creature* pTemp10 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CRUSADER_10));
+                    if (pTemp7 && pTemp8 && pTemp9 && pTemp10) 
                     {
-                        if (!pTemp7->isAlive() && !pTemp8->isAlive() && !pTemp9->isAlive() && !pTemp10->isAlive() && !pTemp11->isAlive() && !pTemp12->isAlive())
+                        if (!pTemp7->isAlive() && !pTemp8->isAlive() && !pTemp9->isAlive() && !pTemp10->isAlive())
                             flag25 = true;
                         else 
                             flag25 = false;
 
-                        if (!pTemp7->isAlive() || !pTemp8->isAlive() || !pTemp9->isAlive() || !pTemp10->isAlive() || !pTemp11->isAlive() || !pTemp12->isAlive())
+                        if (!pTemp7->isAlive() || !pTemp8->isAlive() || !pTemp9->isAlive() || !pTemp10->isAlive())
                             m_bIsAchiev = true;
                         // if neither of them is dead -> reset counter (in case of wipe)
                         else
@@ -843,87 +844,19 @@ struct MANGOS_DLL_DECL npc_crusader_anouncerAI : public ScriptedAI
                         m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                         m_creature->SetVisibility(VISIBILITY_ON);
 
-                        if(Creature *pGarrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
-                            DoScriptText(SAY_VICTORY_HORDE, pGarrosh);
+						if(m_pInstance->GetData(TYPE_STAGE) == 3)
+						{
+							if(Creature *pGarrosh = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_GARROSH)))
+								DoScriptText(SAY_VICTORY_HORDE, pGarrosh);
+						}
+						else if(m_pInstance->GetData(TYPE_STAGE) == 4)
+						{
+							if(Creature *pVarian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VARIAN)))
+								DoScriptText(SAY_VICTORY_ALY, pVarian);
+						}
 
-                        if(Creature *pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
-                            DoScriptText(SAY_OUTRO_TIRION, pTirion);
-
-                        if(m_uiResilienceAchievTimer <= 60000)
-                        {
-                            if(m_pInstance)
-                            {
-                                if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_10MAN_NORMAL)
-                                    m_pInstance->DoCompleteAchievement(ACHIEV_RESILIENCE_WILL_FIX);
-                                else if (Difficulty == RAID_DIFFICULTY_25MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_NORMAL)
-                                    m_pInstance->DoCompleteAchievement(ACHIEV_RESILIENCE_WILL_FIX_H);
-                            }
-                        }
-                        m_bIsAchiev = false;
-                    }
-
-                    if (!pTemp1->isAlive() || !pTemp2->isAlive() || !pTemp3->isAlive() || !pTemp4->isAlive() || !pTemp5->isAlive() || !pTemp6->isAlive())
-                        m_bIsAchiev = true;
-                    // if neither of them is dead -> reset counter (in case of wipe)
-                    else
-                    {
-                        m_bIsAchiev = false;
-                        m_uiResilienceAchievTimer = 0;
-                    }
-                };
-                break;
-            };
-
-            // crusaders -> horde
-        case 4: 
-            {
-                Creature* pTemp1 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_1));
-                Creature* pTemp2 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_2));
-                Creature* pTemp3 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_3));
-                Creature* pTemp4 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_4));
-                Creature* pTemp5 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_5));
-                Creature* pTemp6 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_6));
-
-                if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                {
-                    Creature* pTemp7 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_7));
-                    Creature* pTemp8 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_8));
-                    Creature* pTemp9 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_9));
-                    Creature* pTemp10 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_10));
-                    Creature* pTemp11 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_1));
-                    Creature* pTemp12 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_2));
-                    if (pTemp7 && pTemp8 && pTemp9 && pTemp10 && pTemp11 && pTemp12) 
-                    {
-                        if (!pTemp7->isAlive() && !pTemp8->isAlive() && !pTemp9->isAlive() && !pTemp10->isAlive() && !pTemp11->isAlive() && !pTemp12->isAlive())
-                            flag25 = true;
-                        else 
-                            flag25 = false;
-
-                        if (!pTemp7->isAlive() || !pTemp8->isAlive() || !pTemp9->isAlive() || !pTemp10->isAlive() || !pTemp11->isAlive() || !pTemp12->isAlive())
-                            m_bIsAchiev = true;
-                        // if neither of them is dead -> reset counter (in case of wipe)
-                        else
-                        {
-                            m_bIsAchiev = false;
-                            m_uiResilienceAchievTimer = 0;
-                        }
-                    }
-                } else flag25 = true;
-
-                if (pTemp1 && pTemp2 && pTemp3 && pTemp4 && pTemp5 && pTemp6) 
-                {
-                    if (!pTemp1->isAlive() && !pTemp2->isAlive() && !pTemp3->isAlive() && !pTemp4->isAlive() && !pTemp5->isAlive() && !pTemp6->isAlive() && flag25) 
-                    {
-                        m_pInstance->SetData(TYPE_STAGE,0);
-                        m_pInstance->SetData(TYPE_FACTION_CHAMPIONS,DONE);
-                        m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-                        m_creature->SetVisibility(VISIBILITY_ON);
-
-                        if(Creature *pVarian = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_VARIAN)))
-                            DoScriptText(SAY_VICTORY_ALY, pVarian);
-
-                        if(Creature *pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
-                            DoScriptText(SAY_OUTRO_TIRION, pTirion);
+						if(Creature *pTirion = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_TIRION)))
+							DoScriptText(SAY_OUTRO_TIRION, pTirion);
 
                         if(m_uiResilienceAchievTimer <= 60000)
                         {

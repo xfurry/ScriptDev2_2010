@@ -62,33 +62,41 @@ enum
 
     NPC_JARAXXUS                = 34780,
 
-    // aly
-    NPC_CRUSADER_1_1            = 34460,
-    NPC_CRUSADER_1_2            = 34463,
-    NPC_CRUSADER_1_3            = 34461,
-    NPC_CRUSADER_1_4            = 34471,
-    NPC_CRUSADER_1_5            = 34475,
-    NPC_CRUSADER_1_6            = 34472,
-    NPC_CRUSADER_1_7            = 34467,
-    NPC_CRUSADER_1_8            = 34468,
-    NPC_CRUSADER_1_9            = 34473,
-    NPC_CRUSADER_1_10           = 34474,
+	// champions aly
+	NPC_DUSKBLADE				= 34461,	// dk
+	NPC_GROVESONG				= 34460,	// druid balance
+	NPC_VALESTRIDER				= 34469,	// druid resto
+	NPC_MOONSTALKER				= 34467,	// hunter
+	NPC_WHIZZLESTICK			= 34468,	// mage
+	NPC_VALENAA					= 34465,	// paly holy
+	NPC_LIGHTBEARER				= 34471,	// paly retri
+	NPC_FORGEMENDER				= 34466,	// priest disciple
+	NPC_NIGHTFELL				= 34473,	// priest shadow
+	NPC_SHADOWSTEP				= 34472,	// rogue
+	NPC_SHAABAD					= 34463,	// shamy ench
+	NPC_SAAMUL					= 34470,	// shamy resto
+	NPC_GRIMDABBLER				= 34474,	// lock
+	NPC_SHOCUUL					= 34475,	// warr
 
-    // horde
-    NPC_CRUSADER_2_1            = 34453,
-    NPC_CRUSADER_2_2            = 34455,
-    NPC_CRUSADER_2_3            = 34458,
-    NPC_CRUSADER_2_4            = 34454,
-    NPC_CRUSADER_2_5            = 34451,
-    NPC_CRUSADER_2_6            = 34456,
-    NPC_CRUSADER_2_7            = 34441,
-    NPC_CRUSADER_2_8            = 34449,
-    NPC_CRUSADER_2_9            = 34448,
-    NPC_CRUSADER_2_10           = 34450,
+	// champions horde
+	NPC_SHADOWCLEAVE			= 34458,	// dk
+	NPC_STORMHOOF				= 34451,	// druid balance
+	NPC_MISTHOOF				= 34459,	// druid resto
+	NPC_RUJKAH					= 34448,	// hunter
+	NPC_BLIGHTSLINGER			= 34449,	// mage
+	NPC_SUNCALLER				= 34445,	// paly holy
+	NPC_BRIGHTBLADE				= 34456,	// paly retri
+	NPC_STERN					= 34447,	// priest disciple
+	NPC_BLACKWHISPER			= 34441,	// priest shadow
+	NPC_MAZDINAH				= 34454,	// rogue
+	NPC_STOUTHORM				= 34455,	// shamy ench
+	NPC_THRAKGAR				= 34444,	// shamy resto
+	NPC_HARKZOG					= 34450,	// lock
+	NPC_STEELBREAKER			= 34453,	// warr
 
-    // crusaders pets
-    NPC_CRUSADER_0_1            = 35465,
-    NPC_CRUSADER_0_2            = 35610,
+	// pets
+	NPC_CAT						= 35610,
+	NPC_ZHAAGRYM				= 35465,
 
     NPC_FJOLA                   = 34497,
     NPC_EYDIS                   = 34496,
@@ -130,6 +138,19 @@ enum
     DATA_ANNOUNCER              = 0,
     DATA_FLOOR                  = 1,
     DATA_MAIN_GATE              = 2,
+
+	// data
+	// 6 on 10 man - 10 on 25 man
+	DATA_CRUSADER_1				= 31,
+	DATA_CRUSADER_2				= 32,
+	DATA_CRUSADER_3				= 33,
+	DATA_CRUSADER_4				= 34,
+	DATA_CRUSADER_5				= 35,
+	DATA_CRUSADER_6				= 36,
+	DATA_CRUSADER_7				= 37,
+	DATA_CRUSADER_8				= 38,
+	DATA_CRUSADER_9				= 39,
+	DATA_CRUSADER_10			= 40,
 
     ACHIEV_TRIBUTE_DEDICATED_INSANITY   = 4080,
     ACHIEV_TRIBUTE_IMMORTALITY_ALY      = 4156,
