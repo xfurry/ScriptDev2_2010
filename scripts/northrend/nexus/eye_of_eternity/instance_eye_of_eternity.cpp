@@ -33,17 +33,36 @@ struct MANGOS_DLL_DECL instance_eye_of_eternity : public ScriptedInstance
     uint32 m_auiEncounter[MAX_ENCOUNTER];
 
     uint64 m_uiMalygosGUID;
+	uint64 m_uiAoeTrigger;
     uint64 m_uiGiftGUID;
 	uint64 m_uiHeartGUID;
+
+	uint64 m_uiIrisGUID;
+	uint64 m_uiPlatformGUID;
+	uint64 m_uiPortalGUID;
 
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
         m_uiMalygosGUID = 0;
+		m_uiAoeTrigger	= 0;
         m_uiGiftGUID	= 0;
 		m_uiHeartGUID	= 0;
+
+		m_uiIrisGUID		= 0;
+		m_uiPlatformGUID	= 0;
+		m_uiPortalGUID		= 0;
+
     }
+
+	void OnPlayerEnter(Player* pPlayer)
+	{
+		// start intro
+		if(GetData(TYPE_MALYGOS) == NOT_STARTED)
+			SetData(TYPE_MALYGOS, SPECIAL);
+	}
+
     void OnCreatureCreate(Creature* pCreature)
     {
         switch(pCreature->GetEntry())
@@ -51,30 +70,47 @@ struct MANGOS_DLL_DECL instance_eye_of_eternity : public ScriptedInstance
             case NPC_MALYGOS:
                 m_uiMalygosGUID = pCreature->GetGUID();
                 break;
+			case NPC_AOE_TRIGGER:
+				m_uiAoeTrigger = pCreature->GetGUID();
+				break;
         }
     }
     
     void OnObjectCreate(GameObject* pGo)
     {
-        switch(pGo->GetEntry())
-        {
-            case GO_ALEXSTRASZAS_GIFT:
-				if(instance->IsRegularDifficulty())
-					m_uiGiftGUID = pGo->GetGUID();
-                break;
-            case GO_ALEXSTRASZAS_GIFT_H:
-				if(!instance->IsRegularDifficulty())
-					m_uiGiftGUID = pGo->GetGUID();
-                break;
-			case GO_HEART_OF_MAGIC:
-				if(instance->IsRegularDifficulty())
-					m_uiHeartGUID = pGo->GetGUID();
-				break;
-			case GO_HEART_OF_MAGIC_H:
-				if(!instance->IsRegularDifficulty())
-					m_uiHeartGUID = pGo->GetGUID();
-				break;
-        }
+		switch(pGo->GetEntry())
+		{
+		case GO_FOCUSING_IRIS:
+			if(instance->IsRegularDifficulty())
+				m_uiIrisGUID = pGo->GetGUID();
+			break;
+		case GO_FOCUSING_IRIS_H:
+			if(!instance->IsRegularDifficulty())
+				m_uiIrisGUID = pGo->GetGUID();
+			break;
+		case GO_EXIT_PORTAL:
+			m_uiPortalGUID = pGo->GetGUID();
+			break;
+		case GO_PLATFORM:
+			m_uiPlatformGUID = pGo->GetGUID();
+			break;
+		case GO_ALEXSTRASZAS_GIFT:
+			if(instance->IsRegularDifficulty())
+				m_uiGiftGUID = pGo->GetGUID();
+			break;
+		case GO_ALEXSTRASZAS_GIFT_H:
+			if(!instance->IsRegularDifficulty())
+				m_uiGiftGUID = pGo->GetGUID();
+			break;
+		case GO_HEART_OF_MAGIC:
+			if(instance->IsRegularDifficulty())
+				m_uiHeartGUID = pGo->GetGUID();
+			break;
+		case GO_HEART_OF_MAGIC_H:
+			if(!instance->IsRegularDifficulty())
+				m_uiHeartGUID = pGo->GetGUID();
+			break;
+		}
     }
 
     bool IsEncounterInProgress() const
@@ -149,13 +185,23 @@ struct MANGOS_DLL_DECL instance_eye_of_eternity : public ScriptedInstance
 
     uint64 GetData64(uint32 uiData)
     {
-        switch(uiData)
-        {
-            case NPC_MALYGOS:
-                return m_uiMalygosGUID;
-        }
-        return 0;
-    }
+		switch(uiData)
+		{
+		case NPC_MALYGOS:
+			return m_uiMalygosGUID;
+		case NPC_AOE_TRIGGER:
+			return m_uiAoeTrigger;
+		case GO_FOCUSING_IRIS:
+			return m_uiIrisGUID;
+		case GO_FOCUSING_IRIS_H:
+			return m_uiIrisGUID;
+		case GO_EXIT_PORTAL:
+			return m_uiPortalGUID;
+		case GO_PLATFORM:
+			return m_uiPlatformGUID;
+		}
+		return 0;
+	}
 };
 
 InstanceData* GetInstanceData_instance_eye_of_eternity(Map* pMap)

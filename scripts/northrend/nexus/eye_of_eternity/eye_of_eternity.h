@@ -8,6 +8,7 @@ enum
     TYPE_MALYGOS					= 1,
 
     NPC_MALYGOS						= 28859,
+	NPC_AOE_TRIGGER					= 22517,
 
 	GO_EXIT_PORTAL					= 193908,
 	GO_PLATFORM						= 193070,
