@@ -380,6 +380,8 @@ struct MANGOS_DLL_DECL mob_toc5_warriorAI: public toc5_champion_baseAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
+		toc5_champion_baseAI::UpdateAI(uiDiff);
+
         if (m_uiMortal_Strike_Timer < uiDiff)
         {
             DoCast(m_creature->getVictim(), m_bIsRegularMode ? SPELL_MORTAL_STRIKE : SPELL_MORTAL_STRIKE_H);
@@ -450,6 +452,8 @@ struct MANGOS_DLL_DECL mob_toc5_mageAI: public toc5_champion_baseAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
+		toc5_champion_baseAI::UpdateAI(uiDiff);
+
         if (m_uiFireball_Timer < uiDiff)
         {
             if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
@@ -513,6 +517,8 @@ struct MANGOS_DLL_DECL mob_toc5_shamanAI: public toc5_champion_baseAI
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+		toc5_champion_baseAI::UpdateAI(uiDiff);
 
         if (m_uiChain_Lightning_Timer < uiDiff)
         {
@@ -596,6 +602,8 @@ struct MANGOS_DLL_DECL mob_toc5_hunterAI: public toc5_champion_baseAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
+		toc5_champion_baseAI::UpdateAI(uiDiff);
+
         if (m_uiDisengage_Timer < uiDiff)
         {
             if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 5))
@@ -664,6 +672,8 @@ struct MANGOS_DLL_DECL mob_toc5_rogueAI: public toc5_champion_baseAI
     {
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
+
+		toc5_champion_baseAI::UpdateAI(uiDiff);
 
         if (m_uiDeadlyPoisonTimer < uiDiff)
         {
