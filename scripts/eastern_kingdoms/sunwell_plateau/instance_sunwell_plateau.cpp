@@ -27,6 +27,7 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
 
     uint32 m_auiEncounter[MAX_ENCOUNTER];
     std::string strInstData;
+	uint32 m_uiKiljaedenPhase;
 
     // Creatures
     uint64 m_uiKalecgos_DragonGUID;
@@ -61,6 +62,7 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
+		m_uiKiljaedenPhase				= 0;
 
         // Creatures
         m_uiKalecgos_DragonGUID         = 0;
@@ -111,7 +113,10 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
             case 24882: m_uiBrutallusGUID           = pCreature->GetGUID(); break;
             case 25038: m_uiFelmystGUID             = pCreature->GetGUID();
 				if(m_auiEncounter[1] != DONE)
-					pCreature->SetVisibility(VISIBILITY_OFF);
+				{
+					pCreature->SetDisplayId(11686);
+					pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+				}
 				break;
             case 25166: m_uiAlythessGUID            = pCreature->GetGUID(); break;
             case 25165: m_uiSacrolashGUID           = pCreature->GetGUID(); break;
@@ -182,6 +187,7 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
             case TYPE_EREDAR_TWINS: return m_auiEncounter[3];
             case TYPE_MURU:         return m_auiEncounter[4];
             case TYPE_KILJAEDEN:    return m_auiEncounter[5];
+			case TYPE_KILJAEDEN_PHASE:	return m_uiKiljaedenPhase;
         }
 
         return 0;
@@ -244,6 +250,7 @@ struct MANGOS_DLL_DECL instance_sunwell_plateau : public ScriptedInstance
                 break;
             case TYPE_KILJAEDEN: m_auiEncounter[5] = uiData; break;
             case DATA_SET_SPECTRAL_CHECK:  m_uiSpectralRealmTimer = uiData; break;
+			case TYPE_KILJAEDEN_PHASE:	m_uiKiljaedenPhase = uiData; break;
         }
 
         if (uiData == DONE)

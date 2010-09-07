@@ -15,6 +15,7 @@ enum InstanceSWP
     TYPE_EREDAR_TWINS           = 3,
     TYPE_MURU                   = 4,
     TYPE_KILJAEDEN              = 5,
+	TYPE_KILJAEDEN_PHASE		= 6,
 
     DATA_KALECGOS_DRAGON        = 6,
     DATA_KALECGOS_HUMAN         = 7,

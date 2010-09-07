@@ -15,6 +15,8 @@ UPDATE creature_template SET `ScriptName` = 'mob_felmyst_vapor' WHERE `entry` = 
 UPDATE creature_template SET `ScriptName` = 'mob_fog_of_corruption' WHERE `entry` = 25703; 
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('44883', '1', '24882');
 REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('45063', '1', '24882');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('44885', '1', '25038');
+REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('46350', '1', '25038');
 
 -- Eredar Twins
 UPDATE `creature_template` SET `ScriptName` = 'boss_sacrolash' WHERE `entry` = 25165; 
@@ -39,18 +41,15 @@ UPDATE `creature_template` SET `ScriptName` = 'mob_armagedon_target' WHERE `entr
 UPDATE `creature_template` SET `ScriptName` = 'mob_felfire_fiend' WHERE `entry` = 25598;
 UPDATE `creature_template` SET `ScriptName` = 'mob_kiljaeden_controller' WHERE `entry` = 25608; 
 UPDATE `creature_template` SET `unit_flags` = 33554438 WHERE `entry` = 25603; 
-REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('45856', '1', '25653');
-REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('45848', '1', '25653');
-REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('45862', '1', '25653');
-REPLACE INTO `spell_script_target` (`entry`, `type`, `targetEntry`) VALUES ('45860', '1', '25653');
-update creature set position_z = 50.0 where id = 26046;
+update creature set position_z = 60.0 where id = 26046;
 UPDATE `gameobject_template` SET `type` = 10 WHERE `entry` = 188415;
 Update `gameobject_template` set `flags` = 6553648, `ScriptName` = 'go_orb_of_the_blue_flight' where `entry` = 188415;
 -- Controller
 delete from creature where id = 25608;
 insert into creature values (800110,25608,580,1,1,0,0,1698.61,628.414,27.5395,3.99799,604800,0,0,9347800,1693500,0,0);
 
--- Missing or missmatched Doors, from UDB
+-- Missing Doors
+-- Will be added later
 #delete from `gameobject` where `id` in (187990, 187764, 187765, 187766, 188118);
 #insert into `gameobject` values (160001, 187990, 580, 1, 1, 1849.66, 597.861, 86.105, 2.42601, 0, 0, 0.936672, 0.350207, 180, 100, 0),
 #(160002, 187764, 580, 1, 1, 1876.03, 616.974, 44.6421, 1.46608, 0, 0, 0.669131, 0.743144, 180, 100, 0),

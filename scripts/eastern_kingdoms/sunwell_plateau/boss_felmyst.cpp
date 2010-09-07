@@ -73,6 +73,10 @@ enum
 	SPELL_SUMMON_DEATH_CLOUD	= 45884,
     NPC_DEATH_CLOUD				= 25703,
 
+	// transforms
+	SPELL_TRANSFORM_TRIGGER         = 44885,   // madrigosa to self, trigger 46350
+    SPELL_TRANSFORM_FELMYST         = 45068,   // become fel
+
 	// phases
 	PHASE_IDLE			= 0,
 	PHASE_GROUND		= 1,
@@ -139,7 +143,7 @@ struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
     {
 		m_uiPhase				= PHASE_IDLE;
         m_uiEnrageTimer         = 600000;
-		m_uiMovemetnTimer		= 30000;
+		m_uiMovemetnTimer		= 11000;
 		
 		//Ground Phase
 		m_uiCorrosionTimer      = 10000;
@@ -158,7 +162,7 @@ struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
 		m_uiVaporCount			= 0;
         m_uiBreathCount			= 0;
 
-        m_uiEncounterCheckTimer = 5000;
+        m_uiEncounterCheckTimer = 10000;
     }
 
 	void JustReachedHome()
@@ -239,8 +243,9 @@ struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
 			{
 				if(m_uiEncounterCheckTimer < uiDiff && !m_bHasChecked)
 				{
-					m_creature->SetVisibility(VISIBILITY_ON);
+					m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 					DoScriptText(YELL_REBIRTH, m_creature);
+					DoCast(m_creature, SPELL_TRANSFORM_FELMYST);
 					m_bHasChecked = true;
 					// start flying
 					m_creature->SetSplineFlags(SPLINEFLAG_FLYING);
@@ -255,6 +260,9 @@ struct MANGOS_DLL_DECL boss_felmystAI : public ScriptedAI
 
 			if(m_uiMovemetnTimer < uiDiff && m_bHasChecked)
 			{
+				m_creature->SetSplineFlags(SPLINEFLAG_FLYING);
+				m_creature->SetUInt32Value(UNIT_FIELD_BYTES_0, 50331648);
+				m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 50331648);
 				// movement
 				if(m_uiLastPointId < 2)
 					m_uiLastPointId = urand(2, 4);

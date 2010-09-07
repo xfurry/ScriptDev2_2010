@@ -60,6 +60,7 @@ enum Brutallus
     NPC_MADRIGOSA					= 25160,
 	SPELL_BREAK_ICE					= 46650,	// related to the door
 	SPELL_OPEN_DOOR					= 46652,
+	SPELL_FELMYST_SUMMON            = 45069,
 };
 
 struct MANGOS_DLL_DECL boss_brutallusAI : public ScriptedAI
