@@ -164,7 +164,22 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
     bool isChampIntro;
     uint8 faction;
 
-    void Reset()
+	uint32 m_uiCrusaderEntry1;
+	uint32 m_uiCrusaderEntry2;
+	uint32 m_uiCrusaderEntry3;
+	uint32 m_uiCrusaderEntry4;
+	uint32 m_uiCrusaderEntry5;
+	uint32 m_uiCrusaderEntry6;
+	uint32 m_uiCrusaderEntry7;
+	uint32 m_uiCrusaderEntry8;
+	uint32 m_uiCrusaderEntry9;
+	uint32 m_uiCrusaderEntry10;
+
+	std::vector<uint32> CrusaderHealers;
+	std::vector<uint32> CrusaderRanged;
+	std::vector<uint32> CrusaderMelee;
+
+	void Reset()
     {
         IntroTimer          = 10000;
         IntroStep           = 1;
@@ -177,6 +192,21 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
 
         isChampIntro        = false;
         faction = 0;
+
+		m_uiCrusaderEntry1	= 0;
+		m_uiCrusaderEntry2	= 0;
+		m_uiCrusaderEntry3	= 0;
+		m_uiCrusaderEntry4	= 0;
+		m_uiCrusaderEntry5	= 0;
+		m_uiCrusaderEntry6	= 0;
+		m_uiCrusaderEntry7	= 0;
+		m_uiCrusaderEntry8	= 0;
+		m_uiCrusaderEntry9	= 0;
+		m_uiCrusaderEntry10	= 0;
+
+		CrusaderHealers.reserve(4);
+		CrusaderRanged.reserve(5);
+		CrusaderMelee.reserve(5);
     }
 
     void SetJaruIntro()
@@ -194,116 +224,191 @@ struct MANGOS_DLL_DECL npc_tirionAI : public ScriptedAI
         faction = fact;
     }
 
+	void SummonCrusaders()
+	{
+		if(Creature* pTemp = m_creature->SummonCreature(m_uiCrusaderEntry1, SpawnLoc[3].x, SpawnLoc[3].y - 13, SpawnLoc[3].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+			m_pInstance->SetData64(DATA_CRUSADER_1, pTemp->GetGUID());
+		if(Creature* pTemp = m_creature->SummonCreature(m_uiCrusaderEntry2, SpawnLoc[4].x, SpawnLoc[4].y - 13, SpawnLoc[4].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+			m_pInstance->SetData64(DATA_CRUSADER_2, pTemp->GetGUID());
+		if(Creature* pTemp = m_creature->SummonCreature(m_uiCrusaderEntry3, SpawnLoc[5].x, SpawnLoc[5].y - 13, SpawnLoc[5].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+			m_pInstance->SetData64(DATA_CRUSADER_3, pTemp->GetGUID());
+		if(Creature* pTemp = m_creature->SummonCreature(m_uiCrusaderEntry4, SpawnLoc[6].x, SpawnLoc[6].y - 13, SpawnLoc[6].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+			m_pInstance->SetData64(DATA_CRUSADER_4, pTemp->GetGUID());
+		if(Creature* pTemp = m_creature->SummonCreature(m_uiCrusaderEntry5, SpawnLoc[7].x, SpawnLoc[7].y - 13, SpawnLoc[7].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+			m_pInstance->SetData64(DATA_CRUSADER_5, pTemp->GetGUID());
+		if(Creature* pTemp = m_creature->SummonCreature(m_uiCrusaderEntry6, SpawnLoc[8].x, SpawnLoc[8].y - 13, SpawnLoc[8].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+			m_pInstance->SetData64(DATA_CRUSADER_6, pTemp->GetGUID());
+
+		if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+        {
+			if(Creature* pTemp = m_creature->SummonCreature(m_uiCrusaderEntry7, SpawnLoc[9].x, SpawnLoc[9].y - 13, SpawnLoc[9].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+				m_pInstance->SetData64(DATA_CRUSADER_7, pTemp->GetGUID());
+			if(Creature* pTemp = m_creature->SummonCreature(m_uiCrusaderEntry8, SpawnLoc[10].x, SpawnLoc[10].y - 13, SpawnLoc[10].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+				m_pInstance->SetData64(DATA_CRUSADER_8, pTemp->GetGUID());
+			if(Creature* pTemp = m_creature->SummonCreature(m_uiCrusaderEntry9, SpawnLoc[11].x, SpawnLoc[11].y - 13, SpawnLoc[11].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+				m_pInstance->SetData64(DATA_CRUSADER_9, pTemp->GetGUID());
+			if(Creature* pTemp = m_creature->SummonCreature(m_uiCrusaderEntry10, SpawnLoc[12].x, SpawnLoc[12].y - 13, SpawnLoc[12].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME))
+				m_pInstance->SetData64(DATA_CRUSADER_10, pTemp->GetGUID());
+		}
+	}
+
+	void SetPattern()
+	{
+		// on 10 man:
+		// 1-2 heals
+		// 2-3 ranged
+		// 2-3 melee
+		// total = 6
+
+		// on 25 man
+		// 2-3 heals
+		// 3-4 ranged
+		// 3-4 melee
+		// total = 10
+
+		switch(urand(0, 3))
+		{
+		case 0: // 1-2-3 || 2-4-4
+			// heal
+			m_uiCrusaderEntry1 = CrusaderHealers[1];
+			m_uiCrusaderEntry9 = CrusaderHealers[2];	// 25
+
+			// ranged
+			m_uiCrusaderEntry2 = CrusaderRanged[1];
+			m_uiCrusaderEntry4 = CrusaderRanged[2];
+			m_uiCrusaderEntry7 = CrusaderRanged[3];		// 25
+			m_uiCrusaderEntry10 = CrusaderRanged[0];
+
+			// melee
+			m_uiCrusaderEntry3 = CrusaderMelee[0];
+			m_uiCrusaderEntry5 = CrusaderMelee[1];
+			m_uiCrusaderEntry6 = CrusaderMelee[2];
+			m_uiCrusaderEntry8 = CrusaderMelee[4];		// 25
+			break;
+		case 1:	// 2-2-2 || 3-3-4
+			// heal
+			m_uiCrusaderEntry1 = CrusaderHealers[1];
+			m_uiCrusaderEntry5 = CrusaderHealers[2];	// 25
+			m_uiCrusaderEntry10 = CrusaderHealers[0];
+
+			// ranged
+			m_uiCrusaderEntry2 = CrusaderRanged[1];
+			m_uiCrusaderEntry4 = CrusaderRanged[2];
+			m_uiCrusaderEntry7 = CrusaderRanged[3];		// 25
+
+			// melee
+			m_uiCrusaderEntry3 = CrusaderMelee[0];
+			m_uiCrusaderEntry6 = CrusaderMelee[2];
+			m_uiCrusaderEntry9 = CrusaderMelee[1];		// 25
+			m_uiCrusaderEntry8 = CrusaderMelee[4];		
+			break;
+		case 2:	// 1-3-2 || 2-3-5
+			// heal
+			m_uiCrusaderEntry1 = CrusaderHealers[1];
+			m_uiCrusaderEntry9 = CrusaderHealers[2];	// 25
+
+			// ranged
+			m_uiCrusaderEntry2 = CrusaderRanged[1];
+			m_uiCrusaderEntry4 = CrusaderRanged[2];
+			m_uiCrusaderEntry6 = CrusaderRanged[3];
+			
+			// melee
+			m_uiCrusaderEntry3 = CrusaderMelee[0];
+			m_uiCrusaderEntry5 = CrusaderMelee[1];
+			m_uiCrusaderEntry7 = CrusaderMelee[2];		// 25
+			m_uiCrusaderEntry8 = CrusaderMelee[4];		
+			m_uiCrusaderEntry10 = CrusaderMelee[3];
+			break;
+		case 3:	// 2-3-1 || 3-4-3
+			// heal
+			m_uiCrusaderEntry1 = CrusaderHealers[1];
+			m_uiCrusaderEntry5 = CrusaderHealers[2];	// 25
+			m_uiCrusaderEntry10 = CrusaderHealers[0];
+
+			// ranged
+			m_uiCrusaderEntry2 = CrusaderRanged[1];
+			m_uiCrusaderEntry4 = CrusaderRanged[2];
+			m_uiCrusaderEntry6 = CrusaderRanged[3];		
+			m_uiCrusaderEntry8 = CrusaderRanged[4];		// 25
+
+			// melee
+			m_uiCrusaderEntry3 = CrusaderMelee[0];		// 25
+			m_uiCrusaderEntry7 = CrusaderMelee[2];
+			m_uiCrusaderEntry9 = CrusaderMelee[1];		
+			break;
+		}
+	}
+
     void SummonHorde()
     {
-		// todo: make it random
-		/*
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_1)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_2_1, SpawnLoc[3].x, SpawnLoc[3].y - 13, SpawnLoc[3].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_2)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_2_2, SpawnLoc[4].x, SpawnLoc[4].y - 13, SpawnLoc[4].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_3)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_2_3, SpawnLoc[5].x, SpawnLoc[5].y - 13, SpawnLoc[5].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_4)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_2_4, SpawnLoc[6].x, SpawnLoc[6].y - 13, SpawnLoc[6].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_5)))
-            pTemp->Respawn();
-        else 
-            m_creature->SummonCreature(NPC_CRUSADER_2_5, SpawnLoc[7].x, SpawnLoc[7].y - 13, SpawnLoc[7].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_6)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_2_6, SpawnLoc[8].x, SpawnLoc[8].y - 13, SpawnLoc[8].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-        {
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_7)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_2_7, SpawnLoc[9].x, SpawnLoc[9].y - 13, SpawnLoc[9].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_8)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_2_8, SpawnLoc[10].x, SpawnLoc[10].y - 13, SpawnLoc[10].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_9)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_2_9, SpawnLoc[11].x, SpawnLoc[11].y - 13, SpawnLoc[11].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_2_10)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_2_10, SpawnLoc[12].x, SpawnLoc[12].y - 13, SpawnLoc[12].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_1)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_0_1, SpawnLoc[13].x, SpawnLoc[13].y - 13, SpawnLoc[13].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_2)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_0_2, SpawnLoc[14].x, SpawnLoc[14].y - 13, SpawnLoc[14].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        }*/
+        CrusaderHealers.clear();
+		CrusaderRanged.clear();
+		CrusaderMelee.clear();
+
+		CrusaderHealers.push_back(NPC_MISTHOOF);
+		CrusaderHealers.push_back(NPC_SUNCALLER);
+		CrusaderHealers.push_back(NPC_STERN);
+		CrusaderHealers.push_back(NPC_THRAKGAR);
+
+		if (!CrusaderHealers.empty())
+			std::random_shuffle(CrusaderHealers.begin(), CrusaderHealers.end());
+
+		CrusaderRanged.push_back(NPC_STORMHOOF);
+		CrusaderRanged.push_back(NPC_RUJKAH);
+		CrusaderRanged.push_back(NPC_BLIGHTSLINGER);
+		CrusaderRanged.push_back(NPC_BLACKWHISPER);
+		CrusaderRanged.push_back(NPC_HARKZOG);
+
+		if (!CrusaderRanged.empty())
+			std::random_shuffle(CrusaderRanged.begin(), CrusaderRanged.end());
+
+		CrusaderMelee.push_back(NPC_SHADOWCLEAVE);
+		CrusaderMelee.push_back(NPC_BRIGHTBLADE);
+		CrusaderMelee.push_back(NPC_MAZDINAH);
+		CrusaderMelee.push_back(NPC_STOUTHORM);
+		CrusaderMelee.push_back(NPC_STEELBREAKER);
+
+		if (!CrusaderMelee.empty())
+			std::random_shuffle(CrusaderMelee.begin(), CrusaderMelee.end());
+		
+		SetPattern();
+		SummonCrusaders();
     }
 
     void SummonAly()
     {
-        /*if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_1)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_1_1, SpawnLoc[3].x, SpawnLoc[3].y - 13, SpawnLoc[3].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_2)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_1_2, SpawnLoc[4].x, SpawnLoc[4].y - 13, SpawnLoc[4].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_3)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_1_3, SpawnLoc[5].x, SpawnLoc[5].y - 13, SpawnLoc[5].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_4)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_1_4, SpawnLoc[6].x, SpawnLoc[6].y - 13, SpawnLoc[6].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_5)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_1_5, SpawnLoc[7].x, SpawnLoc[7].y - 13, SpawnLoc[7].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_6)))
-            pTemp->Respawn();
-        else
-            m_creature->SummonCreature(NPC_CRUSADER_1_6, SpawnLoc[8].x, SpawnLoc[8].y - 13, SpawnLoc[8].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        if(Difficulty == RAID_DIFFICULTY_25MAN_NORMAL || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-        {
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_7)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_1_7, SpawnLoc[9].x, SpawnLoc[9].y - 13, SpawnLoc[9].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_8)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_1_8, SpawnLoc[10].x, SpawnLoc[10].y - 13, SpawnLoc[10].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_9)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_1_9, SpawnLoc[11].x, SpawnLoc[11].y - 13, SpawnLoc[11].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_1_10)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_1_10, SpawnLoc[12].x, SpawnLoc[12].y - 13, SpawnLoc[12].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_1)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_0_1, SpawnLoc[13].x, SpawnLoc[13].y - 13, SpawnLoc[13].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-            if (Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_CRUSADER_0_2)))
-                pTemp->Respawn();
-            else
-                m_creature->SummonCreature(NPC_CRUSADER_0_2, SpawnLoc[14].x, SpawnLoc[14].y - 13, SpawnLoc[14].z, 5, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DESPAWN_TIME);
-        }*/
+		CrusaderHealers.clear();
+		CrusaderRanged.clear();
+		CrusaderMelee.clear();
+
+		CrusaderHealers.push_back(NPC_VALESTRIDER);
+		CrusaderHealers.push_back(NPC_VALENAA);
+		CrusaderHealers.push_back(NPC_FORGEMENDER);
+		CrusaderHealers.push_back(NPC_SAAMUL);
+
+		if (!CrusaderHealers.empty())
+			std::random_shuffle(CrusaderHealers.begin(), CrusaderHealers.end());
+
+		CrusaderRanged.push_back(NPC_GROVESONG);
+		CrusaderRanged.push_back(NPC_MOONSTALKER);
+		CrusaderRanged.push_back(NPC_WHIZZLESTICK);
+		CrusaderRanged.push_back(NPC_NIGHTFELL);
+		CrusaderRanged.push_back(NPC_GRIMDABBLER);
+
+		if (!CrusaderRanged.empty())
+			std::random_shuffle(CrusaderRanged.begin(), CrusaderRanged.end());
+
+		CrusaderMelee.push_back(NPC_DUSKBLADE);
+		CrusaderMelee.push_back(NPC_LIGHTBEARER);
+		CrusaderMelee.push_back(NPC_SHADOWSTEP);
+		CrusaderMelee.push_back(NPC_SHAABAD);
+		CrusaderMelee.push_back(NPC_SHOCUUL);
+
+		if (!CrusaderMelee.empty())
+			std::random_shuffle(CrusaderMelee.begin(), CrusaderMelee.end());
+
+        SetPattern();
+		SummonCrusaders();
     }
 
     void UpdateAI(const uint32 uiDiff)

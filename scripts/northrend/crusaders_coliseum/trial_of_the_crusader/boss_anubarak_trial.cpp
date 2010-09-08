@@ -532,6 +532,7 @@ struct MANGOS_DLL_DECL mob_frost_sphereAI : public ScriptedAI
     {
         m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
         SetCombatMovement(false);
+		pCreature->setFaction(14);
         pCreature->SetDisplayId(25144);
         Reset();
     }
@@ -546,6 +547,11 @@ struct MANGOS_DLL_DECL mob_frost_sphereAI : public ScriptedAI
 		m_creature->AddSplineFlag(SPLINEFLAG_FLYING);
 		m_creature->GetMotionMaster()->MoveRandom();
     }
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
 
     void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
     {
@@ -642,18 +648,21 @@ struct MANGOS_DLL_DECL mob_nerubian_burrowerAI : public ScriptedAI
                 {
                     if(i->getSource()->isAlive() && m_creature->GetDistance2d(i->getSource()) < 1.0f)
                     {
-                        if(i->getSource()->HasAura(SPELL_PERMAFROST, EFFECT_INDEX_0))
+                        if(i->getSource()->HasAura(SPELL_PERMAFROST, EFFECT_INDEX_0) || isSubmerged)
                             return;
+						else
+						{
+							DoCast(m_creature, SPELL_SUBMERGE_ANUB);
+							m_creature->SetHealth(m_creature->GetMaxHealth()/2);
+							submergeTimer = 10000;
+							isSubmerged = true;
+							m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+							m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+						}
                     }
                 }
+				isSubmerged = true;
             }
-
-            DoCast(m_creature, SPELL_SUBMERGE_ANUB);
-            m_creature->SetHealth(m_creature->GetMaxHealth()/2);
-            submergeTimer = 10000;
-            isSubmerged = true;
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-			m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         }
 
         if (Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)

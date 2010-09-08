@@ -927,7 +927,7 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
             if(Difficulty == RAID_DIFFICULTY_10MAN_NORMAL || RAID_DIFFICULTY_25MAN_NORMAL)
                 m_uiOrbSummonTimer = urand(30000, 40000);
             else
-                m_uiOrbSummonTimer = urand(5000, 10000);
+                m_uiOrbSummonTimer = urand(10000, 20000);
         }
         else m_uiOrbSummonTimer -= uiDiff;
 

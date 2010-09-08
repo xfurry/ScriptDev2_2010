@@ -72,6 +72,8 @@ struct MANGOS_DLL_DECL boss_faction_championAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance *) pCreature->GetInstanceData();
         Difficulty = pCreature->GetMap()->GetDifficulty();
+		if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+			pCreature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false);
         mAIType = aitype;
         Init();
     }
@@ -1209,7 +1211,9 @@ struct MANGOS_DLL_DECL boss_fc_warlockAI : public boss_faction_championAI
 	    m_uiUnstableAfflictionTimer = 2000+rand()%1000;
         m_uiHellfireTimer = 15000;
 	    m_uiGCDTimer = 2500;
-		DoCast(m_creature, SPELL_SUMMON_FELHUNTER);
+		//DoCast(m_creature, SPELL_SUMMON_FELHUNTER);
+		if(!GetClosestCreatureWithEntry(m_creature, NPC_ZHAAGRYM, 5.0f))
+			m_creature->SummonCreature(NPC_ZHAAGRYM, m_creature->GetPositionX() + 2, m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000);
     }
     
     void UpdateAI(const uint32 diff)
@@ -1513,7 +1517,8 @@ struct MANGOS_DLL_DECL boss_fc_hunterAI : public boss_faction_championAI
 		m_uiWingClipTimer =  6000+rand()%2000;
 		m_uiWyvernStingTimer = 7000+rand()%3000;
 		m_uiGCDTimer = 1000;
-		DoCast(m_creature, SPELL_CALL_PET);
+		if(!GetClosestCreatureWithEntry(m_creature, NPC_CAT, 5.0f))
+			DoCast(m_creature, SPELL_CALL_PET);
     }
     
     void UpdateAI(const uint32 diff)
