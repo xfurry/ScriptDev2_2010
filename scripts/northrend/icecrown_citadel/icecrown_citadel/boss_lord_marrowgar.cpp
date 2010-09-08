@@ -260,7 +260,7 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
 			DoCast(m_creature, SPELL_BONE_STORM_AURA);
 			m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false);
 			SetCombatMovement(false);
-			m_creature->GetMotionMaster()->MoveRandom();
+			m_creature->GetMotionMaster()->MoveConfused();
             m_uiBoneStorm_Timer = 90000;
 			m_uiStormEndTimer	= 23000;
 			m_uiColdFlame_Timer = 5000;
