@@ -262,7 +262,6 @@ struct MANGOS_DLL_DECL boss_marrowgarAI : public ScriptedAI
             m_uiBoneStorm_Timer = 90000;
 			m_uiStormEndTimer	= 23000;
 			m_uiColdFlame_Timer = 5000;
-			//m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT, IMMUNE_TO_SILENCE_AND_STUN_AND_FEAR_MASK, true);
         }
         else m_uiBoneStorm_Timer -= uiDiff;
 

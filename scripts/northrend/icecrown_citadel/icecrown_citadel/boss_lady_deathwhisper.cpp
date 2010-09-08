@@ -360,7 +360,7 @@ struct MANGOS_DLL_DECL boss_deathwhisperAI : public ScriptedAI
                 DoStartMovement(m_creature->getVictim());
                 m_uiSummon_Cult_Timer = 20000;
                 if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC || Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-                    m_creature->SetFlag(UNIT_FIELD_FLAGS, CREATURE_FLAG_EXTRA_NOT_TAUNTABLE);   // not sure if it's right
+                    m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false);
                 m_uiPhase = 2;
                 return;
             }
