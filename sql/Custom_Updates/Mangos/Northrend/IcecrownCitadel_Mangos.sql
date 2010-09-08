@@ -4,6 +4,7 @@
 UPDATE creature_template SET ScriptName = 'boss_marrowgar' WHERE entry = 36612;
 UPDATE creature_template SET ScriptName = 'mob_coldflame' WHERE entry = 36672;
 UPDATE creature_template SET ScriptName = 'mob_bone_spike' WHERE entry = 38711;
+UPDATE `creature_template` SET `flags_extra` = 0 WHERE `entry` = 36672;
 
 -- Deathwhisper
 UPDATE creature_template SET mechanic_immune_mask = 634339327, ScriptName = 'boss_deathwhisper' WHERE entry = 36855;
