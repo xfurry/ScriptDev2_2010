@@ -32,18 +32,9 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
     std::string m_strInstData;
 
     // grand champs
-    // aly
-    uint64 m_uiJacobGUID;
-    uint64 m_uiAmbroseGUID;
-    uint64 m_uiColososGUID;
-    uint64 m_uiJaelyneGUID;
-    uint64 m_uiLanaGUID;
-    // horde
-    uint64 m_uiMokraGUID;
-    uint64 m_uiEresseaGUID;
-    uint64 m_uiRunokGUID;
-    uint64 m_uiZultoreGUID;
-    uint64 m_uiVisceriGUID;
+    uint64 m_uiChampion1GUID;
+	uint64 m_uiChampion2GUID;
+	uint64 m_uiChampion3GUID;
     // argent challenge
     uint64 m_uiEadricGUID;
     uint64 m_uiEadricLootGUID;
@@ -65,18 +56,9 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
     void Initialize()
     {
         // grand champs
-        // aly
-        m_uiJacobGUID           = 0;
-        m_uiAmbroseGUID         = 0;
-        m_uiColososGUID         = 0;
-        m_uiJaelyneGUID         = 0;
-        m_uiLanaGUID            = 0;
-        // horde
-        m_uiMokraGUID           = 0;
-        m_uiEresseaGUID         = 0;
-        m_uiRunokGUID           = 0;
-        m_uiZultoreGUID         = 0;
-        m_uiVisceriGUID         = 0;
+        m_uiChampion1GUID		= 0;
+		m_uiChampion2GUID		= 0;
+		m_uiChampion3GUID		= 0;
         // argent challenge
         m_uiEadricGUID          = 0;
         m_uiEadricLootGUID      = 0;
@@ -124,39 +106,6 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
     {
         switch(pCreature->GetEntry())
         {
-            // Champions of the Alliance
-            case NPC_JACOB:
-                m_uiJacobGUID = pCreature->GetGUID();
-                break;
-            case NPC_AMBROSE:
-                m_uiAmbroseGUID = pCreature->GetGUID();
-                break;
-            case NPC_COLOSOS:
-                m_uiColososGUID = pCreature->GetGUID();
-                break;
-            case NPC_JAELYNE:
-                m_uiJaelyneGUID = pCreature->GetGUID();
-                break;
-            case NPC_LANA:
-                m_uiLanaGUID = pCreature->GetGUID();
-                break;
-            // Champions of the Horde
-            case NPC_MOKRA:
-                m_uiMokraGUID = pCreature->GetGUID();
-                break;
-            case NPC_ERESSEA:
-                m_uiEresseaGUID = pCreature->GetGUID();
-                break;
-            case NPC_RUNOK:
-                m_uiRunokGUID = pCreature->GetGUID();
-                break;
-            case NPC_ZULTORE:
-                m_uiZultoreGUID = pCreature->GetGUID();
-                break;
-            case NPC_VISCERI:
-                m_uiVisceriGUID = pCreature->GetGUID();
-                break;
-
             // Argent Challenge
             case NPC_EADRIC:
                 m_uiEadricGUID = pCreature->GetGUID();
@@ -267,6 +216,22 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
         }
     }
 
+	void SetData64(uint32 uiData, uint64 uiGuid)
+    {
+        switch(uiData)
+		{
+		case DATA_CHAMPION_1:
+			m_uiChampion1GUID = uiGuid;
+			break;
+		case DATA_CHAMPION_2:
+			m_uiChampion2GUID = uiGuid;
+			break;
+		case DATA_CHAMPION_3:
+			m_uiChampion3GUID = uiGuid;
+			break;
+		}
+	}
+
     uint32 GetData(uint32 uiType)
     {
         switch(uiType)
@@ -287,24 +252,18 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
 
     uint64 GetData64(uint32 uiType)
     {
-        switch(uiType)
-        {
-            // aly
-        case NPC_JACOB:     return m_uiJacobGUID;   break;
-        case NPC_AMBROSE:   return m_uiAmbroseGUID; break;
-        case NPC_COLOSOS:   return m_uiColososGUID; break;
-        case NPC_JAELYNE:   return m_uiJaelyneGUID; break;
-        case NPC_LANA:      return m_uiLanaGUID;    break;
-            // horde
-        case NPC_MOKRA:     return m_uiMokraGUID;   break;
-        case NPC_ERESSEA:   return m_uiEresseaGUID; break;
-        case NPC_RUNOK:     return m_uiRunokGUID;   break;
-        case NPC_ZULTORE:   return m_uiZultoreGUID; break;
-        case NPC_VISCERI:   return m_uiVisceriGUID; break;
+		switch(uiType)
+		{
+		case DATA_CHAMPION_1:
+			return m_uiChampion1GUID;
+		case DATA_CHAMPION_2:
+			return m_uiChampion2GUID;
+		case DATA_CHAMPION_3:
+			return m_uiChampion3GUID;
 
-        case DATA_TOC_ANNOUNCER:
-            return m_uiAnnouncerGUID;
-        }
+		case DATA_TOC_ANNOUNCER:
+			return m_uiAnnouncerGUID;
+		}
 
         return 0;
     }

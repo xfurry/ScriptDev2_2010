@@ -17,6 +17,10 @@ enum
     DATA_TOC_ANNOUNCER          = 4,
     DATA_ARGENT_CHALLERGER      = 5,
 
+	DATA_CHAMPION_1				= 6,
+	DATA_CHAMPION_2				= 7,
+	DATA_CHAMPION_3				= 8,
+
     // aly champs
     NPC_JACOB                   = 34705,
     NPC_AMBROSE                 = 34702,

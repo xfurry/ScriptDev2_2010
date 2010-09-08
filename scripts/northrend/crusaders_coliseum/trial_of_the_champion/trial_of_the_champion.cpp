@@ -290,10 +290,6 @@ struct MANGOS_DLL_DECL npc_toc5_announcerAI: public ScriptedAI
     uint32 m_uiChamp2Entry;
     uint32 m_uiChamp3Entry;
     uint32 m_uiGrandChampEntry;
-
-    uint64 m_uiChamp1GUID;
-    uint64 m_uiChamp2GUID;
-    uint64 m_uiChamp3GUID;
     uint64 m_uiGrandChampGUID;
 
     void Reset()
@@ -304,9 +300,6 @@ struct MANGOS_DLL_DECL npc_toc5_announcerAI: public ScriptedAI
         m_uiChamp1Entry     = 0;
         m_uiChamp2Entry     = 0;
         m_uiChamp3Entry     = 0;
-        m_uiChamp1GUID      = 0;
-        m_uiChamp2GUID      = 0;
-        m_uiChamp3GUID      = 0;
         m_uiGrandChampGUID  = 0;
         // set the random encounters
         SetChamps();
@@ -393,11 +386,11 @@ struct MANGOS_DLL_DECL npc_toc5_announcerAI: public ScriptedAI
                             break;
                         case 1:
                             if(Creature* pTemp = m_creature->SummonCreature(m_uiChamp1Entry, 738.665771f, 661.031433f, 412.394623f, 4.698702f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300000))
-                                m_uiChamp1GUID = pTemp->GetGUID();
+								m_pInstance->SetData64(DATA_CHAMPION_1, pTemp->GetGUID());
                             if(Creature* pTemp = m_creature->SummonCreature(m_uiChamp2Entry, 746.864441f, 660.918762f, 411.695465f, 4.698700f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300000))
-                                m_uiChamp2GUID = pTemp->GetGUID();
+                                m_pInstance->SetData64(DATA_CHAMPION_2, pTemp->GetGUID());
                             if(Creature* pTemp = m_creature->SummonCreature(m_uiChamp3Entry, 754.360779f, 660.816162f, 412.395996f, 4.698700f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300000))
-                                m_uiChamp3GUID = pTemp->GetGUID();
+                                m_pInstance->SetData64(DATA_CHAMPION_3, pTemp->GetGUID());
                             ++m_uiIntroStep;
                             m_uiIntroTimer = 2000;
                             break;
@@ -413,9 +406,9 @@ struct MANGOS_DLL_DECL npc_toc5_announcerAI: public ScriptedAI
                 // check if champs are dead
                 if(!m_bIsIntro)
                 {
-                    Creature* pChamp1 = m_pInstance->instance->GetCreature(m_uiChamp1GUID);
-                    Creature* pChamp2 = m_pInstance->instance->GetCreature(m_uiChamp2GUID);
-                    Creature* pChamp3 = m_pInstance->instance->GetCreature(m_uiChamp3GUID);
+					Creature* pChamp1 = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_1));
+                    Creature* pChamp2 = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_2));
+                    Creature* pChamp3 = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_3));
 
                     if(pChamp1 && pChamp2 && pChamp3)
                     {

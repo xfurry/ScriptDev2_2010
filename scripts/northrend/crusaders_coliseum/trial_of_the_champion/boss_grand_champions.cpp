@@ -126,183 +126,71 @@ struct MANGOS_DLL_DECL toc5_champion_baseAI: public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void Aggro(Unit* pWho)
     {
-        if(m_pInstance && m_pInstance->GetData(TYPE_GRAND_CHAMPIONS) != IN_PROGRESS) 
-            m_pInstance->SetData(TYPE_GRAND_CHAMPIONS, IN_PROGRESS);
+		if(m_pInstance)
+		{
+			if(m_pInstance->GetData(TYPE_GRAND_CHAMPIONS) != IN_PROGRESS) 
+				m_pInstance->SetData(TYPE_GRAND_CHAMPIONS, IN_PROGRESS);
+			m_pInstance->SetData(TYPE_STAGE, 1);
+		}
 
-        // call for help
-        if(TeamInInstance == HORDE)
-        {
-            m_pInstance->SetData(TYPE_STAGE, 1);
-
-            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JACOB)))
-            {
-                if(pTemp->isAlive())
-                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                else
-                    pTemp->Respawn();
-            }
-            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_AMBROSE)))
-            {
-                if(pTemp->isAlive())
-                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                else
-                    pTemp->Respawn();
-            }
-            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COLOSOS)))
-            {
-                if(pTemp->isAlive())
-                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                else
-                    pTemp->Respawn();
-            }
-            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JAELYNE)))
-            {
-                if(pTemp->isAlive())
-                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                else
-                    pTemp->Respawn();
-            }
-            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_LANA)))
-            {
-                if(pTemp->isAlive())
-                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                else
-                    pTemp->Respawn();
-            }
-        }
-        else if(TeamInInstance == ALLIANCE)
-        {
-            m_pInstance->SetData(TYPE_STAGE, 1);
-
-            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOKRA)))
-            {
-                if(pTemp->isAlive())
-                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                else
-                    pTemp->Respawn();
-            }
-            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ERESSEA)))
-            {
-                if(pTemp->isAlive())
-                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                else
-                    pTemp->Respawn();
-            }
-            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RUNOK)))
-            {
-                if(pTemp->isAlive())
-                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                else
-                    pTemp->Respawn();
-            }
-            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ZULTORE)))
-            {
-                if(pTemp->isAlive())
-                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                else
-                    pTemp->Respawn();
-            }
-            if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VISCERI)))
-            {
-                if(pTemp->isAlive())
-                    pTemp->AI()->AttackStart(m_creature->getVictim());
-                else
-                    pTemp->Respawn();
-            }
-        }
-    }
+		if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_1)))
+		{
+			if(pTemp->isAlive())
+				pTemp->AI()->AttackStart(m_creature->getVictim());
+			else
+				pTemp->Respawn();
+		}
+		if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_2)))
+		{
+			if(pTemp->isAlive())
+				pTemp->AI()->AttackStart(m_creature->getVictim());
+			else
+				pTemp->Respawn();
+		}
+		if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_3)))
+		{
+			if(pTemp->isAlive())
+				pTemp->AI()->AttackStart(m_creature->getVictim());
+			else
+				pTemp->Respawn();
+		}
+	}
 
     void JustReachedHome()
     {
         if (m_pInstance)
         {  
             // do this only for the first who reaches home
-            if(m_pInstance->GetData(TYPE_GRAND_CHAMPIONS) != NOT_STARTED)
-            {
-                // rewpawn dead champs
-                if(TeamInInstance == HORDE)
-                {
-                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JACOB)))
-                    {
-                        if(!pTemp->isAlive())
-                            pTemp->Respawn();
-                        else
-                            pTemp->AI()->EnterEvadeMode();
-                    }
-                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_AMBROSE)))
-                    {
-                        if(!pTemp->isAlive())
-                            pTemp->Respawn();
-                        else
-                            pTemp->AI()->EnterEvadeMode();
-                    }
-                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_COLOSOS)))
-                    {
-                        if(!pTemp->isAlive())
-                            pTemp->Respawn();
-                        else
-                            pTemp->AI()->EnterEvadeMode();
-                    }
-                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_JAELYNE)))
-                    {
-                        if(!pTemp->isAlive())
-                            pTemp->Respawn();
-                        else
-                            pTemp->AI()->EnterEvadeMode();
-                    }
-                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_LANA)))
-                    {
-                        if(!pTemp->isAlive())
-                            pTemp->Respawn();
-                        else
-                            pTemp->AI()->EnterEvadeMode();
-                    }
-                }
-                else if(TeamInInstance == ALLIANCE)
-                {
-                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_MOKRA)))
-                    {
-                        if(!pTemp->isAlive())
-                            pTemp->Respawn();
-                        else
-                            pTemp->AI()->EnterEvadeMode();
-                    }
-                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ERESSEA)))
-                    {
-                        if(!pTemp->isAlive())
-                            pTemp->Respawn();
-                        else
-                            pTemp->AI()->EnterEvadeMode();
-                    }
-                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_RUNOK)))
-                    {
-                        if(!pTemp->isAlive())
-                            pTemp->Respawn();
-                        else
-                            pTemp->AI()->EnterEvadeMode();
-                    }
-                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_ZULTORE)))
-                    {
-                        if(!pTemp->isAlive())
-                            pTemp->Respawn();
-                        else
-                            pTemp->AI()->EnterEvadeMode();
-                    }
-                    if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_VISCERI)))
-                    {
-                        if(!pTemp->isAlive())
-                            pTemp->Respawn();
-                        else
-                            pTemp->AI()->EnterEvadeMode();
-                    }
-                }
+			if(m_pInstance->GetData(TYPE_GRAND_CHAMPIONS) != NOT_STARTED)
+			{
+				if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_1)))
+				{
+					if(!pTemp->isAlive())
+						pTemp->Respawn();
+					else
+						pTemp->AI()->EnterEvadeMode();
+				}
+				if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_2)))
+				{
+					if(!pTemp->isAlive())
+						pTemp->Respawn();
+					else
+						pTemp->AI()->EnterEvadeMode();
+				}
+				if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_3)))
+				{
+					if(!pTemp->isAlive())
+						pTemp->Respawn();
+					else
+						pTemp->AI()->EnterEvadeMode();
+				}
 
-                m_pInstance->SetData(TYPE_STAGE, 0);
-                m_pInstance->SetData(TYPE_GRAND_CHAMPIONS, NOT_STARTED);
-            }
-        }  
+				m_pInstance->SetData(TYPE_STAGE, 0);
+				m_pInstance->SetData(TYPE_GRAND_CHAMPIONS, NOT_STARTED);
+			}
+		}  
     }
 
     void UpdatePower()
@@ -351,6 +239,8 @@ struct MANGOS_DLL_DECL toc5_champion_baseAI: public ScriptedAI
             m_uiThreatTimer = 4000;
         }
         else m_uiThreatTimer -= uiDiff;
+
+		DoMeleeAttackIfReady();
     }
 };
 
@@ -421,8 +311,6 @@ struct MANGOS_DLL_DECL mob_toc5_warriorAI: public toc5_champion_baseAI
         }
         else 
             m_uiIntercept_Cooldown -= uiDiff;
-
-        DoMeleeAttackIfReady();
     }
 };
 
@@ -487,8 +375,6 @@ struct MANGOS_DLL_DECL mob_toc5_mageAI: public toc5_champion_baseAI
         }
         else
             m_uiPolymorph_Timer -= uiDiff;
-
-        DoMeleeAttackIfReady();
     }
 };
 
@@ -571,8 +457,6 @@ struct MANGOS_DLL_DECL mob_toc5_shamanAI: public toc5_champion_baseAI
         }
         else
             m_uiEarth_Shield_Timer -= uiDiff;
-
-        DoMeleeAttackIfReady();
     }
 };
 
@@ -642,8 +526,6 @@ struct MANGOS_DLL_DECL mob_toc5_hunterAI: public toc5_champion_baseAI
         }
         else
             m_uiLightning_Arrows_Timer -= uiDiff;
-
-        DoMeleeAttackIfReady();
     }
 };
 
@@ -707,8 +589,6 @@ struct MANGOS_DLL_DECL mob_toc5_rogueAI: public toc5_champion_baseAI
         }
         else
             m_uiPoisonBottle_Timer -= uiDiff;
-
-        DoMeleeAttackIfReady();
     }
 };
 
