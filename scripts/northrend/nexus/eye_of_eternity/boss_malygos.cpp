@@ -1149,6 +1149,7 @@ struct MANGOS_DLL_DECL mob_scion_of_eternityAI : public ScriptedAI
     {
         m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
 		pCreature->SetSplineFlags(SPLINEFLAG_FLYING);
+		SetCombatMovement(false);
         Reset();
     }
 
@@ -1170,7 +1171,7 @@ struct MANGOS_DLL_DECL mob_scion_of_eternityAI : public ScriptedAI
             m_creature->AddThreat(pWho);
             m_creature->SetInCombatWith(pWho);
             pWho->SetInCombatWith(m_creature);
-            m_creature->GetMotionMaster()->MoveChase(pWho, 20.0f, 60.0f);
+            //m_creature->GetMotionMaster()->MoveChase(pWho, 20.0f, 60.0f);
         }
     }
 
