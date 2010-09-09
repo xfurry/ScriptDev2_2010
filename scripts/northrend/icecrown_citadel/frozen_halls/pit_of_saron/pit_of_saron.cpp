@@ -1195,6 +1195,7 @@ bool AreaTrigger_at_tyrannus(Player* pPlayer, AreaTriggerEntry const* pAt)
     {
 		if (pInstance->GetData(TYPE_TYRANNUS) == NOT_STARTED && pInstance->GetData(TYPE_KRICK_AND_ICK) == DONE && pInstance->GetData(TYPE_GARFROST) == DONE)
 		{
+			pInstance->SetData(TYPE_TYRANNUS, IN_PROGRESS);
 			// summon controller
 			pPlayer->SummonCreature(NPC_TYRANNUS,  1013.827f, 169.71f, 628.156f, 5.31f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, DAY);
 			// start the gauntlet only if it hasn't been started yet
