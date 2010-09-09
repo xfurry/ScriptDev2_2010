@@ -1411,6 +1411,12 @@ struct MANGOS_DLL_DECL mob_acolyte_of_shadronAI : public ScriptedAI
 			DoCastPlayerSpell(SPELL_TWILIGHT_RESIDUE);
 			DoCastPlayerSpell(SPELL_TWILIGHT_SHIFT_REMOVAL);
 
+			if(m_pInstance)
+			{
+				m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT_ENTER);
+				m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT);
+			}
+
             if(Creature* pShadron = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_SHADRON)))
                 ((mob_shadronAI*)pShadron->AI())->KillDisciple();
         }
@@ -1480,6 +1486,12 @@ struct MANGOS_DLL_DECL mob_acolyte_of_vesperonAI : public ScriptedAI
 
             DoCastPlayerSpell(SPELL_TWILIGHT_RESIDUE);
 			DoCastPlayerSpell(SPELL_TWILIGHT_SHIFT_REMOVAL);
+
+			if(m_pInstance)
+			{
+				m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT_ENTER);
+				m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT);
+			}
 
             if(Creature* pVesperon = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_VESPERON)))
                 ((mob_vesperonAI*)pVesperon->AI())->KillDisciple();
@@ -1616,6 +1628,12 @@ struct MANGOS_DLL_DECL mob_twilight_eggsAI : public ScriptedAI
 	{
 		DoCastPlayerSpell(SPELL_TWILIGHT_RESIDUE);
 		DoCastPlayerSpell(SPELL_TWILIGHT_SHIFT_REMOVAL);
+
+		if(m_pInstance)
+		{
+			m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT_ENTER);
+			m_pInstance->DoRemoveAurasDueToSpellOnPlayers(SPELL_TWILIGHT_SHIFT);
+		}
 	}
 
     void UpdateAI(const uint32 uiDiff)
