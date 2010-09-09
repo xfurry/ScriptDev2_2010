@@ -1067,7 +1067,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
             if (m_uiPainAndSufferingTimer < uiDiff) 
             {
                 DoCast(m_creature->getVictim(), SPELL_PAIN_AND_SUFFERING);
-                m_uiPainAndSufferingTimer = 3500;
+                m_uiPainAndSufferingTimer = 1500;
             } 
 			else m_uiPainAndSufferingTimer -= uiDiff;
 
@@ -1114,7 +1114,7 @@ struct MANGOS_DLL_DECL boss_the_lich_kingAI : public ScriptedAI
             if (m_uiPainAndSufferingTimer < uiDiff) 
             {
                 DoCast(m_creature->getVictim(), SPELL_PAIN_AND_SUFFERING);
-                m_uiPainAndSufferingTimer = 3500;
+                m_uiPainAndSufferingTimer = 1500;
             } 
 			else m_uiPainAndSufferingTimer -= uiDiff;
 
@@ -1630,7 +1630,7 @@ struct MANGOS_DLL_DECL mob_icc_ice_sphereAI : public ScriptedAI
 
     void Reset() 
 	{
-		m_uiIcePulseTimer	= 3000;
+		m_uiIcePulseTimer	= 6000;
 		m_uiIceBurstTimer	= 1000;
 		m_bIsBurst			= false;
 		DoCast(m_creature, SPELL_ICE_SPHERE_VISUAL);
