@@ -144,6 +144,7 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 		m_uiPhase	= PHASE_IDLE;
 		m_uiArchmageDied	= 0;
 		m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_29);		// remove feign death
+		m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);	// unselectable, so it cannot be healed on idle
 		
 		ReviveMages();
 	}
@@ -264,6 +265,7 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 				DoScriptText(SAY_START, m_creature);
 				if(m_pInstance)
 					m_pInstance->SetData(TYPE_DREAMWALKER, IN_PROGRESS);
+				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 			}
 			break;
 		case PHASE_EVENT:
