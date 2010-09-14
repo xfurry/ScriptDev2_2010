@@ -179,6 +179,10 @@ update creature_template set scriptName = 'mob_the_damned' where entry = 37011;
 -- Instance
 UPDATE instance_template SET scriptName ='instance_icecrown_citadel' WHERE map = 631;
 
+-- Trash respawn:
+update creature set spawntimesecs = 7200 where id in (36725, 36808, 36805, 36811, 36829, 36807, 37016, 37031, 37027, 37030, 37026, 37033, 37017, 37028, 36998, 37032,
+37144, 37146, 37004, 37029, 37003, 37035, 37021, 37034, 37148, 37149, 37098, 37664, 37595, 37663, 37571, 37665, 37666, 37662, 37132, 38125, 37133, 37134, 37127);
+
 -- Instance teleporters: light's hammer, oratory of dammed, rampart of skulls, deathbringers rise, sindragosa, central spire, upper spire;
 UPDATE gameobject_template SET ScriptName="icecrown_citadel_teleporter", `flags` = 32 WHERE entry in (202242, 202243, 202244, 202245, 202246, 202223, 202235);
 
