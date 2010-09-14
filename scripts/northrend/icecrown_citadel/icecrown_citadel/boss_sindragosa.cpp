@@ -206,6 +206,26 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 		}
 	}
 
+	void TeleportPlayers()
+    {
+        Map* pMap = m_creature->GetMap();
+        if(pMap)
+        {
+            Map::PlayerList const &lPlayers = pMap->GetPlayers();
+            if (!lPlayers.isEmpty())
+            {
+                for(Map::PlayerList::const_iterator itr = lPlayers.begin(); itr != lPlayers.end(); ++itr)
+                {
+					if (Player* pPlayer = itr->getSource())
+					{
+						if(m_creature->IsWithinDist2d(pPlayer->GetPositionX(), pPlayer->GetPositionY(), 20))
+							pPlayer->TeleportTo(m_creature->GetMapId(), m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), pPlayer->GetOrientation());
+					}
+                }
+            }
+        }
+    }
+
 	void UpdateAI(const uint32 uiDiff)
 	{
 		if (m_uiAttackStartTimer < uiDiff && !m_bStartAttack)
@@ -338,6 +358,7 @@ struct MANGOS_DLL_DECL boss_sindragosaAI : public ScriptedAI
 				{
 					m_creature->InterruptNonMeleeSpells(true);
 					DoCast(m_creature, SPELL_ICYGRIP);
+					TeleportPlayers();
 					m_uiIcyGripTimer = 67000;
 					m_uiBlisteringColdTimer = 500;
 				}
