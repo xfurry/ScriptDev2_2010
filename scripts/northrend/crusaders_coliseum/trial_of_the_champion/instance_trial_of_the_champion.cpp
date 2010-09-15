@@ -44,7 +44,7 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
     // black knight
     uint64 m_uiBlackKnightGUID;
     // announcer
-    uint64 m_uiJaerenGUID;
+	uint64 m_uiJaerenGUID;
     uint64 m_uiArelasGUID;
     uint64 m_uiAnnouncerGUID;
     uint64 m_uiChampionsLootGUID;
@@ -66,7 +66,7 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
         m_uiPaletressLootGUID   = 0;
         m_uiArgentChallenger    = 0;
         m_uiBlackKnightGUID     = 0;
-        m_uiJaerenGUID          = 0;
+		m_uiJaerenGUID          = 0;
         m_uiArelasGUID          = 0;
         m_uiAnnouncerGUID       = 0;
         m_uiChampionsLootGUID   = 0;
@@ -122,13 +122,9 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
             // Coliseum Announcers
             case NPC_JAEREN:
                 m_uiJaerenGUID = pCreature->GetGUID();
-                if (TeamInInstance == HORDE)
-                    m_uiAnnouncerGUID = pCreature->GetGUID();
                 break;
             case NPC_ARELAS:
                 m_uiArelasGUID = pCreature->GetGUID();
-                if (TeamInInstance == ALLIANCE)
-                    m_uiAnnouncerGUID = pCreature->GetGUID();
                 break;
         }
     }
@@ -172,7 +168,19 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
                 m_auiEncounter[0] = uiData;
                 DoUseDoorOrButton(m_uiDoorGUID);
                 if (uiData == DONE)
+				{
                     DoRespawnGameObject(m_uiChampionsLootGUID, DAY);
+					if(Creature* pTemp = instance->GetCreature(m_uiJaerenGUID))
+					{
+						pTemp->SetVisibility(VISIBILITY_ON);
+						pTemp->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP); 
+					}
+					if(Creature* pTemp = instance->GetCreature(m_uiArelasGUID))
+					{
+						pTemp->SetVisibility(VISIBILITY_ON);
+						pTemp->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP); 
+					}
+				}
                 break;
             case TYPE_ARGENT_CHALLENGE:
                 m_auiEncounter[1] = uiData;
@@ -183,6 +191,16 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
                         DoRespawnGameObject(m_uiEadricLootGUID, DAY);
                     if (m_uiArgentChallenger == NPC_PALETRESS)
                         DoRespawnGameObject(m_uiPaletressLootGUID, DAY);
+					if(Creature* pTemp = instance->GetCreature(m_uiJaerenGUID))
+					{
+						pTemp->SetVisibility(VISIBILITY_ON);
+						pTemp->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP); 
+					}
+					if(Creature* pTemp = instance->GetCreature(m_uiArelasGUID))
+					{
+						pTemp->SetVisibility(VISIBILITY_ON);
+						pTemp->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP); 
+					}
                 }
                 break;
             case TYPE_BLACK_KNIGHT:
@@ -190,10 +208,10 @@ struct MANGOS_DLL_DECL instance_trial_of_the_champion : public ScriptedInstance
                 DoUseDoorOrButton(m_uiDoorGUID);
                 if(uiData == DONE)
                 {
-                    if(TeamInInstance == ALLIANCE)
-                        DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEV_TOC_ALY : ACHIEV_TOC_ALY_H);
-                    if(TeamInInstance == HORDE)
-                        DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEV_TOC_HORDE : ACHIEV_TOC_HORDE_H);
+                    //if(TeamInInstance == ALLIANCE)
+                    //    DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEV_TOC_ALY : ACHIEV_TOC_ALY_H);
+                    //if(TeamInInstance == HORDE)
+                    //    DoCompleteAchievement(instance->IsRegularDifficulty() ? ACHIEV_TOC_HORDE : ACHIEV_TOC_HORDE_H);
                 }
                 break;
             case TYPE_STAGE:

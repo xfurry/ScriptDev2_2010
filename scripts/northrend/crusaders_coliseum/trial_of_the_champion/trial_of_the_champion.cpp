@@ -136,7 +136,7 @@ struct MANGOS_DLL_DECL mob_toc_argent_trashAI: public ScriptedAI
         // lightwielder
         m_uiBlazinLightTimer    = 8000;
         m_uiCleaveTimer         = 5000;
-        m_uiStrikeTimer         = 11000;
+        m_uiStrikeTimer         = 7000;
         // monk
         m_bHasShield            = false;
         m_uiFinalMeditationTimer = 9000;
@@ -187,10 +187,10 @@ struct MANGOS_DLL_DECL mob_toc_argent_trashAI: public ScriptedAI
                 }
                 else m_uiCleaveTimer -= uiDiff;
 
-                if(m_uiStrikeTimer -= uiDiff && !m_bIsRegularMode)
+                if(m_uiStrikeTimer < uiDiff && !m_bIsRegularMode)
                 {
                     DoCast(m_creature->getVictim(), SPELL_UNBALANCING_STRIKE);
-                    m_uiStrikeTimer = urand(11000, 14000);
+                    m_uiStrikeTimer = urand(7000, 9000);
                 }
                 else m_uiStrikeTimer -= uiDiff;
 
@@ -406,18 +406,16 @@ struct MANGOS_DLL_DECL npc_toc5_announcerAI: public ScriptedAI
                 // check if champs are dead
                 if(!m_bIsIntro)
                 {
-					Creature* pChamp1 = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_1));
-                    Creature* pChamp2 = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_2));
-                    Creature* pChamp3 = m_pInstance->instance->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_3));
+					Creature* pChamp1 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_1));
+                    Creature* pChamp2 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_2));
+                    Creature* pChamp3 = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_3));
 
                     if(pChamp1 && pChamp2 && pChamp3)
                     {
                         if(!pChamp1->isAlive() && !pChamp2->isAlive() && !pChamp3->isAlive())
                         {
                             m_pInstance->SetData(TYPE_STAGE, 0);
-                            m_pInstance->SetData(TYPE_GRAND_CHAMPIONS, DONE);
-                            m_creature->SetVisibility(VISIBILITY_ON);
-                            m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);        
+                            m_pInstance->SetData(TYPE_GRAND_CHAMPIONS, DONE);      
                         }
                     }
                 }

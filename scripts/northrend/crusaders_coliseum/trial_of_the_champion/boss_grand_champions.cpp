@@ -138,21 +138,21 @@ struct MANGOS_DLL_DECL toc5_champion_baseAI: public ScriptedAI
 		if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_1)))
 		{
 			if(pTemp->isAlive())
-				pTemp->AI()->AttackStart(m_creature->getVictim());
+				pTemp->AI()->AttackStart(pWho);
 			else
 				pTemp->Respawn();
 		}
 		if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_2)))
 		{
 			if(pTemp->isAlive())
-				pTemp->AI()->AttackStart(m_creature->getVictim());
+				pTemp->AI()->AttackStart(pWho);
 			else
 				pTemp->Respawn();
 		}
 		if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(DATA_CHAMPION_3)))
 		{
 			if(pTemp->isAlive())
-				pTemp->AI()->AttackStart(m_creature->getVictim());
+				pTemp->AI()->AttackStart(pWho);
 			else
 				pTemp->Respawn();
 		}

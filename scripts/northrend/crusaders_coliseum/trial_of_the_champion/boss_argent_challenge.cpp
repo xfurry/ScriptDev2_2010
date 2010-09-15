@@ -155,18 +155,6 @@ struct MANGOS_DLL_DECL boss_eadricAI: public ScriptedAI
         {
             m_pInstance->SetData(TYPE_ARGENT_CHALLENGE, DONE);
             m_pInstance->SetData(TYPE_STAGE, 0);
-
-            if(Creature* pAnnoucer = GetClosestCreatureWithEntry(m_creature, NPC_JAEREN, 180.0f))
-            {
-                pAnnoucer->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-                pAnnoucer->SetVisibility(VISIBILITY_ON);
-            }
-
-            if(Creature* pAnnoucer = GetClosestCreatureWithEntry(m_creature, NPC_ARELAS, 180.0f))
-            {
-                pAnnoucer->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-                pAnnoucer->SetVisibility(VISIBILITY_ON);
-            }
         }
     }
 
@@ -200,7 +188,7 @@ struct MANGOS_DLL_DECL boss_eadricAI: public ScriptedAI
         if (m_uiVengeance_Timer < uiDiff)
         {
             DoCast(m_creature, SPELL_VENGEANCE);
-            m_uiVengeance_Timer = 12000;
+            m_uiVengeance_Timer = 7000;
         }
         else
             m_uiVengeance_Timer -= uiDiff;  
@@ -349,18 +337,6 @@ struct MANGOS_DLL_DECL boss_paletressAI: public ScriptedAI
         {
             m_pInstance->SetData(TYPE_ARGENT_CHALLENGE, DONE);
             m_pInstance->SetData(TYPE_STAGE, 0);
-
-            if(Creature* pAnnoucer = GetClosestCreatureWithEntry(m_creature, NPC_JAEREN, 180.0f))
-            {
-                pAnnoucer->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-                pAnnoucer->SetVisibility(VISIBILITY_ON);
-            }
-
-            if(Creature* pAnnoucer = GetClosestCreatureWithEntry(m_creature, NPC_ARELAS, 180.0f))
-            {
-                pAnnoucer->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-                pAnnoucer->SetVisibility(VISIBILITY_ON);
-            }
         }
     }
 
