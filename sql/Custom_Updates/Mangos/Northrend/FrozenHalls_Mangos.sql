@@ -53,7 +53,7 @@ UPDATE `creature_template` SET `ScriptName`='npc_colapsing_icicle' WHERE `entry`
 UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_pos_start' WHERE `entry` in (36993, 36990);
 UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_pos_end' WHERE `entry` in (38188, 38189);
 UPDATE `creature_template` SET `ScriptName`='npc_martin_gorkun' WHERE `entry` in (37591, 37592);
-update creature set spawnMask = 0 where id in (37591, 37592, 38188, 38189);
+update creature set spawnMask = 0 where id in (37591, 37592, 38188, 38189, 36731);
 update creature set spawnMask = 0 where guid in (123745, 123584, 123548, 123585);
 UPDATE gameobject_template SET faction = 114, data10 = 1 WHERE entry = 196485;
 -- spells
