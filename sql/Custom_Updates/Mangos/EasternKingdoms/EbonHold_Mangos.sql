@@ -5,9 +5,6 @@ UPDATE `creature_template` SET `ScriptName`='mob_dark_rider_of_acherus',ainame="
 -- The Gift That Keeps On Giving
 UPDATE `creature_template` SET `ScriptName`='mob_scarlet_miner',ainame="" WHERE `entry`='28822';
 
--- The Endless hunger
-#UPDATE gameobject_template SET data2 = 120000 WHERE entry IN (191577,191580,191581,191582,191583,191584,191585,191586,191587,191588,191589,191590);
-
 -- How To Win Friends And Influence Enemies
 UPDATE `creature_template` SET `ScriptName`='npc_crusade_persuaded',ainame="" WHERE `entry` IN (28939,28940,28610);
 
@@ -31,8 +28,10 @@ INSERT INTO `creature_ai_scripts` VALUES ('90032', '29007', '0', '0', '100', '1'
 INSERT INTO `creature_ai_scripts` VALUES ('90033', '29007', '4', '0', '100', '0', '0', '0', '0', '0', '11', '15498', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', 'Crimson Acolyte aggro');
 
 -- The Light of Dawn (to do)
-UPDATE `creature_template` SET `ScriptName`='npc_highlord_darion_mograine',ainame="" WHERE `entry`='29173';
-UPDATE `creature_template` SET `ScriptName`='npc_the_lich_king_tirion_dawn',ainame="" WHERE `entry` in (29183,29175);
+UPDATE `quest_template` SET `Method` = 0 WHERE `entry` = 12801; -- set quest to autocomplete
+UPDATE `creature_template` SET `ScriptName`='' WHERE `entry`='29173';
+-- UPDATE `creature_template` SET `ScriptName`='npc_highlord_darion_mograine' WHERE `entry`='29173';
+UPDATE `creature_template` SET `ScriptName`='npc_the_lich_king_tirion_dawn' WHERE `entry` in (29183,29175);
 UPDATE creature_template SET AIName='EventAI',unit_flags=0,type_flags=8 WHERE entry IN (29199,29204,29200,29174,29182,29186,29190,29219,29206,29176,29178,29179,29180,29177,29181);
 DELETE FROM `spell_script_target` WHERE `entry` in (53658, 53679, 53701, 53705, 53706, 53677, 53685);
 -- insert into spell_script_target values (53658, 1, 29173);
