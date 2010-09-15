@@ -698,14 +698,7 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 				if(!IsPlayerAlive())
 				{
 					if(m_pInstance)
-					{
-						if(m_pInstance->GetData(TYPE_GAUNTLET != DONE))
-							m_pInstance->SetData(TYPE_GAUNTLET, NOT_STARTED);
-					}
-
-					if(Creature* pRimefang = m_pInstance->instance->GetCreature(m_uiRimefangGuid))
-						pRimefang->ForcedDespawn();
-					m_creature->ForcedDespawn();
+						m_pInstance->SetData(TYPE_GAUNTLET, NOT_STARTED);
 				}
                 m_uiWipeCheckTimer = 1000;
             }
@@ -948,10 +941,8 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
             m_uiMarkOfRimefangTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
-
-        if (m_creature->GetDistance2d(HOME_X, HOME_Y) > 80)
-            EnterEvadeMode();
     }
+
     void JustDied(Unit* killer)  
     {
         DoScriptText(SAY_DEATH, m_creature);
