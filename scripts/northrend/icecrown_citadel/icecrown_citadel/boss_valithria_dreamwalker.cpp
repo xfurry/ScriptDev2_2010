@@ -265,6 +265,7 @@ struct MANGOS_DLL_DECL boss_valithriaAI : public ScriptedAI
 				DoScriptText(SAY_START, m_creature);
 				if(m_pInstance)
 					m_pInstance->SetData(TYPE_DREAMWALKER, IN_PROGRESS);
+				m_creature->SetHealth(m_creature->GetMaxHealth() * 0.5f);
 				m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 			}
 			break;
