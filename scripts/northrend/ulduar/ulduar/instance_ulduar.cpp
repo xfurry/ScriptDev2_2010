@@ -38,6 +38,9 @@ static sSpawnLocation m_aKeepersSpawnLocs[] =
 };
 
 instance_ulduar::instance_ulduar(Map* pMap) : ScriptedInstance(pMap),
+	m_uiMimironPhase(0),
+	m_uiYoggPhase(0),
+	m_uiVisionPhase(0),
     // Creatures
     m_uiLeviathanGUID(0),
     m_uiIgnisGUID(0),
@@ -133,6 +136,7 @@ void instance_ulduar::Initialize()
     memset(&m_auiUlduarKeepers, 0, sizeof(m_auiUlduarKeepers));
     memset(&m_auiUlduarTeleporters, 0, sizeof(m_auiUlduarTeleporters));
     memset(&m_auiMimironTelGUID, 0, sizeof(m_auiMimironTelGUID));
+	memset(&m_auiMiniBoss, 0, sizeof(m_auiMiniBoss));
 }
 
 bool instance_ulduar::IsEncounterInProgress() const
@@ -488,6 +492,13 @@ void instance_ulduar::DoOpenMadnessDoorIfCan()
     }
 }
 
+// used to open the door to XT (custom script because Leviathan is disabled)
+void instance_ulduar::OpenXtDoor()
+{
+	if(m_auiEncounter[1] == DONE && m_auiEncounter[2] == DONE)
+		DoUseDoorOrButton(m_uiXT002GateGUID);
+}
+
 void instance_ulduar::SetData(uint32 uiType, uint32 uiData)
 {
     switch (uiType)
@@ -503,9 +514,11 @@ void instance_ulduar::SetData(uint32 uiType, uint32 uiData)
             break;
         case TYPE_IGNIS:
             m_auiEncounter[1] = uiData;
+			OpenXtDoor();       // remove when leviathan implemented
             break;
         case TYPE_RAZORSCALE:
             m_auiEncounter[2] = uiData;
+			OpenXtDoor();       // remove when leviathan implemented
             break;
         case TYPE_XT002:
             m_auiEncounter[3] = uiData;
@@ -650,6 +663,44 @@ void instance_ulduar::SetData(uint32 uiType, uint32 uiData)
             break;
         case TYPE_MIMIRON_TP:
             m_auiUlduarTeleporters[2] = uiData;
+            break;
+
+			// mini boss
+        case TYPE_RUNIC_COLOSSUS:
+            m_auiMiniBoss[0] = uiData;
+            DoUseDoorOrButton(m_uiHallwayDoorGUID);
+            break;
+        case TYPE_RUNE_GIANT:
+            m_auiMiniBoss[1] = uiData;
+            DoUseDoorOrButton(m_uiThorimEnterDoorGUID);
+            break;
+        case TYPE_LEVIATHAN_MK:
+            m_auiMiniBoss[2] = uiData;
+            break;
+        case TYPE_VX001:
+            m_auiMiniBoss[3] = uiData;
+            if (uiData == DONE)     // just for animation :)
+            {
+                for(uint8 i = 0; i < 9; i++)
+                    DoUseDoorOrButton(m_auiMimironTelGUID[i]);
+            }
+            break;
+        case TYPE_AERIAL_UNIT:
+            m_auiMiniBoss[4] = uiData;
+            break;
+        case TYPE_YOGG_BRAIN:
+            m_auiMiniBoss[5] = uiData;
+            break;
+
+            //phases
+        case TYPE_MIMIRON_PHASE:
+            m_uiMimironPhase = uiData;
+            break;
+        case TYPE_YOGG_PHASE:
+            m_uiYoggPhase = uiData;
+            break;
+        case TYPE_VISION_PHASE:
+            m_uiVisionPhase = uiData;
             break;
     }
 
@@ -837,6 +888,27 @@ uint32 instance_ulduar::GetData(uint32 uiType)
             return m_auiUlduarTeleporters[1];
         case TYPE_MIMIRON_TP:
             return m_auiUlduarTeleporters[2];
+
+			// mini boss
+        case TYPE_RUNE_GIANT:
+            return m_auiMiniBoss[1];
+        case TYPE_RUNIC_COLOSSUS:
+            return m_auiMiniBoss[0];
+        case TYPE_LEVIATHAN_MK:
+            return m_auiMiniBoss[2];
+        case TYPE_VX001:
+            return m_auiMiniBoss[3];
+        case TYPE_AERIAL_UNIT:
+            return m_auiMiniBoss[4];
+        case TYPE_YOGG_BRAIN:
+            return m_auiMiniBoss[5];
+
+        case TYPE_MIMIRON_PHASE:
+            return m_uiMimironPhase;
+        case TYPE_YOGG_PHASE:
+            return m_uiYoggPhase;
+        case TYPE_VISION_PHASE:
+            return m_uiVisionPhase;
      }
 
     return 0;

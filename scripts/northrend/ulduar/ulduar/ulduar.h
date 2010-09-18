@@ -53,6 +53,17 @@ enum
     TYPE_XT002_TP               = 28,
     TYPE_MIMIRON_TP             = 29,
 
+	//other-> these won't be saved to db
+    TYPE_RUNE_GIANT             = 30,
+    TYPE_RUNIC_COLOSSUS         = 31,
+    TYPE_LEVIATHAN_MK           = 32,
+    TYPE_VX001                  = 33,
+    TYPE_AERIAL_UNIT            = 34,
+    TYPE_YOGG_BRAIN             = 35,
+    TYPE_MIMIRON_PHASE          = 36,
+    TYPE_YOGG_PHASE             = 37,
+    TYPE_VISION_PHASE           = 38,
+
     // The siege of ulduar
     NPC_LEVIATHAN               = 33113,
     NPC_IGNIS                   = 33118,
@@ -225,6 +236,7 @@ class MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         bool CheckConditionCriteriaMeet(Player const* pSource, uint32 uiMapId, uint32 uiInstanceConditionId);
 
         void DoOpenMadnessDoorIfCan();
+		void OpenXtDoor();
         Player* GetPlayerInMap();
         void SpawnFriendlyKeeper(uint32 uiWho);
 
@@ -234,6 +246,11 @@ class MANGOS_DLL_DECL instance_ulduar : public ScriptedInstance
         uint32 m_auiHardBoss[HARD_MODE_ENCOUNTER];
         uint32 m_auiUlduarKeepers[KEEPER_ENCOUNTER];
         uint32 m_auiUlduarTeleporters[TELEPORTER_ENCOUNTER];
+		uint32 m_auiMiniBoss[6];
+
+		uint32 m_uiMimironPhase;
+		uint32 m_uiYoggPhase;
+		uint32 m_uiVisionPhase;
 
         // Creatures
         uint64 m_uiLeviathanGUID;
