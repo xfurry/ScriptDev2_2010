@@ -610,10 +610,6 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
 			if(m_pInstance->GetData(TYPE_GAUNTLET != DONE))
 				m_pInstance->SetData(TYPE_GAUNTLET, NOT_STARTED);
 		}
-
-		if(Creature* pRimefang = m_pInstance->instance->GetCreature(m_uiRimefangGuid))
-			pRimefang->ForcedDespawn();
-		m_creature->ForcedDespawn();
     }
 
     uint32 GetFaction()
