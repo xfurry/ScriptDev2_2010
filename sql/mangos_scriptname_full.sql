@@ -73,7 +73,7 @@ UPDATE gameobject_template SET ScriptName='go_tablet_of_the_seven' WHERE entry=1
 UPDATE gameobject_template SET ScriptName='go_tele_to_dalaran_crystal' WHERE entry=191230;
 UPDATE gameobject_template SET ScriptName='go_tele_to_violet_stand' WHERE entry=191229;
 UPDATE gameobject_template SET ScriptName='go_blood_filled_orb' WHERE entry=182024;
-UPDATE gameobject_template SET ScriptName='go_beacon_torch' WHERE entry=176093;
+UPDATE gameobject_template SET ScriptName='go_andorhal_tower' WHERE entry IN (176094,176095,176096,176097);
 UPDATE gameobject_template SET ScriptName='go_scourge_enclosure' WHERE entry=191548;
 
 /* GUARD */
@@ -554,7 +554,10 @@ UPDATE creature_template SET ScriptName='npc_ranger_lilatha' WHERE entry=16295;
 UPDATE creature_template SET ScriptName='npc_rathis_tomber' WHERE entry=16224;
 
 /* GNOMEREGAN */
-
+UPDATE creature_template SET ScriptName='boss_thermaplugg' WHERE entry=7800;
+UPDATE gameobject_template SET ScriptName='go_gnomeface_button' WHERE entry BETWEEN 142214 AND 142219;
+-- UPDATE creature_template SET ScriptName='npc_blastmaster_emi_shortfuse' WHERE entry=7998;
+UPDATE instance_template SET ScriptName='instance_gnomeregan' WHERE map=90;
 
 /* GRIZZLY HILLS */
 
