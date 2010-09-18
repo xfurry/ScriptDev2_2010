@@ -5,29 +5,29 @@
 #ifndef DEF_GUNDRAK_H
 #define DEF_GUNDRAK_H
 /* Encounters
- * Slad'ran          = 1
+ * Slad'ran          = 0
+ * Moorabi           = 1
  * Drakkari Colossus = 2
- * Moorabi           = 3
- * Gal'darah         = 4
- * Eck the Ferocious = 5
+ * Gal'darah         = 3
+ * Eck the Ferocious = 4
 */
 enum
 {
     MAX_ENCOUNTER          = 5,
 
-    TYPE_SLADRAN           = 1,
+    TYPE_SLADRAN           = 0,
+    TYPE_MOORABI           = 1,
     TYPE_COLOSSUS          = 2,
-    TYPE_MOORABI           = 3,
-    TYPE_GALDARAH          = 4,
-    TYPE_ECK               = 5,
+    TYPE_GALDARAH          = 3,
+    TYPE_ECK               = 4,
 
     NPC_SLADRAN            = 29304,
-    NPC_MOORABI            = 29305,
-    NPC_COLOSSUS           = 29307,
+    NPC_MOORABI            = 29307,
+    NPC_COLOSSUS           = 29305,
+    NPC_ELEMENTAL          = 29573,
+    NPC_LIVIN_MOJO         = 29830,
     NPC_GALDARAH           = 29306,
     NPC_ECK                = 29932,
-
-	MOB_DRAKKARI_FRENZY	   = 29834,
 
     GO_ECK_DOOR            = 192632,
     GO_ECK_UNDERWATER_DOOR = 192569,
@@ -63,9 +63,6 @@ class MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         uint32 GetData(uint32 uiType);
         uint64 GetData64(uint32 uiData);
 
-		void Update(uint32 uiDiff);
-		void DoSwitchBridgeIfCan();
-
         const char* Save() { return strInstData.c_str(); }
         void Load(const char* chrIn);
 
@@ -81,17 +78,14 @@ class MANGOS_DLL_DECL instance_gundrak : public ScriptedInstance
         uint64 m_uiSnakeKeyGUID;
         uint64 m_uiMammothKeyGUID;
         uint64 m_uiTrollKeyGUID;
-		uint64 m_uiRhinoKeyGUID;
         uint64 m_uiAltarOfSladranGUID;
         uint64 m_uiAltarOfMoorabiGUID;
         uint64 m_uiAltarOfColossusGUID;
         uint64 m_uiBridgeGUID;
-		uint64 m_uiCollisionGUID;
 
         uint64 m_uiSladranGUID;
-		uint64 m_uiColossusGUID;
-
-		uint32 m_uiWaterCheckTimer;
+        uint64 m_uiElementalGUID;
+        uint64 m_uiColossusGUID;
 };
 
 #endif
