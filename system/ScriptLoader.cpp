@@ -38,6 +38,7 @@ extern void AddSC_spell_scripts();
 extern void AddSC_blackrock_depths();                       //blackrock_depths
 extern void AddSC_boss_ambassador_flamelash();
 extern void AddSC_boss_anubshiah();
+extern void AddSC_boss_coren_direbrew();
 extern void AddSC_boss_draganthaurissan();
 extern void AddSC_boss_general_angerforge();
 extern void AddSC_boss_gorosh_the_dervish();
@@ -559,6 +560,7 @@ void AddScripts()
     AddSC_blackrock_depths();                               //blackrock_depths
     AddSC_boss_ambassador_flamelash();
     AddSC_boss_anubshiah();
+	AddSC_boss_coren_direbrew();
     AddSC_boss_draganthaurissan();
     AddSC_boss_general_angerforge();
     AddSC_boss_gorosh_the_dervish();

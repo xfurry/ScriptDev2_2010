@@ -83,6 +83,7 @@ scripts/eastern_kingdoms/blackrock_depths/blackrock_depths.cpp \
 scripts/eastern_kingdoms/blackrock_depths/blackrock_depths.h \
 scripts/eastern_kingdoms/blackrock_depths/boss_ambassador_flamelash.cpp \
 scripts/eastern_kingdoms/blackrock_depths/boss_anubshiah.cpp \
+scripts/eastern_kingdoms/blackrock_depths/boss_coren_direbrew.cpp \
 scripts/eastern_kingdoms/blackrock_depths/boss_emperor_dagran_thaurissan.cpp \
 scripts/eastern_kingdoms/blackrock_depths/boss_general_angerforge.cpp \
 scripts/eastern_kingdoms/blackrock_depths/boss_gorosh_the_dervish.cpp \
