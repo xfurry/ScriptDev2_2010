@@ -554,6 +554,7 @@ scripts/outland/coilfang_reservoir/serpent_shrine/boss_lurker_below.cpp \
 scripts/outland/coilfang_reservoir/serpent_shrine/boss_morogrim_tidewalker.cpp \
 scripts/outland/coilfang_reservoir/serpent_shrine/instance_serpent_shrine.cpp \
 scripts/outland/coilfang_reservoir/serpent_shrine/serpent_shrine.h \
+scripts/outland/coilfang_reservoir/slave_pens/boss_ahune.cpp \
 scripts/outland/coilfang_reservoir/steam_vault/boss_hydromancer_thespia.cpp \
 scripts/outland/coilfang_reservoir/steam_vault/boss_mekgineer_steamrigger.cpp \
 scripts/outland/coilfang_reservoir/steam_vault/boss_warlord_kalithresh.cpp \

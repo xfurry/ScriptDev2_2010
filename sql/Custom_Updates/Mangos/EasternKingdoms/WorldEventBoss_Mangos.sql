@@ -9,3 +9,6 @@ Insert into `spell_script_target` values
 (42405, 1, 23775),
 (42410, 1, 23682),
 (43101, 1, 23775);
+
+-- Midsummer
+UPDATE `creature_template` SET `ScriptName`='boss_ahune' WHERE `entry` = 25740;
