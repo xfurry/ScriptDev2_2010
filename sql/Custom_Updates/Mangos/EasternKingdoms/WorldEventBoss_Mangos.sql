@@ -12,3 +12,9 @@ Insert into `spell_script_target` values
 
 -- Midsummer
 UPDATE `creature_template` SET `ScriptName`='boss_ahune' WHERE `entry` = 25740;
+
+-- Love is in the Air
+UPDATE `creature_template` SET `ScriptName`='boss_apothecary_hummel' WHERE `entry` = 36296;
+UPDATE `creature_template` SET `ScriptName`='boss_apothecary_baxter' WHERE `entry` = 36565;
+UPDATE `creature_template` SET `ScriptName`='boss_apothecary_frye' WHERE `entry` = 36272;
+UPDATE `creature_template` SET `ScriptName`='mob_crazed_apothecary' WHERE `entry` = 36568;

@@ -133,6 +133,7 @@ extern void AddSC_boss_vectus();
 extern void AddSC_instance_scholomance();
 extern void AddSC_shadowfang_keep();                        //shadowfang_keep
 extern void AddSC_instance_shadowfang_keep();
+extern void AddSC_boss_apothecarey_hummel();
 extern void AddSC_boss_magistrate_barthilas();              //stratholme
 extern void AddSC_boss_maleki_the_pallid();
 extern void AddSC_boss_nerubenkan();
@@ -656,6 +657,7 @@ void AddScripts()
     AddSC_instance_scholomance();
     AddSC_shadowfang_keep();                                //shadowfang_keep
     AddSC_instance_shadowfang_keep();
+	AddSC_boss_apothecarey_hummel();
     AddSC_boss_magistrate_barthilas();                      //stratholme
     AddSC_boss_maleki_the_pallid();
     AddSC_boss_nerubenkan();

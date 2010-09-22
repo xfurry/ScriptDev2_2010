@@ -185,6 +185,7 @@ scripts/eastern_kingdoms/scholomance/boss_vectus.cpp \
 scripts/eastern_kingdoms/scholomance/instance_scholomance.cpp \
 scripts/eastern_kingdoms/scholomance/scholomance.h \
 scripts/eastern_kingdoms/shadowfang_keep/instance_shadowfang_keep.cpp \
+scripts/eastern_kingdoms/shadowfang_keep/boss_apothecary_hummel.cpp \
 scripts/eastern_kingdoms/shadowfang_keep/shadowfang_keep.cpp \
 scripts/eastern_kingdoms/shadowfang_keep/shadowfang_keep.h \
 scripts/eastern_kingdoms/stratholme/boss_baron_rivendare.cpp \
