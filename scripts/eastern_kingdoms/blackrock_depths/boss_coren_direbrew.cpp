@@ -214,9 +214,12 @@ struct MANGOS_DLL_DECL mob_direbrew_maidenAI : public ScriptedAI
 
 		if(m_uiBarreledTimer < uiDiff)
 		{
-			if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-				DoCastSpellIfCan(pTarget, SPELL_BARRELED);
-			m_uiBarreledTimer = 15000;
+			if(Creature* pCoren = GetClosestCreatureWithEntry(m_creature, NPC_COREN_DIREBREW, 50.0f))
+			{
+				if (Unit* pTarget = pCoren->SelectAttackingTarget(ATTACKING_TARGET_TOPAGGRO, 0))
+					DoCastSpellIfCan(pTarget, SPELL_BARRELED);
+			}
+			m_uiBarreledTimer = 8000;
 		}
 		else m_uiBarreledTimer -= uiDiff;
 
