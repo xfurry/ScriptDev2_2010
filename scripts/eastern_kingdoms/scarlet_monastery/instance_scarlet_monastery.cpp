@@ -35,6 +35,8 @@ struct MANGOS_DLL_DECL instance_scarlet_monastery : public ScriptedInstance
     uint64 m_uiVorrelGUID;
     uint64 m_uiDoorHighInquisitorGUID;
 
+	uint64 m_uiHorsemanGUID;
+
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
@@ -43,6 +45,8 @@ struct MANGOS_DLL_DECL instance_scarlet_monastery : public ScriptedInstance
         m_uiWhitemaneGUID = 0;
         m_uiVorrelGUID = 0;
         m_uiDoorHighInquisitorGUID = 0;
+
+		m_uiHorsemanGUID = 0;
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -52,6 +56,7 @@ struct MANGOS_DLL_DECL instance_scarlet_monastery : public ScriptedInstance
             case 3976: m_uiMograineGUID = pCreature->GetGUID(); break;
             case 3977: m_uiWhitemaneGUID = pCreature->GetGUID(); break;
             case 3981: m_uiVorrelGUID = pCreature->GetGUID(); break;
+			case NPC_HEADLESS_HORSEMAN: m_uiHorsemanGUID = pCreature->GetGUID(); break;
         }
     }
 
@@ -73,6 +78,8 @@ struct MANGOS_DLL_DECL instance_scarlet_monastery : public ScriptedInstance
                 return m_uiVorrelGUID;
             case DATA_DOOR_WHITEMANE:
                 return m_uiDoorHighInquisitorGUID;
+			case NPC_HEADLESS_HORSEMAN:
+				return m_uiHorsemanGUID;
         }
 
         return 0;

@@ -14,7 +14,9 @@ enum
     DATA_MOGRAINE                   = 2,
     DATA_WHITEMANE                  = 3,
     DATA_DOOR_WHITEMANE             = 4,
-    DATA_VORREL                     = 5
+    DATA_VORREL                     = 5, 
+
+	NPC_HEADLESS_HORSEMAN		= 23682,
 };
 
 #endif

@@ -4,6 +4,8 @@ UPDATE `creature_template` SET `ScriptName`='mob_direbrew_maiden' WHERE `entry` 
 update creature set position_x =  890.93, position_y = -130.455, position_z = -49.745, orientation =  5.187 where id = 23872;
 
 -- Hallows end
+UPDATE `creature_template` SET `ScriptName`='mob_horsemans_head' WHERE `entry` = 23775;
+UPDATE `creature_template` SET `ScriptName`='mob_pumpkin' WHERE `entry` = 23545;
 Delete from `spell_script_target` where entry in (42405, 42410, 43101);
 Insert into `spell_script_target` values
 (42405, 1, 23775),

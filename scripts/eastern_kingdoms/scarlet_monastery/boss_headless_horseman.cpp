@@ -22,6 +22,7 @@ SDCategory: Scarlet Monastery
 EndScriptData */
 
 #include "precompiled.h"
+#include "scarlet_monastery.h"
 
 enum
 {
@@ -46,6 +47,7 @@ enum
 	// active
 	SPELL_CLEAVE				= 42587,
 	SPELL_SUMMON_PUMPKIN		= 52236,
+	SPELL_CONFLAGRATE			= 42637,
 
 	// confused
 	SPELL_WHIRLWIND				= 43116,
@@ -91,521 +93,16 @@ enum
     SPELL_BODY_LEAVES_COMBAT	= 43805,
 
 	// npc
-	NPC_HEADLESS_HORSEMAN		= 23682,
 	NPC_HORSEMAN				= 23800,	// unmounted
 	NPC_HEAD					= 23775,
 	NPC_PULSING_PUMPKIN			= 23694,
 	NPC_PUMPKIN_FIEND			= 23545,
 	NPC_FLAME_BUNNY				= 23686,
-	NPC_WISP_INVIS				= 24034
+	NPC_WISP_INVIS				= 24034, 
+
+	DISPLAY_ID_MOUNTED			= 22351,
+	DISPLAY_ID_UNMOUNTED		= 22352,
 };
-
-#define NODES_COUNT             21
-#define FLIGHT_TRAVEL_TIME      16000
-
-struct LocationsXY
-{
-    float x, y, z;
-};
-
-static const LocationsXY FlightPoint[NODES_COUNT]=
-{
-    {1754.00f,1346.00f,17.50f},
-    {1765.00f,1347.00f,19.00f},
-    {1784.00f,1346.80f,25.40f},
-    {1803.30f,1347.60f,33.00f},
-    {1824.00f,1350.00f,42.60f},
-    {1838.80f,1353.20f,49.80f},
-    {1852.00f,1357.60f,55.70f},
-    {1861.30f,1364.00f,59.40f},
-    {1866.30f,1374.80f,61.70f},
-    {1864.00f,1387.30f,63.20f},
-    {1854.80f,1399.40f,64.10f},
-    {1844.00f,1406.90f,64.10f},
-    {1824.30f,1411.40f,63.30f},
-    {1801.00f,1412.30f,60.40f},
-    {1782.00f,1410.10f,55.50f},
-    {1770.50f,1405.20f,50.30f},
-    {1765.20f,1400.70f,46.60f},
-    {1761.40f,1393.40f,41.70f},
-    {1759.10f,1386.70f,36.60f},
-    {1757.80f,1378.20f,29.00f},
-    {1758.00f,1367.00f,19.51f}
-};
-
-static const LocationsXY Spawn[]=
-{
-    {1776.27f,1348.74f,19.20f},        //spawn point for pumpkin shrine mob
-    {1765.28f,1347.46f,17.55f}         //spawn point for smoke
-};
-
-/*
-
-+
-+struct MANGOS_DLL_DECL mob_pulsing_pumpkinAI : public ScriptedAI   // also known as pumpkin fiend 
-+{
-+    mob_pulsing_pumpkinAI(Creature *c) : ScriptedAI(c) {InitRootedState();}
-+
-+    void Reset() {}
-+
-+    void InitRootedState()
-     {
-+        SetCombatMovement(false);
-+
-+        //DoCast is not very good function here 
-+        //little problem: first two auras here are not stackable
-+        //so i commmented less important aura
-+        //SELF_CAST(SPELL_PUMPKIN_AURA_GREEN,true);
-+        //SELF_CAST(SPELL_PUMPKIN_AURA,true);
-+        ApplyAuras(m_creature, SPELL_PUMPKIN_AURA_GREEN);
-+        ApplyAuras(m_creature, SPELL_PUMPKIN_AURA);
-+        SELF_CAST(SPELL_SPROUTING,false);
-     }
- 
--    void Aggro(Unit* pWho)
-+    void SpellHit(Unit *caster, const SpellEntry *spell)
-     {
--        m_creature->SetInCombatWithZone();
-+        switch(spell->Id)
-+        {
-+        case SPELL_SPROUTING:
-+            //m_creature->RemoveAllAuras(); not sure that need remove all auras
-+            //SPELL_AURA_TRANSFORM works incorrect - 
-+            //it must really change entry, stats of creatue, not displayid only
-+            SELF_CAST(SPELL_SPROUT_BODY,true);
-+            SetCombatMovement(true);
-+            break;
-+        case 42428:
-+            m_creature->setDeathState(JUST_DIED);
-+            break;
-+        }
-     }
- 
--    void KilledUnit(Unit* pVictim)
-+    void MoveInLineOfSight(Unit *who)
-     {
--        DoScriptText(SAY_SLAY, m_creature);
-+        if(IsCombatMovement())
-+            ScriptedAI::MoveInLineOfSight(who);
-+        else   
-+        {
-+            if (m_creature->IsWithinDist(who,0.1f) && m_creature->IsHostileTo(who))
-+                m_creature->CastSpell(who,SPELL_SQUASH_SOUL,true);
-+        }
-     }
- 
--    void JustDied(Unit* pKiller)
-+    void UpdateAI(const uint32 diff)
-     {
--        DoScriptText(SAY_DEATH, m_creature);
-+        if(IsCombatMovement())
-+            ScriptedAI::UpdateAI(diff);
-     }
- 
--    void UpdateAI(const uint32 uiDiff)
-+    void AttackStart(Unit* who)
-     {
--        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
-+        if(IsCombatMovement())
-+            ScriptedAI::AttackStart(who);
-+    }
-+
-+    void EnterEvadeMode()
-+    {
-+        if (IsCombatMovement()){
-+            ScriptedAI::EnterEvadeMode();
-+            //restore some auras - that's hack, need remove only negative auras on enter evade call
-+            SELF_CAST(SPELL_SPROUT_BODY,true);  
-+        }
-+    }
-+};
-+
-+CreatureAI* GetAI_mob_pulsing_pumpkin(Creature* pCreature)
-+{
-+    return new mob_pulsing_pumpkinAI(pCreature);
-+}
-+
-+
-+
-+
-+struct MANGOS_DLL_DECL mob_horseman_headAI : public ScriptedAI, public EventsPool
-+{
-+    mob_horseman_headAI(Creature *c) : ScriptedAI(c), EventsPool(EventInfo) { Reset();}
-+
-+    void SaySound(int32 textEntry, Unit *target = 0)
-+    {
-+        DoScriptText(textEntry, m_creature, target);
-+        ApplyAuras(m_creature,SPELL_HEAD_SPEAKS);
-+    }
-+
-+    void Reset()
-+    {
-+        ClearTimers();
-+        SetState(0xFFFFFFFF, false);
-+        SetPhase(PH_ONE-1);
-+    }
-+
-+    void MoveInLineOfSight(Unit*) {}
-+    void AttackStart(Unit*){}
-+    void EnterEvadeMode(){}
-+
-+    void DamageTaken(Unit* done_by,uint32 &damage)
-+    {
-+        if(!HasState(STATE_COMBAT))
-+        { // set incoming dmg to null while invisible
-+            damage = 0;
-             return;
-+        }
- 
--        DoMeleeAttackIfReady();
-+        uint32 health_perc = (m_creature->GetHealth() - damage)*100/m_creature->GetMaxHealth();
-+
-+        switch(GetPhaseMask())
-+        {
-+        case MSK(PH_ONE):
-+            if (health_perc < 67)
-+            {
-+                SELF_CAST(SPELL_COMMAND_HEAD_RETURNS, true);
-+                SetState(STATE_COMBAT, false);
-+            }break;
-+        case MSK(PH_TWO):
-+            if (health_perc < 34)
-+            {
-+                SELF_CAST(SPELL_COMMAND_HEAD_RETURNS, true);
-+                SetState(STATE_COMBAT, false);
-+            }break;
-+        case MSK(PH_THREE):
-+            if (damage >= m_creature->GetHealth())
-+            {
-+                damage = m_creature->GetHealth() - m_creature->GetMaxHealth() * 0.01;
-+                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-+                SELF_CAST(SPELL_HEAD_IS_DEAD,true);
-+            }break;
-+        }
-     }
-+
-+    void SpellHit(Unit *caster, const SpellEntry* spell)
-+    {
-+        switch(spell->Id)
-+        {
-+        case SPELL_FLYING_HEAD:
-+            error_log("HeadAI::SpellHit by SPELL_FLYING_HEAD");
-+            MovePhase(true);
-+            SetState(STATE_COMBAT, true);
-+            SaySound(SAY_LOST_HEAD);
-+            break;
-+        case SPELL_COMMAND_RETURN_HEAD:
-+            MovePhase(false);
-+            m_creature->CastSpell(caster,SPELL_FLYING_HEAD, true);
-+            SetState(STATE_COMBAT, false);
-+            break;
-+        }
-+    }
-+
-+    void SpellHitTarget(Unit* target, const SpellEntry* spell)
-+    {
-+        if(spell->Id == SPELL_COMMAND_HEAD_RETURNS)
-+            m_creature->CastSpell(target,SPELL_FLYING_HEAD, true);
-+    }
-+
-+    void OnStateChanged(uint32 state)
-+    {
-+        switch(state)
-+        {
-+        case STATE_COMBAT:
-+            if (HasState(STATE_COMBAT))
-+            {
-+                error_log("HeadAI applying STATE_COMBAT");
-+                m_creature->RemoveAurasDueToSpell(SPELL_HEAD_INVISIBLE);
-+                SELF_CAST(SPELL_HEAD_LANDS,true);
-+                ApplyAuras(m_creature,SPELL_HEAD);
-+
-+                SheduleProcess(EV_LAUGHT,11000,5000,12000);
-+                SheduleProcess(EV_HEAD_FLEE,1000);
-+            }
-+            else
-+            {
-+                error_log("HeadAI removing STATE_COMBAT");
-+                m_creature->RemoveAllAuras();
-+                ApplyAuras(m_creature,SPELL_HEAD_INVISIBLE);
-+                m_creature->SetHealth(m_creature->GetMaxHealth());
-+                //m_creature->CombatStop();
-+            }
-+            break;
-+        }
-+    }
-+
-+    void ProcessEvent(uint32 id)
-+    {
-+        switch(id)
-+        {
-+        case EV_LAUGHT:
-+            SaySound(EMOTE_LAUGH);
-+            break;
-+        case EV_HEAD_FLEE:
-+            if (Unit* u = m_creature->getAttackerForHelper())
-+            {
-+                m_creature->GetMotionMaster()->Clear(false);
-+                m_creature->GetMotionMaster()->MoveFleeing(u);
-+            }break;
-+        }
-+    }
-+
-+    void UpdateAI(const uint32 diff)
-+    {
-+        EventsPool::Update(diff);
-+    }
- };
- 
-+CreatureAI* GetAI_mob_horseman_head(Creature* pCreature)
-+{
-+    return new mob_horseman_headAI(pCreature);
-+}
-+
-+struct MANGOS_DLL_DECL boss_headless_horsemanAI : public ScriptedAI, public EventsPool
-+{
-+    boss_headless_horsemanAI(Creature *c) : ScriptedAI(c), EventsPool(EventInfo)
-+    {
-+        /*if (SpellEntry *confl = GET_SPELL(SPELL_CONFLAGRATION))
-+        {
-+            confl->EffectApplyAuraName[0] = SPELL_AURA_PERIODIC_DAMAGE_PERCENT;
-+            confl->EffectBasePoints[0] = 10;
-+            confl->EffectBaseDice[0] = 10;
-+            confl->DmgMultiplier[0] = 1;
-+        }
-+        Reset();
-+    }
-+
-+    uint64 headguid;
-+
-+    void Reset()
-+    {
-+        headguid = 0;
-+        ClearTimers();
-+        //for testing
-+        SetState(0xFFFFFFFF, false);//clean states
-+
-+        SetState(STATE_MOUNTED, true);
-+        SetPhase(PH_INTRO);
-+    }
-+
-+    void MoveInLineOfSight(Unit *who)
-+    {
-+        if (HasState(STATE_COMBAT))
-+            ScriptedAI::MoveInLineOfSight(who);
-+    }
-+
-+    void AttackStart(Unit* who)
-+    {
-+        if (HasState(STATE_COMBAT))
-+            ScriptedAI::AttackStart(who);
-+    }
-+
-+    void KilledUnit(Unit*) { SaySound(SAY_PLAYER1 - rand()%4);}
-+    void JustDied(Unit*) { SaySound(SAY_DEATH);}
-+
-+    void SaySound(int32 textEntry, Unit *target = 0)
-+    {
-+        DoScriptText(textEntry, m_creature, target);
-+        ApplyAuras(m_creature,SPELL_HEAD_SPEAKS);
-+        if(EventTimer *t = GetEventTimer(EV_LAUGHT))
-+            t->ModifyTime(4000);
-+    }
-+
-+    void SpellHit(Unit *caster, const SpellEntry* spell)
-+    {
-+        switch(spell->Id)
-+        {
-+            case SPELL_COMMAND_HEAD_RETURNS:
-+                CancelEvent(EV_SPELL_42403_TICK);
-+                break;
-+            case SPELL_FLYING_HEAD:
-+                caster->GetMotionMaster()->Clear(false);
-+                caster->GetMotionMaster()->MoveFollow(m_creature,10.0f,float(rand()%6));
-+
-+                MovePhase(true);
-+
-+                SetState(STATE_HEADLESS,false);
-+                SetState(STATE_MOUNTED|STATE_COMBAT,true);
-+
-+                SaySound(SAY_REJOINED);
-+                break;
-+            case SPELL_HEAD_IS_DEAD:
-+                SELF_CAST(SPELL_HEAD_IS_DEAD, true);
-+                SELF_CAST(SPELL_BODY_DEATH, true);
-+                break;
-+        }
-+    }
-+
-+    void SpellHitTarget(Unit* target, const SpellEntry* spell)
-+    {
-+        if(spell->Id == SPELL_COMMAND_TOSS_HEAD)
-+            m_creature->CastSpell(target,SPELL_FLYING_HEAD,true);
-+    }
-+
-+    void DamageTaken(Unit *done_by, uint32 &damage)
-+    {
-+        if (damage >= m_creature->GetHealth())
-+        {
-+            damage = 0;//m_creature->GetHealth() - m_creature->GetMaxHealth()/100;
-+            m_creature->SetHealth(1);
-+
-+            SetState(HEAD_SPAWNED, true);
-+            SELF_CAST(SPELL_COMMAND_TOSS_HEAD, true);
-+
-+            SetState(STATE_MOUNTED|STATE_COMBAT, false);
-+            SetState(STATE_HEADLESS,true);
-+        }
-+    }
-+
-+    void OnStateChanged(uint32 state)
-+    {
-+        bool apply = HasState(state);
-+        switch(state)
-+        {
-+        case STATE_MOUNTED:
-+            if(apply)
-+            {
-+                ApplyAuras(m_creature, SPELL_HEAD);
-+                SheduleProcess(EV_LAUGHT,11000,5000,12000);
-+            }
-+            else
-+                m_creature->RemoveAurasDueToSpell(SPELL_HEAD);
-+            break;
-+        case STATE_HEADLESS:
-+            if(apply)
-+            {
-+                //must be part of confused mov generator
-+                m_creature->SetTargetGUID(0);
-+                SaySound(SAY_BODY_DEFEAT);
-+
-+                //it's core problem - damage can remove auras below 
-+                ApplyAuras(m_creature, SPELL_IMMUNE);
-+                ApplyAuras(m_creature, SPELL_CONFUSE);
-+                ApplyAuras(m_creature, SPELL_BODY_REGEN);
-+
-+                SheduleProcess(EV_SPELL_42403_TICK,1000);
-+                SheduleProcess(EV_WHIRLWIND,3000,3000,4000);
-+            }
-+            else
-+            {
-+                m_creature->RemoveAurasDueToSpell(SPELL_IMMUNE);
-+                m_creature->RemoveAurasDueToSpell(SPELL_BODY_REGEN);
-+                m_creature->RemoveAurasDueToSpell(SPELL_CONFUSE);
-+                m_creature->RemoveAurasDueToSpell(SPELL_WHIRLWIND);
-+            }
-+            break;
-+        case HEAD_SPAWNED:
-+            if (apply)
-+            {
-+                float x, y, z;
-+                m_creature->GetClosePoint(x,y,z,m_creature->GetObjectSize(),float(rand()%6),float(rand()%6));
-+                headguid = m_creature->SummonCreature(HEAD,x,y,z,0.0f, TEMPSUMMON_DEAD_DESPAWN, 0)->GetGUID();
-+            }
-+            else if(Unit* u = Unit::GetUnit((*m_creature), headguid))
-+            {
-+                u->AddObjectToRemoveList();
-+                headguid = 0;
-+            }
-+            break;
-+        case MSK(PH_INTRO):
-+            if(apply)
-+            {
-+                m_creature->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-+                SendMoveByPath(m_creature, FLIGHT_TRAVEL_TIME);
-+                SheduleProcess(EV_INTRO_TIMER, FLIGHT_TRAVEL_TIME,FLIGHT_TRAVEL_TIME);
-+            }
-+            else
-+            {
-+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-+                const Locations& loc = FlightPoint[NODES_COUNT-1];
-+                m_creature->Relocate(loc.x,loc.y,loc.z);
-+                SaySound(SAY_ENTRANCE);
-+            }break;
-+        case MSK(PH_ONE):
-+            if(apply)
-+            {
-+                ApplyAuras(m_creature,SPELL_BODY_STAGE_1);
-+                SheduleProcess(EV_CLEAVE,2000,0,4000);
-+            }else
-+                m_creature->RemoveAurasDueToSpell(SPELL_BODY_STAGE_1);
-+            break;
-+        case MSK(PH_TWO):
-+            if(apply)
-+            {
-+                ApplyAuras(m_creature,SPELL_BODY_STAGE_2);
-+                SheduleProcess(EV_CONFLAGRATE,10000,15000,7000);
-+            }else
-+                m_creature->RemoveAurasDueToSpell(SPELL_BODY_STAGE_2);
-+            break;
-+        case MSK(PH_THREE):
-+            if(apply)
-+            {
-+                ApplyAuras(m_creature,SPELL_BODY_STAGE_3);
-+                SheduleProcess(EV_SPROUT_PUMPKINS,25000,15000,11000);
-+            }
-+            else
-+                m_creature->RemoveAurasDueToSpell(SPELL_BODY_STAGE_3);
-+            break;
-+        }
-+    }
-+
-+    void ProcessEvent(uint32 ev_id)
-+    {
-+        switch (ev_id)
-+        {
-+        case EV_CLEAVE:
-+            if(m_creature->getVictim())
-+                m_creature->CastSpell(m_creature->getVictim(),SPELL_CLEAVE, false);
-+            break;
-+        case EV_LAUGHT:
-+            m_creature->MonsterTextEmote(EMOTE_LAUGH,NULL);
-+            DoPlaySoundToSet(m_creature, RandomLaugh[rand()%3]);
-+            break;
-+        case EV_CONFLAGRATE:
-+            if (Unit *u = SelectUnit(SELECT_TARGET_RANDOM,0))
-+            {
-+                SaySound(SAY_CONFLAGRATION, u);
-+                m_creature->CastSpell(u,SPELL_CONFLAGRATION,false);
-+                //u->CastSpell(u,SPELL_CONFL_SPEED,true);  SPELL_CONFL_SPEED must be casterd after SPELL_CONFLAGRATION(core)
-+            }break;
-+        case EV_SPROUT_PUMPKINS:
-+            SELF_CAST(SPELL_SUMMON_PUMPKIN,false);
-+            SaySound(SAY_SPROUTING_PUMPKINS);
-+            break;
-+        case EV_WHIRLWIND:
-+            // other auras removes: (confused, immune and regenerate aura) :(.. fucking mangos
-+            if (rand()%2)
-+                ApplyAuras(m_creature,SPELL_WHIRLWIND);
-+            else
-+                m_creature->RemoveAurasDueToSpell(SPELL_WHIRLWIND);
-+            break;
-+        case EV_SPELL_42403_TICK:
-+            if (m_creature->GetHealth() == m_creature->GetMaxHealth())
-+            {
-+                MovePhase(false);
-+
-+                SELF_CAST(SPELL_COMMAND_RETURN_HEAD, true);
-+                CancelEvent(EV_SPELL_42403_TICK);
-+            }break;
-+        case EV_INTRO_TIMER:
-+            SetPhase(PH_ONE);
-+            SetState(STATE_COMBAT, true);
-+            CancelEvent(EV_INTRO_TIMER);
-+            break;
-+        }
-+
-+    }
-+
-+    void UpdateAI(const uint32 diff)
-+    {
-+        if (HasState(STATE_COMBAT))
-+            ScriptedAI::UpdateAI(diff);
-+
-+        EventsPool::Update(diff);
-+    }
-+};
-*/
 
 struct MANGOS_DLL_DECL boss_headless_horsemanAI : public ScriptedAI
 {
@@ -614,23 +111,90 @@ struct MANGOS_DLL_DECL boss_headless_horsemanAI : public ScriptedAI
 		Reset();
 	}
 
+	uint8 m_uiPhase;
+	uint8 m_uiCombatPhase;
+	uint64 m_uiHeadGUID;
+	uint32 m_uiCleaveTimer;
+	uint32 m_uiConflagrateTimer;
+	uint32 m_uiPumpkinTimer;
+	uint32 m_uiLaughTimer;
+	uint32 m_uiWhirlTimer;
+
     void Reset()
     {
+		m_uiLaughTimer = urand(5000, 10000);
+		m_uiPumpkinTimer = 1000;
+		m_uiCleaveTimer = 3000;
+		m_uiConflagrateTimer = 10000;
+		m_uiPhase = 0;
+		m_uiCombatPhase = 0;
     }
 
     void Aggro(Unit* pWho)
     {
+		DoScriptText(SAY_ENTRANCE, m_creature);
+		m_uiCombatPhase = 1;
         m_creature->SetInCombatWithZone();
     }
+
+	void JustReachedHome()
+	{
+		m_creature->ForcedDespawn();
+		if(Creature* pHead = m_creature->GetMap()->GetCreature(m_uiHeadGUID))
+			pHead->ForcedDespawn();
+	}
 
     void KilledUnit(Unit* pVictim)
     {
         DoScriptText(SAY_SLAY, m_creature);
     }
 
+	void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+	{
+		if(m_uiCombatPhase == 2)
+		{
+			uiDamage = 0;
+			return;
+		}
+
+		if(m_uiPhase == 0 && m_creature->GetHealth() < uiDamage)
+		{
+			m_uiPhase = 1;
+			uiDamage = 0;
+			float angle = (float) rand()*360/RAND_MAX + 1;
+			float homeX = 1797.632f + urand(10, 40)*cos(angle*(M_PI/180));
+			float homeY = 1348.985f + urand(10, 40)*sin(angle*(M_PI/180));
+			if(Creature* pHead = m_creature->SummonCreature(NPC_HEAD, homeX, homeY, m_creature->GetPositionZ(), 0, TEMPSUMMON_CORPSE_DESPAWN, 1000))
+				m_uiHeadGUID = pHead->GetGUID();
+			m_creature->SetDisplayId(DISPLAY_ID_UNMOUNTED);
+			DoCast(m_creature, SPELL_IMMUNE);
+			m_uiCombatPhase = 2;
+			DoScriptText(SAY_LOST_HEAD, m_creature);
+		}
+		else if((m_uiPhase == 1 || m_uiPhase == 2) && m_creature->GetHealth() < uiDamage)
+		{
+			if(Creature* pHead = m_creature->GetMap()->GetCreature(m_uiHeadGUID))
+			{
+				pHead->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+				pHead->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+				pHead->SetVisibility(VISIBILITY_ON);
+			}
+			uiDamage = 0;
+			m_uiPhase = 2;
+			m_uiCombatPhase = 2;
+			m_uiWhirlTimer = 2000;
+			m_uiPumpkinTimer = 10000;
+			m_creature->SetDisplayId(DISPLAY_ID_UNMOUNTED);
+			DoCast(m_creature, SPELL_IMMUNE);
+			DoScriptText(SAY_LOST_HEAD, m_creature);
+		}
+	}
+
     void JustDied(Unit* pKiller)
     {
         DoScriptText(SAY_DEATH, m_creature);
+		if(Creature* pTemp = m_creature->SummonCreature(NPC_FLAME_BUNNY, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 60000))
+			pTemp->CastSpell(pTemp, SPELL_BODY_FLAME, false);
     }
 
     void UpdateAI(const uint32 uiDiff)
@@ -638,13 +202,255 @@ struct MANGOS_DLL_DECL boss_headless_horsemanAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        DoMeleeAttackIfReady();
+		if(m_uiCombatPhase == 1)
+		{
+			if(m_uiLaughTimer < uiDiff)
+			{
+				DoScriptText(EMOTE_LAUGH, m_creature);
+				m_uiLaughTimer = urand(15000, 30000);
+			}
+			else m_uiLaughTimer -= uiDiff;
+
+			if(m_uiConflagrateTimer < uiDiff && m_uiPhase >= 1)
+			{
+				DoScriptText(SAY_CONFLAGRATION, m_creature);
+				if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+					DoCast(pTarget, SPELL_SUMMON_PUMPKIN);
+				m_uiConflagrateTimer = urand(5000, 9000);
+			}
+			else m_uiConflagrateTimer -= uiDiff;
+
+			if(m_uiCleaveTimer < uiDiff)
+			{
+				DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+				m_uiCleaveTimer = urand(3000, 6000);
+			}
+			else m_uiCleaveTimer -= uiDiff;
+
+			if(m_uiPumpkinTimer < uiDiff && m_uiPhase == 2)
+			{
+				DoScriptText(SAY_SPROUTING_PUMPKINS, m_creature);
+				DoCast(m_creature, SPELL_SUMMON_PUMPKIN);
+				m_uiPumpkinTimer = 60000;
+			}
+			else m_uiPumpkinTimer -= uiDiff;
+
+			DoMeleeAttackIfReady();
+		}
+		else if(m_uiCombatPhase == 2)
+		{
+			if(!m_creature->HasAura(SPELL_BODY_REGEN, EFFECT_INDEX_0))
+				DoCast(m_creature, SPELL_BODY_REGEN);
+
+			if(!m_creature->HasAura(SPELL_CONFUSE, EFFECT_INDEX_0))
+				DoCast(m_creature, SPELL_CONFUSE);
+
+			if(m_uiPhase >= 1)
+			{
+				if(m_uiWhirlTimer < uiDiff)
+				{
+					DoCast(m_creature, SPELL_WHIRLWIND);
+					m_uiWhirlTimer = 10000;
+				}
+				else m_uiWhirlTimer -= uiDiff;
+			}
+		}
     }
 };
 
 CreatureAI* GetAI_boss_headless_horseman(Creature* pCreature)
 {
     return new boss_headless_horsemanAI(pCreature);
+}
+
+struct MANGOS_DLL_DECL mob_horsemans_headAI : public ScriptedAI
+{
+    mob_horsemans_headAI(Creature* pCreature) : ScriptedAI(pCreature) 
+	{
+		m_pInstance = ((ScriptedInstance*)pCreature->GetInstanceData());
+		pCreature->setFaction(14);
+		SetCombatMovement(false);
+		Reset();
+	}
+
+	ScriptedInstance *m_pInstance;
+
+	uint8 m_uiPhase;
+	uint32 m_uiMovementTimer;
+
+	uint32 m_uiDieTimer;
+	bool m_bMustDie;
+
+    void Reset()
+    {
+		DoCast(m_creature, SPELL_HEAD_FLAME);
+		m_uiPhase = 0;
+		m_uiDieTimer		= 1000;
+		m_bMustDie			= false;
+    }
+
+	void AttackStart(Unit* pWho)
+	{
+		return;
+	}
+
+	void DoExplode()
+	{
+		DoCast(m_creature, SPELL_HEAD_IS_DEAD);
+		m_uiDieTimer = 100;
+		m_bMustDie = true;
+	}
+
+	void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
+	{
+		if(m_uiPhase == 0 && m_creature->GetHealthPercent() < 50.0f)
+		{
+			m_uiPhase = 1;
+			m_creature->SetVisibility(VISIBILITY_OFF);
+			m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+			m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+			DoScriptText(SAY_REJOINED, m_creature);
+			if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HEADLESS_HORSEMAN)))
+			{
+				pTemp->SetDisplayId(DISPLAY_ID_MOUNTED);
+				pTemp->SetHealth(pTemp->GetMaxHealth());
+				pTemp->RemoveAllAuras();
+				pTemp->GetMotionMaster()->MoveChase(pTemp->getVictim());
+				((boss_headless_horsemanAI*)pTemp->AI())->m_uiCombatPhase = 1;
+			}
+		}
+		else if(m_uiPhase == 1 && m_creature->GetHealthPercent() < 10.0f)
+		{
+			m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+			m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+			m_creature->SetVisibility(VISIBILITY_OFF);
+			m_uiPhase = 2;
+			DoScriptText(SAY_REJOINED, m_creature);
+			if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HEADLESS_HORSEMAN)))
+			{
+				pTemp->SetDisplayId(DISPLAY_ID_MOUNTED);
+				pTemp->SetHealth(pTemp->GetMaxHealth());
+				pTemp->RemoveAllAuras();
+				pTemp->GetMotionMaster()->MoveChase(pTemp->getVictim());
+				((boss_headless_horsemanAI*)pTemp->AI())->m_uiCombatPhase = 1;
+			}
+		}
+		else if(m_uiPhase == 2 && m_creature->GetHealth() < uiDamage)
+		{
+			uiDamage = 0;
+			DoExplode();
+		}
+	}
+
+	void JustDied(Unit* pKiller)
+	{
+		if(Creature* pTemp = m_creature->GetMap()->GetCreature(m_pInstance->GetData64(NPC_HEADLESS_HORSEMAN)))
+			pTemp->CastSpell(pTemp, SPELL_BODY_DEATH, false);
+	}
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		if(m_uiDieTimer < uiDiff && m_bMustDie)
+            m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        else m_uiDieTimer -= uiDiff;
+
+		if(m_uiMovementTimer < uiDiff)
+		{
+			float angle = (float) rand()*360/RAND_MAX + 1;
+			float homeX = 1797.632f + urand(10, 40)*cos(angle*(M_PI/180));
+			float homeY = 1348.985f + urand(10, 40)*sin(angle*(M_PI/180));
+			m_creature->GetMotionMaster()->MovePoint(0, homeX, homeY, m_creature->GetPositionZ());
+			m_uiMovementTimer = urand(3000, 6000);
+		}
+		else m_uiMovementTimer -= uiDiff;
+    }
+};
+
+CreatureAI* GetAI_mob_horsemans_head(Creature* pCreature)
+{
+    return new mob_horsemans_headAI(pCreature);
+}
+
+struct MANGOS_DLL_DECL mob_pumpkinAI : public ScriptedAI
+{
+    mob_pumpkinAI(Creature* pCreature) : ScriptedAI(pCreature) 
+	{
+		pCreature->setFaction(14);
+		Reset();
+	}
+
+	bool m_bHasGreenAura;
+	uint32 m_uiTransformTimer;
+	uint32 m_uiSproutTimer;
+	bool m_bStartAttack;
+
+	uint32 m_uiSquashTimer;
+
+    void Reset()
+    {
+		DoCast(m_creature, SPELL_PUMPKIN_AURA);
+		m_bHasGreenAura = false;
+		m_bStartAttack = false;
+		m_uiSproutTimer = 1000;
+		m_uiTransformTimer = 10000;
+		m_uiSquashTimer = 5000;
+    }
+
+	void AttackStart(Unit* pWho)
+    {
+		if(!m_bStartAttack)
+			return;
+
+        if (m_creature->Attack(pWho, true)) 
+        {
+            m_creature->AddThreat(pWho);
+            m_creature->SetInCombatWith(pWho);
+            pWho->SetInCombatWith(m_creature);
+            DoStartMovement(pWho);
+        }
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+		if(!m_bHasGreenAura && m_creature->HasAura(SPELL_PUMPKIN_AURA_GREEN, EFFECT_INDEX_0))
+		{
+			DoCast(m_creature, SPELL_PUMPKIN_AURA_GREEN);
+			m_bHasGreenAura = true;
+		}
+		
+		if(m_uiSproutTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_SPROUTING);
+			m_uiSproutTimer = 6000000;
+		}
+		else m_uiSproutTimer -= uiDiff;
+
+		if(m_uiTransformTimer < uiDiff)
+		{
+			DoCast(m_creature, SPELL_SPROUT_BODY);
+			m_bStartAttack = true;
+			m_creature->SetInCombatWithZone();
+			m_uiTransformTimer = 6000000;
+		}
+		else m_uiTransformTimer -= uiDiff;
+
+		if(!m_bStartAttack)
+			return;
+
+		if(m_uiSquashTimer < uiDiff)
+		{
+			DoCast(m_creature->getVictim(), SPELL_SQUASH_SOUL);
+			m_uiSquashTimer = urand(4000, 7000);
+		}
+		else m_uiSquashTimer -= uiDiff;
+
+		DoMeleeAttackIfReady();;
+    }
+};
+
+CreatureAI* GetAI_mob_pumpkin(Creature* pCreature)
+{
+    return new mob_pumpkinAI(pCreature);
 }
 
 void AddSC_boss_headless_horseman()
@@ -654,5 +460,15 @@ void AddSC_boss_headless_horseman()
     NewScript = new Script;
     NewScript->Name = "boss_headless_horseman";
     NewScript->GetAI = GetAI_boss_headless_horseman;
+    NewScript->RegisterSelf();
+
+	NewScript = new Script;
+    NewScript->Name = "mob_horsemans_head";
+    NewScript->GetAI = GetAI_mob_horsemans_head;
+    NewScript->RegisterSelf();
+
+	NewScript = new Script;
+    NewScript->Name = "mob_pumpkin";
+    NewScript->GetAI = GetAI_mob_pumpkin;
     NewScript->RegisterSelf();
 }
