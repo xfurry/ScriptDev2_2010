@@ -12,6 +12,12 @@ Insert into `spell_script_target` values
 
 -- Midsummer
 UPDATE `creature_template` SET `ScriptName`='boss_ahune' WHERE `entry` = 25740;
+UPDATE `creature_template` SET `ScriptName`='mob_frozen_core' WHERE `entry` = 25865;
+UPDATE `creature_template` SET `ScriptName`='mob_ahunite_hailstone' WHERE `entry` = 25755;
+UPDATE `creature_template` SET `ScriptName`='mob_ahunite_coldwave' WHERE `entry` = 25756;
+UPDATE `creature_template` SET `ScriptName`='mob_ahunite_frostwind' WHERE `entry` = 25757;
+update gameobject set spawnmask = 0 where id = 187892;
+UPDATE `gameobject_template` SET `faction` = 0 WHERE `entry` = 187892;
 
 -- Love is in the Air
 UPDATE `creature_template` SET `ScriptName`='boss_apothecary_hummel' WHERE `entry` = 36296;
