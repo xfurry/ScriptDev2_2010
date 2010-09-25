@@ -320,7 +320,7 @@ extern void AddSC_boss_galdarah();
 extern void AddSC_boss_moorabi();
 extern void AddSC_boss_sladran();
 extern void AddSC_instance_gundrak();
-extern void AddSC_boss_bronjahn();                          //icecrown citadel - frozen halls - forge of souls
+extern void AddSC_boss_bronjahm();                          //icecrown citadel - frozen halls - forge of souls
 extern void AddSC_boss_devourer_of_souls();                        
 extern void AddSC_instance_forge_of_souls();
 extern void AddSC_boss_falric();                            //icecrown citadel - frozen halls - halls of reflection
@@ -843,7 +843,7 @@ void AddScripts()
     AddSC_boss_moorabi();
     AddSC_boss_sladran();
     AddSC_instance_gundrak();
-    AddSC_boss_bronjahn();                                  //icecrown citadel - frozen halls - forge of souls
+    AddSC_boss_bronjahm();                                  //icecrown citadel - frozen halls - forge of souls
     AddSC_boss_devourer_of_souls();                              
     AddSC_instance_forge_of_souls();
     AddSC_boss_falric();                                    //icecrown citadel - frozen halls - halls of reflection
