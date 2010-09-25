@@ -93,6 +93,7 @@ enum
  
     MAX_ANGLE_STEPS_COUNT       = 100,                       // 20 = 500ms (retail periodic tic of auras), increase to smoothen
     NPC_WELL_OF_SOULS           = 36536,
+	NPC_UNLEASHED_SOUL			= 36595,
 
     FACE_NORMAL                 = 0,
     FACE_UNLEASHING             = 1,
@@ -213,6 +214,8 @@ struct MANGOS_DLL_DECL boss_devourer_of_soulsAI : public ScriptedAI
             //pSummoned->AI()->SetCombatMovement(false);
             // Prevent Combat Movement
         }
+		else if (pSummoned->GetEntry() == NPC_UNLEASHED_SOUL)
+			pSummoned->SetInCombatWithZone();
     }
  
     /* This is some kind of workaround, because some of these spells work with SPELL_EFFECT_SCRIPT_EFFECT */
