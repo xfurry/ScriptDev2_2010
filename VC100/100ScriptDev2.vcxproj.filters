@@ -309,9 +309,6 @@
     <ClCompile Include="..\base\guard_ai.cpp">
       <Filter>base</Filter>
     </ClCompile>
-    <ClCompile Include="..\base\simple_ai.cpp">
-      <Filter>base</Filter>
-    </ClCompile>
     <ClCompile Include="..\scripts\battlegrounds\battleground.cpp">
       <Filter>scripts\battlegrounds</Filter>
     </ClCompile>
@@ -1371,6 +1368,9 @@
     <ClCompile Include="..\scripts\northrend\icecrown_citadel\frozen_halls\forge_of_souls\boss_devourer_of_souls.cpp">
       <Filter>scripts\northrend\icecrown_citadel\frozen_halls\forge_of_souls</Filter>
     </ClCompile>
+    <ClCompile Include="..\scripts\northrend\icecrown_citadel\frozen_halls\forge_of_souls\instance_forge_of_souls.cpp">
+      <Filter>scripts\northrend\icecrown_citadel\frozen_halls\forge_of_souls</Filter>
+    </ClCompile>
     <ClCompile Include="..\scripts\outland\blades_edge_mountains.cpp">
       <Filter>scripts\outland</Filter>
     </ClCompile>
@@ -1677,9 +1677,6 @@
     <ClInclude Include="..\base\guard_ai.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\base\simple_ai.h">
-      <Filter>base</Filter>
-    </ClInclude>
     <ClInclude Include="..\scripts\eastern_kingdoms\blackrock_depths\blackrock_depths.h">
       <Filter>scripts\eastern_kingdoms\blackrock_depths</Filter>
     </ClInclude>
@@ -1772,6 +1769,9 @@
     </ClInclude>
     <ClInclude Include="..\scripts\northrend\gundrak\gundrak.h">
       <Filter>scripts\northrend\gundrak</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scripts\northrend\icecrown_citadel\frozen_halls\forge_of_souls\forge_of_souls.h">
+      <Filter>scripts\northrend\icecrown_citadel\frozen_halls\forge_of_souls</Filter>
     </ClInclude>
     <ClInclude Include="..\scripts\northrend\naxxramas\naxxramas.h">
       <Filter>scripts\northrend\naxxramas</Filter>
