@@ -98,10 +98,10 @@ struct MANGOS_DLL_DECL boss_anubrekhanAI : public ScriptedAI
         }
         
         //Remove all corpse scarabs
-        std::list<Creature*> CorpseScarabs = GetCreaturesByEntry(NPC_CORPSE_SCARAB);
+        /*std::list<Creature*> CorpseScarabs = GetCreaturesByEntry(NPC_CORPSE_SCARAB);
         if (!CorpseScarabs.empty())
             for(std::list<Creature*>::iterator itr = CorpseScarabs.begin(); itr != CorpseScarabs.end(); ++itr)
-                (*itr)->AddObjectToRemoveList();
+                (*itr)->AddObjectToRemoveList();*/
 
         //if anubrekhan is alive -> this must be first time we entered Arachnid Quarter -> close all other doors
     }
@@ -168,7 +168,7 @@ struct MANGOS_DLL_DECL boss_anubrekhanAI : public ScriptedAI
         return m_creature->IsWithinDistInMap(who, 100.0f);
     }
 
-    std::list<Creature*> GetCreaturesByEntry(uint32 entry)
+    /*std::list<Creature*> GetCreaturesByEntry(uint32 entry)
     {
         CellPair pair(MaNGOS::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
         Cell cell(pair);
@@ -184,7 +184,7 @@ struct MANGOS_DLL_DECL boss_anubrekhanAI : public ScriptedAI
         cell.Visit(pair, visitor, *(m_creature->GetMap()));
 
         return creatureList;
-    }
+    }*/
 
     void JustSummoned(Creature* temp) 
     {
@@ -221,7 +221,7 @@ struct MANGOS_DLL_DECL boss_anubrekhanAI : public ScriptedAI
             m_uiSummonTimer = 2000000;
         }else m_uiSummonTimer -= uiDiff;
 
-        //RiseFromCorpse_Timer
+        /*RiseFromCorpse_Timer
         if (RiseFromCorpse_Timer < uiDiff)
         {
             RiseFromCorpse_Timer = 60000 + (rand()%10000);
@@ -248,7 +248,7 @@ struct MANGOS_DLL_DECL boss_anubrekhanAI : public ScriptedAI
                         pPlayer->CastSpell(pPlayer,SPELL_SELF_SPAWN_5,true);
                 }
             CryptGuards.clear();
-        }else RiseFromCorpse_Timer -= uiDiff; 
+        }else RiseFromCorpse_Timer -= uiDiff; */
 
         if(!swarm)
         {
