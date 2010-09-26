@@ -203,9 +203,6 @@ struct MANGOS_DLL_DECL boss_IckAI : public ScriptedAI
             m_uiMightKickTimer -= uiDiff;
 
         DoMeleeAttackIfReady();
-
-        if (m_creature->GetDistance2d(HOME_X, HOME_Y) > 80)
-            EnterEvadeMode();
     }
 };
 
@@ -347,9 +344,6 @@ struct MANGOS_DLL_DECL boss_KrickAI : public ScriptedAI
 
             if(!GetClosestCreatureWithEntry(m_creature, NPC_ICK, 100.0f))
                 m_bIsOutro = true;
-
-            if (m_creature->GetDistance2d(HOME_X, HOME_Y) > 80)
-                EnterEvadeMode();
         }
         if(m_bIsOutro)
         {

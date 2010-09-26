@@ -6,24 +6,6 @@ UPDATE creature_template SET ScriptName='npc_silvana_and_jaina_fos_intro' WHERE 
 UPDATE instance_template SET ScriptName='instance_forge_of_souls' WHERE map=632;
 
 /* PIT OF SARON */
--- Trash
-UPDATE `creature_template` SET `ScriptName`='npc_YmirjarWrathbringer' WHERE `entry`=36840;
-UPDATE `creature_template` SET `ScriptName`='npc_YmirjarSkycaller' WHERE `entry`=31260;
-UPDATE `creature_template` SET `ScriptName`='npc_YmirjarFlamebearer' WHERE `entry`=36893;
-UPDATE `creature_template` SET `ScriptName`='npc_YmirjarDeathbringer' WHERE `entry`=36892;
-UPDATE `creature_template` SET `ScriptName`='npc_WrathboneLaborer' WHERE `entry`=36830;
-UPDATE `creature_template` SET `ScriptName`='npc_WrathboneColdwraith' WHERE `entry`=36842;
-UPDATE `creature_template` SET `ScriptName`='npc_StonespineGargoyle' WHERE `entry`=36896;
-UPDATE `creature_template` SET `ScriptName`='npc_PlaguebornHorror' WHERE `entry`=36879;
-UPDATE `creature_template` SET `ScriptName`='npc_IcebornProtoDrake' WHERE `entry`=36891;
-UPDATE `creature_template` SET `ScriptName`='npc_HungeringGhoul' WHERE `entry`=37711;
-UPDATE `creature_template` SET `ScriptName`='npc_FallenWarrior' WHERE `entry`=36841;
-UPDATE `creature_template` SET `ScriptName`='npc_DeathwhisperTorturer' WHERE `entry`=37713;
-UPDATE `creature_template` SET `ScriptName`='npc_DeathwhisperShadowcaster' WHERE `entry`=37712;
-UPDATE `creature_template` SET `ScriptName`='npc_DeathwhisperNecrolyte' WHERE `entry`=36788;
-UPDATE `creature_template` SET `ScriptName`='npc_WrathboneSorcerer' WHERE `entry`=37728;
-UPDATE `creature_template` SET `ScriptName`='npc_GeistAmbusher' WHERE `entry`=36886;
-UPDATE `creature_template` SET `ScriptName`='npc_disturbedGlacialRevenant' WHERE `entry`=36874;
 -- Areatrigger:
 delete from scripted_areatrigger where entry = 5578;
 insert into scripted_areatrigger values (5578, 'at_tyrannus');
@@ -34,7 +16,6 @@ UPDATE `creature_template` SET `ScriptName`='boss_Krick' WHERE `entry`=36477;
 UPDATE `creature_template` SET `ScriptName`='mob_explosive_orb' WHERE `entry`=36610;
 UPDATE `creature_template` SET `ScriptName`='boss_Tyrannus' WHERE `entry`=36658;
 UPDATE `creature_template` SET `ScriptName`='boss_Rimefang' WHERE `entry`=36661;
-UPDATE `creature_template` SET `ScriptName`='mob_icy_blast' WHERE `entry`=36731;
 UPDATE `creature_template` SET `ScriptName`='npc_colapsing_icicle' WHERE `entry`=36847;
 -- npc
 UPDATE `creature_template` SET `ScriptName`='npc_slyvanas_jaina_pos_start' WHERE `entry` in (36993, 36990);

@@ -475,6 +475,12 @@ struct MANGOS_DLL_DECL boss_RimefangAI : public ScriptedAI
         m_uiMainTargetGUID = m_uiTargetGUID;
     }
 
+	void JustSummoned(Creature* pSummoned)
+	{
+		if(pSummoned->GetEntry() == NPC_ICY_BLAST)
+			pSummoned->CastSpell(pSummoned, SPELL_ICY_BLAST_AURA, false);
+	}
+
     void UpdateAI(const uint32 uiDiff)
     {
         //Return since we have no target
@@ -963,34 +969,18 @@ struct MANGOS_DLL_DECL boss_TyrannusAI : public ScriptedAI
     }
 };
 
-struct MANGOS_DLL_DECL mob_icy_blastAI : public ScriptedAI
+
+// start tyrannus gauntlet event
+bool AreaTrigger_at_tyrannus(Player* pPlayer, AreaTriggerEntry const* pAt)
 {
-    mob_icy_blastAI(Creature *pCreature) : ScriptedAI(pCreature)
+    if (ScriptedInstance* pInstance = (ScriptedInstance*)pPlayer->GetInstanceData())
     {
-        m_pInstance = (ScriptedInstance*)pCreature->GetInstanceData();
-        m_bIsRegularMode = pCreature->GetMap()->IsRegularDifficulty();
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        pCreature->SetDisplayId(11686);
-        pCreature->setFaction(14);
-        SetCombatMovement(false);
-        Reset();
-    }
+		if (pInstance->GetData(TYPE_TYRANNUS) == NOT_STARTED && pInstance->GetData(TYPE_GAUNTLET) == NOT_STARTED)
+			pInstance->SetData(TYPE_GAUNTLET, IN_PROGRESS);
+	}
 
-    ScriptedInstance* m_pInstance;
-    bool m_bIsRegularMode;
-
-    void Reset()
-    { 
-        DoCast(m_creature, m_bIsRegularMode ? SPELL_ICY_BLAST_AURA : SPELL_ICY_BLAST_AURA_H);
-    }
-
-    void UpdateAI(const uint32 uiDiff)
-    {
-        if (m_pInstance && m_pInstance->GetData(TYPE_TYRANNUS) != IN_PROGRESS) 
-            m_creature->ForcedDespawn();
-    }
-};
+    return false;
+}
 
 CreatureAI* GetAI_boss_Tyrannus(Creature* pCreature)
 {
@@ -1000,11 +990,6 @@ CreatureAI* GetAI_boss_Tyrannus(Creature* pCreature)
 CreatureAI* GetAI_boss_Rimefang(Creature* pCreature)
 {
     return new boss_RimefangAI (pCreature);
-}
-
-CreatureAI* GetAI_mob_icy_blast(Creature* pCreature)
-{
-    return new mob_icy_blastAI (pCreature);
 }
 
 CreatureAI* GetAI_npc_colapsing_icicle(Creature* pCreature)
@@ -1030,11 +1015,6 @@ void AddSC_boss_Tyrannus()
     newscript->GetAI = &GetAI_boss_Rimefang;
     newscript->RegisterSelf();
 
-    newscript = new Script;
-    newscript->Name="mob_icy_blast";
-    newscript->GetAI = &GetAI_mob_icy_blast;
-    newscript->RegisterSelf();
-
 	newscript = new Script;
     newscript->Name="npc_colapsing_icicle";
     newscript->GetAI = &GetAI_npc_colapsing_icicle;
@@ -1043,5 +1023,10 @@ void AddSC_boss_Tyrannus()
     newscript = new Script;
     newscript->GetAI = &GetAI_npc_sylvanas_jaina_pos_end;
     newscript->Name = "npc_slyvanas_jaina_pos_end";
+    newscript->RegisterSelf();
+
+	newscript = new Script;
+    newscript->Name = "at_tyrannus";
+    newscript->pAreaTrigger = &AreaTrigger_at_tyrannus;
     newscript->RegisterSelf();
 }
