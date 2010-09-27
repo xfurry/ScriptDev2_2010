@@ -465,16 +465,16 @@ struct MANGOS_DLL_DECL boss_fjolaAI : public ScriptedAI
 		// on heroic only
 		if (m_uiTouchTimer < uiDiff)
 		{
-            //if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-			//{
-			//	if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			//		DoCast(pTarget, SPELL_TOUCH_OF_LIGHT_10HC);
-			//}
-			//if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-			//{
-			//	if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			//		DoCast(pTarget, SPELL_TOUCH_OF_LIGHT_25HC);
-			//}
+            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+			{
+				if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+					DoCast(pTarget, SPELL_TOUCH_OF_LIGHT_10HC);
+			}
+			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+			{
+				if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+					DoCast(pTarget, SPELL_TOUCH_OF_LIGHT_25HC);
+			}
 			m_uiTouchTimer = 20000;
 		}
 		else m_uiTouchTimer -= uiDiff;
@@ -959,16 +959,16 @@ struct MANGOS_DLL_DECL boss_eydisAI : public ScriptedAI
 		// on heroic only
 		if (m_uiTouchTimer < uiDiff)
 		{
-            //if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
-			//{
-			//	if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			//		DoCast(pTarget, SPELL_TOUCH_OF_DARKNESS_10HC);
-			//}
-			//if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
-			//{
-			//	if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
-			//		DoCast(pTarget, SPELL_TOUCH_OF_DARKNESS_25HC);
-			//}
+            if(Difficulty == RAID_DIFFICULTY_10MAN_HEROIC)
+			{
+				if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+					DoCast(pTarget, SPELL_TOUCH_OF_DARKNESS_10HC);
+			}
+			if(Difficulty == RAID_DIFFICULTY_25MAN_HEROIC)
+			{
+				if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
+					DoCast(pTarget, SPELL_TOUCH_OF_DARKNESS_25HC);
+			}
 			m_uiTouchTimer = 20000;
 		}
 		else m_uiTouchTimer -= uiDiff;
