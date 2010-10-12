@@ -20,12 +20,6 @@ DELETE FROM scripted_areatrigger WHERE entry = 4113;
 INSERT INTO scripted_areatrigger VALUES
 (4113, 'at_naxxramas');
 
-DELETE FROM script_texts WHERE entry BETWEEN -1533149 AND -1533147;
-INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
-(-1533147,'%s loses its link!',0,3,0,0,'tesla_coil EMOTE_LOSING_LINK'),
-(-1533148,'%s overloads!',0,3,0,0,'tesla_coil EMOTE_TESLA_OVERLOAD'),
-(-1533149,'The polarity has shifted!',0,3,0,0,'thaddius EMOTE_POLARITY_SHIFT');
-
 UPDATE `gameobject` SET `state` = 1 WHERE `guid` = 73469;
 UPDATE `gameobject_template` SET `faction` = 114, `data0` = '1' where `entry` in (194022, 181195, 181228, 181225, 181201, 181200);
 UPDATE `gameobject_template` SET `faction` = 114 where `entry` in (181234, 181169, 181168, 181477, 181478);

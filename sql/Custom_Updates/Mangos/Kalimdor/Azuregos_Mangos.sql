@@ -1,10 +1,5 @@
-##Skript
+-- Script
 UPDATE creature_template SET npcflag=1, AIName="",ScriptName="npc_spirit_azuregos" WHERE entry=15481;
-
-##TextIDs
-DELETE FROM `script_texts` WHERE `entry` = '-1630010';
-INSERT INTO script_texts (entry, emote, content_default, comment) VALUES
-(-1630010, 0, "I said GOOD DAY!", "SAY_SpiritAzu_GoodBye");
 
 DELETE FROM `npc_text` WHERE `ID` IN (1630011, 1630012, 1630013, 1630014, 1630015, 1630016, 1630017, 1630018, 1630019, 1630020, 1630021, 1630022, 1630023);
 INSERT INTO npc_text (ID, prob0, em0_1, text0_0) VALUES
