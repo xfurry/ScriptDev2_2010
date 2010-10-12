@@ -1,4 +1,4 @@
-﻿-- Into the Realm of Shadows
+-- Into the Realm of Shadows
 UPDATE `creature_template` SET `ScriptName`='npc_salanar_the_horseman',ainame="" WHERE `entry`='28653';
 UPDATE `creature_template` SET `ScriptName`='mob_dark_rider_of_acherus',ainame="" WHERE `entry`='28768';
 
