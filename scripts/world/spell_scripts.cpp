@@ -67,7 +67,7 @@ bool EffectDummyGameObj_spell_dummy_go(Unit* pCaster, uint32 uiSpellId, SpellEff
         {
             if (uiEffIndex == EFFECT_INDEX_0)
             {
-                if (pGOTarget->GetEntry() != GO_TASTY_REEF_FISH || pCaster->GetTypeId() != TYPEID_PLAYER)
+                if (pGOTarget->GetRespawnTime() != 0 || pGOTarget->GetEntry() != GO_TASTY_REEF_FISH || pCaster->GetTypeId() != TYPEID_PLAYER)
                     return true;
 
                 if (urand(0, 3))
@@ -81,7 +81,7 @@ bool EffectDummyGameObj_spell_dummy_go(Unit* pCaster, uint32 uiSpellId, SpellEff
                         pShark->AI()->AttackStart(pCaster);
                 }
 
-                pGOTarget->Delete();                        // sends despawn anim + destroy
+                pGOTarget->SetLootState(GO_JUST_DEACTIVATED);
                 return true;
             }
             return true;
@@ -90,7 +90,7 @@ bool EffectDummyGameObj_spell_dummy_go(Unit* pCaster, uint32 uiSpellId, SpellEff
         {
             if (uiEffIndex == EFFECT_INDEX_0)
             {
-                if (pGOTarget->GetEntry() != GO_RED_SNAPPER || pCaster->GetTypeId() != TYPEID_PLAYER)
+                if (pGOTarget->GetRespawnTime() != 0 || pGOTarget->GetEntry() != GO_RED_SNAPPER || pCaster->GetTypeId() != TYPEID_PLAYER)
                     return true;
 
                 if (urand(0, 2))
@@ -104,7 +104,7 @@ bool EffectDummyGameObj_spell_dummy_go(Unit* pCaster, uint32 uiSpellId, SpellEff
                         ((Player*)pCaster)->SendNewItem(pItem, 1, true, false);
                 }
 
-                pGOTarget->Delete();                        // sends despawn anim + destroy
+                pGOTarget->SetLootState(GO_JUST_DEACTIVATED);
                 return true;
             }
             return true;
@@ -241,13 +241,55 @@ enum
     SPELL_ENRAGE                        = 45111,
     NPC_FREED_GREENGILL_SLAVE           = 25085,
     NPC_DARKSPINE_MYRMIDON              = 25060,
-    NPC_DARKSPINE_SIREN                 = 25073
+    NPC_DARKSPINE_SIREN                 = 25073,
+
+    // quest 14107
+    SPELL_BLESSING_OF_PEACE             = 66719,
+    NPC_FALLEN_HERO_SPIRIT              = 32149,
+    NPC_FALLEN_HERO_SPIRIT_PROXY        = 35055,
+    SAY_BLESS_1                         = -1000594,
+    SAY_BLESS_2                         = -1000595,
+    SAY_BLESS_3                         = -1000596,
+    SAY_BLESS_4                         = -1000597,
+    SAY_BLESS_5                         = -1000598,
 };
 
 bool EffectAuraDummy_spell_aura_dummy_npc(const Aura* pAura, bool bApply)
 {
     switch(pAura->GetId())
     {
+        case SPELL_BLESSING_OF_PEACE:
+        {
+            Creature* pCreature = (Creature*)pAura->GetTarget();
+
+            if (!pCreature || pCreature->GetEntry() != NPC_FALLEN_HERO_SPIRIT)
+                return true;
+
+            if (pAura->GetEffIndex() != EFFECT_INDEX_0)
+                return true;
+
+            if (bApply)
+            {
+                switch(urand(0, 4))
+                {
+                    case 0: DoScriptText(SAY_BLESS_1, pCreature); break;
+                    case 1: DoScriptText(SAY_BLESS_2, pCreature); break;
+                    case 2: DoScriptText(SAY_BLESS_3, pCreature); break;
+                    case 3: DoScriptText(SAY_BLESS_4, pCreature); break;
+                    case 4: DoScriptText(SAY_BLESS_5, pCreature); break;
+                }
+            }
+            else
+            {
+                if (Player* pPlayer = (Player*)pAura->GetCaster())
+                {
+                    pPlayer->KilledMonsterCredit(NPC_FALLEN_HERO_SPIRIT_PROXY, pCreature->GetGUID());
+                    pCreature->ForcedDespawn();
+                }
+            }
+
+            return true;
+        }
         case SPELL_HEALING_SALVE:
         {
             if (pAura->GetEffIndex() != EFFECT_INDEX_0)
