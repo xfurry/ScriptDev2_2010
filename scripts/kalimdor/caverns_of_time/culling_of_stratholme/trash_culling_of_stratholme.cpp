@@ -86,7 +86,7 @@ struct MANGOS_DLL_DECL npc_cs_gnoulAI : public ScriptedAI
       m_creature->RemoveAllAuras();
       m_creature->DeleteThreatList();
       m_creature->CombatStop(true);
-      m_creature->LoadCreaturesAddon();
+      m_creature->LoadCreatureAddon();
       m_uiFleshTimer = (urand(3000, 10000));
 
       m_creature->SetLootRecipient(NULL);
@@ -100,7 +100,7 @@ struct MANGOS_DLL_DECL npc_cs_gnoulAI : public ScriptedAI
         if (!m_creature->hasUnitState(UNIT_STAT_STUNNED) && pWho->isTargetableForAttack() &&
             m_creature->IsHostileTo(pWho) && pWho->isInAccessablePlaceFor(m_creature))
         {
-            if (!m_creature->canFly() && m_creature->GetDistanceZ(pWho) > CREATURE_Z_ATTACK_RANGE)
+            if (!m_creature->CanFly() && m_creature->GetDistanceZ(pWho) > CREATURE_Z_ATTACK_RANGE)
                 return;
 
             float attackRadius = m_creature->GetAttackDistance(pWho);
@@ -128,7 +128,7 @@ struct MANGOS_DLL_DECL npc_cs_gnoulAI : public ScriptedAI
 
    void UpdateAI(const uint32 uiDiff)
    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() && m_creature->isTemporarySummon())
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() && m_creature->IsTemporarySummon())
         {
           if(MoveTimer < uiDiff)
           {   
@@ -272,7 +272,7 @@ struct MANGOS_DLL_DECL npc_cs_necromancerAI : public ScriptedAI
       m_creature->RemoveAllAuras();
       m_creature->DeleteThreatList();
       m_creature->CombatStop(true);
-      m_creature->LoadCreaturesAddon();
+      m_creature->LoadCreatureAddon();
       m_uiShadowBoltTimer = (urand(3000, 10000));
       m_uiCourseTimer = (urand(7000, 17000));
 
@@ -287,7 +287,7 @@ struct MANGOS_DLL_DECL npc_cs_necromancerAI : public ScriptedAI
         if (!m_creature->hasUnitState(UNIT_STAT_STUNNED) && pWho->isTargetableForAttack() &&
             m_creature->IsHostileTo(pWho) && pWho->isInAccessablePlaceFor(m_creature))
         {
-            if (!m_creature->canFly() && m_creature->GetDistanceZ(pWho) > CREATURE_Z_ATTACK_RANGE)
+            if (!m_creature->CanFly() && m_creature->GetDistanceZ(pWho) > CREATURE_Z_ATTACK_RANGE)
                 return;
 
             float attackRadius = m_creature->GetAttackDistance(pWho);
@@ -315,7 +315,7 @@ struct MANGOS_DLL_DECL npc_cs_necromancerAI : public ScriptedAI
 
    void UpdateAI(const uint32 uiDiff)
    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() && m_creature->isTemporarySummon())
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() && m_creature->IsTemporarySummon())
         {
           if(MoveTimer < uiDiff)
           {   
@@ -462,7 +462,7 @@ struct MANGOS_DLL_DECL npc_cs_fieldAI : public ScriptedAI
       m_creature->RemoveAllAuras();
       m_creature->DeleteThreatList();
       m_creature->CombatStop(true);
-      m_creature->LoadCreaturesAddon();
+      m_creature->LoadCreatureAddon();
       m_uiScarabTimer = (urand(3000, 10000));
       m_uiBlowTimer = (urand(7000, 17000));
 
@@ -477,7 +477,7 @@ struct MANGOS_DLL_DECL npc_cs_fieldAI : public ScriptedAI
         if (!m_creature->hasUnitState(UNIT_STAT_STUNNED) && pWho->isTargetableForAttack() &&
             m_creature->IsHostileTo(pWho) && pWho->isInAccessablePlaceFor(m_creature))
         {
-            if (!m_creature->canFly() && m_creature->GetDistanceZ(pWho) > CREATURE_Z_ATTACK_RANGE)
+            if (!m_creature->CanFly() && m_creature->GetDistanceZ(pWho) > CREATURE_Z_ATTACK_RANGE)
                 return;
 
             float attackRadius = m_creature->GetAttackDistance(pWho);
@@ -505,7 +505,7 @@ struct MANGOS_DLL_DECL npc_cs_fieldAI : public ScriptedAI
 
    void UpdateAI(const uint32 uiDiff)
    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() && m_creature->isTemporarySummon())
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() && m_creature->IsTemporarySummon())
         {
           if(MoveTimer < uiDiff)
           {   
@@ -664,7 +664,7 @@ struct MANGOS_DLL_DECL npc_cs_acolyteAI : public ScriptedAI
       m_creature->RemoveAllAuras();
       m_creature->DeleteThreatList();
       m_creature->CombatStop(true);
-      m_creature->LoadCreaturesAddon();
+      m_creature->LoadCreatureAddon();
       m_uiColdTimer = (urand(7000, 17000));
       m_uiFireTimer = (urand(3000, 10000));
       m_uiCourseTimer = (urand(5000, 12000));
@@ -681,7 +681,7 @@ struct MANGOS_DLL_DECL npc_cs_acolyteAI : public ScriptedAI
         if (!m_creature->hasUnitState(UNIT_STAT_STUNNED) && pWho->isTargetableForAttack() &&
             m_creature->IsHostileTo(pWho) && pWho->isInAccessablePlaceFor(m_creature))
         {
-            if (!m_creature->canFly() && m_creature->GetDistanceZ(pWho) > CREATURE_Z_ATTACK_RANGE)
+            if (!m_creature->CanFly() && m_creature->GetDistanceZ(pWho) > CREATURE_Z_ATTACK_RANGE)
                 return;
 
             float attackRadius = m_creature->GetAttackDistance(pWho);
@@ -709,7 +709,7 @@ struct MANGOS_DLL_DECL npc_cs_acolyteAI : public ScriptedAI
 
    void UpdateAI(const uint32 uiDiff)
    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() && m_creature->isTemporarySummon())
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() && m_creature->IsTemporarySummon())
         {
           if(MoveTimer < uiDiff)
           {   
@@ -866,7 +866,7 @@ struct MANGOS_DLL_DECL npc_cs_butcherAI : public ScriptedAI
       m_creature->RemoveAllAuras();
       m_creature->DeleteThreatList();
       m_creature->CombatStop(true);
-      m_creature->LoadCreaturesAddon();
+      m_creature->LoadCreatureAddon();
 
       m_creature->SetLootRecipient(NULL);
       DoCast(m_creature, SPELL_CLOUD);
@@ -880,7 +880,7 @@ struct MANGOS_DLL_DECL npc_cs_butcherAI : public ScriptedAI
         if (!m_creature->hasUnitState(UNIT_STAT_STUNNED) && pWho->isTargetableForAttack() &&
             m_creature->IsHostileTo(pWho) && pWho->isInAccessablePlaceFor(m_creature))
         {
-            if (!m_creature->canFly() && m_creature->GetDistanceZ(pWho) > CREATURE_Z_ATTACK_RANGE)
+            if (!m_creature->CanFly() && m_creature->GetDistanceZ(pWho) > CREATURE_Z_ATTACK_RANGE)
                 return;
 
             float attackRadius = m_creature->GetAttackDistance(pWho);
@@ -908,7 +908,7 @@ struct MANGOS_DLL_DECL npc_cs_butcherAI : public ScriptedAI
 
    void UpdateAI(const uint32 uiDiff)
    {
-        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() && m_creature->isTemporarySummon())
+        if (!m_creature->SelectHostileTarget() || !m_creature->getVictim() && m_creature->IsTemporarySummon())
         {
           if(MoveTimer < uiDiff)
           {   

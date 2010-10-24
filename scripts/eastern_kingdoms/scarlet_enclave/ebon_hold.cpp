@@ -1416,7 +1416,7 @@ struct MANGOS_DLL_DECL mob_scarlet_minerAI : public ScriptedAI
                 // spell 52490 Scarlet Miner Ghoul Transform doesn't work, hack it
                 Unit* pGhoul = m_creature->SummonCreature(NPC_SCARLET_GHOUL, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 60000);
                 ((Player*)pCaster)->KilledMonsterCredit(NPC_SCARLET_GHOUL,pGhoul->GetGUID());
-                m_creature->setDeathState(JUST_DIED);
+                m_creature->SetDeathState(JUST_DIED);
                 m_creature->RemoveCorpse();
             }
         }
@@ -1952,15 +1952,15 @@ struct MANGOS_DLL_DECL npc_highlord_darion_mograineAI : public npc_escortAI
             //UpdateWorldState(m_creature->GetMap(), WORLD_STATE_EVENT_BEGIN, 0);
 
             if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiTirionGUID))
-                pTemp->setDeathState(JUST_DIED);
+                pTemp->SetDeathState(JUST_DIED);
             if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiKorfaxGUID))
-                pTemp->setDeathState(JUST_DIED);
+                pTemp->SetDeathState(JUST_DIED);
             if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiMaxwellGUID))
-                pTemp->setDeathState(JUST_DIED);
+                pTemp->SetDeathState(JUST_DIED);
             if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiEligorGUID))
-                pTemp->setDeathState(JUST_DIED);
+                pTemp->SetDeathState(JUST_DIED);
             if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiRayneGUID))
-                pTemp->setDeathState(JUST_DIED);
+                pTemp->SetDeathState(JUST_DIED);
 
             uiTirionGUID = NULL;
             uiKorfaxGUID = NULL;
@@ -1971,24 +1971,24 @@ struct MANGOS_DLL_DECL npc_highlord_darion_mograineAI : public npc_escortAI
             for(uint8 i = 0; i < ENCOUNTER_DEFENDER_NUMBER; ++i)
             {
                 if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiDefenderGUID[i]))
-                    pTemp->setDeathState(JUST_DIED);
+                    pTemp->SetDeathState(JUST_DIED);
                 uiDefenderGUID[i] = 0;
             }
             for(uint8 i = 0; i < ENCOUNTER_EARTHSHATTER_NUMBER; ++i)
             {
                 if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiEarthshatterGUID[i]))
-                    pTemp->setDeathState(JUST_DIED);
+                    pTemp->SetDeathState(JUST_DIED);
                 uiEarthshatterGUID[i] = 0;
             }
 
             if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiKoltiraGUID))
-                pTemp->setDeathState(JUST_DIED);
+                pTemp->SetDeathState(JUST_DIED);
             if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiOrbazGUID))
-                pTemp->setDeathState(JUST_DIED);
+                pTemp->SetDeathState(JUST_DIED);
             if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiThassarianGUID))
-                pTemp->setDeathState(JUST_DIED);
+                pTemp->SetDeathState(JUST_DIED);
             if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiLichKingGUID))
-                pTemp->setDeathState(JUST_DIED);
+                pTemp->SetDeathState(JUST_DIED);
 
             uiKoltiraGUID = NULL;
             uiOrbazGUID = NULL;
@@ -1997,25 +1997,25 @@ struct MANGOS_DLL_DECL npc_highlord_darion_mograineAI : public npc_escortAI
             for(uint8 i = 0; i < ENCOUNTER_ABOMINATION_NUMBER; ++i)
             {
                 if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiAbominationGUID[i]))
-                    pTemp->setDeathState(JUST_DIED);
+                    pTemp->SetDeathState(JUST_DIED);
                 uiAbominationGUID[i] = 0;
             }
             for(uint8 i = 0; i < ENCOUNTER_BEHEMOTH_NUMBER; ++i)
             {
                 if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiBehemothGUID[i]))
-                    pTemp->setDeathState(JUST_DIED);
+                    pTemp->SetDeathState(JUST_DIED);
                 uiBehemothGUID[i] = 0;
             }
             for(uint8 i = 0; i < ENCOUNTER_GHOUL_NUMBER; ++i)
             {
                 if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiGhoulGUID[i]))
-                    pTemp->setDeathState(JUST_DIED);
+                    pTemp->SetDeathState(JUST_DIED);
                 uiGhoulGUID[i] = 0;
             }
             for(uint8 i = 0; i < ENCOUNTER_WARRIOR_NUMBER; ++i)
             {
                 if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiWarriorGUID[i]))
-                    pTemp->setDeathState(JUST_DIED);
+                    pTemp->SetDeathState(JUST_DIED);
                 uiWarriorGUID[i] = 0;
             }
         }
@@ -2466,7 +2466,7 @@ struct MANGOS_DLL_DECL npc_highlord_darion_mograineAI : public npc_escortAI
 
                     case 27:
                         if (Creature* pTemp = m_creature->GetMap()->GetCreature(uiDarionGUID))
-                            pTemp->setDeathState(JUST_DIED);
+                            pTemp->SetDeathState(JUST_DIED);
                         JumpToNextStep(24000);
                         break;
 

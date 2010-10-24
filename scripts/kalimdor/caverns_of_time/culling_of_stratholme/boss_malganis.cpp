@@ -121,7 +121,7 @@ struct MANGOS_DLL_DECL boss_malganisAI : public ScriptedAI
         m_creature->RemoveAllAuras();
         m_creature->DeleteThreatList();
         m_creature->CombatStop(true);
-        m_creature->LoadCreaturesAddon();
+        m_creature->LoadCreatureAddon();
 
         if(m_pInstance->GetData(TYPE_PHASE) > 9)
         {
