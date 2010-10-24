@@ -19,14 +19,4 @@ enum
     GO_DOOR_ANUBARAK_3          = 192398
 };
 
-enum Data64
-{
-    DATA_KRIKTHIR_THE_GATEWATCHER       = 1,
-    DATA_HADRONOX                       = 2,
-    DATA_ANUBARAK                       = 3,
-    DATA_WATCHER_GASHRA                 = 4,
-    DATA_WATCHER_SILTHIK                = 5,
-    DATA_WATCHER_NARJIL                 = 6,
-};
-
 #endif

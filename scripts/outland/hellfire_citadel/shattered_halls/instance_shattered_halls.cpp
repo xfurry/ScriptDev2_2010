@@ -27,8 +27,7 @@ EndScriptData */
 enum
 {
     MAX_ENCOUNTER       = 2,
-    GO_DOOR_NETHEKURSE  = 182539,
-	GO_DOOR_NETHEKURSE_EXIT	= 182540,
+    GO_DOOR_NETHEKURSE  = 1,                                //entry unknown
     NPC_NETHEKURSE      = 16807
 };
 
@@ -39,7 +38,6 @@ struct MANGOS_DLL_DECL instance_shattered_halls : public ScriptedInstance
     uint32 m_auiEncounter[MAX_ENCOUNTER];
     uint64 m_uiNethekurseGUID;
     uint64 m_uiNethekurseDoorGUID;
-	uint64 m_uiNethekurseDoorExitGUID;
 
     void Initialize()
     {
@@ -47,7 +45,6 @@ struct MANGOS_DLL_DECL instance_shattered_halls : public ScriptedInstance
 
         m_uiNethekurseGUID = 0;
         m_uiNethekurseDoorGUID = 0;
-		m_uiNethekurseDoorExitGUID = 0;
     }
 
     bool IsEncounterInProgress() const
@@ -61,17 +58,7 @@ struct MANGOS_DLL_DECL instance_shattered_halls : public ScriptedInstance
     void OnObjectCreate(GameObject* pGo)
     {
         if (pGo->GetEntry() == GO_DOOR_NETHEKURSE)
-		{
             m_uiNethekurseDoorGUID = pGo->GetGUID();
-			if(m_auiEncounter[0] == DONE)
-				pGo->SetGoState(GO_STATE_ACTIVE);
-		}
-		if (pGo->GetEntry() == GO_DOOR_NETHEKURSE_EXIT)
-		{
-			m_uiNethekurseDoorExitGUID = pGo->GetGUID();
-			if(m_auiEncounter[0] == DONE)
-				pGo->SetGoState(GO_STATE_ACTIVE);
-		}
     }
 
     void OnCreatureCreate(Creature* pCreature)
@@ -86,11 +73,6 @@ struct MANGOS_DLL_DECL instance_shattered_halls : public ScriptedInstance
         {
             case TYPE_NETHEKURSE:
                 m_auiEncounter[0] = uiData;
-				if(uiData == DONE)
-				{
-					DoUseDoorOrButton(m_uiNethekurseDoorGUID);
-					DoUseDoorOrButton(m_uiNethekurseDoorExitGUID);
-				}
                 break;
             case TYPE_OMROGG:
                 m_auiEncounter[1] = uiData;
