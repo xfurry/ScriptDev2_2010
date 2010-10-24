@@ -9,4 +9,4 @@ UPDATE `creature_template` SET `ScriptName` = 'npc_death_knight_gargoyle' WHERE 
 -- XP eliminator
 UPDATE `creature_template` SET `ScriptName` = 'npc_experience_eliminator' WHERE `entry` in (35364, 35365);
 -- Training dummy
-UPDATE `creature_template` SET `ScriptName` = 'npc_training_dummy' WHERE `entry` in (31144, 32666, 32546, 32542, 30527, 31146);
+UPDATE `creature_template` SET `AIName` = '', `ScriptName` = 'npc_training_dummy' WHERE `entry` IN (31146, 31144, 30527, 32541, 32542, 32543, 32545, 32546, 32666, 32667);
