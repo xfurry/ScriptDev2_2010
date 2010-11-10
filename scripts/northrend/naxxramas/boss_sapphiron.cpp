@@ -36,7 +36,9 @@ enum
     SPELL_FROST_AURA            = 28531,
     SPELL_LIFE_DRAIN            = 28542,
     SPELL_BLIZZARD              = 28547,
-    SPELL_BESERK                = 26662
+    SPELL_BESERK                = 26662,
+    SPELL_CLEAVE                = 19983,
+    SPELL_TAIL_LASH             = 55697,
 };
 
 struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
@@ -62,6 +64,8 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
     uint32 phase;
     bool landoff;
     uint32 land_Timer;
+    uint32 m_uiCleaveTimer;
+    uint32 m_uiTailSweepTimer;
 
     void Reset()
     {
@@ -76,6 +80,8 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
         phase = 1;
         Icebolt_Count = 0;
         landoff = false;
+        m_uiCleaveTimer = 7000;
+        m_uiTailSweepTimer = 20000;
 
         //m_creature->ApplySpellMod(SPELL_FROST_AURA, SPELLMOD_DURATION, -1);
     }
@@ -126,6 +132,24 @@ struct MANGOS_DLL_DECL boss_sapphironAI : public ScriptedAI
 
                 Blizzard_Timer = 20000;
             }else Blizzard_Timer -= uiDiff;
+
+            // Cleave
+            if (m_uiCleaveTimer < uiDiff)
+            {
+                DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+                m_uiCleaveTimer = 7000 + rand()%3000;
+            }
+            else
+                m_uiCleaveTimer -= uiDiff;
+
+            // Tail Sweep
+            if (m_uiTailSweepTimer < uiDiff)
+            {
+                DoCast(m_creature->getVictim(), SPELL_TAIL_LASH);
+                m_uiTailSweepTimer = 15000 + rand()%5000;
+            }
+            else
+                m_uiTailSweepTimer -= uiDiff;
 
             if (m_creature->GetHealthPercent() > 10.0f)
             {
