@@ -1084,10 +1084,6 @@
 						>
 					</File>
 					<File
-						RelativePath="..\scripts\eastern_kingdoms\uldaman\boss_ironaya.cpp"
-						>
-					</File>
-					<File
 						RelativePath="..\scripts\eastern_kingdoms\uldaman\uldaman.cpp"
 						>
 					</File>
@@ -1767,12 +1763,24 @@
 						RelativePath="..\scripts\northrend\draktharon_keep\boss_trollgore.cpp"
 						>
 					</File>
+					<File
+						RelativePath="..\scripts\northrend\draktharon_keep\draktharon_keep.h"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\draktharon_keep\instance_draktharon_keep.cpp"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="gundrak"
 					>
 					<File
 						RelativePath="..\scripts\northrend\gundrak\boss_colossus.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\scripts\northrend\gundrak\boss_eck.cpp"
 						>
 					</File>
 					<File
@@ -1867,6 +1875,18 @@
 							</File>
 							<File
 								RelativePath="..\scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron\boss_scourgelord_tyrannus.cpp"
+								>
+							</File>
+							<File
+								RelativePath="..\scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron\instance_pit_of_saron.cpp"
+								>
+							</File>
+							<File
+								RelativePath="..\scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron\pit_of_saron.cpp"
+								>
+							</File>
+							<File
+								RelativePath="..\scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron\pit_of_saron.h"
 								>
 							</File>
 						</Filter>

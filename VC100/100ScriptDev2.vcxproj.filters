@@ -735,9 +735,6 @@
     <ClCompile Include="..\scripts\eastern_kingdoms\uldaman\boss_archaedas.cpp">
       <Filter>scripts\eastern_kingdoms\uldaman</Filter>
     </ClCompile>
-    <ClCompile Include="..\scripts\eastern_kingdoms\uldaman\boss_ironaya.cpp">
-      <Filter>scripts\eastern_kingdoms\uldaman</Filter>
-    </ClCompile>
     <ClCompile Include="..\scripts\eastern_kingdoms\uldaman\uldaman.cpp">
       <Filter>scripts\eastern_kingdoms\uldaman</Filter>
     </ClCompile>
@@ -1113,7 +1110,13 @@
     <ClCompile Include="..\scripts\northrend\draktharon_keep\boss_trollgore.cpp">
       <Filter>scripts\northrend\draktharon_keep</Filter>
     </ClCompile>
+    <ClCompile Include="..\scripts\northrend\draktharon_keep\instance_draktharon_keep.cpp">
+      <Filter>scripts\northrend\draktharon_keep</Filter>
+    </ClCompile>
     <ClCompile Include="..\scripts\northrend\gundrak\boss_colossus.cpp">
+      <Filter>scripts\northrend\gundrak</Filter>
+    </ClCompile>
+    <ClCompile Include="..\scripts\northrend\gundrak\boss_eck.cpp">
       <Filter>scripts\northrend\gundrak</Filter>
     </ClCompile>
     <ClCompile Include="..\scripts\northrend\gundrak\boss_galdarah.cpp">
@@ -1351,6 +1354,12 @@
       <Filter>scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron</Filter>
     </ClCompile>
     <ClCompile Include="..\scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron\boss_scourgelord_tyrannus.cpp">
+      <Filter>scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron</Filter>
+    </ClCompile>
+    <ClCompile Include="..\scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron\instance_pit_of_saron.cpp">
+      <Filter>scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron</Filter>
+    </ClCompile>
+    <ClCompile Include="..\scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron\pit_of_saron.cpp">
       <Filter>scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron</Filter>
     </ClCompile>
     <ClCompile Include="..\scripts\northrend\icecrown_citadel\frozen_halls\halls_of_reflection\boss_falryn.cpp">
@@ -1767,11 +1776,17 @@
     <ClInclude Include="..\scripts\northrend\crusaders_coliseum\trial_of_the_crusader\trial_of_the_crusader.h">
       <Filter>scripts\northrend\crusaders_coliseum\trial_of_the_crusader</Filter>
     </ClInclude>
+    <ClInclude Include="..\scripts\northrend\draktharon_keep\draktharon_keep.h">
+      <Filter>scripts\northrend\draktharon_keep</Filter>
+    </ClInclude>
     <ClInclude Include="..\scripts\northrend\gundrak\gundrak.h">
       <Filter>scripts\northrend\gundrak</Filter>
     </ClInclude>
     <ClInclude Include="..\scripts\northrend\icecrown_citadel\frozen_halls\forge_of_souls\forge_of_souls.h">
       <Filter>scripts\northrend\icecrown_citadel\frozen_halls\forge_of_souls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron\pit_of_saron.h">
+      <Filter>scripts\northrend\icecrown_citadel\frozen_halls\pit_of_saron</Filter>
     </ClInclude>
     <ClInclude Include="..\scripts\northrend\naxxramas\naxxramas.h">
       <Filter>scripts\northrend\naxxramas</Filter>

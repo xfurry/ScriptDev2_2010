@@ -15,30 +15,19 @@
  */
 
 /* ScriptData
-SDName: boss_razorscale
-SD%Complete: 0%
+SDName: pit_of_saron
+SD%Complete: 0
 SDComment:
-SDCategory: Ulduar
+SDCategory: Pit of Saron
 EndScriptData */
 
+/* ContentData
+EndContentData */
+
 #include "precompiled.h"
-#include "ulduar.h"
+#include "pit_of_saron.h"
 
-enum
-{
-    SAY_INTRO_WELCOME                   = -1603036,
-    SAY_INTRO_1                         = -1603037,
-    SAY_INTRO_2                         = -1603038,
-    SAY_INTRO_3                         = -1603039,
-    SAY_GROUNDED                        = -1603040,
-    SAY_EXTINGUISH_FIRE                 = -1603041,
-
-    EMOTE_BREATH                        = -1603042,
-    EMOTE_HARPOON_READY                 = -1603043,
-    EMOTE_GROUNDED                      = -1603044,
-};
-
-void AddSC_boss_razorscale()
+void AddSC_pit_of_saron()
 {
 
 }
