@@ -87,6 +87,12 @@ void instance_pit_of_saron::SetData(uint32 uiType, uint32 uiData)
         case TYPE_TYRANNUS:
             m_auiEncounter[uiType] = uiData;
             break;
+        case TYPE_GAUNTLET:
+            m_auiEncounter[uiType] = uiData;
+            break;
+        case TYPE_INTRO:
+            m_auiEncounter[uiType] = uiData;
+            break;
         default:
             return;
     }
@@ -96,7 +102,7 @@ void instance_pit_of_saron::SetData(uint32 uiType, uint32 uiData)
         OUT_SAVE_INST_DATA;
 
         std::ostringstream saveStream;
-        saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2];
+        saveStream << m_auiEncounter[0] << " " << m_auiEncounter[1] << " " << m_auiEncounter[2] << " " << m_auiEncounter[3] << " " << m_auiEncounter[4];
 
         strInstData = saveStream.str();
 
@@ -134,6 +140,8 @@ uint32 instance_pit_of_saron::GetData(uint32 uiType)
         case TYPE_GARFROST:  return m_auiEncounter[uiType];
         case TYPE_KRICK:     return m_auiEncounter[uiType];
         case TYPE_TYRANNUS:  return m_auiEncounter[uiType];
+        case TYPE_INTRO:                return m_auiEncounter[uiType];
+        case TYPE_GAUNTLET:             return m_auiEncounter[uiType];
         default:
             return 0;
     }
