@@ -547,6 +547,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\scripts\eastern_kingdoms\blackrock_depths\boss_coren_direbrew.cpp"
+						>
+					</File>
+					<File
 						RelativePath="..\scripts\eastern_kingdoms\blackrock_depths\boss_emperor_dagran_thaurissan.cpp"
 						>
 					</File>
@@ -986,6 +990,10 @@
 				<Filter
 					Name="shadowfang_keep"
 					>
+					<File
+						RelativePath="..\scripts\eastern_kingdoms\shadowfang_keep\boss_apothecary_hummel.cpp"
+						>
+					</File>
 					<File
 						RelativePath="..\scripts\eastern_kingdoms\shadowfang_keep\instance_shadowfang_keep.cpp"
 						>
@@ -2717,6 +2725,10 @@
 					<Filter
 						Name="slave_pens"
 						>
+						<File
+							RelativePath="..\scripts\outland\coilfang_reservoir\slave_pens\boss_ahune.cpp"
+							>
+						</File>
 					</Filter>
 					<Filter
 						Name="steam_vault"

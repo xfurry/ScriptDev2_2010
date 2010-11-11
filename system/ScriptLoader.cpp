@@ -23,6 +23,7 @@ extern void AddSC_example_misc();
 //world
 extern void AddSC_areatrigger_scripts();
 extern void AddSC_boss_emeriss();
+extern void AddSC_boss_lethon();
 extern void AddSC_boss_taerar();
 extern void AddSC_boss_ysondre();
 extern void AddSC_generic_creature();
@@ -37,6 +38,7 @@ extern void AddSC_spell_scripts();
 extern void AddSC_blackrock_depths();                       //blackrock_depths
 extern void AddSC_boss_ambassador_flamelash();
 extern void AddSC_boss_anubshiah();
+extern void AddSC_boss_coren_direbrew();
 extern void AddSC_boss_draganthaurissan();
 extern void AddSC_boss_general_angerforge();
 extern void AddSC_boss_gorosh_the_dervish();
@@ -67,6 +69,7 @@ extern void AddSC_boss_flamegor();
 extern void AddSC_boss_chromaggus();
 extern void AddSC_boss_nefarian();
 extern void AddSC_boss_victor_nefarius();
+extern void AddSC_instance_blackwing_lair();
 extern void AddSC_deadmines();                              //deadmines
 extern void AddSC_instance_deadmines();
 extern void AddSC_gnomeregan();                             //gnomeregan
@@ -78,6 +81,7 @@ extern void AddSC_boss_maiden_of_virtue();
 extern void AddSC_boss_shade_of_aran();
 extern void AddSC_boss_netherspite();
 extern void AddSC_boss_malchezaar();
+extern void AddSC_boss_nightbane();
 extern void AddSC_boss_terestian_illhoof();
 extern void AddSC_netherspite_infernal();
 extern void AddSC_boss_moroes();
@@ -128,6 +132,7 @@ extern void AddSC_boss_theravenian();
 extern void AddSC_boss_vectus();
 extern void AddSC_instance_scholomance();
 extern void AddSC_shadowfang_keep();                        //shadowfang_keep
+extern void AddSC_boss_apothecarey_hummel();
 extern void AddSC_instance_shadowfang_keep();
 extern void AddSC_boss_magistrate_barthilas();              //stratholme
 extern void AddSC_boss_maleki_the_pallid();
@@ -238,9 +243,13 @@ extern void AddSC_boss_amnennar_the_coldbringer();          //razorfen_downs
 extern void AddSC_razorfen_downs();
 extern void AddSC_instance_razorfen_kraul();                //razorfen_kraul
 extern void AddSC_boss_ayamiss();                           //ruins_of_ahnqiraj
+extern void AddSC_boss_buru();
+extern void AddSC_boss_ossirian();
 extern void AddSC_boss_kurinnaxx();
 extern void AddSC_boss_moam();
+extern void AddSC_boss_rajaxx();
 extern void AddSC_ruins_of_ahnqiraj();
+extern void AddSC_instance_ruins_of_ahnqiraj();
 extern void AddSC_boss_cthun();                             //temple_of_ahnqiraj
 extern void AddSC_boss_fankriss();
 extern void AddSC_boss_huhuran();
@@ -462,6 +471,7 @@ extern void AddSC_boss_leotheras_the_blind();
 extern void AddSC_boss_the_lurker_below();
 extern void AddSC_boss_morogrim_tidewalker();
 extern void AddSC_instance_serpentshrine_cavern();
+extern void AddSC_boss_ahune();                             //CR, slave_pens
 extern void AddSC_boss_hydromancer_thespia();               //CR, steam_vault
 extern void AddSC_boss_mekgineer_steamrigger();
 extern void AddSC_boss_warlord_kalithresh();
@@ -533,6 +543,7 @@ void AddScripts()
     //world
     AddSC_areatrigger_scripts();
     AddSC_boss_emeriss();
+    AddSC_boss_lethon();
     AddSC_boss_taerar();
     AddSC_boss_ysondre();
     AddSC_generic_creature();
@@ -547,6 +558,7 @@ void AddScripts()
     AddSC_blackrock_depths();                               //blackrock_depths
     AddSC_boss_ambassador_flamelash();
     AddSC_boss_anubshiah();
+    AddSC_boss_coren_direbrew();
     AddSC_boss_draganthaurissan();
     AddSC_boss_general_angerforge();
     AddSC_boss_gorosh_the_dervish();
@@ -577,6 +589,7 @@ void AddScripts()
     AddSC_boss_chromaggus();
     AddSC_boss_nefarian();
     AddSC_boss_victor_nefarius();
+    AddSC_instance_blackwing_lair();
     AddSC_deadmines();                                      //deadmines
     AddSC_instance_deadmines();
     AddSC_gnomeregan();                                     //gnomeregan
@@ -588,6 +601,7 @@ void AddScripts()
     AddSC_boss_shade_of_aran();
     AddSC_boss_netherspite();
     AddSC_boss_malchezaar();
+    AddSC_boss_nightbane();
     AddSC_boss_terestian_illhoof();
     AddSC_netherspite_infernal();
     AddSC_boss_moroes();
@@ -638,6 +652,7 @@ void AddScripts()
     AddSC_boss_vectus();
     AddSC_instance_scholomance();
     AddSC_shadowfang_keep();                                //shadowfang_keep
+    AddSC_boss_apothecarey_hummel();
     AddSC_instance_shadowfang_keep();
     AddSC_boss_magistrate_barthilas();                      //stratholme
     AddSC_boss_maleki_the_pallid();
@@ -748,8 +763,12 @@ void AddScripts()
     AddSC_razorfen_downs();
     AddSC_instance_razorfen_kraul();                        //razorfen_kraul
     AddSC_boss_ayamiss();                                   //ruins_of_ahnqiraj
+    AddSC_boss_buru();
+    AddSC_boss_ossirian();
     AddSC_boss_kurinnaxx();
     AddSC_boss_moam();
+    AddSC_boss_rajaxx();
+    AddSC_instance_ruins_of_ahnqiraj();
     AddSC_ruins_of_ahnqiraj();
     AddSC_boss_cthun();                                     //temple_of_ahnqiraj
     AddSC_boss_fankriss();
@@ -972,6 +991,7 @@ void AddScripts()
     AddSC_boss_the_lurker_below();
     AddSC_boss_morogrim_tidewalker();
     AddSC_instance_serpentshrine_cavern();
+    AddSC_boss_ahune();                                     //CR, slave_pens
     AddSC_boss_hydromancer_thespia();                       //CR, steam_vault
     AddSC_boss_mekgineer_steamrigger();
     AddSC_boss_warlord_kalithresh();
