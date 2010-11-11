@@ -37,9 +37,6 @@ enum
     SPELL_PIERCING_SLASH                = 48878,
     SPELL_RAPTOR_CALL                   = 59416,            //not yet implemented
 
-    NPC_DRAKKARI_GUTRIPPER              = 26641,
-    NPC_DRAKKARI_SCYTHECLAW             = 26628,
-
     SPELL_GUT_RIP                       = 49710,
     SPELL_REND                          = 13738
 };
@@ -88,19 +85,19 @@ struct MANGOS_DLL_DECL boss_dredAI : public ScriptedAI
         m_uiRaptorCounter = 0;
 
         if(m_pInstance)
-            m_pInstance->SetData(TYPE_DRED, NOT_STARTED);
+            m_pInstance->SetData(TYPE_KING_DRED, NOT_STARTED);
     }
 
     void Aggro(Unit* pWho)
     {
         if(m_pInstance)
-            m_pInstance->SetData(TYPE_DRED, IN_PROGRESS);
+            m_pInstance->SetData(TYPE_KING_DRED, IN_PROGRESS);
     }
 
     void JustDied(Unit* pKiller)
     {
         if(m_pInstance)
-            m_pInstance->SetData(TYPE_DRED, DONE);
+            m_pInstance->SetData(TYPE_KING_DRED, DONE);
 
         if(!m_bIsRegularMode && m_uiRaptorCounter >= 6)
         {
@@ -224,7 +221,7 @@ struct MANGOS_DLL_DECL mob_dred_raptorAI : public ScriptedAI
     {
         if (m_pInstance)
         {
-            if(!m_bIsRegularMode && m_pInstance->GetData(TYPE_DRED) == IN_PROGRESS)
+            if(!m_bIsRegularMode && m_pInstance->GetData(TYPE_KING_DRED) == IN_PROGRESS)
                 ++m_uiRaptorCounter;
         }
     }

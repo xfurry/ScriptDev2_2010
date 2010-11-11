@@ -278,6 +278,7 @@ extern void AddSC_northrend_beasts();
 extern void AddSC_trial_of_the_crusader();
 extern void AddSC_twin_valkyr();
 extern void AddSC_boss_novos();                             //draktharon_keep
+extern void AddSC_boss_dred();
 extern void AddSC_boss_tharonja();
 extern void AddSC_boss_trollgore();
 extern void AddSC_instance_draktharon_keep();
@@ -718,6 +719,7 @@ void AddScripts()
     AddSC_trial_of_the_crusader();
     AddSC_twin_valkyr();
     AddSC_boss_novos();                                     //draktharon_keep
+    AddSC_boss_dred();
     AddSC_boss_tharonja();
     AddSC_boss_trollgore();
     AddSC_instance_draktharon_keep();
