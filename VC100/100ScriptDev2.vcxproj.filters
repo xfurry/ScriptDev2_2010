@@ -1023,6 +1023,12 @@
     <ClCompile Include="..\scripts\kalimdor\wailing_caverns\instance_wailing_caverns.cpp">
       <Filter>scripts\kalimdor\wailing_caverns</Filter>
     </ClCompile>
+    <ClCompile Include="..\scripts\kalimdor\zulfarrak\boss_zumrah.cpp">
+      <Filter>scripts\kalimdor\zulfarrak</Filter>
+    </ClCompile>
+    <ClCompile Include="..\scripts\kalimdor\zulfarrak\instance_zulfarrak.cpp">
+      <Filter>scripts\kalimdor\zulfarrak</Filter>
+    </ClCompile>
     <ClCompile Include="..\scripts\kalimdor\zulfarrak\zulfarrak.cpp">
       <Filter>scripts\kalimdor\zulfarrak</Filter>
     </ClCompile>
@@ -1079,6 +1085,15 @@
     </ClCompile>
     <ClCompile Include="..\scripts\northrend\azjol-nerub\azjol-nerub\instance_azjol-nerub.cpp">
       <Filter>scripts\northrend\azjol-nerub\azjol-nerub</Filter>
+    </ClCompile>
+    <ClCompile Include="..\scripts\northrend\crusaders_coliseum\trial_of_the_champion\boss_grand_champions.cpp">
+      <Filter>scripts\northrend\crusaders_coliseum\trial_of_the_champion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\scripts\northrend\crusaders_coliseum\trial_of_the_champion\instance_trial_of_the_champion.cpp">
+      <Filter>scripts\northrend\crusaders_coliseum\trial_of_the_champion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\scripts\northrend\crusaders_coliseum\trial_of_the_champion\trial_of_the_champion.cpp">
+      <Filter>scripts\northrend\crusaders_coliseum\trial_of_the_champion</Filter>
     </ClCompile>
     <ClCompile Include="..\scripts\northrend\crusaders_coliseum\trial_of_the_crusader\boss_anubarak_trial.cpp">
       <Filter>scripts\northrend\crusaders_coliseum\trial_of_the_crusader</Filter>
@@ -1767,11 +1782,17 @@
     <ClInclude Include="..\scripts\kalimdor\wailing_caverns\wailing_caverns.h">
       <Filter>scripts\kalimdor\wailing_caverns</Filter>
     </ClInclude>
+    <ClInclude Include="..\scripts\kalimdor\zulfarrak\zulfarrak.h">
+      <Filter>scripts\kalimdor\zulfarrak</Filter>
+    </ClInclude>
     <ClInclude Include="..\scripts\northrend\azjol-nerub\ahnkahet\ahnkahet.h">
       <Filter>scripts\northrend\azjol-nerub\ahnkahet</Filter>
     </ClInclude>
     <ClInclude Include="..\scripts\northrend\azjol-nerub\azjol-nerub\azjol-nerub.h">
       <Filter>scripts\northrend\azjol-nerub\azjol-nerub</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scripts\northrend\crusaders_coliseum\trial_of_the_champion\trial_of_the_champion.h">
+      <Filter>scripts\northrend\crusaders_coliseum\trial_of_the_champion</Filter>
     </ClInclude>
     <ClInclude Include="..\scripts\northrend\crusaders_coliseum\trial_of_the_crusader\trial_of_the_crusader.h">
       <Filter>scripts\northrend\crusaders_coliseum\trial_of_the_crusader</Filter>
