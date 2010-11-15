@@ -7,13 +7,11 @@
 
 enum
 {
-    MAX_ENCOUNTER                   = 5,
+    MAX_ENCOUNTER                   = 3,
 
     TYPE_GARFROST                   = 0,
     TYPE_KRICK                      = 1,
     TYPE_TYRANNUS                   = 2,
-    TYPE_GAUNTLET                   = 3,
-    TYPE_INTRO                      = 4,
 
     NPC_TYRANNUS_INTRO              = 36794,
     NPC_GARFROST                    = 36494,
@@ -27,27 +25,14 @@ enum
     NPC_SYLVANAS_PART2              = 38189,
     NPC_JAINA_PART1                 = 36993,
     NPC_JAINA_PART2                 = 38188,
-    NPC_KALIRA                      = 37583,
+    NPC_KILARA                      = 37583,
     NPC_ELANDRA                     = 37774,
-    NPC_LORALEN                     = 37779,
-    NPC_KORELN                      = 37582,
+    NPC_KORALEN                     = 37779,
+    NPC_KORLAEN                     = 37582,
     NPC_CHAMPION_1_HORDE            = 37584,
     NPC_CHAMPION_2_HORDE            = 37587,
-    NPC_CHAMPION_3_HORDE            = 37588,
     NPC_CHAMPION_1_ALLIANCE         = 37496,
     NPC_CHAMPION_2_ALLIANCE         = 37497,
-    NPC_CHAMPION_3_ALLIANCE         = 37498,
-
-    NPC_SLAVE_HORDE_1               = 37578,
-    NPC_SLAVE_HORDE_2               = 37577,
-    NPC_SLAVE_HORDE_3               = 37579,
-    NPC_SLAVE_ALY_1                 = 37572,
-    NPC_SLAVE_ALY_2                 = 37575,
-    NPC_SLAVE_ALY_3                 = 37576,
-    NPC_MARTIN_VICTUS_SLAVE         = 37591, 
-    NPC_MARTIN_VICTUS_END           = 37580,
-    NPC_GORKUN_IRONSKULL_SLAVE      = 37592,
-    NPC_GORKUN_IRONSKULL_END        = 37581,
 
     GO_ICEWALL                      = 201885,               // open after gafrost/krick
     GO_HALLS_OF_REFLECT_PORT        = 201848,               // unlocked by jaina/sylvanas at last outro
