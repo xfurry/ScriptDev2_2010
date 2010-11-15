@@ -1,0 +1,80 @@
+diff --git a/include/sc_creature.cpp b/include/sc_creature.cpp
+index a25f7ea..62bff1e 100644
+--- a/include/sc_creature.cpp
++++ b/include/sc_creature.cpp
+@@ -417,7 +417,7 @@ Unit* ScriptedAI::DoSelectLowestHpFriendly(float fRange, uint32 uiMinHPDiff)
+     Unit* pUnit = NULL;
+ 
+     MaNGOS::MostHPMissingInRangeCheck u_check(m_creature, fRange, uiMinHPDiff);
+-    MaNGOS::UnitLastSearcher<MaNGOS::MostHPMissingInRangeCheck> searcher(pUnit, u_check);
++    MaNGOS::UnitLastSearcher<MaNGOS::MostHPMissingInRangeCheck> searcher(m_creature, pUnit, u_check);
+ 
+     Cell::VisitGridObjects(m_creature, searcher, fRange);
+ 
+@@ -429,7 +429,7 @@ std::list<Creature*> ScriptedAI::DoFindFriendlyCC(float fRange)
+     std::list<Creature*> pList;
+ 
+     MaNGOS::FriendlyCCedInRangeCheck u_check(m_creature, fRange);
+-    MaNGOS::CreatureListSearcher<MaNGOS::FriendlyCCedInRangeCheck> searcher(pList, u_check);
++    MaNGOS::CreatureListSearcher<MaNGOS::FriendlyCCedInRangeCheck> searcher(m_creature, pList, u_check);
+ 
+     Cell::VisitGridObjects(m_creature, searcher, fRange);
+ 
+@@ -441,7 +441,7 @@ std::list<Creature*> ScriptedAI::DoFindFriendlyMissingBuff(float fRange, uint32
+     std::list<Creature*> pList;
+ 
+     MaNGOS::FriendlyMissingBuffInRangeCheck u_check(m_creature, fRange, uiSpellId);
+-    MaNGOS::CreatureListSearcher<MaNGOS::FriendlyMissingBuffInRangeCheck> searcher(pList, u_check);
++    MaNGOS::CreatureListSearcher<MaNGOS::FriendlyMissingBuffInRangeCheck> searcher(m_creature,pList, u_check);
+ 
+     Cell::VisitGridObjects(m_creature, searcher, fRange);
+ 
+@@ -453,7 +453,7 @@ Player* ScriptedAI::GetPlayerAtMinimumRange(float fMinimumRange)
+     Player* pPlayer = NULL;
+ 
+     MaNGOS::AnyPlayerInObjectRangeCheck check(m_creature, fMinimumRange);
+-    MaNGOS::PlayerSearcher<MaNGOS::AnyPlayerInObjectRangeCheck> searcher(pPlayer, check);
++    MaNGOS::PlayerSearcher<MaNGOS::AnyPlayerInObjectRangeCheck> searcher(m_creature, pPlayer, check);
+ 
+     Cell::VisitWorldObjects(m_creature, searcher, fMinimumRange);
+ 
+diff --git a/include/sc_grid_searchers.cpp b/include/sc_grid_searchers.cpp
+index 2734315..5891b83 100644
+--- a/include/sc_grid_searchers.cpp
++++ b/include/sc_grid_searchers.cpp
+@@ -10,7 +10,7 @@ GameObject* GetClosestGameObjectWithEntry(WorldObject* pSource, uint32 uiEntry,
+     GameObject* pGo = NULL;
+ 
+     MaNGOS::NearestGameObjectEntryInObjectRangeCheck go_check(*pSource, uiEntry, fMaxSearchRange);
+-    MaNGOS::GameObjectLastSearcher<MaNGOS::NearestGameObjectEntryInObjectRangeCheck> searcher(pGo, go_check);
++    MaNGOS::GameObjectLastSearcher<MaNGOS::NearestGameObjectEntryInObjectRangeCheck> searcher(pSource, pGo, go_check);
+ 
+     Cell::VisitGridObjects(pSource, searcher, fMaxSearchRange);
+ 
+@@ -23,7 +23,7 @@ Creature* GetClosestCreatureWithEntry(WorldObject* pSource, uint32 uiEntry, floa
+     Creature* pCreature = NULL;
+ 
+     MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck creature_check(*pSource, uiEntry, true, fMaxSearchRange);
+-    MaNGOS::CreatureLastSearcher<MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(pCreature, creature_check);
++    MaNGOS::CreatureLastSearcher<MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(pSource, pCreature, creature_check);
+ 
+     Cell::VisitGridObjects(pSource, searcher, fMaxSearchRange);
+ 
+@@ -33,7 +33,7 @@ Creature* GetClosestCreatureWithEntry(WorldObject* pSource, uint32 uiEntry, floa
+ void GetGameObjectListWithEntryInGrid(std::list<GameObject*>& lList , WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange)
+ {
+     AllGameObjectsWithEntryInRangeCheck check(pSource, uiEntry, fMaxSearchRange);
+-    MaNGOS::GameObjectListSearcher<AllGameObjectsWithEntryInRangeCheck> searcher(lList, check);
++    MaNGOS::GameObjectListSearcher<AllGameObjectsWithEntryInRangeCheck> searcher(pSource, lList, check);
+ 
+     Cell::VisitGridObjects(pSource, searcher, fMaxSearchRange);
+ }
+@@ -41,7 +41,7 @@ void GetGameObjectListWithEntryInGrid(std::list<GameObject*>& lList , WorldObjec
+ void GetCreatureListWithEntryInGrid(std::list<Creature*>& lList, WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange)
+ {
+     AllCreaturesOfEntryInRangeCheck check(pSource, uiEntry, fMaxSearchRange);
+-    MaNGOS::CreatureListSearcher<AllCreaturesOfEntryInRangeCheck> searcher(lList, check);
++    MaNGOS::CreatureListSearcher<AllCreaturesOfEntryInRangeCheck> searcher(pSource, lList, check);
+ 
+     Cell::VisitGridObjects(pSource, searcher, fMaxSearchRange);
+ }
