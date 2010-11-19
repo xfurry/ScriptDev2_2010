@@ -228,6 +228,15 @@ class MANGOS_DLL_DECL instance_culling_of_stratholme : public ScriptedInstance
         uint64 m_uiBattsonGUID;
         
         uint64 m_uiOReillyGUID;
+		
+		uint64 m_uiUtherGUID;
+		uint64 m_uiJainaGUID;
+		uint64 m_uiDogGUID;
+		uint64 m_uiMarthaGUID;
+		uint64 m_uiPerelliGUID;
+
+		uint32 m_uiZombieCount;
+		uint32 m_uiZombieTimer;
 
         std::list<uint64> m_luiCratesBunnyGUIDs;
         std::list<uint64> m_luiFootmanGUIDs;
