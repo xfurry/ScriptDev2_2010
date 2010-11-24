@@ -570,7 +570,7 @@ UPDATE gameobject_template SET ScriptName='go_gnomeface_button' WHERE entry BETW
 UPDATE instance_template SET ScriptName='instance_gnomeregan' WHERE map=90;
 
 /* GRIZZLY HILLS */
-
+UPDATE creature_template SET ScriptName='npc_depleted_war_golem' WHERE entry=27017;
 
 /* GRUUL'S LAIR */
 UPDATE instance_template SET ScriptName='instance_gruuls_lair' WHERE map =565;
@@ -821,6 +821,7 @@ UPDATE creature_template SET ScriptName='npc_protectorate_nether_drake' WHERE en
 UPDATE creature_template SET ScriptName='npc_veronia' WHERE entry=20162;
 UPDATE creature_template SET ScriptName='npc_bessy' WHERE entry=20415;
 UPDATE creature_template SET ScriptName='npc_maxx_a_million' WHERE entry=19589;
+UPDATE creature_template SET ScriptName='npc_zeppit' WHERE entry=22484;
 
 /*  */
 /* THE NEXUS */
@@ -1111,6 +1112,7 @@ UPDATE creature_template SET ScriptName='mob_rotting_forest_rager' WHERE entry=2
 UPDATE creature_template SET ScriptName='mob_unkor_the_ruthless' WHERE entry=18262;
 UPDATE creature_template SET ScriptName='npc_akuno' WHERE entry=22377;
 UPDATE creature_template SET ScriptName='npc_floon' WHERE entry=18588;
+UPDATE creature_template SET ScriptName='npc_hungry_nether_ray' WHERE entry=23439;
 UPDATE creature_template SET ScriptName='npc_letoll' WHERE entry=22458;
 UPDATE creature_template SET ScriptName='npc_mana_bomb_exp_trigger' WHERE entry=20767;
 UPDATE gameobject_template SET ScriptName='go_mana_bomb' WHERE entry=184725;
