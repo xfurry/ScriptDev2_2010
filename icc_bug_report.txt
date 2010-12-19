@@ -1,0 +1,59 @@
+Icecrown Citadel bug report (old Mangos core)                           18.IX.2010
+                               
+Lord Marrowgar
+-Bone slice works fine
+-Coldflame should act visually more like a fire that slowly spreads towards a player instead of an instant pop-up on the ground
+ 
+Lady Deathwisper
+-Death and Decay ticks twice/second (or maybe she spawns 2 in the same spot) proof: http://img838.imageshack.us/img838/3159/wowscrnshot091010144921.jpg
+-Frostbolt spell should be cast at the aggro target only
+Lady Deathwisper adds
+-Dark Empowerment can be interrupted by stunning the add
+-Shroud of the Ocult, Adherent’s determination and Fanatic’s determination work
+-Dark Martyrdom doesn’t inflict 12000 Shadowstorm damage to players within 15 yards, but the reanimation part works
+ 
+Deathbringer Saurfang
+-it casts Boiling Blood on all players instead of one, random target
+-it doesn’t receive any healing from Mark of the fallen champion that casts it after he gains 100 runic power
+-it doesn’t cast Rune of Blood on the tank (so it doesn’t require tank switching)
+-not sure if Saurfang gets runic power when adds hit players
+ 
+Festergut
+-when encounter starts, it applies the same visual buff that Festergut has (a smoke horizontal layer) to all players in range that lowers fps greatly when stacked
+-Inhale Blight does nothing to the visual smoke that is inside the room
+-Inhale Blight stacks Inhaled Blight on Festergut, up to three stacks. Casting Pungent Blight does not remove those stacks.
+-Gaseous blight works
+-doesn’t stack Gastric Bloat on the tank
+-when gas spore explodes, it doesn’t apply Inoculated on the affected nearby targets
+-Vile gas works
+ 
+Rotface
+-Rotface casts Mutated Infection on all players at a time instead of a single, random target
+-when Mutated Infection is dispelled, it doesn’t summon an ooze beneath the player
+-Rotface shouldn’t spawn the oozes by himself
+ 
+Professor Putricide
+-Slime Puddle, visually it slowly grows, but actually it spawns with max range (just like jormungar encounter in toc). You can hide from 1 puddle using LoS tactics, you can barely hide from the 2nd, but the 3rd puddle wipes the raid (you run out of hiding places).
+ 
+Blood prince council
+-if you aggro a Dark Nucleus, it doesn’t channel Dark Resonance on you, so you do not receive the shadow resistance buff/debuff
+-Dark Nuclei should have no aggro table and should attack the last player that damaged them
+-Dark Nuclei’s health pool doesn’t decay over time
+ 
+Blood-queen Lana’thel
+-Blood-queen casts Vampiric Bite to turn one player into a vampire, after the 75 sec effect expires, on the player’s action bar a “Vampiric Bite” spell should appear so he could pass the buff to someone else. If that player doesn’t bite anyone, it should get mind controlled. If a bitten player successfully bites another player, the “Essence of the blood queen” should refresh itself on the first player and be applied to the second.
+-She doesn’t cast Blood Mirror on the tank and the closest player to the tank so the off-tank doesn’t get 100% damage received by the main tank, in shadow damage.
+-Pact of the Darkfallen links all players in the raid and it cannot be removed if the linked players stack on each other
+ 
+Sister Svalna trash
+-when you kill 1 of the 2nd wave mobs, the 1st wave will respawn
+-the 2nd wave mobs channel a spell that summons lots of adds while channeled (like army of the dead), maybe the 1st wave respawn is triggered if one of them finishes casting it before death
+-when killed, Sister Svalna should drop 1 emblem of frost
+ 
+Valithria Dreamwalker
+-in 10-man normal only the first left and right doors should open (not all 4). Right now you get overwhelmed by adds because they spawn from all doors.
+ 
+Sindragosa
+-Radu posted “She does the Blistering Cold and the visual for the pull, but she doesn't pull us under her. She doesn't do frost tombs in air phase. She does them in phase 3, and afther you all die the frost tomb doens't reset geting you in combat for 1 sec , at an interval of 20-30 sec. Afther you try Sindragosa again, the frost tombs appear and they stun all the raid = wipe.”
+-s0th posted “Unchained Magic and Permeating Chill aren't working, you have the debuff but you don't take any damage.”
+-Maetisto posted “Sindragosa in phase 3 ice tomb sunt uber buguite , face 2 ice tomb si da stun permanent la 4 . adica daca spargi ice tomb tot in stun esti , in rest debuffurile si blistering cold par ok ( ca dmg - no visual effect sau pull ) arcane debuff si cel de frost merg. ar trebui sa mearga si faza cu los la ice tomb dar nu merge. Intra in phase 3 si incepe bugu de range la hunteri , si bugul la ice tomb , nu apare animatia de la bomba pe care o da de sus , ar trebui sa fie o mare pata pe jos. Nu e los la ice tomb si chiar daca le spargi la timp inainte sa dea mega bomba aia cand lasa tot raidu cu 3k hp ramai blocat permanent si nu mai apuci sa dai heal. Arcane instability si chill to the bone par sa mearga bine , dar e greu de controlat debufful magic.“
