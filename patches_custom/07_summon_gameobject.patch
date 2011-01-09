@@ -1,0 +1,51 @@
+diff --git a/src/game/Object.cpp b/src/game/Object.cpp
+index 8386721..1311c4b 100644
+--- a/src/game/Object.cpp
++++ b/src/game/Object.cpp
+@@ -1665,6 +1665,26 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
+     return pCreature;
+ }
+ 
++GameObject* WorldObject::SummonGameobject(uint32 id, float x, float y, float z, float ang, uint32 despwTime)
++{
++    GameObject* GameObj = new GameObject;
++
++    Map *map = GetMap();
++    if(!GameObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), id, map,
++        GetPhaseMask(), x, y, z, ang, 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
++    {
++        delete GameObj;
++        return NULL;
++    }
++    GameObj->SetRespawnTime(despwTime);
++
++    map->Add(GameObj);
++
++    GameObj->SummonLinkedTrapIfAny();
++
++    return GameObj;
++}
++
+ namespace MaNGOS
+ {
+     class NearUsedPosDo
+diff --git a/src/game/Object.h b/src/game/Object.h
+index c900e4d..9158393 100644
+--- a/src/game/Object.h
++++ b/src/game/Object.h
+@@ -71,6 +71,7 @@ class Unit;
+ class Map;
+ class UpdateMask;
+ class InstanceData;
++class GameObject;
+ 
+ typedef UNORDERED_MAP<Player*, UpdateData> UpdateDataMapType;
+ 
+@@ -486,6 +487,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
+         void BuildUpdateData(UpdateDataMapType &);
+ 
+         Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime);
++		GameObject* SummonGameobject(uint32 id, float x, float y, float z, float ang, uint32 despwTime);
+ 
+         bool isActiveObject() const { return m_isActiveObject || m_viewPoint.hasViewers(); }
+ 

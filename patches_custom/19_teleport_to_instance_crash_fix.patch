@@ -1,0 +1,22 @@
+diff --git a/src/game/Map.cpp b/src/game/Map.cpp
+index c36f81b..676469b 100644
+--- a/src/game/Map.cpp
++++ b/src/game/Map.cpp
+@@ -1712,7 +1712,7 @@ bool InstanceMap::Add(Player *player)
+                         GetInstanceSave()->GetMapId(), GetInstanceSave()->GetInstanceId(),
+                         GetInstanceSave()->GetDifficulty(), GetInstanceSave()->GetPlayerCount(),
+                         GetInstanceSave()->GetGroupCount(), GetInstanceSave()->CanReset());
+-                    ASSERT(false);
++                    player->RepopAtGraveyard();
+                 }
+             }
+             else
+@@ -1761,7 +1761,7 @@ bool InstanceMap::Add(Player *player)
+                                 sLog.outError("GroupBind save players: %d, group count: %d", groupBind->save->GetPlayerCount(), groupBind->save->GetGroupCount());
+                             else
+                                 sLog.outError("GroupBind save NULL");
+-                            ASSERT(false);
++                            player->RepopAtGraveyard();
+                         }
+                         // if the group/leader is permanently bound to the instance
+                         // players also become permanently bound when they enter

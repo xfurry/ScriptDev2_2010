@@ -1,0 +1,17 @@
+d991743ae3ff129266210a09b3f371d5dd32faac
+ src/game/Unit.cpp |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index 4ef0227..3341f17 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -11729,7 +11729,7 @@ void Unit::IncrDiminishing(DiminishingGroup group)
+ 
+ void Unit::ApplyDiminishingToDuration(DiminishingGroup group, int32 &duration,Unit* caster,DiminishingLevels Level, int32 limitduration)
+ {
+-    if(duration == -1 || group == DIMINISHING_NONE || caster->IsFriendlyTo(this) )
++    if(duration == -1 || group == DIMINISHING_NONE)
+         return;
+ 
+     // Duration of crowd control abilities on pvp target is limited by 10 sec. (2.2.0)

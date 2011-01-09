@@ -1,0 +1,17 @@
+diff --git a/src/game/UnitAuraProcHandler.cpp b/src/game/UnitAuraProcHandler.cpp
+index feecc65..7798104 100644
+--- a/src/game/UnitAuraProcHandler.cpp
++++ b/src/game/UnitAuraProcHandler.cpp
+@@ -959,6 +959,12 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
+                 case 63320:
+                     triggered_spell_id = 63321;
+                     break;
++                // Glyph of Shadowflame
++                case 63310:
++                {
++                    triggered_spell_id = 63311;
++                    break;
++                }
+                 // Item - Shadowmourne Legendary
+                 case 71903:
+                 {

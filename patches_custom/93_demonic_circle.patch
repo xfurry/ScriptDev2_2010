@@ -1,0 +1,178 @@
+diff --git a/src/game/Spell.cpp b/src/game/Spell.cpp
+index aca699d..1d3f040 100644
+--- a/src/game/Spell.cpp
++++ b/src/game/Spell.cpp
+@@ -2461,6 +2461,11 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
+         {
+             // add here custom effects that need default target.
+             // FOR EVERY TARGET TYPE THERE IS A DIFFERENT FILL!!
++            if (m_spellInfo->SpellFamilyFlags2 & UI64LIT (0x00000020) && m_spellInfo->SpellIconID == 3217)
++            {
++                targetUnitMap.push_back(m_caster);
++                break;
++            }
+             switch(m_spellInfo->Effect[effIndex])
+             {
+                 case SPELL_EFFECT_DUMMY:
+@@ -4312,7 +4317,9 @@ SpellCastResult Spell::CheckCast(bool strict)
+         return SPELL_FAILED_CASTER_AURASTATE;
+ 
+     // Caster aura req check if need
+-    if(m_spellInfo->casterAuraSpell && !m_caster->HasAura(m_spellInfo->casterAuraSpell))
++ 	if(m_spellInfo->casterAuraSpell 
++ 		&& sSpellStore.LookupEntry(m_spellInfo->casterAuraSpell) 
++ 		&& !m_caster->HasAura(m_spellInfo->casterAuraSpell))
+         return SPELL_FAILED_CASTER_AURASTATE;
+     if(m_spellInfo->excludeCasterAuraSpell)
+     {
+diff --git a/src/game/SpellAuras.cpp b/src/game/SpellAuras.cpp
+index dcbbf41..7d048f7 100644
+--- a/src/game/SpellAuras.cpp
++++ b/src/game/SpellAuras.cpp
+@@ -4363,6 +4363,19 @@ void Aura::HandleModMechanicImmunity(bool apply, bool /*Real*/)
+ 
+     target->ApplySpellImmune(GetId(),IMMUNITY_MECHANIC,misc,apply);
+ 
++    // Demonic Circle
++    if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_WARLOCK && GetSpellProto()->SpellIconID == 3221)
++    {
++        if (target->GetTypeId() != TYPEID_PLAYER)
++            return;
++        if (apply)
++        {
++            GameObject* obj = target->GetGameObject(48018);
++            if (obj)
++                if (target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(GetSpellProto()->rangeIndex))))
++                    ((Player*)target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
++        }
++    }
+     // Bestial Wrath
+     if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_HUNTER && GetSpellProto()->SpellIconID == 1680)
+     {
+@@ -4644,7 +4657,17 @@ void Aura::HandleAuraPeriodicDummy(bool apply, bool Real)
+         case SPELLFAMILY_HUNTER:
+         {
+             Unit* caster = GetCaster();
+-
++            switch (spell->Id)
++            {
++                case 48018:
++                    if (apply)
++                        GetHolder()->SendFakeAuraUpdate(62388,false);
++                    else
++                    {
++                        target->RemoveGameObject(spell->Id,true);
++                        GetHolder()->SendFakeAuraUpdate(62388,true);
++                    }
++            }
+             // Explosive Shot
+             if (apply && !loading && caster)
+                 m_modifier.m_amount += int32(caster->GetTotalAttackPowerValue(RANGED_ATTACK) * 14 / 100);
+@@ -7329,6 +7352,20 @@ void Aura::PeriodicDummyTick()
+             }
+             break;
+         }
++        case SPELLFAMILY_WARLOCK:
++            switch (spell->Id)
++            {
++                case 48018:
++                    GameObject* obj = target->GetGameObject(spell->Id);
++                    if (!obj) return;
++                    // We must take a range of teleport spell, not summon.
++                    const SpellEntry* goToCircleSpell = sSpellStore.LookupEntry(48020);
++                    if (target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(goToCircleSpell->rangeIndex))))
++                        GetHolder()->SendFakeAuraUpdate(62388,false);
++                    else
++                        GetHolder()->SendFakeAuraUpdate(62388,true);
++            }
++            break;
+         case SPELLFAMILY_ROGUE:
+         {
+             switch (spell->Id)
+@@ -8226,6 +8263,52 @@ bool SpellAuraHolder::IsNeedVisibleSlot(Unit const* caster) const
+     return !m_isPassive || totemAura || HasAreaAuraEffect(m_spellProto);
+ }
+ 
++void SpellAuraHolder::SendFakeAuraUpdate(uint32 auraId, bool remove)
++{
++    WorldPacket data(SMSG_AURA_UPDATE);
++    data << m_target->GetPackGUID();
++    data << uint8(64);
++    data << uint32(remove ? 0 : auraId);
++
++    if(remove)
++    {
++        m_target->SendMessageToSet(&data, true);
++        return;
++    }
++
++    uint8 auraFlags = GetAuraFlags();
++    data << uint8(auraFlags);
++    data << uint8(GetAuraLevel());
++    data << uint8(m_procCharges ? m_procCharges : m_stackAmount);
++
++    if(!(auraFlags & AFLAG_NOT_CASTER))
++    {
++        data << uint8(0);                                   // pguid
++    }
++
++    if(auraFlags & AFLAG_DURATION)
++    {
++        uint32 max_duration = 0;
++        uint32 duration = 0;
++        for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
++        {
++            if (Aura *aura = m_auras[i])
++            {
++                if (uint32(aura->GetAuraMaxDuration()) > max_duration)
++                {
++                    max_duration = aura->GetAuraMaxDuration();
++                    duration = aura->GetAuraDuration();
++                }
++            }
++        }
++
++        data << uint32(max_duration);
++        data << uint32(duration);
++    }
++
++    m_target->SendMessageToSet(&data, true);
++}
++
+ void SpellAuraHolder::SendAuraUpdate(bool remove)
+ {
+     WorldPacket data(SMSG_AURA_UPDATE);
+diff --git a/src/game/SpellAuras.h b/src/game/SpellAuras.h
+index 45c4e3b..a856b50 100644
+--- a/src/game/SpellAuras.h
++++ b/src/game/SpellAuras.h
+@@ -54,6 +54,7 @@ class MANGOS_DLL_SPEC SpellAuraHolder
+         void SendAuraUpdate(bool remove);
+         void HandleSpellSpecificBoosts(bool apply);
+         void CleanupTriggeredSpells();
++		void SendFakeAuraUpdate(uint32 auraId, bool remove);
+ 
+         void setDiminishGroup(DiminishingGroup group) { m_AuraDRGroup = group; }
+         DiminishingGroup getDiminishGroup() const { return m_AuraDRGroup; }
+diff --git a/src/game/SpellEffects.cpp b/src/game/SpellEffects.cpp
+index 6646e54..5778a99 100644
+--- a/src/game/SpellEffects.cpp
++++ b/src/game/SpellEffects.cpp
+@@ -7197,7 +7197,16 @@ void Spell::EffectSummonObject(SpellEffectIndex eff_idx)
+     }
+     // Summon in random point all other units if location present
+     else
+-        m_caster->GetClosePoint(x, y, z, DEFAULT_WORLD_OBJECT_SIZE);
++     {
++         if(m_spellInfo->Id == 48018)
++         {
++             x = m_caster->GetPositionX();
++             y = m_caster->GetPositionY();
++             z = m_caster->GetPositionZ();
++         }
++         else
++             m_caster->GetClosePoint(x, y, z, DEFAULT_WORLD_OBJECT_SIZE);
++     }
+ 
+     Map *map = m_caster->GetMap();
+     if(!pGameObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), go_id, map,

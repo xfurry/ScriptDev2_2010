@@ -1,0 +1,17 @@
+diff --git a/src/game/UnitAuraProcHandler.cpp b/src/game/UnitAuraProcHandler.cpp
+index e0dc754..20e4681 100644
+--- a/src/game/UnitAuraProcHandler.cpp
++++ b/src/game/UnitAuraProcHandler.cpp
+@@ -3210,6 +3210,12 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
+                 basepoints[0] = triggerAmount * damage / 100;
+                 trigger_spell_id = 50475;
+             }
++            // Glyph of Death's Embrace
++            else if (auraSpellInfo->Id == 58677)
++            {
++                if (procSpell->Id != 47633)
++                    return SPELL_AURA_PROC_FAILED;
++            }
+             break;
+         }
+         default:

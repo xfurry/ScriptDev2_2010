@@ -1,0 +1,99 @@
+diff --git a/src/game/BattleGround.cpp b/src/game/BattleGround.cpp
+index eb6ba1b..f428bc1 100644
+--- a/src/game/BattleGround.cpp
++++ b/src/game/BattleGround.cpp
+@@ -1089,7 +1089,7 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
+         {
+             // a player has left the battleground, so there are free slots -> add to queue
+             AddToBGFreeSlotQueue();
+-            sBattleGroundMgr.ScheduleQueueUpdate(0, 0, bgQueueTypeId, bgTypeId, GetBracketId());
++            sBattleGroundMgr.ScheduleQueueUpdate(0, 0, 0, bgQueueTypeId, bgTypeId, GetBracketId());
+         }
+ 
+         // Let others know
+diff --git a/src/game/BattleGroundHandler.cpp b/src/game/BattleGroundHandler.cpp
+index 231cc9d..778ab1e 100644
+--- a/src/game/BattleGroundHandler.cpp
++++ b/src/game/BattleGroundHandler.cpp
+@@ -220,7 +220,7 @@ void WorldSession::HandleBattlemasterJoinOpcode( WorldPacket & recv_data )
+         SendPacket(&data);
+         DEBUG_LOG("Battleground: player joined queue for bg queue type %u bg type %u: GUID %u, NAME %s",bgQueueTypeId,bgTypeId,_player->GetGUIDLow(), _player->GetName());
+     }
+-    sBattleGroundMgr.ScheduleQueueUpdate(0, 0, bgQueueTypeId, bgTypeId, bracketEntry->GetBracketId());
++    sBattleGroundMgr.ScheduleQueueUpdate(0, 0, 0, bgQueueTypeId, bgTypeId, bracketEntry->GetBracketId());
+ }
+ 
+ void WorldSession::HandleBattleGroundPlayerPositionsOpcode( WorldPacket & /*recv_data*/ )
+@@ -469,7 +469,7 @@ void WorldSession::HandleBattleFieldPortOpcode( WorldPacket &recv_data )
+             bgQueue.RemovePlayer(_player->GetGUID(), true);
+             // player left queue, we should update it - do not update Arena Queue
+             if (!ginfo.ArenaType)
+-                sBattleGroundMgr.ScheduleQueueUpdate(ginfo.ArenaTeamRating, ginfo.ArenaType, bgQueueTypeId, bgTypeId, bracketEntry->GetBracketId());
++                sBattleGroundMgr.ScheduleQueueUpdate(0, ginfo.ArenaTeamRating, ginfo.ArenaType, bgQueueTypeId, bgTypeId, bracketEntry->GetBracketId());
+             SendPacket(&data);
+             DEBUG_LOG("Battleground: player %s (%u) left queue for bgtype %u, queue type %u.", _player->GetName(), _player->GetGUIDLow(), bg->GetTypeID(), bgQueueTypeId);
+             break;
+@@ -775,7 +775,7 @@ void WorldSession::HandleBattlemasterJoinArena( WorldPacket & recv_data )
+         SendPacket(&data);
+         DEBUG_LOG("Battleground: player joined queue for arena, skirmish, bg queue type %u bg type %u: GUID %u, NAME %s",bgQueueTypeId,bgTypeId,_player->GetGUIDLow(), _player->GetName());
+     }
+-    sBattleGroundMgr.ScheduleQueueUpdate(arenaRating, arenatype, bgQueueTypeId, bgTypeId, bracketEntry->GetBracketId());
++    sBattleGroundMgr.ScheduleQueueUpdate(isRated, arenaRating, arenatype, bgQueueTypeId, bgTypeId, bracketEntry->GetBracketId());
+ }
+ 
+ void WorldSession::HandleReportPvPAFK( WorldPacket & recv_data )
+diff --git a/src/game/BattleGroundMgr.cpp b/src/game/BattleGroundMgr.cpp
+index 8b4f674..54c7d0a 100644
+--- a/src/game/BattleGroundMgr.cpp
++++ b/src/game/BattleGroundMgr.cpp
+@@ -1102,7 +1102,7 @@ bool BGQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
+             bgQueue.RemovePlayer(m_PlayerGuid, true);
+             //update queues if battleground isn't ended
+             if (bg && bg->isBattleGround() && bg->GetStatus() != STATUS_WAIT_LEAVE)
+-                sBattleGroundMgr.ScheduleQueueUpdate(0, 0, m_BgQueueTypeId, m_BgTypeId, bg->GetBracketId());
++                sBattleGroundMgr.ScheduleQueueUpdate(0, 0, 0, m_BgQueueTypeId, m_BgTypeId, bg->GetBracketId());
+ 
+             WorldPacket data;
+             sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, queueSlot, STATUS_NONE, 0, 0, 0);
+@@ -1169,11 +1169,12 @@ void BattleGroundMgr::Update(uint32 diff)
+         for (uint8 i = 0; i < scheduled.size(); i++)
+         {
+             uint32 arenaRating = scheduled[i] >> 32;
+-            uint8 arenaType = scheduled[i] >> 24 & 255;
++            uint8 isRated = scheduled[i] >> 28 & 15;
++            uint8 arenaType = scheduled[i] >> 24 & 15;
+             BattleGroundQueueTypeId bgQueueTypeId = BattleGroundQueueTypeId(scheduled[i] >> 16 & 255);
+             BattleGroundTypeId bgTypeId = BattleGroundTypeId((scheduled[i] >> 8) & 255);
+             BattleGroundBracketId bracket_id = BattleGroundBracketId(scheduled[i] & 255);
+-            m_BattleGroundQueues[bgQueueTypeId].Update(bgTypeId, bracket_id, arenaType, arenaRating > 0, arenaRating);
++            m_BattleGroundQueues[bgQueueTypeId].Update(bgTypeId, bracket_id, arenaType, isRated, arenaRating);
+         }
+     }
+ 
+@@ -1988,11 +1989,11 @@ void BattleGroundMgr::ToggleArenaTesting()
+         sWorld.SendWorldText(LANG_DEBUG_ARENA_OFF);
+ }
+ 
+-void BattleGroundMgr::ScheduleQueueUpdate(uint32 arenaRating, uint8 arenaType, BattleGroundQueueTypeId bgQueueTypeId, BattleGroundTypeId bgTypeId, BattleGroundBracketId bracket_id)
++void BattleGroundMgr::ScheduleQueueUpdate(uint8 isRated, uint32 arenaRating, uint8 arenaType, BattleGroundQueueTypeId bgQueueTypeId, BattleGroundTypeId bgTypeId, BattleGroundBracketId bracket_id)
+ {
+     //ACE_Guard<ACE_Thread_Mutex> guard(SchedulerLock);
+     //we will use only 1 number created of bgTypeId and bracket_id
+-    uint64 schedule_id = ((uint64)arenaRating << 32) | (arenaType << 24) | (bgQueueTypeId << 16) | (bgTypeId << 8) | bracket_id;
++    uint64 schedule_id = ((uint64)arenaRating << 32) | (isRated << 28) | (arenaType << 24) | (bgQueueTypeId << 16) | (bgTypeId << 8) | bracket_id;
+     bool found = false;
+     for (uint8 i = 0; i < m_QueueUpdateScheduler.size(); i++)
+     {
+diff --git a/src/game/BattleGroundMgr.h b/src/game/BattleGroundMgr.h
+index a77def1..bd70fce 100644
+--- a/src/game/BattleGroundMgr.h
++++ b/src/game/BattleGroundMgr.h
+@@ -228,7 +228,7 @@ class BattleGroundMgr
+ 
+         BGFreeSlotQueueType BGFreeSlotQueue[MAX_BATTLEGROUND_TYPE_ID];
+ 
+-        void ScheduleQueueUpdate(uint32 arenaRating, uint8 arenaType, BattleGroundQueueTypeId bgQueueTypeId, BattleGroundTypeId bgTypeId, BattleGroundBracketId bracket_id);
++        void ScheduleQueueUpdate(uint8 isRated, uint32 arenaRating, uint8 arenaType, BattleGroundQueueTypeId bgQueueTypeId, BattleGroundTypeId bgTypeId, BattleGroundBracketId bracket_id);
+         uint32 GetMaxRatingDifference() const;
+         uint32 GetRatingDiscardTimer()  const;
+         uint32 GetPrematureFinishTime() const;

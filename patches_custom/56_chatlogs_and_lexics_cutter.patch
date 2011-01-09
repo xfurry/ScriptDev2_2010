@@ -1,0 +1,1638 @@
+diff --git a/56-chatlogs_and_lexics_cutter.patch b/56-chatlogs_and_lexics_cutter.patch
+new file mode 100644
+index 0000000..e69de29
+diff --git a/src/game/ChatHandler.cpp b/src/game/ChatHandler.cpp
+index 6d778db..4708379 100644
+--- a/src/game/ChatHandler.cpp
++++ b/src/game/ChatHandler.cpp
+@@ -18,6 +18,7 @@
+ 
+ #include "Common.h"
+ #include "Log.h"
++#include "ChatLog.h"
+ #include "WorldPacket.h"
+ #include "WorldSession.h"
+ #include "World.h"
+@@ -179,11 +180,20 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+                 break;
+ 
+             if(type == CHAT_MSG_SAY)
++            {
++                sChatLog.ChatMsg(GetPlayer(), msg, type);
+                 GetPlayer()->Say(msg, lang);
++            }
+             else if(type == CHAT_MSG_EMOTE)
++            {
++                sChatLog.ChatMsg(GetPlayer(), msg, type);
+                 GetPlayer()->TextEmote(msg);
++            }
+             else if(type == CHAT_MSG_YELL)
++            {
++                sChatLog.ChatMsg(GetPlayer(), msg, type);
+                 GetPlayer()->Yell(msg, lang);
++            }
+         } break;
+ 
+         case CHAT_MSG_WHISPER:
+@@ -198,6 +208,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+             if(msg.empty())
+                 break;
+ 
++            sChatLog.WhisperMsg(GetPlayer(), to, msg);
++
+             if(!normalizePlayerName(to))
+             {
+                 SendPlayerNotFoundNotice(to);
+@@ -245,6 +257,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+             if(msg.empty())
+                 break;
+ 
++            sChatLog.PartyMsg(GetPlayer(), msg);
++
+             // if player is in battleground, he cannot say to battleground members by /p
+             Group *group = GetPlayer()->GetOriginalGroup();
+             if(!group)
+@@ -279,6 +293,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+             if(msg.empty())
+                 break;
+ 
++            sChatLog.GuildMsg(GetPlayer(), msg, false);
++
+             if (GetPlayer()->GetGuildId())
+                 if (Guild *guild = sObjectMgr.GetGuildById(GetPlayer()->GetGuildId()))
+                     guild->BroadcastToGuild(this, msg, lang == LANG_ADDON ? LANG_ADDON : LANG_UNIVERSAL);
+@@ -301,6 +317,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+             if(msg.empty())
+                 break;
+ 
++            sChatLog.GuildMsg(GetPlayer(), msg, true);
++
+             if (GetPlayer()->GetGuildId())
+                 if (Guild *guild = sObjectMgr.GetGuildById(GetPlayer()->GetGuildId()))
+                     guild->BroadcastToOfficers(this, msg, lang == LANG_ADDON ? LANG_ADDON : LANG_UNIVERSAL);
+@@ -323,6 +341,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+             if(msg.empty())
+                 break;
+ 
++            sChatLog.RaidMsg(GetPlayer(), msg, type);
++
+             // if player is in battleground, he cannot say to battleground members by /ra
+             Group *group = GetPlayer()->GetOriginalGroup();
+             if(!group)
+@@ -353,6 +373,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+             if(msg.empty())
+                 break;
+ 
++            sChatLog.RaidMsg(GetPlayer(), msg, type);
++
+             // if player is in battleground, he cannot say to battleground members by /ra
+             Group *group = GetPlayer()->GetOriginalGroup();
+             if(!group)
+@@ -378,6 +400,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+             if(msg.empty())
+                 break;
+ 
++            sChatLog.RaidMsg(GetPlayer(), msg, type);
++
+             Group *group = GetPlayer()->GetGroup();
+             if(!group || !group->isRaidGroup() || !(group->IsLeader(GetPlayer()->GetGUID()) || group->IsAssistant(GetPlayer()->GetGUID())))
+                 return;
+@@ -399,6 +423,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+             if(msg.empty())
+                 break;
+ 
++            sChatLog.BattleGroundMsg(GetPlayer(), msg, type);
++
+             // battleground raid is always in Player->GetGroup(), never in GetOriginalGroup()
+             Group *group = GetPlayer()->GetGroup();
+             if(!group || !group->isBGGroup())
+@@ -420,6 +446,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+             if(msg.empty())
+                 break;
+ 
++            sChatLog.BattleGroundMsg(GetPlayer(), msg, type);
++
+             // battleground raid is always in Player->GetGroup(), never in GetOriginalGroup()
+             Group *group = GetPlayer()->GetGroup();
+             if(!group || !group->isBGGroup() || !group->IsLeader(GetPlayer()->GetGUID()))
+@@ -442,6 +470,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
+             if(msg.empty())
+                 break;
+ 
++            sChatLog.ChannelMsg(GetPlayer(), channel, msg);
++
+             if(ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
+                 if(Channel *chn = cMgr->GetChannel(channel, _player))
+                     chn->Say(_player->GetGUID(), msg.c_str(), lang);
+diff --git a/src/game/ChatLexicsCutter.cpp b/src/game/ChatLexicsCutter.cpp
+new file mode 100644
+index 0000000..9980148
+--- /dev/null
++++ b/src/game/ChatLexicsCutter.cpp
+@@ -0,0 +1,287 @@
++/*
++ * Copyright (C) 2005,2006,2007 MaNGOS <http://www.mangosproject.org/>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++#include "Common.h"
++#include "ChatLexicsCutter.h"
++#include "Log.h"
++
++LexicsCutter::LexicsCutter()
++{
++    InvalidChars = "~`!@#$%^&*()-_+=[{]}|\\;:'\",<.>/?";
++}
++
++bool LexicsCutter::ReadUTF8(std::string& in, std::string& out, unsigned int& pos)
++{
++    if (pos >= in.length()) return false;
++
++    out = "";
++    unsigned char c = in[pos++];
++    out += c;
++    int toread = trailingBytesForUTF8[(int) c];
++    while ((pos < in.length()) && (toread > 0))
++    {
++        out += in[pos++];
++        toread--;
++    }
++
++    return true;
++}
++
++std::string LexicsCutter::trim(std::string& s, const std::string& drop)
++{
++    std::string r = s.erase(s.find_last_not_of(drop) + 1);
++    return r.erase(0, r.find_first_not_of(drop));
++}
++
++bool LexicsCutter::Read_Letter_Analogs(std::string& FileName)
++{
++    FILE *ma_file;
++    char line[1024];
++    unsigned int pos;
++    std::string line_s;
++    std::string lchar;
++    std::string lanalog;
++
++    ma_file = fopen(FileName.c_str(), "rb");
++
++    if (!ma_file)
++    {
++        sLog.outError("Chat lexics cutter disabled. Reason: LexicsCutterAnalogsFile file does not exist in the server directory.");
++        return false;
++    }
++
++    while (!feof(ma_file))
++    {
++        line[0] = 0x0;
++        fgets(line, 1020, ma_file);
++
++        // check for UTF8 prefix and comments
++        if (strlen(line) >= 3)
++        {
++            if (line[0] == '\xEF' && line[1] == '\xBB' && line[2] == '\xBF')
++            {
++                strncpy(&line[0], &line[3], strlen(line) - 3);
++            }
++        }
++
++        if (strlen(line) >= 2)
++        {
++            if (line[0] == '/' && line[1] == '/') continue;
++        }
++
++        // check for empty string
++        line_s = line;
++        line_s = trim(line_s, "\x0A\x0D\x20");
++        if (line_s == "") continue;
++
++        // process line without CR/LF
++        line_s = line;
++        line_s = trim(line_s, "\x0A\x0D");
++
++        pos = 0;
++        if (ReadUTF8(line_s, lchar, pos))
++        {
++            // create analogs vector
++            LC_AnalogVector av;
++            while (ReadUTF8(line_s, lanalog, pos))
++            {
++                av.push_back(lanalog);
++            }
++
++            // store vector in hash map
++            AnalogMap[lchar] = av;
++        }
++    }
++
++    fclose(ma_file);
++
++    return true;
++}
++
++bool LexicsCutter::Read_Innormative_Words(std::string& FileName)
++{
++    FILE *ma_file;
++    char line[1024];
++    unsigned int pos;
++    std::string line_s;
++    std::string lchar;
++
++    ma_file = fopen(FileName.c_str(), "rb");
++
++    if (!ma_file)
++    {
++        sLog.outError("Chat lexics cutter disabled. Reason: LexicsCutterWordsFile file does not exist in the server directory.");
++        return false;
++    }
++
++    while (!feof(ma_file))
++    {
++        line[0] = 0x0;
++        fgets(line, 1020, ma_file);
++
++        // check for UTF8 prefix and comment
++        if (strlen(line) >= 3)
++        {
++            if (line[0] == '\xEF' && line[1] == '\xBB' && line[2] == '\xBF')
++            {
++                strncpy(&line[0], &line[3], strlen(line) - 3);
++            }
++        }
++
++        if (strlen(line) >= 2)
++        {
++            if (line[0] == '/' && line[1] == '/') continue;
++        }
++
++        // check for empty string
++        line_s = line;
++        line_s = trim(line_s, "\x0A\x0D\x20");
++        if (line_s == "") continue;
++
++        // process line without CR/LF
++        line_s = line;
++        line_s = trim(line_s, "\x0A\x0D");
++
++        // create word vector of vectors
++        LC_WordVector vw;
++        pos = 0;
++        while (ReadUTF8(line_s, lchar, pos))
++        {
++            // create letter set
++            LC_LetterSet vl;
++
++            // initialize letter set with letter read
++            vl.insert(lchar);
++
++            // find letter analogs and push them onto the vector
++            LC_AnalogMap::iterator itr = AnalogMap.find(lchar);
++            if (itr != AnalogMap.end())
++            {
++                // analogs present, iterate
++                for (LC_AnalogVector::iterator itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++)
++                {
++                    vl.insert(*itr2);
++                }
++            }
++
++            // add letter vector to word vector
++            vw.push_back(vl);
++        }
++
++        // push new word to words list
++        WordList.push_back(vw);
++    }
++
++    fclose(ma_file);
++
++    return true;
++}
++
++void LexicsCutter::Map_Innormative_Words()
++{
++    // process all the words in the vector
++    for (unsigned int i = 0; i < WordList.size(); i++)
++    {
++        // parse all analogs in the first word letter
++        for (LC_LetterSet::iterator itr = (*WordList[i].begin()).begin(); itr != (*WordList[i].begin()).end(); itr++)
++        {
++            // map the word to its first letter variants
++            WordMap.insert(std::pair< std::string, unsigned int >(*itr, i));
++        }
++    }
++}
++
++bool LexicsCutter::Compare_Word(std::string& str, unsigned int pos, LC_WordVector word)
++{
++   std::string lchar_prev;
++    std::string lchar;
++
++   // read first letter of the word into lchar_prev
++   ReadUTF8(str, lchar, pos);
++
++    // okay, here we go, comparing word
++    // first letter is already okay, we do begin from second and go on
++    LC_WordVector::iterator i = word.begin();
++    i++;
++    while (i != word.end())
++    {
++        // get letter from word, return false if the string is shorter
++        if (!ReadUTF8(str, lchar, pos)) return(false);
++        // check, if the letter is in the set
++        LC_LetterSet ls = *i;
++        if (ls.count(lchar) == 0)
++       {
++           // letter is not in set, but we must check, if it is not space or repeat
++           if ( (!(IgnoreMiddleSpaces && (lchar == " "))) &&
++               (!(IgnoreLetterRepeat && (lchar == lchar_prev))) )
++           {
++               // no checks viable
++               return(false);
++           }
++       }
++       else
++       {
++           // next word letter
++           i++;
++       }
++       // set previous string letter to compare if needed (this check can really conserve time)
++       if (IgnoreLetterRepeat) lchar_prev = lchar;
++   }
++
++    return(true);
++}
++
++bool LexicsCutter::Check_Lexics(std::string& Phrase)
++{
++    std::string lchar;
++    LC_WordMap::iterator i;
++    std::pair< LC_WordMap::iterator, LC_WordMap::iterator > ii;
++
++    if (Phrase.size() == 0) return(false);
++
++    // first, convert the string, adding spaces and removing invalid characters
++    // also create fast position vector for the new positions
++    std::string str = " ";
++    unsigned int pos = 0;
++    while (ReadUTF8(Phrase, lchar, pos))
++    {
++        if (InvalidChars.find(lchar) == std::string::npos)
++        {
++            str.append(lchar);
++        }
++    }
++
++    // string prepared, now parse it and scan for all the words
++   unsigned int pos_prev = 0;
++    pos = 0;
++    while (ReadUTF8(str, lchar, pos))
++    {
++        // got character, now try to find wordmap for it
++        ii = WordMap.equal_range(lchar);
++        // iterate over all found words
++        for (i = ii.first; i != ii.second; i++)
++        {
++            // compare word at initial position
++            if (Compare_Word(str, pos_prev, WordList[i->second])) return(true);
++        }
++       // set initial position to the current position
++       pos_prev = pos;
++    }
++
++    return(false);
++}
+diff --git a/src/game/ChatLexicsCutter.h b/src/game/ChatLexicsCutter.h
+new file mode 100644
+index 0000000..dce3e4f
+--- /dev/null
++++ b/src/game/ChatLexicsCutter.h
+@@ -0,0 +1,66 @@
++/*
++ * Copyright (C) 2005,2006,2007 MaNGOS <http://www.mangosproject.org/>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++#ifndef MANGOSSERVER_CHATLEXICSCUTTER_H
++#define MANGOSSERVER_CHATLEXICSCUTTER_H
++
++typedef std::vector< std::string > LC_AnalogVector;
++typedef std::map< std::string, LC_AnalogVector > LC_AnalogMap;
++typedef std::set< std::string > LC_LetterSet;
++typedef std::vector< LC_LetterSet > LC_WordVector;
++typedef std::vector< LC_WordVector > LC_WordList;
++typedef std::multimap< std::string, unsigned int > LC_WordMap;
++
++static int trailingBytesForUTF8[256] = {
++    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
++    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
++    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
++    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
++    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
++    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
++    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
++    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5
++};
++
++class LexicsCutter
++{
++    protected:
++        LC_AnalogMap AnalogMap;
++        LC_WordList WordList;
++        LC_WordMap WordMap;
++
++        std::string InvalidChars;
++
++    public:
++        LexicsCutter();
++
++        static bool ReadUTF8(std::string& in, std::string& out, unsigned int& pos);
++
++        std::string trim(std::string& s, const std::string& drop = " ");
++        bool Read_Letter_Analogs(std::string& FileName);
++        bool Read_Innormative_Words(std::string& FileName);
++        void Map_Innormative_Words();
++        bool Compare_Word(std::string& str, unsigned int pos, LC_WordVector word);
++        bool Check_Lexics(std::string& Phrase);
++
++        std::vector< std::pair< unsigned int, unsigned int > > Found;
++        bool IgnoreMiddleSpaces;
++        bool IgnoreLetterRepeat;
++};
++
++#endif
+diff --git a/src/game/ChatLog.cpp b/src/game/ChatLog.cpp
+new file mode 100644
+index 0000000..9c6e64e
+--- /dev/null
++++ b/src/game/ChatLog.cpp
+@@ -0,0 +1,854 @@
++/*
++ * Copyright (C) 2005,2006,2007 MaNGOS <http://www.mangosproject.org/>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++#include "Common.h"
++#include "ChatLexicsCutter.h"
++#include "ChatLog.h"
++#include "Chat.h"
++#include "Group.h"
++#include "Guild.h"
++#include "ObjectMgr.h"
++#include "SpellAuras.h"
++#include "Policies/SingletonImp.h"
++#include "Config/Config.h"
++
++INSTANTIATE_SINGLETON_1( ChatLog );
++
++ChatLog::ChatLog()
++{
++    for (int i = 0; i <= CHATLOG_CHAT_TYPES_COUNT - 1; i++)
++    {
++        names[i] = "";
++        files[i] = NULL;
++    }
++
++    Lexics = NULL;
++    fn_innormative = "";
++    f_innormative = NULL;
++
++    Initialize();
++}
++
++ChatLog::~ChatLog()
++{
++    // close all files (avoiding double-close)
++    CloseAllFiles();
++
++    if (Lexics)
++    {
++        delete Lexics;
++        Lexics = NULL;
++    }
++}
++
++void ChatLog::Initialize()
++{
++    // determine, if the chat logs are enabled
++    ChatLogEnable = sConfig.GetBoolDefault("ChatLogEnable", false);
++    ChatLogDateSplit = sConfig.GetBoolDefault("ChatLogDateSplit", false);
++    ChatLogUTFHeader = sConfig.GetBoolDefault("ChatLogUTFHeader", false);
++    ChatLogIgnoreUnprintable = sConfig.GetBoolDefault("ChatLogIgnoreUnprintable", false);
++
++    if (ChatLogEnable)
++    {
++        // read chat log file names
++        names[CHAT_LOG_CHAT] = sConfig.GetStringDefault("ChatLogChatFile", "");
++        names[CHAT_LOG_PARTY] = sConfig.GetStringDefault("ChatLogPartyFile", "");
++        names[CHAT_LOG_GUILD] = sConfig.GetStringDefault("ChatLogGuildFile", "");
++        names[CHAT_LOG_WHISPER] = sConfig.GetStringDefault("ChatLogWhisperFile", "");
++        names[CHAT_LOG_CHANNEL] = sConfig.GetStringDefault("ChatLogChannelFile", "");
++        names[CHAT_LOG_RAID] = sConfig.GetStringDefault("ChatLogRaidFile", "");
++        names[CHAT_LOG_BATTLEGROUND] = sConfig.GetStringDefault("ChatLogBattleGroundFile", "");
++
++        // read screen log flags
++        screenflag[CHAT_LOG_CHAT] = sConfig.GetBoolDefault("ChatLogChatScreen", false);
++        screenflag[CHAT_LOG_PARTY] = sConfig.GetBoolDefault("ChatLogPartyScreen", false);
++        screenflag[CHAT_LOG_GUILD] = sConfig.GetBoolDefault("ChatLogGuildScreen", false);
++        screenflag[CHAT_LOG_WHISPER] = sConfig.GetBoolDefault("ChatLogWhisperScreen", false);
++        screenflag[CHAT_LOG_CHANNEL] = sConfig.GetBoolDefault("ChatLogChannelScreen", false);
++        screenflag[CHAT_LOG_RAID] = sConfig.GetBoolDefault("ChatLogRaidScreen", false);
++        screenflag[CHAT_LOG_BATTLEGROUND] = sConfig.GetBoolDefault("ChatLogBattleGroundScreen", false);
++    }
++
++    // lexics cutter
++    LexicsCutterEnable = sConfig.GetBoolDefault("LexicsCutterEnable", false);
++
++    if (LexicsCutterEnable)
++    {
++        // initialize lexics cutter parameters
++        LexicsCutterInnormativeCut = sConfig.GetBoolDefault("LexicsCutterInnormativeCut", true);
++        LexicsCutterNoActionOnGM = sConfig.GetBoolDefault("LexicsCutterNoActionOnGM", true);
++        LexicsCutterScreenLog = sConfig.GetBoolDefault("LexicsCutterScreenLog", false);
++        LexicsCutterCutReplacement = sConfig.GetStringDefault("LexicsCutterCutReplacement", "&!@^%!^&*!!! [gibberish]");
++        LexicsCutterAction = sConfig.GetIntDefault("LexicsCutterAction", 0);
++        LexicsCutterActionDuration = sConfig.GetIntDefault("LexicsCutterActionDuration", 60000);
++        std::string fn_analogsfile = sConfig.GetStringDefault("LexicsCutterAnalogsFile", "");
++        std::string fn_wordsfile = sConfig.GetStringDefault("LexicsCutterWordsFile", "");
++
++        // read lexics cutter flags
++        cutflag[CHAT_LOG_CHAT] = sConfig.GetBoolDefault("LexicsCutInChat", true);
++        cutflag[CHAT_LOG_PARTY] = sConfig.GetBoolDefault("LexicsCutInParty", true);
++        cutflag[CHAT_LOG_GUILD] = sConfig.GetBoolDefault("LexicsCutInGuild", true);
++        cutflag[CHAT_LOG_WHISPER] = sConfig.GetBoolDefault("LexicsCutInWhisper", true);
++        cutflag[CHAT_LOG_CHANNEL] = sConfig.GetBoolDefault("LexicsCutInChannel", true);
++        cutflag[CHAT_LOG_RAID] = sConfig.GetBoolDefault("LexicsCutInRaid", true);
++        cutflag[CHAT_LOG_BATTLEGROUND] = sConfig.GetBoolDefault("LexicsCutInBattleGround", true);
++
++        if (fn_analogsfile == "" || fn_wordsfile == "")
++        {
++            LexicsCutterEnable = false;
++        }
++        else
++        {
++            // initialize lexics cutter
++            Lexics = new LexicsCutter;
++            if (Lexics) Lexics->Read_Letter_Analogs(fn_analogsfile);
++            if (Lexics) Lexics->Read_Innormative_Words(fn_wordsfile);
++            if (Lexics) Lexics->Map_Innormative_Words();
++
++            // read additional parameters
++            Lexics->IgnoreLetterRepeat = sConfig.GetBoolDefault("LexicsCutterIgnoreRepeats", true);
++            Lexics->IgnoreMiddleSpaces = sConfig.GetBoolDefault("LexicsCutterIgnoreSpaces", true);
++            fn_innormative = sConfig.GetStringDefault("LexicsCutterLogFile", "");
++        }
++    }
++
++    // open all files (with aliasing)
++    OpenAllFiles();
++
++    // write timestamps (init)
++    WriteInitStamps();
++}
++
++bool ChatLog::_ChatCommon(int ChatType, Player *player, std::string &msg)
++{
++    if (LexicsCutterEnable && Lexics && cutflag[ChatType] && Lexics->Check_Lexics(msg)) ChatBadLexicsAction(player, msg);
++
++    if (!ChatLogEnable) return(false);
++
++    if (ChatLogIgnoreUnprintable)
++    {
++        // have to ignore unprintables, verify string by UTF8 here
++        unsigned int pos = 0;
++        std::string lchar;
++        while (LexicsCutter::ReadUTF8(msg, lchar, pos))
++        {
++            if (lchar.size() == 1)
++            {
++                if (lchar[0] < ' ') return(false); // unprintable detected
++            }
++        }
++    }
++
++    return(true);
++}
++
++void ChatLog::ChatMsg(Player *player, std::string &msg, uint32 type)
++{
++    if (!_ChatCommon(CHAT_LOG_CHAT, player, msg)) return;
++
++    CheckDateSwitch();
++
++    std::string log_str = "";
++
++    switch (type)
++    {
++        case CHAT_MSG_EMOTE:
++        log_str.append("{EMOTE} ");
++        break;
++
++        case CHAT_MSG_YELL:
++        log_str.append("{YELL} ");
++        break;
++    }
++
++    log_str.append("[");
++    log_str.append(player->GetName());
++    log_str.append("] ");
++
++    log_str.append(msg);
++
++    log_str.append("\n");
++
++    if (screenflag[CHAT_LOG_CHAT]) printf("%s", log_str.c_str());
++    if (files[CHAT_LOG_CHAT])
++    {
++        OutTimestamp(files[CHAT_LOG_CHAT]);
++        fprintf(files[CHAT_LOG_CHAT], "%s", log_str.c_str());
++        fflush(files[CHAT_LOG_CHAT]);
++    }
++}
++
++void ChatLog::PartyMsg(Player *player, std::string &msg)
++{
++    if (!_ChatCommon(CHAT_LOG_PARTY, player, msg)) return;
++
++    CheckDateSwitch();
++
++    std::string log_str = "";
++
++    log_str.append("[");
++    log_str.append(player->GetName());
++    log_str.append("]->GROUP:");
++
++    Group *group = player->GetGroup();
++    if (!group)
++    {
++        log_str.append("[unknown group] ");
++    }
++    else
++    {
++        // obtain group information
++        log_str.append("[");
++
++        uint8 gm_count = group->GetMembersCount();
++        uint8 gm_count_m1 = gm_count - 1;
++        uint64 gm_leader_GUID = group->GetLeaderGUID();
++        Player *gm_member;
++
++        gm_member = sObjectMgr.GetPlayer(gm_leader_GUID);
++        if (gm_member)
++        {
++            log_str.append(gm_member->GetName());
++            log_str.append(",");
++        }
++
++        Group::MemberSlotList g_members = group->GetMemberSlots();
++
++        for (Group::member_citerator itr = g_members.begin(); itr != g_members.end(); itr++)
++        {
++            if (itr->guid == gm_leader_GUID) continue;
++
++            gm_member = sObjectMgr.GetPlayer(itr->guid);
++            if (gm_member)
++            {
++                log_str.append(itr->name);
++                log_str.append(",");
++            }
++        }
++
++        log_str.erase(log_str.length() - 1);
++        log_str.append("] ");
++    }
++
++    log_str.append(msg);
++
++    log_str.append("\n");
++
++    if (screenflag[CHAT_LOG_PARTY]) printf("%s", log_str.c_str());
++    if (files[CHAT_LOG_PARTY])
++    {
++        OutTimestamp(files[CHAT_LOG_PARTY]);
++        fprintf(files[CHAT_LOG_PARTY], "%s", log_str.c_str());
++        fflush(files[CHAT_LOG_PARTY]);
++    }
++}
++
++void ChatLog::GuildMsg(Player *player, std::string &msg, bool officer)
++{
++    if (!_ChatCommon(CHAT_LOG_GUILD, player, msg)) return;
++
++    CheckDateSwitch();
++
++    std::string log_str = "";
++
++    log_str.append("[");
++    log_str.append(player->GetName());
++    log_str.append((officer ? "]->GUILD_OFF:" : "]->GUILD:"));
++
++    if (!player->GetGuildId())
++    {
++        log_str.append("[unknown guild] ");
++    }
++    else
++    {
++        Guild *guild = sObjectMgr.GetGuildById(player->GetGuildId());
++        if (!guild)
++        {
++            log_str.append("[unknown guild] ");
++        }
++        else
++        {
++            // obtain guild information
++            log_str.append("(");
++            log_str.append(guild->GetName());
++            log_str.append(") ");
++        }
++    }
++
++    log_str.append(msg);
++
++    log_str.append("\n");
++
++    if (screenflag[CHAT_LOG_GUILD]) printf("%s", log_str.c_str());
++    if (files[CHAT_LOG_GUILD])
++    {
++        OutTimestamp(files[CHAT_LOG_GUILD]);
++        fprintf(files[CHAT_LOG_GUILD], "%s", log_str.c_str());
++        fflush(files[CHAT_LOG_GUILD]);
++    }
++}
++
++void ChatLog::WhisperMsg(Player *player, std::string &to, std::string &msg)
++{
++    if (!_ChatCommon(CHAT_LOG_WHISPER, player, msg)) return;
++
++    CheckDateSwitch();
++
++    std::string log_str = "";
++
++    log_str.append("[");
++    log_str.append(player->GetName());
++    log_str.append("]->");
++
++    if (to.size() == 0)
++    {
++        log_str.append("[???] ");
++    }
++    else
++    {
++        normalizePlayerName(to);
++        log_str.append("[");
++        log_str.append(to);
++        log_str.append("] ");
++    }
++
++    log_str.append(msg);
++
++    log_str.append("\n");
++
++    if (screenflag[CHAT_LOG_WHISPER]) printf("%s", log_str.c_str());
++    if (files[CHAT_LOG_WHISPER])
++    {
++        OutTimestamp(files[CHAT_LOG_WHISPER]);
++        fprintf(files[CHAT_LOG_WHISPER], "%s", log_str.c_str());
++        fflush(files[CHAT_LOG_WHISPER]);
++    }
++}
++
++void ChatLog::ChannelMsg(Player *player, std::string &channel, std::string &msg)
++{
++    if (!_ChatCommon(CHAT_LOG_CHANNEL, player, msg)) return;
++
++    CheckDateSwitch();
++
++    std::string log_str = "";
++
++    log_str.append("[");
++    log_str.append(player->GetName());
++    log_str.append("]->CHANNEL:");
++
++    if (channel.size() == 0)
++    {
++        log_str.append("[unknown channel] ");
++    }
++    else
++    {
++        log_str.append("[");
++        log_str.append(channel);
++        log_str.append("] ");
++    }
++
++    log_str.append(msg);
++
++    log_str.append("\n");
++
++    if (screenflag[CHAT_LOG_CHANNEL]) printf("%s", log_str.c_str());
++    if (files[CHAT_LOG_CHANNEL])
++    {
++        OutTimestamp(files[CHAT_LOG_CHANNEL]);
++        fprintf(files[CHAT_LOG_CHANNEL], "%s", log_str.c_str());
++        fflush(files[CHAT_LOG_CHANNEL]);
++    }
++}
++
++void ChatLog::RaidMsg(Player *player, std::string &msg, uint32 type)
++{
++    if (!_ChatCommon(CHAT_LOG_RAID, player, msg)) return;
++
++    CheckDateSwitch();
++
++    std::string log_str = "";
++
++    log_str.append("[");
++    log_str.append(player->GetName());
++
++    switch (type)
++    {
++        case CHAT_MSG_RAID:
++        log_str.append("]->RAID:");
++        break;
++
++        case CHAT_MSG_RAID_LEADER:
++        log_str.append("]->RAID_LEADER:");
++        break;
++
++        case CHAT_MSG_RAID_WARNING:
++        log_str.append("]->RAID_WARN:");
++        break;
++
++        default:
++        log_str.append("]->RAID_UNKNOWN:");
++    }
++
++    Group *group = player->GetGroup();
++    if (!group)
++    {
++        log_str.append("[unknown raid] ");
++    }
++    else
++    {
++        // obtain group information
++        log_str.append("[");
++
++        uint8 gm_count = group->GetMembersCount();
++        uint8 gm_count_m1 = gm_count - 1;
++        uint64 gm_leader_GUID = group->GetLeaderGUID();
++        Player *gm_member;
++
++        gm_member = sObjectMgr.GetPlayer(gm_leader_GUID);
++        if (gm_member)
++        {
++            log_str.append(gm_member->GetName());
++            log_str.append(",");
++        }
++
++        Group::MemberSlotList g_members = group->GetMemberSlots();
++
++        for (Group::member_citerator itr = g_members.begin(); itr != g_members.end(); itr++)
++        {
++            if (itr->guid == gm_leader_GUID) continue;
++
++            gm_member = sObjectMgr.GetPlayer(itr->guid);
++            if (gm_member)
++            {
++                log_str.append(itr->name);
++                log_str.append(",");
++            }
++        }
++
++        log_str.erase(log_str.length() - 1);
++        log_str.append("] ");
++    }
++
++    log_str.append(msg);
++
++    log_str.append("\n");
++
++    if (screenflag[CHAT_LOG_RAID]) printf("%s", log_str.c_str());
++    if (files[CHAT_LOG_RAID])
++    {
++        OutTimestamp(files[CHAT_LOG_RAID]);
++        fprintf(files[CHAT_LOG_RAID], "%s", log_str.c_str());
++        fflush(files[CHAT_LOG_RAID]);
++    }
++}
++
++void ChatLog::BattleGroundMsg(Player *player, std::string &msg, uint32 type)
++{
++    if (!_ChatCommon(CHAT_LOG_BATTLEGROUND, player, msg)) return;
++
++    CheckDateSwitch();
++
++    std::string log_str = "";
++
++    log_str.append("[");
++    log_str.append(player->GetName());
++
++    switch (type)
++    {
++        case CHAT_MSG_BATTLEGROUND:
++        log_str.append("]->BG:");
++        break;
++
++        case CHAT_MSG_BATTLEGROUND_LEADER:
++        log_str.append("]->BG_LEADER:");
++        break;
++
++        default:
++        log_str.append("]->BG_UNKNOWN:");
++    }
++
++    Group *group = player->GetGroup();
++    if (!group)
++    {
++        log_str.append("[unknown group] ");
++    }
++    else
++    {
++        // obtain group information
++        log_str.append("[");
++
++        uint8 gm_count = group->GetMembersCount();
++        uint8 gm_count_m1 = gm_count - 1;
++        uint64 gm_leader_GUID = group->GetLeaderGUID();
++        Player *gm_member;
++
++        gm_member = sObjectMgr.GetPlayer(gm_leader_GUID);
++        if (gm_member)
++        {
++            log_str.append(gm_member->GetName());
++            log_str.append(",");
++        }
++
++        Group::MemberSlotList g_members = group->GetMemberSlots();
++
++        for (Group::member_citerator itr = g_members.begin(); itr != g_members.end(); itr++)
++        {
++            if (itr->guid == gm_leader_GUID) continue;
++
++            gm_member = sObjectMgr.GetPlayer(itr->guid);
++            if (gm_member)
++            {
++                log_str.append(itr->name);
++                log_str.append(",");
++            }
++        }
++
++        log_str.erase(log_str.length() - 1);
++        log_str.append("] ");
++    }
++
++    log_str.append(msg);
++
++    log_str.append("\n");
++
++    if (screenflag[CHAT_LOG_BATTLEGROUND]) printf("%s", log_str.c_str());
++    if (files[CHAT_LOG_BATTLEGROUND])
++    {
++        OutTimestamp(files[CHAT_LOG_BATTLEGROUND]);
++        fprintf(files[CHAT_LOG_BATTLEGROUND], "%s", log_str.c_str());
++        fflush(files[CHAT_LOG_BATTLEGROUND]);
++    }
++}
++
++void ChatLog::OpenAllFiles()
++{
++    std::string tempname;
++    char dstr[12];
++
++    if (ChatLogDateSplit)
++    {
++        time_t t = time(NULL);
++        tm* aTm = localtime(&t);
++        sprintf(dstr, "%-4d-%02d-%02d", aTm->tm_year + 1900, aTm->tm_mon + 1, aTm->tm_mday);
++    }
++
++    if (ChatLogEnable)
++    {
++        for (int i = 0; i <= CHATLOG_CHAT_TYPES_COUNT - 1; i++)
++        {
++            if (names[i] != "")
++            {
++                for (int j = i - 1; j >= 0; j--)
++                {
++                    if (names[i] == names[j])
++                    {
++                        files[i] = files[j];
++                        break;
++                    }
++                }
++                if (!files[i])
++                {
++                    tempname = names[i];
++                    if (ChatLogDateSplit)
++                    {
++                        // append date instead of $d if applicable
++                        int dpos = tempname.find("$d");
++                        if (dpos != tempname.npos)
++                        {
++                            tempname.replace(dpos, 2, &dstr[0], 10);
++                        }
++                    }
++                    files[i] = fopen(tempname.c_str(), "a+b");
++                    if (ChatLogUTFHeader && (ftell(files[i]) == 0)) fputs("\xEF\xBB\xBF", files[i]);
++                }
++            }
++        }
++    }
++
++    // initialize innormative log
++    if (LexicsCutterEnable)
++    {
++        if (fn_innormative != "")
++        {
++            tempname = fn_innormative;
++            if (ChatLogDateSplit)
++            {
++                // append date instead of $d if applicable
++                int dpos = tempname.find("$d");
++                if (dpos != tempname.npos)
++                {
++                    tempname.replace(dpos, 2, &dstr[0], 10);
++                }
++            }
++            f_innormative = fopen(tempname.c_str(), "a+b");
++            if (ChatLogUTFHeader && (ftell(f_innormative) == 0)) fputs("\xEF\xBB\xBF", f_innormative);
++        }
++    }
++}
++
++void ChatLog::CloseAllFiles()
++{
++    for (int i = 0; i <= CHATLOG_CHAT_TYPES_COUNT - 1; i++)
++    {
++        if (files[i])
++        {
++            for (int j = i + 1; j <= CHATLOG_CHAT_TYPES_COUNT - 1; j++)
++            {
++                if (files[j] == files[i]) files[j] = NULL;
++            }
++
++            fclose(files[i]);
++            files[i] = NULL;
++        }
++    }
++
++    if (f_innormative)
++    {
++        fclose(f_innormative);
++        f_innormative = NULL;
++    }
++}
++
++void ChatLog::CheckDateSwitch()
++{
++    if (ChatLogDateSplit)
++    {
++        time_t t = time(NULL);
++        tm* aTm = localtime(&t);
++        if (lastday != aTm->tm_mday)
++        {
++            // date switched
++            CloseAllFiles();
++            OpenAllFiles();
++            WriteInitStamps();
++        }
++    }
++}
++
++void ChatLog::WriteInitStamps()
++{
++    // remember date
++    time_t t = time(NULL);
++    tm* aTm = localtime(&t);
++    lastday = aTm->tm_mday;
++
++    if (files[CHAT_LOG_CHAT])
++    {
++        OutTimestamp(files[CHAT_LOG_CHAT]);
++        fprintf(files[CHAT_LOG_CHAT], "%s", "[SYSTEM] Chat Log Initialized\n");
++    }
++    if (files[CHAT_LOG_PARTY])
++    {
++        OutTimestamp(files[CHAT_LOG_PARTY]);
++        fprintf(files[CHAT_LOG_PARTY], "%s", "[SYSTEM] Party Chat Log Initialized\n");
++    }
++    if (files[CHAT_LOG_GUILD])
++    {
++        OutTimestamp(files[CHAT_LOG_GUILD]);
++        fprintf(files[CHAT_LOG_GUILD], "%s", "[SYSTEM] Guild Chat Log Initialized\n");
++    }
++    if (files[CHAT_LOG_WHISPER])
++    {
++        OutTimestamp(files[CHAT_LOG_WHISPER]);
++        fprintf(files[CHAT_LOG_WHISPER], "%s", "[SYSTEM] Whisper Log Initialized\n");
++    }
++    if (files[CHAT_LOG_CHANNEL])
++    {
++        OutTimestamp(files[CHAT_LOG_CHANNEL]);
++        fprintf(files[CHAT_LOG_CHANNEL], "%s", "[SYSTEM] Chat Channels Log Initialized\n");
++    }
++    if (files[CHAT_LOG_RAID])
++    {
++        OutTimestamp(files[CHAT_LOG_RAID]);
++        fprintf(files[CHAT_LOG_RAID], "%s", "[SYSTEM] Raid Party Chat Log Initialized\n");
++    }
++
++    if (f_innormative)
++    {
++        OutTimestamp(f_innormative);
++        fprintf(f_innormative, "%s", "[SYSTEM] Innormative Lexics Log Initialized\n");
++    }
++}
++
++void ChatLog::OutTimestamp(FILE* file)
++{
++    time_t t = time(NULL);
++    tm* aTm = localtime(&t);
++    fprintf(file, "%-4d-%02d-%02d %02d:%02d:%02d ", aTm->tm_year + 1900, aTm->tm_mon + 1, aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec);
++}
++
++void ChatLog::ChatBadLexicsAction(Player* player, std::string& msg)
++{
++    // logging
++    std::string log_str = "";
++
++    log_str.append("[");
++    log_str.append(player->GetName());
++    log_str.append("] ");
++
++    log_str.append(msg);
++
++    log_str.append("\n");
++
++    if (LexicsCutterScreenLog) printf("<INNORMATIVE!> %s", log_str.c_str());
++    if (f_innormative)
++    {
++        OutTimestamp(f_innormative);
++        fprintf(f_innormative, "%s", log_str.c_str());
++        fflush(f_innormative);
++    }
++
++    // cutting innormative lexics
++    if (LexicsCutterInnormativeCut)
++    {
++        msg = LexicsCutterCutReplacement;
++    }
++
++    if (!player || !player->GetSession()) return;
++
++    if (LexicsCutterNoActionOnGM && player->GetSession()->GetSecurity()) return;
++
++    // special action
++    //const SpellEntry* sl;
++
++    switch (LexicsCutterAction)
++    {
++        /*case LEXICS_ACTION_SHEEP:
++        {
++            // sheep me, yeah, yeah, sheep me
++            sl = sSpellStore.LookupEntry(118);
++            if (sl)
++            {
++                for (int i = 0; i < MAX_EFFECT_INDEX; i++)
++                {
++                    Aura* Aur = CreateAura(sl, SpellEffectIndex(i), NULL, player);
++                    if (Aur)
++                    {
++                        Aur->SetAuraDuration(LexicsCutterActionDuration);
++                        player->AddAura(Aur);
++                    }
++                }
++            }
++        }
++        break;
++
++        case LEXICS_ACTION_STUN:
++        {
++            // stunned surprised
++            sl = sSpellStore.LookupEntry(13005);
++            if (sl)
++            {
++                for (int i = 0; i < MAX_EFFECT_INDEX; i++)
++                {
++                    Aura* Aur = CreateAura(sl, SpellEffectIndex(i), NULL, player);
++                    if (Aur)
++                    {
++                        Aur->SetAuraDuration(LexicsCutterActionDuration);
++                        player->AddAura(Aur);
++                    }
++                }
++            }
++        }
++        break;*/
++
++        case LEXICS_ACTION_DIE:
++        {
++            // oops, kicked the bucket
++            player->DealDamage(player, player->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
++        }
++        break;
++
++        case LEXICS_ACTION_DRAIN:
++        {
++            // living corpse :)
++            player->DealDamage(player, player->GetHealth() - 5, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
++        }
++        break;
++
++        case LEXICS_ACTION_SILENCE:
++        {
++            // glue the mouth
++            time_t mutetime = time(NULL) + (int) (LexicsCutterActionDuration / 1000);
++            player->GetSession()->m_muteTime = mutetime;
++        }
++        break;
++
++        /*case LEXICS_ACTION_STUCK:
++        {
++            // yo, the Matrix has had you :) [by KAPATEJIb]
++            sl = sSpellStore.LookupEntry(23312);
++            if (sl)
++            {
++                for (int i = 0; i < MAX_EFFECT_INDEX; i++)
++                {
++                    Aura* Aur = CreateAura(sl, SpellEffectIndex(i), NULL, player);
++                    if (Aur)
++                    {
++                        Aur->SetAuraDuration(LexicsCutterActionDuration);
++                        player->AddAura(Aur);
++                    }
++                }
++            }
++        }
++        break;
++
++        case LEXICS_ACTION_SICKNESS:
++        {
++            // for absence of censorship, there is punishment [by Koshei]
++            sl = sSpellStore.LookupEntry(15007);
++            if (sl)
++            {
++                for (int i = 0; i < MAX_EFFECT_INDEX; i++)
++                {
++                    Aura* Aur = CreateAura(sl, SpellEffectIndex(i), NULL, player);
++                    if (Aur)
++                    {
++                        Aur->SetAuraDuration(LexicsCutterActionDuration);
++                        player->AddAura(Aur);
++                    }
++                }
++            }
++        }
++        break;
++
++        case LEXICS_ACTION_SHEAR:
++        {
++            // Lord Illidan to watch you [by Koshei]
++            sl = sSpellStore.LookupEntry(41032);
++            if (sl)
++            {
++                for (int i = 0; i < MAX_EFFECT_INDEX; i++)
++                {
++                    Aura* Aur = CreateAura(sl, SpellEffectIndex(i), NULL, player);
++                    if (Aur)
++                    {
++                        Aur->SetAuraDuration(LexicsCutterActionDuration);
++                        player->AddAura(Aur);
++                    }
++                }
++            }
++        }
++        break;*/
++
++        default:
++        // no action except logging
++        break;
++    }
++}
+diff --git a/src/game/ChatLog.h b/src/game/ChatLog.h
+new file mode 100644
+index 0000000..e2962c8
+--- /dev/null
++++ b/src/game/ChatLog.h
+@@ -0,0 +1,107 @@
++/*
++ * Copyright (C) 2005,2006,2007 MaNGOS <http://www.mangosproject.org/>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++#ifndef MANGOSSERVER_CHATLOG_H
++#define MANGOSSERVER_CHATLOG_H
++
++#include "SharedDefines.h"
++#include "ChatLexicsCutter.h"
++#include "ObjectMgr.h"
++#include "Policies/Singleton.h"
++
++#define CHATLOG_CHAT_TYPES_COUNT 7
++
++enum ChatLogFiles
++{
++    CHAT_LOG_CHAT = 0,
++    CHAT_LOG_PARTY = 1,
++    CHAT_LOG_GUILD = 2,
++    CHAT_LOG_WHISPER = 3,
++    CHAT_LOG_CHANNEL = 4,
++    CHAT_LOG_RAID = 5,
++    CHAT_LOG_BATTLEGROUND = 6,
++};
++
++enum LexicsActions
++{
++    LEXICS_ACTION_LOG = 0,
++    LEXICS_ACTION_SHEEP = 1,
++    LEXICS_ACTION_STUN = 2,
++    LEXICS_ACTION_DIE = 3,
++    LEXICS_ACTION_DRAIN = 4,
++    LEXICS_ACTION_SILENCE = 5,
++    LEXICS_ACTION_STUCK = 6,
++    LEXICS_ACTION_SICKNESS = 7,
++    LEXICS_ACTION_SHEAR = 8,
++};
++
++class ChatLog : public MaNGOS::Singleton<ChatLog, MaNGOS::ClassLevelLockable<ChatLog, /*ZThread::Mutex*/ACE_Thread_Mutex> >
++{
++    public:
++        ChatLog();
++        ~ChatLog();
++
++        void Initialize();
++
++        void ChatMsg(Player *player, std::string &msg, uint32 type);
++        void PartyMsg(Player *player, std::string &msg);
++        void GuildMsg(Player *player, std::string &msg, bool officer);
++        void WhisperMsg(Player *player, std::string &to, std::string &msg);
++        void ChannelMsg(Player *player, std::string &channel, std::string &msg);
++        void RaidMsg(Player *player, std::string &msg, uint32 type);
++        void BattleGroundMsg(Player *player, std::string &msg, uint32 type);
++
++        void ChatBadLexicsAction(Player *player, std::string &msg);
++
++    private:
++        bool _ChatCommon(int ChatType, Player *player, std::string &msg);
++
++        bool ChatLogEnable;
++        bool ChatLogDateSplit;
++        bool ChatLogUTFHeader;
++        bool ChatLogIgnoreUnprintable;
++
++        int lastday;
++
++        FILE* files[CHATLOG_CHAT_TYPES_COUNT];
++        std::string names[CHATLOG_CHAT_TYPES_COUNT];
++        bool screenflag[CHATLOG_CHAT_TYPES_COUNT];
++
++        LexicsCutter* Lexics;
++        bool cutflag[CHATLOG_CHAT_TYPES_COUNT];
++
++        bool LexicsCutterEnable;
++        bool LexicsCutterInnormativeCut;
++        bool LexicsCutterNoActionOnGM;
++        bool LexicsCutterScreenLog;
++        std::string LexicsCutterCutReplacement;
++        int LexicsCutterAction;
++        int LexicsCutterActionDuration;
++        std::string fn_innormative;
++        FILE* f_innormative;
++
++        void OpenAllFiles();
++        void CloseAllFiles();
++        void CheckDateSwitch();
++
++        void WriteInitStamps();
++        void OutTimestamp(FILE *file);
++};
++
++#define sChatLog MaNGOS::Singleton<ChatLog>::Instance()
++#endif
+diff --git a/src/game/Makefile.am b/src/game/Makefile.am
+index 1008833..b3f332f 100644
+--- a/src/game/Makefile.am
++++ b/src/game/Makefile.am
+@@ -91,6 +91,10 @@ libmangosgame_a_SOURCES = \
+ 	Chat.cpp \
+ 	Chat.h \
+ 	ChatHandler.cpp \
++	ChatLexicsCutter.cpp \
++	ChatLexicsCutter.h \
++	ChatLog.cpp \
++	ChatLog.h \
+ 	CombatHandler.cpp \
+ 	ConfusedMovementGenerator.cpp \
+ 	ConfusedMovementGenerator.h \
+diff --git a/src/mangosd/mangosd.conf.dist.in b/src/mangosd/mangosd.conf.dist.in
+index cff2882..62455c4 100644
+--- a/src/mangosd/mangosd.conf.dist.in
++++ b/src/mangosd/mangosd.conf.dist.in
+@@ -366,6 +366,78 @@ GmLogPerAccount = 0
+ RaLogFile = ""
+ LogColors = ""
+ 
++# Chat log parameters
++ChatLogEnable = 0
++
++# If this is enabled, all $d in file names are replaced with current date
++# This does include innormative lexics log
++ChatLogDateSplit = 1
++
++# If this is enabled, UTF8 header is written into new files
++ChatLogUTFHeader = 1
++
++# If this is enabled, chat log will ignore messages with unprintable chars
++ChatLogIgnoreUnprintable = 1
++
++# Chat log files
++ChatLogChatFile = main_chat-$d.log
++ChatLogPartyFile = party_chat-$d.log
++ChatLogGuildFile = guild_chat-$d.log
++ChatLogWhisperFile = whisper_chat-$d.log
++ChatLogChannelFile = channel_chat-$d.log
++ChatLogRaidFile = raid_chat-$d.log
++ChatLogBattleGroundFile = bg_chat-$d.log
++
++# Chat log screen logging
++ChatLogChatScreen = 0
++ChatLogPartyScreen = 0
++ChatLogGuildScreen = 0
++ChatLogWhisperScreen = 0
++ChatLogChannelScreen = 0
++ChatLogRaidScreen = 0
++ChatLogBattleGroundScreen = 0
++
++# Lexics cutter parameters
++LexicsCutterEnable = 1
++
++LexicsCutterInnormativeCut = 1
++LexicsCutterCutReplacement = &!@^%!^&*!!!
++LexicsCutterLogFile = innormative-$d.log
++LexicsCutterScreenLog = 0
++LexicsCutterAnalogsFile = letter_analogs.txt
++LexicsCutterWordsFile = innormative_words.txt
++
++# Where to cut lexics
++LexicsCutInChat = 1
++LexicsCutInParty = 1
++LexicsCutInGuild = 1
++LexicsCutInWhisper = 1
++LexicsCutInChannel = 1
++LexicsCutInRaid = 1
++LexicsCutInBattleGround = 1
++
++# Ignore word spaces like: W O R D
++LexicsCutterIgnoreSpaces = 1
++
++# Ignore repeats like: WWOOOORRRRRD
++LexicsCutterIgnoreRepeats = 1
++
++# --- Action:
++# ---   0: log only
++# ---   1: sheep
++# ---   2: stun
++# ---   3: kill
++# ---   4: leave 5 health
++# ---   5: disable chat
++# ---   6: stuck (works as stun + 50% health)
++# ---   7: resurrection sickness
++# ---   8: shear
++LexicsCutterAction = 0
++LexicsCutterActionDuration = 60000
++
++# Do not perform action on GM if this is enabled
++LexicsCutterNoActionOnGM = 1
++
+ ###################################################################################################################
+ # SERVER SETTINGS
+ #
+diff --git a/win/VC100/game.vcxproj b/win/VC100/game.vcxproj
+index 4525ed4..ad8bb59 100644
+--- a/win/VC100/game.vcxproj
++++ b/win/VC100/game.vcxproj
+@@ -379,6 +379,8 @@
+     <ClCompile Include="..\..\src\game\CharacterHandler.cpp" />
+     <ClCompile Include="..\..\src\game\Chat.cpp" />
+     <ClCompile Include="..\..\src\game\ChatHandler.cpp" />
++    <ClCompile Include="..\..\src\game\ChatLexicsCutter.cpp" />
++    <ClCompile Include="..\..\src\game\ChatLog.cpp" />
+     <ClCompile Include="..\..\src\game\CombatHandler.cpp" />
+     <ClCompile Include="..\..\src\game\ConfusedMovementGenerator.cpp" />
+     <ClCompile Include="..\..\src\game\Corpse.cpp" />
+@@ -527,6 +529,8 @@
+     <ClInclude Include="..\..\src\game\ChannelMgr.h" />
+     <ClInclude Include="..\..\src\game\CharacterDatabaseCleaner.h" />
+     <ClInclude Include="..\..\src\game\Chat.h" />
++    <ClInclude Include="..\..\src\game\ChatLexicsCutter.h" />
++    <ClInclude Include="..\..\src\game\ChatLog.h" />
+     <ClInclude Include="..\..\src\game\ConfusedMovementGenerator.h" />
+     <ClInclude Include="..\..\src\game\Corpse.h" />
+     <ClInclude Include="..\..\src\game\Creature.h" />
+diff --git a/win/VC80/game.vcproj b/win/VC80/game.vcproj
+index d083dbd..362e66f 100644
+--- a/win/VC80/game.vcproj
++++ b/win/VC80/game.vcproj
+@@ -721,6 +721,22 @@
+ 				RelativePath="..\..\src\game\ChatHandler.cpp"
+ 				>
+ 			</File>
++            <File
++                RelativePath="..\..\src\game\ChatLexicsCutter.cpp"
++                >
++            </File>
++            <File
++                RelativePath="..\..\src\game\ChatLexicsCutter.h"
++                >
++            </File>
++            <File
++                RelativePath="..\..\src\game\ChatLog.cpp"
++                >
++            </File>
++            <File
++                RelativePath="..\..\src\game\ChatLog.h"
++                >
++            </File>
+ 			<File
+ 				RelativePath="..\..\src\game\CombatHandler.cpp"
+ 				>
+diff --git a/win/VC90/game.vcproj b/win/VC90/game.vcproj
+index 1d491a2..bc801e0 100644
+--- a/win/VC90/game.vcproj
++++ b/win/VC90/game.vcproj
+@@ -715,6 +715,22 @@
+ 				>
+ 			</File>
+ 			<File
++				RelativePath="..\..\src\game\ChatLexicsCutter.cpp"
++				>
++			</File>
++			<File
++				RelativePath="..\..\src\game\ChatLexicsCutter.h"
++				>
++			</File>
++			<File
++				RelativePath="..\..\src\game\ChatLog.cpp"
++				>
++			</File>
++			<File
++				RelativePath="..\..\src\game\ChatLog.h"
++				>
++			</File>
++			<File
+ 				RelativePath="..\..\src\game\CombatHandler.cpp"
+ 				>
+ 			</File>

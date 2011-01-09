@@ -1,0 +1,69 @@
+diff --git a/src/game/AchievementMgr.h b/src/game/AchievementMgr.h
+index 32c5c71..fb2fb87 100644
+--- a/src/game/AchievementMgr.h
++++ b/src/game/AchievementMgr.h
+@@ -252,6 +252,7 @@ class AchievementMgr
+         void CheckAllAchievementCriteria();
+         void SendAllAchievementData();
+         void SendRespondInspectAchievements(Player* player);
++		void CompletedAchievement(AchievementEntry const* entry);
+ 
+         Player* GetPlayer() { return m_player;}
+ 
+@@ -263,7 +264,6 @@ class AchievementMgr
+         void SendCriteriaUpdate(uint32 id, CriteriaProgress const* progress);
+         void SetCriteriaProgress(AchievementCriteriaEntry const* entry, uint32 changeValue, ProgressType ptype = PROGRESS_SET);
+         void CompletedCriteriaFor(AchievementEntry const* achievement);
+-        void CompletedAchievement(AchievementEntry const* entry);
+         bool IsCompletedCriteria(AchievementCriteriaEntry const* criteria, AchievementEntry const* achievement);
+         bool IsCompletedAchievement(AchievementEntry const* entry);
+         void CompleteAchievementsWithRefs(AchievementEntry const* entry);
+diff --git a/src/game/DBCStores.cpp b/src/game/DBCStores.cpp
+index b42cbd0..1489f40 100644
+--- a/src/game/DBCStores.cpp
++++ b/src/game/DBCStores.cpp
+@@ -950,3 +950,4 @@ MANGOS_DLL_SPEC DBCStorage <ItemEntry>          const* GetItemDisplayStore()
+ MANGOS_DLL_SPEC DBCStorage <CreatureDisplayInfoEntry> const* GetCreatureDisplayStore() { return &sCreatureDisplayInfoStore; }
+ MANGOS_DLL_SPEC DBCStorage <EmotesEntry>        const* GetEmotesStore()         { return &sEmotesStore;         }
+ MANGOS_DLL_SPEC DBCStorage <EmotesTextEntry>    const* GetEmotesTextStore()     { return &sEmotesTextStore;     }
++MANGOS_DLL_SPEC DBCStorage <AchievementEntry>   const* GetAchievementStore()    { return &sAchievementStore;    }
+diff --git a/src/game/DBCStores.h b/src/game/DBCStores.h
+index ad07b05..6c1bd21 100644
+--- a/src/game/DBCStores.h
++++ b/src/game/DBCStores.h
+@@ -179,4 +179,5 @@ MANGOS_DLL_SPEC DBCStorage <ItemEntry>                  const* GetItemDisplaySto
+ MANGOS_DLL_SPEC DBCStorage <CreatureDisplayInfoEntry>   const* GetCreatureDisplayStore();
+ MANGOS_DLL_SPEC DBCStorage <EmotesEntry>                const* GetEmotesStore();
+ MANGOS_DLL_SPEC DBCStorage <EmotesTextEntry>            const* GetEmotesTextStore();
++MANGOS_DLL_SPEC DBCStorage <AchievementEntry>           const* GetAchievementStore();
+ #endif
+diff --git a/src/game/Player.cpp b/src/game/Player.cpp
+index 91a0e15..1e196fa 100644
+--- a/src/game/Player.cpp
++++ b/src/game/Player.cpp
+@@ -21381,6 +21381,11 @@ void Player::UpdateAchievementCriteria( AchievementCriteriaTypes type, uint32 mi
+     GetAchievementMgr().UpdateAchievementCriteria(type, miscvalue1,miscvalue2,unit,time);
+ }
+ 
++void Player::CompletedAchievement(AchievementEntry const* entry)
++{
++    GetAchievementMgr().CompletedAchievement(entry);
++}
++
+ PlayerTalent const* Player::GetKnownTalentById(int32 talentId) const
+ {
+     PlayerTalentMap::const_iterator itr = m_talents[m_activeSpec].find(talentId);
+diff --git a/src/game/Player.h b/src/game/Player.h
+index d4ba36e..672b091 100644
+--- a/src/game/Player.h
++++ b/src/game/Player.h
+@@ -2378,7 +2378,8 @@ class MANGOS_DLL_SPEC Player : public Unit
+         AchievementMgr& GetAchievementMgr() { return m_achievementMgr; }
+         void UpdateAchievementCriteria(AchievementCriteriaTypes type, uint32 miscvalue1=0, uint32 miscvalue2=0, Unit *unit=NULL, uint32 time=0);
+ 
+-        bool HasTitle(uint32 bitIndex);
++        void CompletedAchievement(AchievementEntry const* entry);
++		bool HasTitle(uint32 bitIndex);
+         bool HasTitle(CharTitlesEntry const* title) { return HasTitle(title->bit_index); }
+         void SetTitle(CharTitlesEntry const* title, bool lost = false);
+ 

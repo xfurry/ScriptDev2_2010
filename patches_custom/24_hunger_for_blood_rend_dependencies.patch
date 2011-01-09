@@ -1,0 +1,115 @@
+diff --git a/src/game/SharedDefines.h b/src/game/SharedDefines.h
+index 3d2857a..f3f6fb6 100644
+--- a/src/game/SharedDefines.h
++++ b/src/game/SharedDefines.h
+@@ -915,7 +915,7 @@ enum AuraState
+     AURA_STATE_SWIFTMEND                    = 15,           //   T |
+     AURA_STATE_DEADLY_POISON                = 16,           //   T |
+     AURA_STATE_ENRAGE                       = 17,           // C   |
+-    //AURA_STATE_UNKNOWN18                  = 18,           // C  t|
++	AURA_STATE_MECHANIC_BLEED               = 18,           // C  t|
+     //AURA_STATE_UNKNOWN19                  = 19,           //     | not used
+     //AURA_STATE_UNKNOWN20                  = 20,           //  c  | only (45317 Suicide)
+     //AURA_STATE_UNKNOWN21                  = 21,           //     | not used
+diff --git a/src/game/SpellAuras.cpp b/src/game/SpellAuras.cpp
+index 6136c63..50c7fc1 100644
+--- a/src/game/SpellAuras.cpp
++++ b/src/game/SpellAuras.cpp
+@@ -7845,7 +7845,10 @@ void SpellAuraHolder::_AddSpellAuraHolder()
+         // Enrage aura state
+         if(m_spellProto->Dispel == DISPEL_ENRAGE)
+             m_target->ModifyAuraState(AURA_STATE_ENRAGE, true);
+-        
++
++        // Mechanic bleed aura state
++        if(GetAllSpellMechanicMask(m_spellProto) & (1 << (MECHANIC_BLEED-1)))
++            m_target->ModifyAuraState(AURA_STATE_MECHANIC_BLEED, true);       
+     }
+ }
+ 
+@@ -7900,6 +7903,10 @@ void SpellAuraHolder::_RemoveSpellAuraHolder()
+         if(m_spellProto->Dispel == DISPEL_ENRAGE)
+             m_target->ModifyAuraState(AURA_STATE_ENRAGE, false);
+ 
++        // Mechanic bleed aura state
++        if(GetAllSpellMechanicMask(m_spellProto) & (1 << (MECHANIC_BLEED-1)))
++            m_target->ModifyAuraState(AURA_STATE_MECHANIC_BLEED, false);
++
+         uint32 removeState = 0;
+         uint64 removeFamilyFlag = m_spellProto->SpellFamilyFlags;
+         uint32 removeFamilyFlag2 = m_spellProto->SpellFamilyFlags2;
+diff --git a/src/game/SpellEffects.cpp b/src/game/SpellEffects.cpp
+index 1d7bd20..47bdeaf 100644
+--- a/src/game/SpellEffects.cpp
++++ b/src/game/SpellEffects.cpp
+@@ -2126,6 +2126,11 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
+                     m_caster->CastSpell(m_caster, 45182, true);
+                     return;
+                 }
++                case 51662:                                 // Hunger for Blood
++                {
++                    m_caster->CastSpell(m_caster, 63848, true);
++                    return;
++                }
+             }
+             break;
+         }
+@@ -5077,6 +5082,27 @@ void Spell::EffectWeaponDmg(SpellEffectIndex eff_idx)
+             }
+             break;
+         }
++        case SPELLFAMILY_DRUID:
++        {
++            // Rend and Tear ( on Maul / Shred )
++            if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000008800))
++            {
++                if(unitTarget && unitTarget->HasAuraState(AURA_STATE_MECHANIC_BLEED))
++                {
++                    Unit::AuraList const& aura = m_caster->GetAurasByType(SPELL_AURA_DUMMY);
++                    for(Unit::AuraList::const_iterator itr = aura.begin(); itr != aura.end(); ++itr)
++                    {
++                        if ((*itr)->GetSpellProto()->SpellIconID == 2859 && (*itr)->GetEffIndex() == 0)
++                        {
++                            totalDamagePercentMod += (totalDamagePercentMod * (*itr)->GetModifier()->m_amount) / 100;
++                            break;
++                        }
++                    }
++                }
++            }
++
++            break;
++        }
+         case SPELLFAMILY_WARRIOR:
+         {
+             // Devastate bonus and sunder armor refresh
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index f5131d7..dfc298f 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -6544,6 +6544,26 @@ bool Unit::IsSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolM
+             break;
+         }
+         case SPELL_DAMAGE_CLASS_MELEE:
++            // Rend and Tear crit chance with Ferocious Bite on bleeding target
++            if (spellProto->SpellFamilyName == SPELLFAMILY_DRUID)
++            {
++                if(spellProto->SpellFamilyFlags & UI64LIT(0x0000000000800000))
++                {
++                    if(pVictim->HasAuraState(AURA_STATE_MECHANIC_BLEED))
++                    {
++                        Unit::AuraList const& aura = GetAurasByType(SPELL_AURA_DUMMY);
++                        for(Unit::AuraList::const_iterator itr = aura.begin(); itr != aura.end(); ++itr)
++                        {
++                            if ((*itr)->GetSpellProto()->SpellIconID == 2859 && (*itr)->GetEffIndex() == 1)
++                            {
++                                crit_chance += (*itr)->GetModifier()->m_amount;
++                                break;
++                            }
++                        }
++                    }
++                }
++            }
++            // do not use break here
+         case SPELL_DAMAGE_CLASS_RANGED:
+         {
+             if (pVictim)

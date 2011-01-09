@@ -1,0 +1,13 @@
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index 00464c9..f5131d7 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -2025,7 +2025,7 @@ void Unit::CalculateAbsorbAndResist(Unit *pCaster, SpellSchoolMask schoolMask, D
+                     continue;
+                 }
+                 // Reflective Shield
+-                if (spellProto->SpellFamilyFlags == 0x1 && canReflect)
++                if (spellProto->SpellIconID == 566 && canReflect)
+                 {
+                     if (pCaster == this)
+                         break;

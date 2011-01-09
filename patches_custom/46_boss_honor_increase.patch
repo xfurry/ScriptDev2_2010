@@ -1,0 +1,13 @@
+diff --git a/src/game/Player.cpp b/src/game/Player.cpp
+index 3c93bbc..2191cec 100644
+--- a/src/game/Player.cpp
++++ b/src/game/Player.cpp
+@@ -6481,7 +6481,7 @@ bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor)
+             if (!cVictim->isRacialLeader())
+                 return false;
+ 
+-            honor = 100;                                    // ??? need more info
++            honor = 2000;                                    // ??? need more info
+             victim_rank = 19;                               // HK: Leader
+         }
+     }

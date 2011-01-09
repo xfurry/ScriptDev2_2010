@@ -1,0 +1,66 @@
+diff --git a/src/game/Spell.cpp b/src/game/Spell.cpp
+index 769d44e..6c2cacc 100644
+--- a/src/game/Spell.cpp
++++ b/src/game/Spell.cpp
+@@ -1510,6 +1510,23 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
+ 						else unMaxTargets = 1;
+ 						break;
+ 					}
++				case 69075:                                 // Bone Storm
++				case 70834:                                 // Bone Storm
++				case 70835:                                 // Bone Storm
++				case 70836:                                 // Bone Storm
++					radius = DEFAULT_VISIBILITY_INSTANCE;
++                    break;
++                case 72350:                                 // Fury of Frostmourne
++                case 72351:                                 // Fury of Frostmourne 
++                    radius = 300;
++                    break;
++                case 72754:                                 // Defile. Radius depended from scale.
++                case 73708:                                 // Defile 25
++                case 73709:                                 // Defile 10H
++                case 73710:                                 // Defile 25H
++                    if (Unit* realCaster = GetAffectiveCaster())
++                        radius = realCaster->GetFloatValue(OBJECT_FIELD_SCALE_X) * 6;
++                    break;
+             }
+             break;
+         }
+diff --git a/src/game/SpellEffects.cpp b/src/game/SpellEffects.cpp
+index 30922e5..417f94c 100644
+--- a/src/game/SpellEffects.cpp
++++ b/src/game/SpellEffects.cpp
+@@ -364,6 +364,33 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
+                     case 67485:
+                         damage += uint32(0.5f * m_caster->GetTotalAttackPowerValue(BASE_ATTACK));
+                         break;
++					// Defile damage depending from scale.
++					case 72754:
++					case 73708:
++                    case 73709:
++                    case 73710:
++                        damage = damage * m_caster->GetObjectScale();
++                        break;
++                    // Growling ooze puddle
++                    case 70346:
++                    case 72456:
++                    case 72868:
++                    case 72869:
++                    {
++                        float distance = unitTarget->GetDistance2d(m_caster); 
++                        damage *= exp(-distance/(5.0f*m_caster->GetObjectScale()));
++                        break;
++                    }
++                    // Bone Storm
++                    case 69075:
++                    case 70834:
++                    case 70835:
++                    case 70836:
++                    {
++                        float distance = unitTarget->GetDistance2d(m_caster); 
++                        damage *= exp(-distance/(10.0f));
++                        break;
++                    }
+                 }
+                 break;
+             }

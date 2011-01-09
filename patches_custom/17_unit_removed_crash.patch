@@ -1,0 +1,19 @@
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index 186d0b9..a104a2b 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -282,7 +282,13 @@ void Unit::Update( uint32 p_time )
+     // Spells must be processed with event system BEFORE they go to _UpdateSpells.
+     // Or else we may have some SPELL_STATE_FINISHED spells stalled in pointers, that is bad.
+     m_Events.Update( p_time );
+-    _UpdateSpells( p_time );
++	if(!IsInWorld())
++    {
++        sLog.outError("unit is not in world anymore after m_events update");
++        return;
++    }
++
++	_UpdateSpells( p_time );
+ 
+     CleanupDeletedAuras();
+ 

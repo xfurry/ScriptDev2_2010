@@ -1,0 +1,33 @@
+diff --git a/src/game/UnitAuraProcHandler.cpp b/src/game/UnitAuraProcHandler.cpp
+index 9a4a197..4ae59fe 100644
+--- a/src/game/UnitAuraProcHandler.cpp
++++ b/src/game/UnitAuraProcHandler.cpp
+@@ -2089,20 +2089,20 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
+ 
+                     int32 extra_attack_power = CalculateSpellDamage(pVictim, windfurySpellEntry, EFFECT_INDEX_1);
+ 
+-                    // Off-Hand case
+-                    if (castItem->GetSlot() == EQUIPMENT_SLOT_OFFHAND)
+-                    {
+-                        // Value gained from additional AP
+-                        basepoints[0] = int32(extra_attack_power/14.0f * GetAttackTime(OFF_ATTACK)/1000/2);
+-                        triggered_spell_id = 33750;
+-                    }
+                     // Main-Hand case
+-                    else
++                    if ( castItem->GetSlot() == EQUIPMENT_SLOT_MAINHAND && isAttackReady(BASE_ATTACK) )
+                     {
+                         // Value gained from additional AP
+                         basepoints[0] = int32(extra_attack_power/14.0f * GetAttackTime(BASE_ATTACK)/1000);
+                         triggered_spell_id = 25504;
+                     }
++                    // Off-Hand case
++                    else if ( castItem->GetSlot() == EQUIPMENT_SLOT_OFFHAND && isAttackReady(OFF_ATTACK) )
++                    {
++                        // Value gained from additional AP
++                        basepoints[0] = int32(extra_attack_power/14.0f * GetAttackTime(OFF_ATTACK)/1000/2);
++                        triggered_spell_id = 33750;
++                   }
+ 
+                     // apply cooldown before cast to prevent processing itself
+                     if( cooldown )

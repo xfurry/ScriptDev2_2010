@@ -1,0 +1,13 @@
+diff --git a/src/game/Pet.cpp b/src/game/Pet.cpp
+index 45339c5..b20ea0f 100644
+--- a/src/game/Pet.cpp
++++ b/src/game/Pet.cpp
+@@ -483,7 +483,7 @@ void Pet::setDeathState(DeathState s)                       // overwrite virtual
+ 
+ void Pet::Update(uint32 diff)
+ {
+-    if(m_removed)                                           // pet already removed, just wait in remove queue, no updates
++	if(m_removed || m_loading)                               // pet already removed, just wait in remove queue, no updates
+         return;
+ 
+     switch( m_deathState )

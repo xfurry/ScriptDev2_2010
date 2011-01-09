@@ -1,0 +1,32 @@
+diff --git a/src/game/Spell.cpp b/src/game/Spell.cpp
+index f7ef9f4..2f0f3e1 100644
+--- a/src/game/Spell.cpp
++++ b/src/game/Spell.cpp
+@@ -2835,6 +2835,10 @@ void Spell::cast(bool skipCheck)
+         }
+         case SPELLFAMILY_DRUID:
+         {
++            // Berserk (hit 3 targets at once with mangle in dire bear form)
++            if (m_spellInfo->SpellIconID == 2852 && (m_spellInfo->AttributesEx & 0x28020))
++                AddPrecastSpell(58923);
++
+             // Faerie Fire (Feral)
+             if (m_spellInfo->Id == 16857 && m_caster->m_form != FORM_CAT)
+                 AddTriggeredSpell(60089);
+diff --git a/src/game/SpellMgr.cpp b/src/game/SpellMgr.cpp
+index 1941c26..d5d185d 100644
+--- a/src/game/SpellMgr.cpp
++++ b/src/game/SpellMgr.cpp
+@@ -932,7 +932,11 @@ SpellCastResult GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32
+     if(actAsShifted)
+     {
+         if (spellInfo->Attributes & SPELL_ATTR_NOT_SHAPESHIFT) // not while shapeshifted
+-            return SPELL_FAILED_NOT_SHAPESHIFT;
++        {
++            // but we must allow cast of Berserk+modifier from any form... where for the hell should we do it?
++            if (!(spellInfo->SpellIconID == 1680 && (spellInfo->AttributesEx & 0x8000)))
++                return SPELL_FAILED_NOT_SHAPESHIFT;
++        }
+         else if (spellInfo->Stances != 0)                   // needs other shapeshift
+             return SPELL_FAILED_ONLY_SHAPESHIFT;
+     }

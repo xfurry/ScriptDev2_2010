@@ -1,0 +1,26 @@
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index cdd94e5..de762c8 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -2004,13 +2004,16 @@ void Unit::CalculateAbsorbAndResist(Unit *pCaster, SpellSchoolMask schoolMask, D
+             {
+                 // Cheat Death (make less prio with Guardian Spirit case)
+                 if (!preventDeathSpell && spellProto->SpellIconID == 2109 &&
+-                    GetTypeId()==TYPEID_PLAYER &&           // Only players
+-                    !((Player*)this)->HasSpellCooldown(31231) &&
++                    GetTypeId()==TYPEID_PLAYER)             // Only players
++                {
++                    if (!((Player*)this)->HasSpellCooldown(31231) &&
+                                                             // Only if no cooldown
+-                    roll_chance_i((*i)->GetModifier()->m_amount))
++                        roll_chance_i((*i)->GetModifier()->m_amount))
+                                                             // Only if roll
+-                {
+-                    preventDeathSpell = (*i)->GetSpellProto();
++                    {
++                        preventDeathSpell = (*i)->GetSpellProto();
++                    }
++                    // continue in every case
+                     continue;
+                 }
+                 break;

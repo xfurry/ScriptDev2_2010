@@ -1,0 +1,16 @@
+diff --git a/src/game/SpellEffects.cpp b/src/game/SpellEffects.cpp
+index 6eb4b41..f9a282a 100644
+--- a/src/game/SpellEffects.cpp
++++ b/src/game/SpellEffects.cpp
+@@ -6849,7 +6849,10 @@ void Spell::EffectStuck(SpellEffectIndex /*eff_idx*/)
+         return;
+ 
+     // homebind location is loaded always
+-    pTarget->TeleportToHomebind(unitTarget==m_caster ? TELE_TO_SPELL : 0);
++	if(pTarget->InBattleGround())
++        pTarget->TeleportToHomebind(unitTarget==m_caster ? TELE_TO_SPELL : 0);
++    else
++        pTarget->RepopAtGraveyard();
+ 
+     // Stuck spell trigger Hearthstone cooldown
+     SpellEntry const *spellInfo = sSpellStore.LookupEntry(8690);

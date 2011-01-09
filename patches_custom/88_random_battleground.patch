@@ -1,0 +1,824 @@
+diff --git a/src/game/AchievementMgr.cpp b/src/game/AchievementMgr.cpp
+index d32d951..cc2e1c8 100644
+--- a/src/game/AchievementMgr.cpp
++++ b/src/game/AchievementMgr.cpp
+@@ -795,7 +795,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
+                     {
+                         case 161:                           // AB, Overcome a 500 resource disadvantage
+                         {
+-                            if (bg->GetTypeID() != BATTLEGROUND_AB)
++                            if (bg->GetTypeID(true) != BATTLEGROUND_AB)
+                                 continue;
+                             if(!((BattleGroundAB*)bg)->IsTeamScores500Disadvantage(GetPlayer()->GetTeam()))
+                                 continue;
+diff --git a/src/game/BattleGround.cpp b/src/game/BattleGround.cpp
+index f428bc1..be22055 100644
+--- a/src/game/BattleGround.cpp
++++ b/src/game/BattleGround.cpp
+@@ -209,6 +209,7 @@ void BattleGround::BroadcastWorker(Do& _do)
+ BattleGround::BattleGround()
+ {
+     m_TypeID            = BattleGroundTypeId(0);
++    m_RandomTypeID      = BattleGroundTypeId(0);
+     m_Status            = STATUS_NONE;
+     m_ClientInstanceID  = 0;
+     m_EndTime           = 0;
+@@ -222,6 +223,7 @@ BattleGround::BattleGround()
+     m_Events            = 0;
+     m_IsRated           = false;
+     m_BuffChange        = false;
++    m_IsRandom          = false;
+     m_Name              = "";
+     m_LevelMin          = 0;
+     m_LevelMax          = 0;
+@@ -794,14 +796,31 @@ void BattleGround::EndBattleGround(uint32 winner)
+             }
+         }
+ 
++        uint32 win_kills = plr->GetRandomWinner() ? BG_REWARD_WINNER_HONOR_LAST : BG_REWARD_WINNER_HONOR_FIRST;
++        uint32 loos_kills = plr->GetRandomWinner() ? BG_REWARD_LOOSER_HONOR_LAST : BG_REWARD_LOOSER_HONOR_FIRST;
++        uint32 win_arena = plr->GetRandomWinner() ? BG_REWARD_WINNER_ARENA_LAST : BG_REWARD_WINNER_ARENA_FIRST;
++
+         if (team == winner)
+         {
+             RewardMark(plr,ITEM_WINNER_COUNT);
+             RewardQuestComplete(plr);
+-            plr->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_BG, 1);
++
++            if (IsRandom() || BattleGroundMgr::IsBGWeekend(GetTypeID()))
++            {
++                UpdatePlayerScore(plr, SCORE_BONUS_HONOR, GetBonusHonorFromKill(win_kills*4));
++                plr->ModifyArenaPoints(win_arena);
++                if(!plr->GetRandomWinner())
++                    plr->SetRandomWinner(true);
++            }
++
++            plr->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_BG, 1);            
+         }
+         else
++        {
+             RewardMark(plr,ITEM_LOSER_COUNT);
++            if (IsRandom() || BattleGroundMgr::IsBGWeekend(GetTypeID()))
++                UpdatePlayerScore(plr, SCORE_BONUS_HONOR, GetBonusHonorFromKill(loos_kills*4));
++        }
+ 
+         plr->CombatStopWithPets(true);
+ 
+@@ -842,7 +861,7 @@ uint32 BattleGround::GetBonusHonorFromKill(uint32 kills) const
+ 
+ uint32 BattleGround::GetBattlemasterEntry() const
+ {
+-    switch(GetTypeID())
++    switch(GetTypeID(true))
+     {
+         case BATTLEGROUND_AV: return 15972;
+         case BATTLEGROUND_WS: return 14623;
+@@ -855,7 +874,7 @@ uint32 BattleGround::GetBattlemasterEntry() const
+ 
+ void BattleGround::RewardMark(Player *plr,uint32 count)
+ {
+-    switch(GetTypeID())
++    switch(GetTypeID(true))
+     {
+         case BATTLEGROUND_AV:
+             if (count == ITEM_WINNER_COUNT)
+@@ -961,7 +980,7 @@ void BattleGround::SendRewardMarkByMail(Player *plr,uint32 mark, uint32 count)
+ void BattleGround::RewardQuestComplete(Player *plr)
+ {
+     uint32 quest;
+-    switch(GetTypeID())
++    switch(GetTypeID(true))
+     {
+         case BATTLEGROUND_AV:
+             quest = SPELL_AV_QUEST_REWARD;
+@@ -1691,7 +1710,7 @@ void BattleGround::HandleTriggerBuff(uint64 const& go_guid)
+         index--;
+     if (index < 0)
+     {
+-        sLog.outError("BattleGround (Type: %u) has buff gameobject (Guid: %u Entry: %u Type:%u) but it hasn't that object in its internal data",GetTypeID(),GUID_LOPART(go_guid),obj->GetEntry(),obj->GetGoType());
++        sLog.outError("BattleGround (Type: %u) has buff gameobject (Guid: %u Entry: %u Type:%u) but it hasn't that object in its internal data",GetTypeID(true),GUID_LOPART(go_guid),obj->GetEntry(),obj->GetGoType());
+         return;
+     }
+ 
+diff --git a/src/game/BattleGround.h b/src/game/BattleGround.h
+index 32554e4..ce5557a 100644
+--- a/src/game/BattleGround.h
++++ b/src/game/BattleGround.h
+@@ -128,6 +128,16 @@ enum BattleGroundBuffObjects
+     BG_OBJECTID_BERSERKERBUFF_ENTRY = 179905
+ };
+ 
++enum BattleGroundRandomRewards
++{
++    BG_REWARD_WINNER_HONOR_FIRST    = 30,
++    BG_REWARD_WINNER_ARENA_FIRST    = 25,
++    BG_REWARD_WINNER_HONOR_LAST     = 15,
++    BG_REWARD_WINNER_ARENA_LAST     = 0,
++    BG_REWARD_LOOSER_HONOR_FIRST    = 5,
++    BG_REWARD_LOOSER_HONOR_LAST     = 5
++};
++
+ const uint32 Buff_Entries[3] = { BG_OBJECTID_SPEEDBUFF_ENTRY, BG_OBJECTID_REGENBUFF_ENTRY, BG_OBJECTID_BERSERKERBUFF_ENTRY };
+ 
+ enum BattleGroundStatus
+@@ -164,11 +174,12 @@ enum BattleGroundQueueTypeId
+     BATTLEGROUND_QUEUE_EY       = 4,
+     BATTLEGROUND_QUEUE_SA       = 5,
+     BATTLEGROUND_QUEUE_IC       = 6,
+-    BATTLEGROUND_QUEUE_2v2      = 7,
+-    BATTLEGROUND_QUEUE_3v3      = 8,
+-    BATTLEGROUND_QUEUE_5v5      = 9
++    BATTLEGROUND_QUEUE_RB       = 7,
++    BATTLEGROUND_QUEUE_2v2      = 8,
++    BATTLEGROUND_QUEUE_3v3      = 9,
++    BATTLEGROUND_QUEUE_5v5      = 10
+ };
+-#define MAX_BATTLEGROUND_QUEUE_TYPES 10
++#define MAX_BATTLEGROUND_QUEUE_TYPES 11
+ 
+ enum ScoreType
+ {
+@@ -307,7 +318,7 @@ class BattleGround
+         /* Battleground */
+         // Get methods:
+         char const* GetName() const         { return m_Name; }
+-        BattleGroundTypeId GetTypeID() const { return m_TypeID; }
++        BattleGroundTypeId GetTypeID(bool GetRandom = false) const { return GetRandom ? m_RandomTypeID : m_TypeID; }
+         BattleGroundBracketId GetBracketId() const { return m_BracketId; }
+         // the instanceId check is also used to determine a bg-template
+         // that's why the m_map hack is here..
+@@ -330,10 +341,12 @@ class BattleGround
+         uint8 GetWinner() const             { return m_Winner; }
+         uint32 GetBattlemasterEntry() const;
+         uint32 GetBonusHonorFromKill(uint32 kills) const;
++        bool IsRandom() { return m_IsRandom; }
+ 
+         // Set methods:
+         void SetName(char const* Name)      { m_Name = Name; }
+         void SetTypeID(BattleGroundTypeId TypeID) { m_TypeID = TypeID; }
++        void SetRandomTypeID(BattleGroundTypeId TypeID) { m_RandomTypeID = TypeID; }
+         //here we can count minlevel and maxlevel for players
+         void SetBracket(PvPDifficultyEntry const* bracketEntry);
+         void SetStatus(BattleGroundStatus Status) { m_Status = Status; }
+@@ -359,6 +372,8 @@ class BattleGround
+ 
+         void DecreaseInvitedCount(uint32 team)      { (team == ALLIANCE) ? --m_InvitedAlliance : --m_InvitedHorde; }
+         void IncreaseInvitedCount(uint32 team)      { (team == ALLIANCE) ? ++m_InvitedAlliance : ++m_InvitedHorde; }
++
++        void SetRandom(bool isRandom) { m_IsRandom = isRandom; }
+         uint32 GetInvitedCount(uint32 team) const
+         {
+             if (team == ALLIANCE)
+@@ -568,10 +583,12 @@ class BattleGround
+         uint32 m_StartMessageIds[BG_STARTING_EVENT_COUNT];
+ 
+         bool   m_BuffChange;
++        bool   m_IsRandom;
+ 
+     private:
+         /* Battleground */
+         BattleGroundTypeId m_TypeID;
++        BattleGroundTypeId m_RandomTypeID;
+         BattleGroundStatus m_Status;
+         uint32 m_ClientInstanceID;                          //the instance-id which is sent to the client and without any other internal use
+         uint32 m_StartTime;
+diff --git a/src/game/BattleGroundHandler.cpp b/src/game/BattleGroundHandler.cpp
+index 778ab1e..7fc9183 100644
+--- a/src/game/BattleGroundHandler.cpp
++++ b/src/game/BattleGroundHandler.cpp
+@@ -99,6 +99,7 @@ void WorldSession::HandleBattlemasterJoinOpcode( WorldPacket & recv_data )
+ 
+     // can do this, since it's battleground, not arena
+     BattleGroundQueueTypeId bgQueueTypeId = BattleGroundMgr::BGQueueTypeId(bgTypeId, 0);
++    BattleGroundQueueTypeId bgQueueTypeIdRandom = BattleGroundMgr::BGQueueTypeId(BATTLEGROUND_RB, 0);
+ 
+     // ignore if player is already in BG
+     if (_player->InBattleGround())
+@@ -141,13 +142,38 @@ void WorldSession::HandleBattlemasterJoinOpcode( WorldPacket & recv_data )
+             _player->GetSession()->SendPacket(&data);
+             return;
+         }
++
++        if (_player->GetBattleGroundQueueIndex(bgQueueTypeIdRandom) < PLAYER_MAX_BATTLEGROUND_QUEUES)
++        {
++            //player is already in random queue
++            WorldPacket data;
++            sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(&data, ERR_IN_RANDOM_BG);
++            _player->GetSession()->SendPacket(&data);
++            return;
++        }
++        
++        if(_player->InBattleGroundQueue() && bgTypeId == BATTLEGROUND_RB)
++        {
++            //player is already in queue, can't start random queue
++            WorldPacket data;
++            sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(&data, ERR_IN_NON_RANDOM_BG);
++            _player->GetSession()->SendPacket(&data);
++            return;
++        }
++
+         // check if already in queue
+         if (_player->GetBattleGroundQueueIndex(bgQueueTypeId) < PLAYER_MAX_BATTLEGROUND_QUEUES)
+             //player is already in this queue
+             return;
++
+         // check if has free queue slots
+         if (!_player->HasFreeBattleGroundQueueId())
++        {
++            WorldPacket data;
++            sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(&data, ERR_BATTLEGROUND_TOO_MANY_QUEUES);
++            _player->GetSession()->SendPacket(&data);
+             return;
++        }
+     }
+     else
+     {
+@@ -232,7 +258,7 @@ void WorldSession::HandleBattleGroundPlayerPositionsOpcode( WorldPacket & /*recv
+     if(!bg)                                                 // can't be received if player not in battleground
+         return;
+ 
+-    switch( bg->GetTypeID() )
++    switch( bg->GetTypeID(true) )
+     {
+         case BATTLEGROUND_WS:
+             {
+diff --git a/src/game/BattleGroundMgr.cpp b/src/game/BattleGroundMgr.cpp
+index 15c8095..2e85443 100644
+--- a/src/game/BattleGroundMgr.cpp
++++ b/src/game/BattleGroundMgr.cpp
+@@ -43,6 +43,7 @@
+ #include "World.h"
+ #include "WorldPacket.h"
+ #include "GameEventMgr.h"
++#include "Formulas.h"
+ 
+ #include "Policies/SingletonImp.h"
+ 
+@@ -1345,7 +1346,7 @@ void BattleGroundMgr::BuildPvpLogDataPacket(WorldPacket *data, BattleGround *bg)
+         }
+         *data << (int32)itr->second->DamageDone;             // damage done
+         *data << (int32)itr->second->HealingDone;            // healing done
+-        switch(bg->GetTypeID())                              // battleground specific things
++        switch(bg->GetTypeID(true))                          // battleground specific things
+         {
+             case BATTLEGROUND_AV:
+                 *data << (uint32)0x00000005;                // count of next fields
+@@ -1381,7 +1382,7 @@ void BattleGroundMgr::BuildPvpLogDataPacket(WorldPacket *data, BattleGround *bg)
+                 *data << (int32)0;                          // 0
+                 break;
+             default:
+-                DEBUG_LOG("Unhandled MSG_PVP_LOG_DATA for BG id %u", bg->GetTypeID());
++                DEBUG_LOG("Unhandled MSG_PVP_LOG_DATA for BG id %u", bg->GetTypeID(true));
+                 *data << (int32)0;
+                 break;
+         }
+@@ -1511,6 +1512,22 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
+         }
+     }
+ 
++    bool isRandom = false;
++
++    if(bgTypeId==BATTLEGROUND_RB)
++    {
++        BattleGroundTypeId random_bgs[] = {BATTLEGROUND_AV, BATTLEGROUND_WS, BATTLEGROUND_AB, BATTLEGROUND_EY/*, BATTLEGROUND_SA, BATTLEGROUND_IC*/};
++        uint32 bg_num = urand(0,3/*5*/);
++        bgTypeId = random_bgs[bg_num];
++        bg_template = GetBattleGroundTemplate(bgTypeId);
++        if (!bg_template)
++        {
++            sLog.outError("BattleGround: CreateNewBattleGround - bg template not found for %u", bgTypeId);
++            return NULL;
++        }
++        isRandom = true;
++    }
++
+     BattleGround *bg = NULL;
+     // create a copy of the BG template
+     switch(bgTypeId)
+@@ -1565,7 +1582,7 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
+     // will also set m_bgMap, instanceid
+     sMapMgr.CreateBgMap(bg->GetMapId(), bg);
+ 
+-    bg->SetClientInstanceID(CreateClientVisibleInstanceId(bgTypeId, bracketEntry->GetBracketId()));
++    bg->SetClientInstanceID(CreateClientVisibleInstanceId(isRandom ? BATTLEGROUND_RB : bgTypeId, bracketEntry->GetBracketId()));
+ 
+     // reset the new bg (set status to status_wait_queue from status_none)
+     bg->Reset();
+@@ -1574,6 +1591,9 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
+     bg->SetStatus(STATUS_WAIT_JOIN);
+     bg->SetArenaType(arenaType);
+     bg->SetRated(isRated);
++    bg->SetRandom(isRandom);
++    bg->SetTypeID(isRandom ? BATTLEGROUND_RB : bgTypeId);
++    bg->SetRandomTypeID(bgTypeId);
+ 
+     return bg;
+ }
+@@ -1809,6 +1829,13 @@ void BattleGroundMgr::BuildBattleGroundListPacket(WorldPacket *data, const uint6
+     if (!plr)
+         return;
+ 
++    uint32 win_kills = plr->GetRandomWinner() ? BG_REWARD_WINNER_HONOR_LAST : BG_REWARD_WINNER_HONOR_FIRST;
++    uint32 win_arena = plr->GetRandomWinner() ? BG_REWARD_WINNER_ARENA_LAST : BG_REWARD_WINNER_ARENA_FIRST;
++    uint32 loos_kills = plr->GetRandomWinner() ? BG_REWARD_LOOSER_HONOR_LAST : BG_REWARD_LOOSER_HONOR_FIRST;
++
++    win_kills = (uint32)MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), win_kills*4);
++    loos_kills = (uint32)MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), loos_kills*4);
++
+     data->Initialize(SMSG_BATTLEFIELD_LIST);
+     *data << uint64(guid);                                  // battlemaster guid
+     *data << uint8(fromWhere);                              // from where you joined
+@@ -1817,20 +1844,22 @@ void BattleGroundMgr::BuildBattleGroundListPacket(WorldPacket *data, const uint6
+     *data << uint8(0);                                      // unk
+ 
+     // Rewards
+-    *data << uint8(0);                                      // 3.3.3 hasWin
+-    *data << uint32(0);                                     // 3.3.3 winHonor
+-    *data << uint32(0);                                     // 3.3.3 winArena
+-    *data << uint32(0);                                     // 3.3.3 lossHonor
++    *data << uint8( plr->GetRandomWinner() );               // 3.3.3 hasWin
++    *data << uint32( win_kills );                           // 3.3.3 winHonor
++    *data << uint32( win_arena );                           // 3.3.3 winArena
++    *data << uint32( loos_kills );                          // 3.3.3 lossHonor
++
++    uint8 isRandom = bgTypeId == BATTLEGROUND_RB;
+ 
+-    uint8 isRandom = 0;
+     *data << uint8(isRandom);                               // 3.3.3 isRandom
++
+     if(isRandom)
+     {
+         // Rewards (random)
+-        *data << uint8(0);                                  // 3.3.3 hasWin_Random
+-        *data << uint32(0);                                 // 3.3.3 winHonor_Random
+-        *data << uint32(0);                                 // 3.3.3 winArena_Random
+-        *data << uint32(0);                                 // 3.3.3 lossHonor_Random
++        *data << uint8( plr->GetRandomWinner() );           // 3.3.3 hasWin_Random
++        *data << uint32( win_kills );                       // 3.3.3 winHonor_Random
++        *data << uint32( win_arena );                       // 3.3.3 winArena_Random
++        *data << uint32( loos_kills );                      // 3.3.3 lossHonor_Random
+     }
+ 
+     if(bgTypeId == BATTLEGROUND_AA)                         // arena
+@@ -1907,7 +1936,7 @@ BattleGroundQueueTypeId BattleGroundMgr::BGQueueTypeId(BattleGroundTypeId bgType
+         case BATTLEGROUND_IC:
+             return BATTLEGROUND_QUEUE_IC;
+         case BATTLEGROUND_RB:
+-            return BATTLEGROUND_QUEUE_NONE;
++            return BATTLEGROUND_QUEUE_RB;
+         case BATTLEGROUND_AA:
+         case BATTLEGROUND_NA:
+         case BATTLEGROUND_RL:
+@@ -1946,6 +1975,8 @@ BattleGroundTypeId BattleGroundMgr::BGTemplateId(BattleGroundQueueTypeId bgQueue
+             return BATTLEGROUND_SA;
+         case BATTLEGROUND_QUEUE_IC:
+             return BATTLEGROUND_IC;
++        case BATTLEGROUND_QUEUE_RB:
++            return BATTLEGROUND_RB;
+         case BATTLEGROUND_QUEUE_2v2:
+         case BATTLEGROUND_QUEUE_3v3:
+         case BATTLEGROUND_QUEUE_5v5:
+diff --git a/src/game/CharacterHandler.cpp b/src/game/CharacterHandler.cpp
+index 1f4c852..35ee441 100644
+--- a/src/game/CharacterHandler.cpp
++++ b/src/game/CharacterHandler.cpp
+@@ -101,6 +101,7 @@ bool LoginQueryHolder::Initialize()
+     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADGLYPHS,          "SELECT spec, slot, glyph FROM character_glyphs WHERE guid='%u'", GUID_LOPART(m_guid));
+     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADMAILS,           "SELECT id,messageType,sender,receiver,subject,body,has_items,expire_time,deliver_time,money,cod,checked,stationery,mailTemplateId FROM mail WHERE receiver = '%u' ORDER BY id DESC", GUID_LOPART(m_guid));
+     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADMAILEDITEMS,     "SELECT data, text, mail_id, item_guid, item_template FROM mail_items JOIN item_instance ON item_guid = guid WHERE receiver = '%u'", GUID_LOPART(m_guid));
++    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADRANDOMBG,        "SELECT guid FROM character_battleground_random WHERE guid = '%u'", GUID_LOPART(m_guid));
+ 
+     return res;
+ }
+diff --git a/src/game/GameObject.cpp b/src/game/GameObject.cpp
+index 04a21a6..b590d25 100644
+--- a/src/game/GameObject.cpp
++++ b/src/game/GameObject.cpp
+@@ -745,7 +745,7 @@ bool GameObject::ActivateToQuest( Player *pTarget)const
+                 //look for battlegroundAV for some objects which are only activated after mine gots captured by own team
+                 if (GetEntry() == BG_AV_OBJECTID_MINE_N || GetEntry() == BG_AV_OBJECTID_MINE_S)
+                     if (BattleGround *bg = pTarget->GetBattleGround())
+-                        if (bg->GetTypeID() == BATTLEGROUND_AV && !(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam())))
++                        if (bg->GetTypeID(true) == BATTLEGROUND_AV && !(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam())))
+                             return false;
+                 return true;
+             }
+@@ -1328,15 +1328,15 @@ void GameObject::Use(Unit* user)
+                     {
+                         case 179785:                        // Silverwing Flag
+                             // check if it's correct bg
+-                            if(bg->GetTypeID() == BATTLEGROUND_WS)
++                            if(bg->GetTypeID(true) == BATTLEGROUND_WS)
+                                 bg->EventPlayerClickedOnFlag(player, this);
+                             break;
+                         case 179786:                        // Warsong Flag
+-                            if(bg->GetTypeID() == BATTLEGROUND_WS)
++                            if(bg->GetTypeID(true) == BATTLEGROUND_WS)
+                                 bg->EventPlayerClickedOnFlag(player, this);
+                             break;
+                         case 184142:                        // Netherstorm Flag
+-                            if(bg->GetTypeID() == BATTLEGROUND_EY)
++                            if(bg->GetTypeID(true) == BATTLEGROUND_EY)
+                                 bg->EventPlayerClickedOnFlag(player, this);
+                             break;
+                     }
+diff --git a/src/game/Group.cpp b/src/game/Group.cpp
+index 76bc42a..e27b69f 100644
+--- a/src/game/Group.cpp
++++ b/src/game/Group.cpp
+@@ -28,6 +28,7 @@
+ #include "Formulas.h"
+ #include "ObjectAccessor.h"
+ #include "BattleGround.h"
++#include "BattleGroundMgr.h"
+ #include "MapManager.h"
+ #include "InstanceSaveMgr.h"
+ #include "MapInstanced.h"
+@@ -1581,6 +1582,8 @@ GroupJoinBattlegroundResult Group::CanJoinBattleGroundQueue(BattleGround const*
+     uint32 arenaTeamId = reference->GetArenaTeamId(arenaSlot);
+     uint32 team = reference->GetTeam();
+ 
++    BattleGroundQueueTypeId bgQueueTypeIdRandom = BattleGroundMgr::BGQueueTypeId(BATTLEGROUND_RB, 0);
++
+     // check every member of the group to be able to join
+     for(GroupReference *itr = GetFirstMember(); itr != NULL; itr = itr->next())
+     {
+@@ -1601,6 +1604,12 @@ GroupJoinBattlegroundResult Group::CanJoinBattleGroundQueue(BattleGround const*
+         // don't let join if someone from the group is already in that bg queue
+         if(member->InBattleGroundQueueForBattleGroundQueueType(bgQueueTypeId))
+             return ERR_BATTLEGROUND_JOIN_FAILED;            // not blizz-like
++        // don't let join if someone from the group is in bg queue random
++        if(member->InBattleGroundQueueForBattleGroundQueueType(bgQueueTypeIdRandom))
++            return ERR_IN_RANDOM_BG;
++        // don't let join to bg queue random if someone from the group is already in bg queue
++        if(bgOrTemplate->GetTypeID() == BATTLEGROUND_RB && member->InBattleGroundQueue())
++            return ERR_IN_NON_RANDOM_BG;
+         // check for deserter debuff in case not arena queue
+         if(bgOrTemplate->GetTypeID() != BATTLEGROUND_AA && !member->CanJoinToBattleground())
+             return ERR_GROUP_JOIN_BATTLEGROUND_DESERTERS;
+diff --git a/src/game/Player.cpp b/src/game/Player.cpp
+index bc1cb85..26648d5 100644
+--- a/src/game/Player.cpp
++++ b/src/game/Player.cpp
+@@ -580,6 +580,8 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
+     // Honor System
+     m_lastHonorUpdateTime = time(NULL);
+ 
++    m_IsBGRandomWinner = false;
++
+     // Player summoning
+     m_summon_expire = 0;
+     m_summon_mapid = 0;
+@@ -7835,7 +7837,7 @@ void Player::SendLoot(ObjectGuid guid, LootType loot_type)
+                 uint32 lootid =  go->GetGOInfo()->GetLootId();
+                 if ((go->GetEntry() == BG_AV_OBJECTID_MINE_N || go->GetEntry() == BG_AV_OBJECTID_MINE_S))
+                     if (BattleGround *bg = GetBattleGround())
+-                        if (bg->GetTypeID() == BATTLEGROUND_AV)
++                        if (bg->GetTypeID(true) == BATTLEGROUND_AV)
+                             if (!(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(go->GetEntry(), GetTeam())))
+                             {
+                                 SendLootRelease(guid);
+@@ -7961,7 +7963,7 @@ void Player::SendLoot(ObjectGuid guid, LootType loot_type)
+                 bones->lootForBody = true;
+                 uint32 pLevel = bones->loot.gold;
+                 bones->loot.clear();
+-                if (GetBattleGround()->GetTypeID() == BATTLEGROUND_AV)
++                if (GetBattleGround() && GetBattleGround()->GetTypeID(true) == BATTLEGROUND_AV)
+                     loot->FillLoot(0, LootTemplates_Creature, this, false);
+                 // It may need a better formula
+                 // Now it works like this: lvl10: ~6copper, lvl70: ~9silver
+@@ -8455,25 +8457,25 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
+         case 2257:
+             break;
+         case 2597:                                          // AV
+-            if (bg && bg->GetTypeID() == BATTLEGROUND_AV)
++            if (bg && bg->GetTypeID(true) == BATTLEGROUND_AV)
+                 bg->FillInitialWorldStates(data, count);
+             else
+                 FillInitialWorldState(data,count, AV_world_states);
+             break;
+         case 3277:                                          // WS
+-            if (bg && bg->GetTypeID() == BATTLEGROUND_WS)
++            if (bg && bg->GetTypeID(true) == BATTLEGROUND_WS)
+                 bg->FillInitialWorldStates(data, count);
+             else
+                 FillInitialWorldState(data,count, WS_world_states);
+             break;
+         case 3358:                                          // AB
+-            if (bg && bg->GetTypeID() == BATTLEGROUND_AB)
++            if (bg && bg->GetTypeID(true) == BATTLEGROUND_AB)
+                 bg->FillInitialWorldStates(data, count);
+             else
+                 FillInitialWorldState(data,count, AB_world_states);
+             break;
+         case 3820:                                          // EY
+-            if (bg && bg->GetTypeID() == BATTLEGROUND_EY)
++            if (bg && bg->GetTypeID(true) == BATTLEGROUND_EY)
+                 bg->FillInitialWorldStates(data, count);
+             else
+                 FillInitialWorldState(data,count, EY_world_states);
+@@ -8488,7 +8490,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
+             FillInitialWorldState(data,count, ZM_world_states);
+             break;
+         case 3698:                                          // Nagrand Arena
+-            if (bg && bg->GetTypeID() == BATTLEGROUND_NA)
++            if (bg && bg->GetTypeID(true) == BATTLEGROUND_NA)
+                 bg->FillInitialWorldStates(data, count);
+             else
+             {
+@@ -8498,7 +8500,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
+             }
+             break;
+         case 3702:                                          // Blade's Edge Arena
+-            if (bg && bg->GetTypeID() == BATTLEGROUND_BE)
++            if (bg && bg->GetTypeID(true) == BATTLEGROUND_BE)
+                 bg->FillInitialWorldStates(data, count);
+             else
+             {
+@@ -8508,7 +8510,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
+             }
+             break;
+         case 3968:                                          // Ruins of Lordaeron
+-            if (bg && bg->GetTypeID() == BATTLEGROUND_RL)
++            if (bg && bg->GetTypeID(true) == BATTLEGROUND_RL)
+                 bg->FillInitialWorldStates(data, count);
+             else
+             {
+@@ -8518,7 +8520,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
+             }
+ 			break;
+ 		case 4378:                                          // Dalaran Severs
+-			if (bg && bg->GetTypeID() == BATTLEGROUND_DS)
++			if (bg && bg->GetTypeID(true) == BATTLEGROUND_DS)
+ 				bg->FillInitialWorldStates(data, count);
+ 			else
+ 			{
+@@ -13634,7 +13636,7 @@ void Player::RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver
+     RemoveTimedQuest(quest_id);
+ 
+     if (BattleGround* bg = GetBattleGround())
+-        if (bg->GetTypeID() == BATTLEGROUND_AV)
++        if (bg->GetTypeID(true) == BATTLEGROUND_AV)
+             ((BattleGroundAV*)bg)->HandleQuestComplete(pQuest->GetQuestId(), this);
+ 
+     if (pQuest->GetRewChoiceItemsCount() > 0)
+@@ -15475,6 +15477,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
+     _LoadQuestStatus(holder->GetResult(PLAYER_LOGIN_QUERY_LOADQUESTSTATUS));
+     _LoadDailyQuestStatus(holder->GetResult(PLAYER_LOGIN_QUERY_LOADDAILYQUESTSTATUS));
+     _LoadWeeklyQuestStatus(holder->GetResult(PLAYER_LOGIN_QUERY_LOADWEEKLYQUESTSTATUS));
++    _LoadRandomBGStatus(holder->GetResult(PLAYER_LOGIN_QUERY_LOADRANDOMBG));
+ 
+     _LoadTalents(holder->GetResult(PLAYER_LOGIN_QUERY_LOADTALENTS));
+ 
+@@ -22316,3 +22319,21 @@ void Player::SetRestType( RestType n_r_type, uint32 areaTriggerId /*= 0*/)
+             SetFFAPvP(false);
+     }
+ }
++
++void Player::SetRandomWinner(bool isWinner)
++{
++    m_IsBGRandomWinner = isWinner;
++    if(m_IsBGRandomWinner)
++        CharacterDatabase.PExecute("INSERT INTO character_battleground_random (guid) VALUES ('%u')", GetGUIDLow());
++}
++
++void Player::_LoadRandomBGStatus(QueryResult *result)
++{
++    //QueryResult *result = CharacterDatabase.PQuery("SELECT guid FROM character_battleground_random WHERE guid = '%u'", GetGUIDLow());
++
++    if (result)
++    {
++        m_IsBGRandomWinner = true;
++        delete result;
++    }
++}
+diff --git a/src/game/Player.h b/src/game/Player.h
+index 672b091..a21f048 100644
+--- a/src/game/Player.h
++++ b/src/game/Player.h
+@@ -914,6 +914,7 @@ enum PlayerLoginQueryIndex
+     PLAYER_LOGIN_QUERY_LOADMAILEDITEMS,
+     PLAYER_LOGIN_QUERY_LOADTALENTS,
+     PLAYER_LOGIN_QUERY_LOADWEEKLYQUESTSTATUS,
++    PLAYER_LOGIN_QUERY_LOADRANDOMBG,
+ 
+     MAX_PLAYER_LOGIN_QUERY
+ };
+@@ -2187,6 +2188,9 @@ class MANGOS_DLL_SPEC Player : public Unit
+         bool isTotalImmune();
+         bool CanCaptureTowerPoint();
+ 
++        bool GetRandomWinner() { return m_IsBGRandomWinner; }
++        void SetRandomWinner(bool isWinner);
++
+         /*********************************************************/
+         /***                    REST SYSTEM                    ***/
+         /*********************************************************/
+@@ -2404,6 +2408,8 @@ class MANGOS_DLL_SPEC Player : public Unit
+         BgBattleGroundQueueID_Rec m_bgBattleGroundQueueID[PLAYER_MAX_BATTLEGROUND_QUEUES];
+         BGData                    m_bgData;
+ 
++        bool m_IsBGRandomWinner;
++
+         /*********************************************************/
+         /***                    QUEST SYSTEM                   ***/
+         /*********************************************************/
+@@ -2429,6 +2435,7 @@ class MANGOS_DLL_SPEC Player : public Unit
+         void _LoadQuestStatus(QueryResult *result);
+         void _LoadDailyQuestStatus(QueryResult *result);
+         void _LoadWeeklyQuestStatus(QueryResult *result);
++        void _LoadRandomBGStatus(QueryResult *result);
+         void _LoadGroup(QueryResult *result);
+         void _LoadSkills(QueryResult *result);
+         void _LoadSpells(QueryResult *result);
+diff --git a/src/game/SpellEffects.cpp b/src/game/SpellEffects.cpp
+index 3e5d69a..20e1f3f 100644
+--- a/src/game/SpellEffects.cpp
++++ b/src/game/SpellEffects.cpp
+@@ -3741,7 +3741,7 @@ void Spell::EffectOpenLock(SpellEffectIndex eff_idx)
+             if (BattleGround *bg = player->GetBattleGround())
+             {
+                 // check if it's correct bg
+-                if (bg->GetTypeID() == BATTLEGROUND_AB || bg->GetTypeID() == BATTLEGROUND_AV)
++                if (bg->GetTypeID(true) == BATTLEGROUND_AB || bg->GetTypeID(true) == BATTLEGROUND_AV)
+                     bg->EventPlayerClickedOnFlag(player, gameObjTarget);
+                 return;
+             }
+@@ -3752,7 +3752,7 @@ void Spell::EffectOpenLock(SpellEffectIndex eff_idx)
+             // in battleground check
+             if (BattleGround *bg = player->GetBattleGround())
+             {
+-                if (bg->GetTypeID() == BATTLEGROUND_EY)
++                if (bg->GetTypeID(true) == BATTLEGROUND_EY)
+                     bg->EventPlayerClickedOnFlag(player, gameObjTarget);
+                 return;
+             }
+@@ -5561,7 +5561,7 @@ void Spell::EffectSummonObjectWild(SpellEffectIndex eff_idx)
+         {
+             case 489:                                       //WS
+             {
+-                if(bg && bg->GetTypeID()==BATTLEGROUND_WS && bg->GetStatus() == STATUS_IN_PROGRESS)
++                if(bg && bg->GetTypeID(true)==BATTLEGROUND_WS && bg->GetStatus() == STATUS_IN_PROGRESS)
+                 {
+                     uint32 team = ALLIANCE;
+ 
+@@ -5574,7 +5574,7 @@ void Spell::EffectSummonObjectWild(SpellEffectIndex eff_idx)
+             }
+             case 566:                                       //EY
+             {
+-                if(bg && bg->GetTypeID()==BATTLEGROUND_EY && bg->GetStatus() == STATUS_IN_PROGRESS)
++                if(bg && bg->GetTypeID(true)==BATTLEGROUND_EY && bg->GetStatus() == STATUS_IN_PROGRESS)
+                 {
+                     ((BattleGroundEY*)bg)->SetDroppedFlagGUID(pGameObj->GetGUID());
+                 }
+diff --git a/src/game/World.cpp b/src/game/World.cpp
+index df99083..d8e90f5 100644
+--- a/src/game/World.cpp
++++ b/src/game/World.cpp
+@@ -722,6 +722,7 @@ void World::LoadConfigSettings(bool reload)
+     setConfig(CONFIG_UINT32_BATTLEGROUND_INVITATION_TYPE,              "Battleground.InvitationType", 0);
+     setConfig(CONFIG_UINT32_BATTLEGROUND_PREMATURE_FINISH_TIMER,       "BattleGround.PrematureFinishTimer", 5 * MINUTE * IN_MILLISECONDS);
+     setConfig(CONFIG_UINT32_BATTLEGROUND_PREMADE_GROUP_WAIT_FOR_MATCH, "BattleGround.PremadeGroupWaitForMatch", 30 * MINUTE * IN_MILLISECONDS);
++    setConfigMinMax(CONFIG_UINT32_RANDOM_BG_RESET_HOUR,                "BattleGround.Random.ResetHour", 6, 0, 23);
+     setConfig(CONFIG_UINT32_ARENA_MAX_RATING_DIFFERENCE,               "Arena.MaxRatingDifference", 150);
+     setConfig(CONFIG_UINT32_ARENA_RATING_DISCARD_TIMER,                "Arena.RatingDiscardTimer", 10 * MINUTE * IN_MILLISECONDS);
+     setConfig(CONFIG_BOOL_ARENA_AUTO_DISTRIBUTE_POINTS,                "Arena.AutoDistributePoints", false);
+@@ -1301,6 +1302,9 @@ void World::SetInitialWorldSettings()
+     sLog.outString("Calculate next weekly quest reset time..." );
+     InitWeeklyQuestResetTime();
+ 
++    sLog.outString("Calculate random battleground reset time..." );
++    InitRandomBGResetTime();
++
+     sLog.outString("Starting objects Pooling system..." );
+     sPoolMgr.Initialize();
+ 
+@@ -1385,6 +1389,9 @@ void World::Update(uint32 diff)
+     if (m_gameTime > m_NextWeeklyQuestReset)
+         ResetWeeklyQuests();
+ 
++    if (m_gameTime > m_NextRandomBGReset)
++        ResetRandomBG();
++
+     /// <ul><li> Handle auctions when the timer has passed
+     if (m_timers[WUPDATE_AUCTIONS].Passed())
+     {
+@@ -1985,6 +1992,37 @@ void World::InitDailyQuestResetTime()
+         delete result;
+ }
+ 
++void World::InitRandomBGResetTime()
++{
++    QueryResult * result = CharacterDatabase.Query("SELECT NextRandomBGResetTime FROM saved_variables");
++    if (!result)
++        m_NextRandomBGReset = time_t(time(NULL));         // game time not yet init
++    else
++        m_NextRandomBGReset = time_t((*result)[0].GetUInt64());
++
++    // generate time by config
++    time_t curTime = time(NULL);
++    tm localTm = *localtime(&curTime);
++    localTm.tm_hour = getConfig(CONFIG_UINT32_RANDOM_BG_RESET_HOUR);
++    localTm.tm_min  = 0;
++    localTm.tm_sec  = 0;
++
++    // current day reset time
++    time_t nextDayResetTime = mktime(&localTm);
++
++    // next reset time before current moment
++    if (curTime >= nextDayResetTime)
++        nextDayResetTime += DAY;
++
++    // normalize reset time
++    m_NextRandomBGReset = m_NextRandomBGReset < curTime ? nextDayResetTime - DAY : nextDayResetTime;
++
++    if (!result)
++        CharacterDatabase.PExecute("INSERT INTO saved_variables (NextRandomBGResetTime) VALUES ('"UI64FMTD"')", uint64(m_NextRandomBGReset));
++    else
++        delete result;
++}
++
+ void World::ResetDailyQuests()
+ {
+     DETAIL_LOG("Daily quests reset for all characters.");
+@@ -2009,6 +2047,18 @@ void World::ResetWeeklyQuests()
+     CharacterDatabase.PExecute("UPDATE saved_variables SET NextWeeklyQuestResetTime = '"UI64FMTD"'", uint64(m_NextWeeklyQuestReset));
+ }
+ 
++void World::ResetRandomBG()
++{
++    sLog.outDetail("Random BG status reset for all characters.");
++    CharacterDatabase.Execute("DELETE FROM character_battleground_random");
++    for(SessionMap::const_iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
++        if (itr->second->GetPlayer())
++            itr->second->GetPlayer()->SetRandomWinner(false);
++
++    m_NextRandomBGReset = time_t(m_NextRandomBGReset + DAY);
++    CharacterDatabase.PExecute("UPDATE saved_variables SET NextRandomBGResetTime = '"UI64FMTD"'", uint64(m_NextRandomBGReset));
++}
++
+ void World::SetPlayerLimit( int32 limit, bool needUpdate )
+ {
+     if (limit < -SEC_ADMINISTRATOR)
+diff --git a/src/game/World.h b/src/game/World.h
+index 6aadc0d..b608954 100644
+--- a/src/game/World.h
++++ b/src/game/World.h
+@@ -182,6 +182,7 @@ enum eConfigUInt32Values
+     CONFIG_UINT32_CHARDELETE_KEEP_DAYS,
+     CONFIG_UINT32_CHARDELETE_METHOD,
+     CONFIG_UINT32_CHARDELETE_MIN_LEVEL,
++    CONFIG_UINT32_RANDOM_BG_RESET_HOUR,
+     CONFIG_UINT32_VALUE_COUNT
+ };
+ 
+@@ -506,6 +507,7 @@ class World
+         /// Next daily quests reset time
+         time_t GetNextDailyQuestsResetTime() const { return m_NextDailyQuestReset; }
+         time_t GetNextWeeklyQuestsResetTime() const { return m_NextWeeklyQuestReset; }
++        time_t GetNextRandomBGResetTime() const { return m_NextRandomBGReset; }
+ 
+         /// Get the maximum skill level a player can reach
+         uint16 GetConfigMaxSkillValue() const
+@@ -607,8 +609,10 @@ class World
+ 
+         void InitDailyQuestResetTime();
+         void InitWeeklyQuestResetTime();
++        void InitRandomBGResetTime();
+         void ResetDailyQuests();
+         void ResetWeeklyQuests();
++        void ResetRandomBG();
+     private:
+         void setConfig(eConfigUInt32Values index, char const* fieldname, uint32 defvalue);
+         void setConfig(eConfigInt32Values index, char const* fieldname, int32 defvalue);
+@@ -679,6 +683,7 @@ class World
+         // next daily quests reset time
+         time_t m_NextDailyQuestReset;
+         time_t m_NextWeeklyQuestReset;
++        time_t m_NextRandomBGReset;
+ 
+         //Player Queue
+         Queue m_QueuedPlayer;
+diff --git a/src/mangosd/mangosd.conf.dist.in b/src/mangosd/mangosd.conf.dist.in
+index 62455c4..d4058ee 100644
+--- a/src/mangosd/mangosd.conf.dist.in
++++ b/src/mangosd/mangosd.conf.dist.in
+@@ -1427,6 +1427,10 @@ Death.Bones.BattlegroundOrArena = 1
+ #        Default: 1800000 (30 minutes)
+ #                 0 - disable (not recommended)
+ #
++#    BattleGround.Random.ResetHour
++#        Hour when random bg reset (0..23)
++#        Default: 6
++#
+ ###################################################################################################################
+ 
+ Battleground.CastDeserter = 1
+@@ -1435,6 +1439,7 @@ Battleground.QueueAnnouncer.Start = 0
+ Battleground.InvitationType = 0
+ BattleGround.PrematureFinishTimer = 300000
+ BattleGround.PremadeGroupWaitForMatch = 1800000
++BattleGround.Random.ResetHour = 6
+ 
+ ###################################################################################################################
+ # ARENA CONFIG

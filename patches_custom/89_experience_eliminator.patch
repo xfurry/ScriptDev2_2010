@@ -1,0 +1,14 @@
+diff --git a/src/game/Player.cpp b/src/game/Player.cpp
+index 26648d5..9dfbc08 100644
+--- a/src/game/Player.cpp
++++ b/src/game/Player.cpp
+@@ -2517,6 +2517,9 @@ void Player::GiveXP(uint32 xp, Unit* victim)
+     if(!isAlive())
+         return;
+ 
++    if(HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED))
++        return;
++
+     uint32 level = getLevel();
+ 
+     // XP to money conversion processed in Player::RewardQuest

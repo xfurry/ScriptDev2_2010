@@ -1,0 +1,16 @@
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index 6d5d916..b0829ea 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -5702,8 +5702,9 @@ Pet* Unit::GetPet() const
+ {
+     if(uint64 pet_guid = GetPetGUID())
+     {
+-        if(Pet* pet = GetMap()->GetPet(pet_guid))
+-            return pet;
++        if(IsInWorld())
++            if(Pet* pet = GetMap()->GetPet(pet_guid))
++                return pet;
+ 
+         sLog.outError("Unit::GetPet: Pet %u not exist.",GUID_LOPART(pet_guid));
+         const_cast<Unit*>(this)->SetPet(0);

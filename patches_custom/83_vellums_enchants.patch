@@ -1,0 +1,128 @@
+diff --git a/src/game/Item.cpp b/src/game/Item.cpp
+index 3548a30..da00f64 100644
+--- a/src/game/Item.cpp
++++ b/src/game/Item.cpp
+@@ -758,6 +758,15 @@ bool Item::IsFitToSpellRequirements(SpellEntry const* spellInfo) const
+ {
+     ItemPrototype const* proto = GetProto();
+ 
++	// Enchant spells have only effect[0]
++    if(proto->IsVellum() && spellInfo->Effect[0] == SPELL_EFFECT_ENCHANT_ITEM && spellInfo->EffectItemType[0])
++    {
++        if ((proto->SubClass == ITEM_SUBCLASS_WEAPON_ENCHANTMENT && spellInfo->EquippedItemClass == ITEM_CLASS_WEAPON) ||
++            (proto->SubClass == ITEM_SUBCLASS_ARMOR_ENCHANTMENT && spellInfo->EquippedItemClass == ITEM_CLASS_ARMOR))
++            return true;
++    }
++    // Vellum enchant case should ignore everything below
++
+     if (spellInfo->EquippedItemClass != -1)                 // -1 == any item class
+     {
+         if(spellInfo->EquippedItemClass != int32(proto->Class))
+diff --git a/src/game/ItemPrototype.h b/src/game/ItemPrototype.h
+index d47879e..6473244 100644
+--- a/src/game/ItemPrototype.h
++++ b/src/game/ItemPrototype.h
+@@ -654,6 +654,10 @@ struct ItemPrototype
+ 
+     bool IsPotion() const { return Class==ITEM_CLASS_CONSUMABLE && SubClass==ITEM_SUBCLASS_POTION; }
+     bool IsConjuredConsumable() const { return Class == ITEM_CLASS_CONSUMABLE && (Flags & ITEM_FLAGS_CONJURED); }
++    bool IsVellum() const
++    {
++        return (Class == ITEM_CLASS_TRADE_GOODS && (1 << ITEM_SUBCLASS_ARMOR_ENCHANTMENT | 1 << ITEM_SUBCLASS_WEAPON_ENCHANTMENT) & (1<<SubClass));
++    }
+ };
+ 
+ struct ItemLocale
+diff --git a/src/game/Spell.cpp b/src/game/Spell.cpp
+index 2f35090..17807a0 100644
+--- a/src/game/Spell.cpp
++++ b/src/game/Spell.cpp
+@@ -5775,6 +5775,8 @@ SpellCastResult Spell::CheckItems()
+         return SPELL_CAST_OK;
+ 
+     Player* p_caster = (Player*)m_caster;
++    bool isScrollItem = false;
++    bool isVellumTarget = false;
+ 
+     // cast item checks
+     if(m_CastItem)
+@@ -5787,6 +5789,8 @@ SpellCastResult Spell::CheckItems()
+         if(!proto)
+             return SPELL_FAILED_ITEM_NOT_FOUND;
+ 
++		if(proto->Flags & ITEM_FLAGS_ENCHANT_SCROLL) isScrollItem = true;
++
+         for (int i = 0; i < 5; ++i)
+             if (proto->Spells[i].SpellCharges)
+                 if(m_CastItem->GetSpellCharges(i) == 0)
+@@ -5853,8 +5857,13 @@ SpellCastResult Spell::CheckItems()
+         if(!m_targets.getItemTarget())
+             return SPELL_FAILED_ITEM_GONE;
+ 
++		isVellumTarget = m_targets.getItemTarget()->GetProto()->IsVellum();
+         if(!m_targets.getItemTarget()->IsFitToSpellRequirements(m_spellInfo))
+             return SPELL_FAILED_EQUIPPED_ITEM_CLASS;
++
++		// Do not enchant vellum with scroll
++        if(isVellumTarget && isScrollItem)
++            return SPELL_FAILED_BAD_TARGETS;
+     }
+     // if not item target then required item must be equipped
+     else
+@@ -6007,6 +6016,17 @@ SpellCastResult Spell::CheckItems()
+ 
+                 if( targetItem->GetProto()->ItemLevel < m_spellInfo->baseLevel )
+                     return SPELL_FAILED_LOWLEVEL;
++                // Check if we can store a new scroll, enchanting vellum has implicit SPELL_EFFECT_CREATE_ITEM
++                if(isVellumTarget && m_spellInfo->EffectItemType[i])
++                {
++                    ItemPosCountVec dest;
++                    uint8 msg = p_caster->CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, m_spellInfo->EffectItemType[i], 1 );
++                    if(msg != EQUIP_ERR_OK)
++                    {
++                        p_caster->SendEquipError( msg, NULL, NULL );
++                        return SPELL_FAILED_DONT_REPORT;
++                    }
++                }
+                 // Not allow enchant in trade slot for some enchant type
+                 if( targetItem->GetOwner() != m_caster )
+                 {
+@@ -6016,6 +6036,9 @@ SpellCastResult Spell::CheckItems()
+                         return SPELL_FAILED_ERROR;
+                     if (pEnchant->slot & ENCHANTMENT_CAN_SOULBOUND)
+                         return SPELL_FAILED_NOT_TRADEABLE;
++                    // cannot replace vellum with scroll in trade slot
++                    if (isVellumTarget)
++                        return SPELL_FAILED_BAD_TARGETS;
+                 }
+                 break;
+             }
+diff --git a/src/game/SpellEffects.cpp b/src/game/SpellEffects.cpp
+index 8ff005a..31feab3 100644
+--- a/src/game/SpellEffects.cpp
++++ b/src/game/SpellEffects.cpp
+@@ -4639,8 +4639,22 @@ void Spell::EffectEnchantItemPerm(SpellEffectIndex eff_idx)
+ 
+     Player* p_caster = (Player*)m_caster;
+ 
+-    // not grow at item use at item case
+-    p_caster->UpdateCraftSkill(m_spellInfo->Id);
++    // Enchanting a vellum requires special handling, as it creates a new item
++    // instead of modifying an existing one.
++    ItemPrototype const* targetProto = itemTarget->GetProto();
++    if(targetProto->IsVellum() && m_spellInfo->EffectItemType[eff_idx])
++    {
++        unitTarget = m_caster;
++        DoCreateItem(eff_idx,m_spellInfo->EffectItemType[eff_idx]);
++        // Vellum target case: Target becomes additional reagent, new scroll item created instead in Spell::EffectEnchantItemPerm()
++        // cannot already delete in TakeReagents() unfortunately
++        p_caster->DestroyItemCount(targetProto->ItemId, 1, true);
++        return;
++    }
++
++    // not grow at item use at item case, using scrolls does not increase enchanting skill!
++    if (!(m_CastItem && m_CastItem->GetProto()->Flags & ITEM_FLAGS_ENCHANT_SCROLL))
++        p_caster->UpdateCraftSkill(m_spellInfo->Id);
+ 
+     uint32 enchant_id = m_spellInfo->EffectMiscValue[eff_idx];
+     if (!enchant_id)

@@ -1,0 +1,15 @@
+diff --git a/src/game/SpellEffects.cpp b/src/game/SpellEffects.cpp
+index 23dabb6..6eb4b41 100644
+--- a/src/game/SpellEffects.cpp
++++ b/src/game/SpellEffects.cpp
+@@ -632,6 +632,10 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
+                         // Eviscerate and Envenom Bonus Damage (item set effect)
+                         if (m_caster->GetDummyAura(37169))
+                             damage += ((Player*)m_caster)->GetComboPoints()*40;
++
++                        // Apply spell mods
++                        if(Player* modOwner = m_caster->GetSpellModOwner())
++                            modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DAMAGE, damage);
+                     }
+                 }
+                 // Eviscerate

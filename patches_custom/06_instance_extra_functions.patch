@@ -1,0 +1,56 @@
+diff --git a/src/game/InstanceData.cpp b/src/game/InstanceData.cpp
+index d1d05a8..b829b48 100644
+--- a/src/game/InstanceData.cpp
++++ b/src/game/InstanceData.cpp
+@@ -20,6 +20,7 @@
+ #include "Database/DatabaseEnv.h"
+ #include "Map.h"
+ #include "Log.h"
++#include "Player.h"
+ 
+ void InstanceData::SaveToDB()
+ {
+@@ -42,3 +43,26 @@ bool InstanceData::CheckConditionCriteriaMeet(Player const* /*source*/, uint32 m
+         instance->GetId(), instance_condition_id, map_id);
+     return false;
+ }
++
++// Complete Achievement for all players in instance
++void InstanceData::DoCompleteAchievement(uint32 achievement)
++{
++    AchievementEntry const* AE = GetAchievementStore()->LookupEntry(achievement);
++    Map::PlayerList const &PlayerList = instance->GetPlayers();
++
++    if (!PlayerList.isEmpty())
++        for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
++            if (Player *pPlayer = i->getSource())
++                pPlayer->CompletedAchievement(AE);
++}
++
++// Remove Auras due to Spell on all players in instance
++void InstanceData::DoRemoveAurasDueToSpellOnPlayers(uint32 spell)
++{
++    Map::PlayerList const &PlayerList = instance->GetPlayers();
++
++    if (!PlayerList.isEmpty())
++        for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
++            if (Player* pPlayer = i->getSource())
++                pPlayer->RemoveAurasDueToSpell(spell);
++}
+\ No newline at end of file
+diff --git a/src/game/InstanceData.h b/src/game/InstanceData.h
+index 524d792..62e417d 100644
+--- a/src/game/InstanceData.h
++++ b/src/game/InstanceData.h
+@@ -78,5 +78,11 @@ class MANGOS_DLL_SPEC InstanceData
+         // Condition criteria additional requirements check
+         // This is used for such things are heroic loot
+         virtual bool CheckConditionCriteriaMeet(Player const* source, uint32 map_id, uint32 instance_condition_id);
++
++		// Complete Achievement for all players in instance
++        void DoCompleteAchievement(uint32 achievement);
++
++        // Remove Auras due to Spell on all players in instance
++        void DoRemoveAurasDueToSpellOnPlayers(uint32 spell);
+ };
+ #endif

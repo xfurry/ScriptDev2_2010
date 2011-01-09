@@ -1,0 +1,32 @@
+diff --git a/src/game/ArenaTeam.cpp b/src/game/ArenaTeam.cpp
+index 06f0c95..0770e24 100644
+--- a/src/game/ArenaTeam.cpp
++++ b/src/game/ArenaTeam.cpp
+@@ -540,8 +540,13 @@ uint32 ArenaTeam::GetPoints(uint32 MemberRating)
+ 
+     uint32 rating = MemberRating + 150 < m_stats.rating ? MemberRating : m_stats.rating;
+ 
+-    if(rating <= 1500)
+-        points = (float)rating * 0.22f + 14.0f;
++    if (rating<=1500)
++    {
++        if (sWorld.getConfig(CONFIG_UINT32_ARENA_SEASON_ID) < 5)
++            points = (float)rating * 0.22f + 14.0f;
++        else
++            points = MINIMUM_ARENA_POINTS_PER_WEEK;
++    }
+     else
+         points = 1511.26f / (1.0f + 1639.28f * exp(-0.00412f * (float)rating));
+ 
+diff --git a/src/game/ArenaTeam.h b/src/game/ArenaTeam.h
+index cbca14b..5c7fb1d 100644
+--- a/src/game/ArenaTeam.h
++++ b/src/game/ArenaTeam.h
+@@ -118,6 +118,7 @@ struct ArenaTeamStats
+ };
+ 
+ #define MAX_ARENA_SLOT 3                                    // 0..2 slots
++#define MINIMUM_ARENA_POINTS_PER_WEEK 344                 // As of arena season 5, this is 344 for 5v5 team
+ 
+ class ArenaTeam
+ {

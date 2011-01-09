@@ -1,0 +1,18 @@
+diff --git a/src/game/UnitAuraProcHandler.cpp b/src/game/UnitAuraProcHandler.cpp
+index 4ae59fe..e0dc754 100644
+--- a/src/game/UnitAuraProcHandler.cpp
++++ b/src/game/UnitAuraProcHandler.cpp
+@@ -2442,6 +2442,13 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
+                 triggered_spell_id = 61607;
+                 break;
+             }
++            // Unholy Blight
++            if (dummySpell->Id == 49194)
++            {
++                basepoints[0] = triggerAmount * damage / 1000;
++                triggered_spell_id = 50536;
++                break;
++            }
+             // Vendetta
+             if (dummySpell->SpellFamilyFlags & UI64LIT(0x0000000000010000))
+             {

@@ -1,0 +1,36 @@
+diff --git a/src/game/AggressorAI.cpp b/src/game/AggressorAI.cpp
+index 8978436..b5648a0 100644
+--- a/src/game/AggressorAI.cpp
++++ b/src/game/AggressorAI.cpp
+@@ -56,7 +56,6 @@ AggressorAI::MoveInLineOfSight(Unit *u)
+             if(!m_creature->getVictim())
+             {
+                 AttackStart(u);
+-                u->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
+             }
+             else if(sMapStore.LookupEntry(m_creature->GetMapId())->IsDungeon())
+             {
+diff --git a/src/game/GuardAI.cpp b/src/game/GuardAI.cpp
+index 7315097..7c3d9d4 100644
+--- a/src/game/GuardAI.cpp
++++ b/src/game/GuardAI.cpp
+@@ -50,7 +50,6 @@ void GuardAI::MoveInLineOfSight(Unit *u)
+         {
+             //Need add code to let guard support player
+             AttackStart(u);
+-            u->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
+         }
+     }
+ }
+diff --git a/src/game/PetAI.cpp b/src/game/PetAI.cpp
+index 3498083..b3f7974 100644
+--- a/src/game/PetAI.cpp
++++ b/src/game/PetAI.cpp
+@@ -62,7 +62,6 @@ void PetAI::MoveInLineOfSight(Unit *u)
+             if(m_creature->IsWithinLOSInMap(u))
+             {
+                 AttackStart(u);
+-                u->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
+             }
+         }
+     }

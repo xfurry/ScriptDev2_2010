@@ -1,0 +1,12 @@
+diff --git a/src/game/BattleGroundWS.cpp b/src/game/BattleGroundWS.cpp
+index 88d25a7..fdfaa7d 100644
+--- a/src/game/BattleGroundWS.cpp
++++ b/src/game/BattleGroundWS.cpp
+@@ -226,6 +226,7 @@ void BattleGroundWS::EventPlayerCapturedFlag(Player *Source)
+     //for flag capture is reward 2 honorable kills
+     RewardHonorToTeam(GetBonusHonorFromKill(2), Source->GetTeam());
+ 
++	Source->RewardHonor(NULL, 0, GetBonusHonorFromKill(3));
+     // despawn flags
+     SpawnEvent(WS_EVENT_FLAG_A, 0, false);
+     SpawnEvent(WS_EVENT_FLAG_H, 0, false);

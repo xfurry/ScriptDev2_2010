@@ -1,0 +1,21 @@
+diff --git a/src/game/Channel.cpp b/src/game/Channel.cpp
+index a749e1a..4f465ef 100644
+--- a/src/game/Channel.cpp
++++ b/src/game/Channel.cpp
+@@ -46,6 +46,7 @@ Channel::Channel(const std::string& name, uint32 channel_id)
+     }
+     else                                                    // it's custom channel
+     {
++        m_announce = false;                                 // no join/leave announces
+         m_flags |= CHANNEL_FLAG_CUSTOM;
+     }
+ }
+@@ -381,7 +382,7 @@ void Channel::SetOwner(uint64 p, const char *newname)
+         return;
+     }
+ 
+-    if(sec < SEC_GAMEMASTER && p != m_ownerGUID)
++    if(sec < SEC_MODERATOR && p != m_ownerGUID)
+     {
+         WorldPacket data;
+         MakeNotOwner(&data);

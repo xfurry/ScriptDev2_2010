@@ -1,0 +1,238 @@
+diff --git a/src/game/BattleGroundDS.cpp b/src/game/BattleGroundDS.cpp
+index e6a298d..4452bf3 100644
+--- a/src/game/BattleGroundDS.cpp
++++ b/src/game/BattleGroundDS.cpp
+@@ -16,9 +16,12 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  */
+ 
++#include "Object.h"
+ #include "Player.h"
+ #include "BattleGround.h"
+ #include "BattleGroundDS.h"
++#include "ObjectMgr.h"
++#include "WorldPacket.h"
+ #include "Language.h"
+ 
+ BattleGroundDS::BattleGroundDS()
+@@ -43,6 +46,25 @@ BattleGroundDS::~BattleGroundDS()
+ void BattleGroundDS::Update(uint32 diff)
+ {
+     BattleGround::Update(diff);
++
++	if (GetStatus() == STATUS_IN_PROGRESS)
++    {
++        // knockback
++        if(m_uiKnockback < diff)
++        {
++            for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
++            {
++                Player * plr = sObjectMgr.GetPlayer(itr->first);
++                if (plr && plr->IsWithinLOS(1214,765,14) && plr->GetDistance2d(1214,765) <= 50)
++                    plr->KnockBackPlayerWithAngle(6.40f,55,7);
++                if (plr && plr->IsWithinLOS(1369,817,14) && plr->GetDistance2d(1369,817) <= 50)
++                    plr->KnockBackPlayerWithAngle(3.03f,55,7);
++            }
++            m_uiKnockback = 1000;
++        }
++        else
++            m_uiKnockback -= diff;
++    }
+ }
+ 
+ void BattleGroundDS::StartingEventCloseDoors()
+@@ -51,6 +73,7 @@ void BattleGroundDS::StartingEventCloseDoors()
+ 
+ void BattleGroundDS::StartingEventOpenDoors()
+ {
++	OpenDoorEvent(BG_EVENT_DOOR);
+ }
+ 
+ void BattleGroundDS::AddPlayer(Player *plr)
+@@ -60,19 +83,76 @@ void BattleGroundDS::AddPlayer(Player *plr)
+     BattleGroundDSScore* sc = new BattleGroundDSScore;
+ 
+     m_PlayerScores[plr->GetGUID()] = sc;
++
++	UpdateWorldState(0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
++    UpdateWorldState(0xe10, GetAlivePlayersCountByTeam(HORDE));
++}
++
++void BattleGroundDS::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
++{
++    if (GetStatus() == STATUS_WAIT_LEAVE)
++        return;
++
++    UpdateWorldState(0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
++    UpdateWorldState(0xe10, GetAlivePlayersCountByTeam(HORDE));
++
++    CheckArenaWinConditions();
++}
++
++void BattleGroundDS::HandleKillPlayer(Player *player, Player *killer)
++{
++    if (GetStatus() != STATUS_IN_PROGRESS)
++        return;
++
++    if (!killer)
++    {
++        sLog.outError("BattleGroundDS: Killer player not found");
++        return;
++    }
++
++    BattleGround::HandleKillPlayer(player,killer);
++
++    UpdateWorldState(0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
++    UpdateWorldState(0xe10, GetAlivePlayersCountByTeam(HORDE));
++
++    CheckArenaWinConditions();
+ }
+ 
+-void BattleGroundDS::RemovePlayer(Player * /*plr*/, uint64 /*guid*/)
++bool BattleGroundDS::HandlePlayerUnderMap(Player *player)
+ {
++    player->TeleportTo(GetMapId(),1299.046f,784.825f,9.338f,player->GetOrientation(),false);
++    return true;
+ }
+ 
+-void BattleGroundDS::HandleKillPlayer(Player* player, Player* killer)
++void BattleGroundDS::HandleAreaTrigger(Player *Source, uint32 Trigger)
+ {
+-    BattleGround::HandleKillPlayer(player, killer);
++    if (GetStatus() != STATUS_IN_PROGRESS)
++        return;
++
++    switch(Trigger)
++    {
++        case 5347:
++        case 5348:
++            break;
++        default:
++            sLog.outError("WARNING: Unhandled AreaTrigger in Battleground: %u", Trigger);
++            Source->GetSession()->SendAreaTriggerMessage("Warning: Unhandled AreaTrigger in Battleground: %u", Trigger);
++            break;
++    }
+ }
+ 
+-void BattleGroundDS::HandleAreaTrigger(Player * /*Source*/, uint32 /*Trigger*/)
++void BattleGroundDS::FillInitialWorldStates(WorldPacket &data, uint32& count)
++{
++    FillInitialWorldState(data, count, 0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
++    FillInitialWorldState(data, count, 0xe10, GetAlivePlayersCountByTeam(HORDE));
++    FillInitialWorldState(data, count, 0xe1a, 1);
++}
++ 
++void BattleGroundDS::Reset()
+ {
++    //call parent's class reset
++    BattleGround::Reset();
++    m_uiKnockback = 5000;
+ }
+ 
+ bool BattleGroundDS::SetupBattleGround()
+diff --git a/src/game/BattleGroundDS.h b/src/game/BattleGroundDS.h
+index 0034226..b76ffce 100644
+--- a/src/game/BattleGroundDS.h
++++ b/src/game/BattleGroundDS.h
+@@ -45,6 +45,11 @@ class BattleGroundDS : public BattleGround
+         void RemovePlayer(Player *plr, uint64 guid);
+         void HandleAreaTrigger(Player *Source, uint32 Trigger);
+         bool SetupBattleGround();
++		virtual void Reset();
++        virtual void FillInitialWorldStates(WorldPacket &d, uint32& count);
+         void HandleKillPlayer(Player* player, Player *killer);
++		bool HandlePlayerUnderMap(Player * plr);
++    private:
++        uint32 m_uiKnockback;
+ };
+ #endif
+diff --git a/src/game/BattleGroundMgr.cpp b/src/game/BattleGroundMgr.cpp
+index c269a92..15c8095 100644
+--- a/src/game/BattleGroundMgr.cpp
++++ b/src/game/BattleGroundMgr.cpp
+@@ -1500,8 +1500,8 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
+     //for arenas there is random map used
+     if (bg_template->isArena())
+     {
+-        BattleGroundTypeId arenas[] = {BATTLEGROUND_NA, BATTLEGROUND_BE, BATTLEGROUND_RL};
+-        uint32 arena_num = urand(0,2);
++        BattleGroundTypeId arenas[] = {BATTLEGROUND_NA, BATTLEGROUND_BE, BATTLEGROUND_RL, BATTLEGROUND_DS};
++        uint32 arena_num = urand(0,3);
+         bgTypeId = arenas[arena_num];
+         bg_template = GetBattleGroundTemplate(bgTypeId);
+         if (!bg_template)
+@@ -1886,7 +1886,8 @@ bool BattleGroundMgr::IsArenaType(BattleGroundTypeId bgTypeId)
+     return ( bgTypeId == BATTLEGROUND_AA ||
+         bgTypeId == BATTLEGROUND_BE ||
+         bgTypeId == BATTLEGROUND_NA ||
+-        bgTypeId == BATTLEGROUND_RL );
++        bgTypeId == BATTLEGROUND_RL ||
++		bgTypeId == BATTLEGROUND_DS);
+ }
+ 
+ BattleGroundQueueTypeId BattleGroundMgr::BGQueueTypeId(BattleGroundTypeId bgTypeId, uint8 arenaType)
+diff --git a/src/game/Player.cpp b/src/game/Player.cpp
+index a62e009..bc1cb85 100644
+--- a/src/game/Player.cpp
++++ b/src/game/Player.cpp
+@@ -8517,6 +8517,16 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
+                 FillInitialWorldState(data,count,0xbba,0x0);// 9 show
+             }
+ 			break;
++		case 4378:                                          // Dalaran Severs
++			if (bg && bg->GetTypeID() == BATTLEGROUND_DS)
++				bg->FillInitialWorldStates(data, count);
++			else
++			{
++				FillInitialWorldState(data,count,0xe11,0x0);// 7 gold
++				FillInitialWorldState(data,count,0xe10,0x0);// 8 green
++				FillInitialWorldState(data,count,0xe1a,0x0);// 9 show
++			}
++			break;
+         case 3703:                                          // Shattrath City
+             break;
+         default:
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index e1ab363..45a3a36 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -10455,6 +10455,27 @@ void Unit::KnockBackFrom(Unit* target, float horizontalSpeed, float verticalSpee
+     }
+ }
+ 
++void Unit::KnockBackPlayerWithAngle(float angle, float horizontalSpeed, float verticalSpeed)
++{
++    float vsin = sin(angle);
++    float vcos = cos(angle);
++
++    // Effect propertly implemented only for players
++    if(GetTypeId()==TYPEID_PLAYER)
++    {
++        WorldPacket data(SMSG_MOVE_KNOCK_BACK, 8+4+4+4+4+4);
++        data << GetPackGUID();
++        data << uint32(0);                                  // Sequence
++        data << float(vcos);                                // x direction
++        data << float(vsin);                                // y direction
++        data << float(horizontalSpeed);                     // Horizontal speed
++        data << float(-verticalSpeed);                      // Z Movement speed (vertical)
++        ((Player*)this)->GetSession()->SendPacket(&data);
++    }
++    else
++        sLog.outError("KnockBackPlayer: Target of KnockBackPlayer must be player!");
++}
++
+ float Unit::GetCombatRatingReduction(CombatRating cr) const
+ {
+     if (GetTypeId() == TYPEID_PLAYER)
+diff --git a/src/game/Unit.h b/src/game/Unit.h
+index 5184158..8438f8e 100644
+--- a/src/game/Unit.h
++++ b/src/game/Unit.h
+@@ -1836,6 +1836,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
+         bool isHover() const { return HasAuraType(SPELL_AURA_HOVER); }
+ 
+         void KnockBackFrom(Unit* target, float horizontalSpeed, float verticalSpeed);
++		void KnockBackPlayerWithAngle(float angle, float horizontalSpeed, float verticalSpeed);
+ 
+         void _RemoveAllAuraMods();
+         void _ApplyAllAuraMods();

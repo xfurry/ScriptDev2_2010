@@ -1,0 +1,13 @@
+diff --git a/src/game/Player.cpp b/src/game/Player.cpp
+index e9b0b0c..44e0a00 100644
+--- a/src/game/Player.cpp
++++ b/src/game/Player.cpp
+@@ -4847,7 +4847,7 @@ void Player::RepopAtGraveyard()
+     AreaTableEntry const *zone = GetAreaEntryByAreaID(GetAreaId());
+ 
+     // Such zones are considered unreachable as a ghost and the player must be automatically revived
+-    if ((!isAlive() && zone && zone->flags & AREA_FLAG_NEED_FLY) || GetTransport())
++    if ((!isAlive() && zone && zone->flags & AREA_FLAG_NEED_FLY) || GetTransport() || GetPositionZ() < -500.0f)
+     {
+         ResurrectPlayer(0.5f);
+         SpawnCorpseBones();

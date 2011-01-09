@@ -1,0 +1,44 @@
+diff --git a/src/game/Spell.cpp b/src/game/Spell.cpp
+index 6a287cf..0c248e0 100644
+--- a/src/game/Spell.cpp
++++ b/src/game/Spell.cpp
+@@ -2063,6 +2063,11 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
+         case TARGET_IN_FRONT_OF_CASTER:
+         {
+             bool inFront = m_spellInfo->SpellVisual[0] != 3879;
++            // Pound (not turn caster to target)
++            if (m_spellInfo->SpellIconID == 66)
++            {
++                m_caster->SetOrientation(m_castOrientation);
++            }
+             FillAreaTargets(targetUnitMap, m_caster->GetPositionX(), m_caster->GetPositionY(), radius, inFront ? PUSH_IN_FRONT : PUSH_IN_BACK, SPELL_TARGETS_AOE_DAMAGE);
+             break;
+         }
+diff --git a/src/game/SpellAuras.cpp b/src/game/SpellAuras.cpp
+index 63f9466..9302641 100644
+--- a/src/game/SpellAuras.cpp
++++ b/src/game/SpellAuras.cpp
+@@ -3727,6 +3727,23 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
+             else
+                 delete pObj;
+         }
++        // Pound
++        if (GetSpellProto()->SpellIconID == 66)
++        {
++            Unit* caster = GetCaster();
++            if(!caster)
++                return;
++            uint32 spell_id = 0;
++            switch(GetSpellProto()->Id)
++            {
++                case 53472: spell_id = 53509; break;
++                case 59433: spell_id = 59432; break;
++                default: break;
++            }
++            if (spell_id)
++                caster->CastSpell(target, spell_id, true, NULL, NULL);
++            return;
++        }
+     }
+     else
+     {

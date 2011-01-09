@@ -1,0 +1,114 @@
+diff --git a/src/game/Spell.cpp b/src/game/Spell.cpp
+index bfb8e98..2f35090 100644
+--- a/src/game/Spell.cpp
++++ b/src/game/Spell.cpp
+@@ -1131,6 +1131,16 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
+         return;
+     }
+ 
++    // Recheck deflection (only for delayed spells)
++    if (m_spellInfo->speed && unit->HasAura(19263))
++    {
++        if (realCaster)
++            realCaster->SendSpellMiss(unit, m_spellInfo->Id, SPELL_MISS_DEFLECT);
++
++        ResetEffectDamageAndHeal();
++        return;
++    }
++
+     if (unit->GetTypeId() == TYPEID_PLAYER)
+     {
+         ((Player*)unit)->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET, m_spellInfo->Id);
+@@ -2897,6 +2907,9 @@ void Spell::cast(bool skipCheck)
+             // Lock and Load
+             if (m_spellInfo->Id == 56453)
+                 AddPrecastSpell(67544);                     // Lock and Load Marker
++			// Deterrence
++            else if (m_spellInfo->Id == 19263)
++                AddTriggeredSpell(67801);
+             break;
+         }
+         case SPELLFAMILY_PALADIN:
+diff --git a/src/game/SpellMgr.cpp b/src/game/SpellMgr.cpp
+index 24c3c25..db69a0e 100644
+--- a/src/game/SpellMgr.cpp
++++ b/src/game/SpellMgr.cpp
+@@ -2114,6 +2114,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
+                     (spellInfo_2->SpellFamilyFlags & UI64LIT(0x4)) && (spellInfo_1->SpellFamilyFlags & UI64LIT(0x00000004000)) )
+                     return false;
+ 
++                // Deterrence
++                if( spellInfo_1->SpellIconID == 83 && spellInfo_2->SpellIconID == 83 )
++                    return false;
++
+                 // Bestial Wrath
+                 if( spellInfo_1->SpellIconID == 1680 && spellInfo_2->SpellIconID == 1680 )
+                     return false;
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index e6c84a5..ce44b9c 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -2556,7 +2556,7 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst (const Unit *pVictim, WeaponAttack
+     // parry & block chances
+ 
+     // check if attack comes from behind, nobody can parry or block if attacker is behind
+-    if (!pVictim->HasInArc(M_PI_F,this))
++    if (!pVictim->HasInArc(M_PI_F,this) && !pVictim->HasAura(19263))
+     {
+         DEBUG_FILTER_LOG(LOG_FILTER_COMBAT, "RollMeleeOutcomeAgainst: attack came from behind.");
+     }
+@@ -2857,23 +2857,13 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell,
+     bool canDodge = true;
+     bool canParry = true;
+ 
+-    // Same spells cannot be parry/dodge
++    // Some spells cannot be parry/dodge
+     if (spell->Attributes & SPELL_ATTR_IMPOSSIBLE_DODGE_PARRY_BLOCK)
+         return SPELL_MISS_NONE;
+ 
+-    // Ranged attack cannot be parry/dodge only deflect
++    // Ranged attack cannot be parry/dodge only miss
+     if (attType == RANGED_ATTACK)
+-    {
+-        // only if in front
+-        if (pVictim->HasInArc(M_PI_F,this))
+-        {
+-            int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_SPELLS)*100;
+-            tmp+=deflect_chance;
+-            if (roll < tmp)
+-                return SPELL_MISS_DEFLECT;
+-        }
+         return SPELL_MISS_NONE;
+-    }
+ 
+     // Check for attack from behind
+     if (!pVictim->HasInArc(M_PI_F,this))
+@@ -2882,7 +2872,8 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell,
+         if (GetTypeId() == TYPEID_PLAYER && pVictim->GetTypeId() == TYPEID_PLAYER)
+             canDodge = false;
+         // Can`t parry
+-        canParry = false;
++        if (!pVictim->HasAura(19263))
++            canParry = false;
+     }
+     // Check creatures flags_extra for disable parry
+     if(pVictim->GetTypeId()==TYPEID_UNIT)
+@@ -3016,14 +3007,10 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
+     if (rand < tmp)
+         return SPELL_MISS_MISS;
+ 
+-    // cast by caster in front of victim
+-    if (pVictim->HasInArc(M_PI_F,this))
+-    {
+-        int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_SPELLS)*100;
+-        tmp+=deflect_chance;
+-        if (rand < tmp)
+-            return SPELL_MISS_DEFLECT;
+-    }
++    int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_SPELLS)*100;
++    tmp+=deflect_chance;
++    if (rand < tmp)
++        return SPELL_MISS_DEFLECT;
+ 
+     return SPELL_MISS_NONE;
+ }

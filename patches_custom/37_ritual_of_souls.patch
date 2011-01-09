@@ -1,0 +1,71 @@
+diff --git a/src/game/GameObject.cpp b/src/game/GameObject.cpp
+index b10ae55..09b7baa 100644
+--- a/src/game/GameObject.cpp
++++ b/src/game/GameObject.cpp
+@@ -1222,12 +1222,30 @@ void GameObject::Use(Unit* user)
+                 return;
+ 
+             spellId = info->summoningRitual.spellId;
+-            if (spellId == 62330)                           // GO store not existed spell, replace by expected
+-            {
+-                // spell have reagent and mana cost but it not expected use its
+-                // it triggered spell in fact casted at currently channeled GO
+-                spellId = 61993;
+-                triggered = true;
++            switch (spellId)                           // GO store not existed spell, replace by expected
++			{
++                case 62330:
++                {
++                    // spell have reagent and mana cost but it not expected use its
++                    // it triggered spell in fact casted at currently channeled GO
++                    spellId = 61993;
++                    triggered = true;
++                    break;
++                }
++                case 34145:
++                {
++                    spellId = 29886;
++                    triggered = true;
++                    break;
++                }
++                case 58888:
++                {
++                    spellId = 58889;
++                    triggered = true;
++                    break;
++                }
++                default:
++					break;
+             }
+ 
+             // finish spell
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index e1181a3..a281b25 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -3361,6 +3361,12 @@ void Unit::_UpdateSpells( uint32 time )
+             {
+                 (*ite1)->SetOwnerGUID(0);
+                 (*ite1)->SetRespawnTime(0);
++
++                if (this->GetTypeId() == TYPEID_PLAYER)
++                    if (const SpellEntry* spellInfo = sSpellStore.LookupEntry((*ite1)->GetSpellId()))
++                        if (spellInfo->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE)
++                            ((Player*)this)->SendCooldownEvent(spellInfo);
++
+                 (*ite1)->Delete();
+                 dnext1 = m_gameObj.erase(ite1);
+             }
+@@ -4910,6 +4916,12 @@ void Unit::RemoveGameObject(uint32 spellid, bool del)
+             if(del)
+             {
+                 (*i)->SetRespawnTime(0);
++
++		        if (this->GetTypeId() == TYPEID_PLAYER)
++				    if (const SpellEntry* spellInfo = sSpellStore.LookupEntry((*i)->GetSpellId()))
++						if (spellInfo->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE)
++							((Player*)this)->SendCooldownEvent(spellInfo);
++
+                 (*i)->Delete();
+             }
+ 

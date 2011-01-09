@@ -1,0 +1,14 @@
+diff --git a/src/game/CreatureAI.cpp b/src/game/CreatureAI.cpp
+index 33cb568..8f9e0df 100644
+--- a/src/game/CreatureAI.cpp
++++ b/src/game/CreatureAI.cpp
+@@ -74,6 +74,9 @@ CanCastResult CreatureAI::CanCastSpell(Unit* pTarget, const SpellEntry *pSpell,
+ 
+ CanCastResult CreatureAI::DoCastSpellIfCan(Unit* pTarget, uint32 uiSpell, uint32 uiCastFlags, uint64 uiOriginalCasterGUID)
+ {
++    if (!pTarget)
++        return CAST_FAIL_OTHER;
++
+     Unit* pCaster = m_creature;
+ 
+     if (uiCastFlags & CAST_FORCE_TARGET_SELF)

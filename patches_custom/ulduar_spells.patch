@@ -1,0 +1,18 @@
+diff --git a/src/game/Spell.cpp b/src/game/Spell.cpp
+index 2962c58..c022624 100644
+--- a/src/game/Spell.cpp
++++ b/src/game/Spell.cpp
+@@ -1483,6 +1483,13 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
+                 case 38794:                                 // Murmur's Touch (h)
+                 case 50988:                                 // Glare of the Tribunal (Halls of Stone)
+                 case 59870:                                 // Glare of the Tribunal (h) (Halls of Stone)
++                case 62488:                                 // Activate Construct (Ignis - Ulduar)
++                case 63024:                                 // Gravity Bomb (XT002 - Ulduar)
++                case 65598:                                 // Light Bomb (XT002 - Ulduar)
++                case 67282:                                 // Touch of Darkness (Eydis Darkbane - ToC)
++                case 67283:                                 // Touch of Darkness (h) (Eydis Darkbane - ToC)
++                case 67297:                                 // Touch of Light (Fjola Lightbane - ToC)
++                case 67298:                                 // Touch of Light (h) (Fjola LIghtbane - Toc)
+                     unMaxTargets = 1;
+                     break;
+                 case 28542:                                 // Life Drain

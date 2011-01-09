@@ -1,0 +1,136 @@
+diff --git a/src/game/Spell.h b/src/game/Spell.h
+index 4fa1fcb..c219b98 100644
+--- a/src/game/Spell.h
++++ b/src/game/Spell.h
+@@ -336,6 +336,7 @@ class Spell
+         void EffectTitanGrip(SpellEffectIndex eff_idx);
+         void EffectEnchantItemPrismatic(SpellEffectIndex eff_idx);
+         void EffectPlayMusic(SpellEffectIndex eff_idx);
++        void EffectRedirectThreat(SpellEffectIndex eff_idx);
+         void EffectSpecCount(SpellEffectIndex eff_idx);
+         void EffectActivateSpec(SpellEffectIndex eff_idx);
+ 
+diff --git a/src/game/SpellAuras.cpp b/src/game/SpellAuras.cpp
+index 6140a07..5acf9ac 100644
+--- a/src/game/SpellAuras.cpp
++++ b/src/game/SpellAuras.cpp
+@@ -2220,6 +2220,13 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
+ 
+                 return;
+             }
++            case 34477: //Misdirection
++            case 57934: //Tricks of Trade
++            {
++                if(Unit * caster = GetCaster())
++                    caster->SetThreatRedirectionTarget(0, 0);
++                return;
++            }
+             case 58600:                                     // Restricted Flight Area
+             {
+                 AreaTableEntry const* area = GetAreaEntryByAreaID(target->GetAreaId());
+diff --git a/src/game/SpellEffects.cpp b/src/game/SpellEffects.cpp
+index 5a5fe6e..6646e54 100644
+--- a/src/game/SpellEffects.cpp
++++ b/src/game/SpellEffects.cpp
+@@ -190,7 +190,7 @@ pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
+     &Spell::EffectProspecting,                              //127 SPELL_EFFECT_PROSPECTING              Prospecting spell
+     &Spell::EffectApplyAreaAura,                            //128 SPELL_EFFECT_APPLY_AREA_AURA_FRIEND
+     &Spell::EffectApplyAreaAura,                            //129 SPELL_EFFECT_APPLY_AREA_AURA_ENEMY
+-    &Spell::EffectNULL,                                     //130 SPELL_EFFECT_REDIRECT_THREAT
++    &Spell::EffectRedirectThreat,                           //130 SPELL_EFFECT_REDIRECT_THREAT
+     &Spell::EffectUnused,                                   //131 SPELL_EFFECT_131                      used in some test spells
+     &Spell::EffectPlayMusic,                                //132 SPELL_EFFECT_PLAY_MUSIC               sound id in misc value (SoundEntries.dbc)
+     &Spell::EffectUnlearnSpecialization,                    //133 SPELL_EFFECT_UNLEARN_SPECIALIZATION   unlearn profession specialization
+@@ -8174,6 +8174,17 @@ void Spell::EffectRestoreItemCharges( SpellEffectIndex eff_idx )
+     item->RestoreCharges();
+ }
+ 
++void Spell::EffectRedirectThreat(SpellEffectIndex eff_idx)
++{
++    if(unitTarget)
++    {
++        m_caster->SetThreatRedirectionTarget(unitTarget->GetGUID(), (uint32)damage);
++
++        // Tricks of trade hacky buff applying (15% damage increase)
++        if( m_spellInfo->Id == 57934 )
++            unitTarget->CastSpell(unitTarget, 57933, true);
++    }
++}
+ void Spell::EffectTeachTaxiNode( SpellEffectIndex eff_idx )
+ {
+     if (unitTarget->GetTypeId() != TYPEID_PLAYER)
+diff --git a/src/game/SpellMgr.cpp b/src/game/SpellMgr.cpp
+index db69a0e..daf6d18 100644
+--- a/src/game/SpellMgr.cpp
++++ b/src/game/SpellMgr.cpp
+@@ -2097,6 +2097,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
+             if( spellInfo_1->SpellIconID == 2285 && spellInfo_2->SpellIconID == 2285 )
+                 return false;
+ 
++            //Tricks of Trade
++            if( spellInfo_1->SpellIconID == 3413 && spellInfo_2->SpellIconID == 3413 )
++                return false;
++
+             // Garrote -> Garrote-Silence (multi-family check)
+             if( spellInfo_1->SpellIconID == 498 && spellInfo_2->SpellIconID == 498 && spellInfo_2->SpellVisual[0] == 0 )
+                 return false;
+diff --git a/src/game/ThreatManager.cpp b/src/game/ThreatManager.cpp
+index 61689ea..e9f91a7 100644
+--- a/src/game/ThreatManager.cpp
++++ b/src/game/ThreatManager.cpp
+@@ -392,6 +392,14 @@ void ThreatManager::addThreat(Unit* pVictim, float pThreat, bool crit, SpellScho
+ 
+     float threat = ThreatCalcHelper::calcThreat(pVictim, iOwner, pThreat, crit, schoolMask, pThreatSpell);
+ 
++    if( pVictim->GetThreatRedirectionPercent() && threat > 0.0f )
++    {
++        float redirectedThreat = threat * pVictim->GetThreatRedirectionPercent() / 100;
++        threat -= redirectedThreat;
++        if(Unit *unit = pVictim->GetMisdirectionTarget())
++            iThreatContainer.addThreat(unit, redirectedThreat);
++    }
++
+     HostileReference* ref = iThreatContainer.addThreat(pVictim, threat);
+     // Ref is online
+     if (ref)
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index 45a3a36..6f5f253 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -239,6 +239,9 @@ Unit::Unit()
+ 
+     m_charmInfo = NULL;
+ 
++    m_ThreatRedirectionPercent = 0;
++    m_misdirectionTargetGUID = 0;
++
+     // remove aurastates allowing special moves
+     for(int i=0; i < MAX_REACTIVE; ++i)
+         m_reactiveTimer[i] = 0;
+diff --git a/src/game/Unit.h b/src/game/Unit.h
+index 8438f8e..81768f1 100644
+--- a/src/game/Unit.h
++++ b/src/game/Unit.h
+@@ -1887,6 +1887,13 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
+         PetAuraSet m_petAuras;
+         void AddPetAura(PetAura const* petSpell);
+         void RemovePetAura(PetAura const* petSpell);
++        void SetThreatRedirectionTarget(uint64 guid, uint32 pct)
++        {
++            m_misdirectionTargetGUID = guid;
++            m_ThreatRedirectionPercent = pct;
++        }
++        uint32 GetThreatRedirectionPercent() { return m_ThreatRedirectionPercent; }
++        Unit *GetMisdirectionTarget() { return m_misdirectionTargetGUID ? GetUnit(*this, m_misdirectionTargetGUID) : NULL; }
+ 
+         // Movement info
+         MovementInfo m_movementInfo;
+@@ -1968,6 +1975,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
+         ComboPointHolderSet m_ComboPointHolders;
+ 
+         GuardianPetList m_guardianPets;
++        uint32 m_ThreatRedirectionPercent;
++        uint64 m_misdirectionTargetGUID;
+ 
+         uint64 m_TotemSlot[MAX_TOTEM_SLOT];
+ };

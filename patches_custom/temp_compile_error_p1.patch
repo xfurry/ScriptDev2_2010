@@ -1,0 +1,13 @@
+diff --git a/src/game/SpellAuras.cpp b/src/game/SpellAuras.cpp
+index 11096cf..d58c516 100644
+--- a/src/game/SpellAuras.cpp
++++ b/src/game/SpellAuras.cpp
+@@ -7552,7 +7552,7 @@ m_auraFlags(AFLAG_NONE), m_auraLevel(1), m_procCharges(0), m_stackAmount(1)
+     else
+     {
+         // remove this assert when not unit casters will be supported
+-        ASSERT(caster->GetObjectGuid().IsUnit())
++        ASSERT(caster->GetObjectGuid().IsUnit());
+         m_caster_guid = caster->GetGUID();
+     }
+ 

@@ -1,0 +1,13 @@
+diff --git a/src/shared/Errors.h b/src/shared/Errors.h
+index 6764c18..c0afb52 100644
+--- a/src/shared/Errors.h
++++ b/src/shared/Errors.h
+@@ -70,7 +70,7 @@ if (!(CONDITION)) \
+ #ifdef MANGOS_DEBUG
+ #  define ASSERT WPError
+ #else
+-#  define ASSERT WPError // Error even if in release mode.
++#  define ASSERT(X) do {} while(0) // Error even if in release mode.
+ #endif
+ 
+ #endif

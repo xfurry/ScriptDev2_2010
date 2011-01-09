@@ -1,0 +1,15 @@
+diff --git a/src/game/Unit.cpp b/src/game/Unit.cpp
+index 292dd06..e2f10a3 100644
+--- a/src/game/Unit.cpp
++++ b/src/game/Unit.cpp
+@@ -7781,6 +7781,10 @@ bool Unit::isVisibleForOrDetect(Unit const* u, WorldObject const* viewPoint, boo
+         invisible = false;
+     }
+ 
++    // Arena preparation hack
++    if(HasAura(SPELL_ARENA_PREPARATION))
++        invisible = true;
++
+     // special cases for always overwrite invisibility/stealth
+     if(invisible || m_Visibility == VISIBILITY_GROUP_STEALTH)
+     {

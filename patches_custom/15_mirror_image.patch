@@ -1,0 +1,253 @@
+diff --git a/src/game/Opcodes.cpp b/src/game/Opcodes.cpp
+index 6c26ded..b247e45 100644
+--- a/src/game/Opcodes.cpp
++++ b/src/game/Opcodes.cpp
+@@ -1051,7 +1051,7 @@ OpcodeHandler opcodeTable[NUM_MSG_TYPES] =
+     /*0x3FE*/ { "MSG_GUILD_BANK_MONEY_WITHDRAWN",               STATUS_LOGGEDIN, &WorldSession::HandleGuildBankMoneyWithdrawn   },
+     /*0x3FF*/ { "MSG_GUILD_EVENT_LOG_QUERY",                    STATUS_LOGGEDIN, &WorldSession::HandleGuildEventLogQueryOpcode  },
+     /*0x400*/ { "CMSG_MAELSTROM_RENAME_GUILD",                  STATUS_NEVER,    &WorldSession::Handle_NULL                     },
+-    /*0x401*/ { "CMSG_GET_MIRRORIMAGE_DATA",                    STATUS_NEVER,    &WorldSession::Handle_NULL                     },
++    /*0x401*/ { "CMSG_GET_MIRRORIMAGE_DATA",                    STATUS_LOGGEDIN, &WorldSession::HandleMirrorImageDataRequest    },
+     /*0x402*/ { "SMSG_MIRRORIMAGE_DATA",                        STATUS_NEVER,    &WorldSession::Handle_ServerSide               },
+     /*0x403*/ { "SMSG_FORCE_DISPLAY_UPDATE",                    STATUS_NEVER,    &WorldSession::Handle_ServerSide               },
+     /*0x404*/ { "SMSG_SPELL_CHANCE_RESIST_PUSHBACK",            STATUS_NEVER,    &WorldSession::Handle_ServerSide               },
+diff --git a/src/game/SpellAuraDefines.h b/src/game/SpellAuraDefines.h
+index d57e1d5..1cde136 100644
+--- a/src/game/SpellAuraDefines.h
++++ b/src/game/SpellAuraDefines.h
+@@ -289,7 +289,7 @@ enum AuraType
+     SPELL_AURA_COMPREHEND_LANGUAGE = 244,
+     SPELL_AURA_MOD_DURATION_OF_MAGIC_EFFECTS = 245,
+     SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL = 246,
+-    SPELL_AURA_247 = 247,
++    SPELL_AURA_MIRROR_IMAGE = 247,
+     SPELL_AURA_MOD_COMBAT_RESULT_CHANCE = 248,
+     SPELL_AURA_CONVERT_RUNE = 249,
+     SPELL_AURA_MOD_INCREASE_HEALTH_2 = 250,
+diff --git a/src/game/SpellAuras.cpp b/src/game/SpellAuras.cpp
+index 71edde5..d45959a 100644
+--- a/src/game/SpellAuras.cpp
++++ b/src/game/SpellAuras.cpp
+@@ -297,7 +297,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
+     &Aura::HandleComprehendLanguage,                        //244 SPELL_AURA_COMPREHEND_LANGUAGE
+     &Aura::HandleNoImmediateEffect,                         //245 SPELL_AURA_MOD_DURATION_OF_MAGIC_EFFECTS     implemented in Unit::CalculateSpellDuration
+     &Aura::HandleNoImmediateEffect,                         //246 SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL implemented in Unit::CalculateSpellDuration
+-    &Aura::HandleNULL,                                      //247 target to become a clone of the caster
++    &Aura::HandleAuraMirrorImage,                           //247 SPELL_AURA_MIRROR_IMAGE
+     &Aura::HandleNoImmediateEffect,                         //248 SPELL_AURA_MOD_COMBAT_RESULT_CHANCE         implemented in Unit::RollMeleeOutcomeAgainst
+     &Aura::HandleAuraConvertRune,                           //249 SPELL_AURA_CONVERT_RUNE
+     &Aura::HandleAuraModIncreaseHealth,                     //250 SPELL_AURA_MOD_INCREASE_HEALTH_2
+@@ -8786,4 +8786,24 @@ void SpellAuraHolder::UnregisterSingleCastHolder()
+         }
+         m_isSingleTarget = false;
+     }
++}
++void Aura::HandleAuraMirrorImage(bool Apply, bool Real)
++{
++    if (!Real)
++        return;
++    Unit* target = GetTarget();
++    if (Apply)
++    {
++        Unit* caster = GetCaster();
++        if (!caster)
++            return;
++        // Set display id
++        target->SetDisplayId(caster->GetDisplayId());
++        target->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE);
++    }
++    else
++    {
++        target->SetDisplayId(target->GetNativeDisplayId());
++        target->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE);
++    }
+ }
+\ No newline at end of file
+diff --git a/src/game/SpellAuras.h b/src/game/SpellAuras.h
+index 22dffa7..0779378 100644
+--- a/src/game/SpellAuras.h
++++ b/src/game/SpellAuras.h
+@@ -363,6 +363,7 @@ class MANGOS_DLL_SPEC Aura
+         void HandlePhase(bool Apply, bool Real);
+         void HandleModTargetArmorPct(bool Apply, bool Real);
+         void HandleAuraModAllCritChance(bool Apply, bool Real);
++		void HandleAuraMirrorImage(bool Apply, bool Real);
+         void HandleAllowOnlyAbility(bool Apply, bool Real);
+ 
+         virtual ~Aura();
+diff --git a/src/game/SpellEffects.cpp b/src/game/SpellEffects.cpp
+index bff584f..d306bf2 100644
+--- a/src/game/SpellEffects.cpp
++++ b/src/game/SpellEffects.cpp
+@@ -2656,6 +2656,13 @@ void Spell::EffectTriggerSpell(SpellEffectIndex effIndex)
+                 pet->CastSpell(pet, 28305, true);
+             return;
+         }
++		// Glyph of Mirror Image
++        case 58832:
++        {
++            if (m_caster->HasAura(63093))
++                m_caster->CastSpell(m_caster, 65047, true); // Mirror Image
++            break;
++        }
+     }
+ 
+     // normal case
+@@ -3829,6 +3836,8 @@ void Spell::EffectSummonType(SpellEffectIndex eff_idx)
+                     //SUMMON_TYPE_TOTEM2 = 647: 52893, Anti-Magic Zone (npc used)
+                     if(prop_id == 121 || prop_id == 647)
+                         DoSummonTotem(eff_idx);
++					else if (prop_id == 1021)
++                        DoSummonGuardian(eff_idx, summon_prop->FactionId);
+                     else
+                         DoSummonWild(eff_idx, summon_prop->FactionId);
+                     break;
+@@ -4411,6 +4420,27 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
+         m_caster->AddGuardian(spawnCreature);
+ 
+         map->Add((Creature*)spawnCreature);
++
++		switch(pet_entry)
++        {
++            case 31216:
++            {
++                // set bounding and combat radiuses to player defaults values
++                spawnCreature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, DEFAULT_WORLD_OBJECT_SIZE);
++                spawnCreature->SetFloatValue(UNIT_FIELD_COMBATREACH, 1.5f);
++                // copy onwer's SheathState and UnitBytes2_Flags
++                spawnCreature->SetUInt32Value(UNIT_FIELD_BYTES_2,m_caster->GetUInt32Value(UNIT_FIELD_BYTES_2));
++                //Set Health and Manna
++                spawnCreature->SetMaxHealth(m_caster->GetMaxHealth()/6.0f);
++                spawnCreature->SetHealth(m_caster->GetHealth()/6.0f);
++                spawnCreature->SetMaxPower(POWER_MANA, m_caster->GetMaxPower(POWER_MANA)/6.0f);
++                spawnCreature->SetPower(POWER_MANA, m_caster->GetPower(POWER_MANA)/6.0f);
++                break;
++            }
++            default:
++                break;
++         }
++
+     }
+ }
+ 
+@@ -5671,6 +5701,9 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
+                     unitTarget->CastSpell(unitTarget, 44870, true);
+                     break;
+                 }
++				case 45204: // Clone Me!
++                    unitTarget->CastSpell(m_caster, damage, true);
++                    break;
+                 case 45206:                                 // Copy Off-hand Weapon
+                 {
+                     if (m_caster->GetTypeId() != TYPEID_UNIT || !unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+diff --git a/src/game/SpellHandler.cpp b/src/game/SpellHandler.cpp
+index 41adfd3..e2affdc 100644
+--- a/src/game/SpellHandler.cpp
++++ b/src/game/SpellHandler.cpp
+@@ -590,3 +590,81 @@ void WorldSession::HandleSpellClick( WorldPacket & recv_data )
+         }
+     }
+ }
++
++void WorldSession::HandleMirrorImageDataRequest( WorldPacket & recv_data )
++{
++    uint64 guid;
++    recv_data >> guid;
++    DEBUG_LOG("WORLD: CMSG_GET_MIRRORIMAGE_DATA");
++    // Get unit for which data is needed by client
++    Unit *unit = ObjectAccessor::GetUnit(*_player, guid);
++    if (!unit)
++        return;
++    // Get creator of the unit
++    Unit *creator = unit;
++    // Get SPELL_AURA_247 caster
++    if (!unit->GetAurasByType(SPELL_AURA_MIRROR_IMAGE).empty())
++        creator = unit->GetAurasByType(SPELL_AURA_MIRROR_IMAGE).front()->GetCaster();
++    WorldPacket data(SMSG_MIRRORIMAGE_DATA, 68);
++    data << (uint64)guid;
++    data << (uint32)creator->GetDisplayId();
++    if (creator->GetTypeId()==TYPEID_PLAYER)
++    {
++        Player * pCreator = (Player *)creator;
++        data << (uint8)pCreator->getRace();
++        data << (uint8)pCreator->getGender();
++        data << (uint8)pCreator->getClass();
++        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 0); // skin
++        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 1); // face
++        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 2); // hair
++        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 3); // haircolor
++        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES_2, 0); // facialhair
++        data << (uint32)pCreator->GetGuildId();  // unk
++        static const EquipmentSlots ItemSlots[] =
++        {
++            EQUIPMENT_SLOT_HEAD,
++            EQUIPMENT_SLOT_SHOULDERS,
++            EQUIPMENT_SLOT_BODY,
++            EQUIPMENT_SLOT_CHEST,
++            EQUIPMENT_SLOT_WAIST,
++            EQUIPMENT_SLOT_LEGS,
++            EQUIPMENT_SLOT_FEET,
++            EQUIPMENT_SLOT_WRISTS,
++            EQUIPMENT_SLOT_HANDS,
++            EQUIPMENT_SLOT_BACK,
++            EQUIPMENT_SLOT_TABARD,
++            EQUIPMENT_SLOT_END
++        };
++        // Display items in visible slots
++        for (EquipmentSlots const* itr = &ItemSlots[0];*itr!=EQUIPMENT_SLOT_END;++itr)
++        {
++            if (*itr == EQUIPMENT_SLOT_HEAD && pCreator->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM))
++                data << (uint32)0;
++            else if (*itr == EQUIPMENT_SLOT_BACK && pCreator->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_CLOAK))
++                data << (uint32)0;
++            else if (Item const *item = pCreator->GetItemByPos(INVENTORY_SLOT_BAG_0, *itr))
++                data << (uint32)item->GetProto()->DisplayInfoID;
++            else
++                data << (uint32)0;
++        }
++    }
++    else
++    {
++        // Skip player data for creatures
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++        data << (uint32)0;
++    }
++    SendPacket( &data );
++}
+\ No newline at end of file
+diff --git a/src/game/Unit.h b/src/game/Unit.h
+index 1e88070..3753835 100644
+--- a/src/game/Unit.h
++++ b/src/game/Unit.h
+@@ -580,6 +580,7 @@ enum UnitFlags2
+     UNIT_FLAG2_FEIGN_DEATH          = 0x00000001,
+     UNIT_FLAG2_UNK1                 = 0x00000002,           // Hides unit model (show only player equip)
+     UNIT_FLAG2_COMPREHEND_LANG      = 0x00000008,
++	UNIT_FLAG2_MIRROR_IMAGE         = 0x00000010,
+     UNIT_FLAG2_FORCE_MOVE           = 0x00000040,
+     UNIT_FLAG2_DISARM               = 0x00000400,           // disarm or something
+     UNIT_FLAG2_REGENERATE_POWER     = 0x00000800,
+diff --git a/src/game/WorldSession.h b/src/game/WorldSession.h
+index af857e2..4a52dfc 100644
+--- a/src/game/WorldSession.h
++++ b/src/game/WorldSession.h
+@@ -768,6 +768,7 @@ class MANGOS_DLL_SPEC WorldSession
+         void HandleEquipmentSetDelete(WorldPacket& recv_data);
+         void HandleEquipmentSetUse(WorldPacket& recv_data);
+         void HandleWorldStateUITimerUpdate(WorldPacket& recv_data);
++		void HandleMirrorImageDataRequest( WorldPacket & recv_data );
+         void HandleReadyForAccountDataTimes(WorldPacket& recv_data);
+         void HandleQueryQuestsCompleted(WorldPacket& recv_data);
+         void HandleQuestPOIQuery(WorldPacket& recv_data);

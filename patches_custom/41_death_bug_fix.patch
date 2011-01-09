@@ -1,0 +1,14 @@
+diff --git a/src/game/Player.cpp b/src/game/Player.cpp
+index 44e0a00..3c93bbc 100644
+--- a/src/game/Player.cpp
++++ b/src/game/Player.cpp
+@@ -1403,6 +1403,9 @@ void Player::Update( uint32 p_time )
+             RegenerateAll();
+     }
+ 
++	if (!isAlive() && !HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST))
++        SetHealth(0);
++
+     if (m_deathState == JUST_DIED)
+         KillPlayer();
+ 
